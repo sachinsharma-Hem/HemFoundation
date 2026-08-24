@@ -1,0 +1,96 @@
+﻿<!-- Include User Profile Card at Top -->
+<partial name="~/Views/Dashboard/Partials/_UserProfileCard.cshtml" />
+
+<!-- School Specific Management Workspace -->
+<div class="row g-4 mt-2">
+    <!-- Stat 1: Total Students -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 border-start border-4 border-warning">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted small mb-1">Total Students</h6>
+                    <h3 class="fw-bold text-dark m-0">0</h3>
+                </div>
+                <div class="bg-warning-subtle text-warning p-3 rounded-4 fs-4">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat 2: Active Teachers -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 border-start border-4 border-primary">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted small mb-1">Active Teachers</h6>
+                    <h3 class="fw-bold text-dark m-0">0</h3>
+                </div>
+                <div class="bg-primary-subtle text-primary p-3 rounded-4 fs-4">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat 3: Assigned Classes -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 border-start border-4 border-success">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted small mb-1">Enrolled Classes</h6>
+                    <h3 class="fw-bold text-dark m-0">0</h3>
+                </div>
+                <div class="bg-success-subtle text-success p-3 rounded-4 fs-4">
+                    <i class="bi bi-book-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat 4: Institute Verification Status -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 border-start border-4 border-info">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted small mb-1">Verification Status</h6>
+                    <span class="badge bg-warning-subtle text-warning px-2 py-1 fw-bold rounded-pill mt-1">Pending Approval</span>
+                </div>
+                <div class="bg-info-subtle text-info p-3 rounded-4 fs-4">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- School Quick Actions & Notice Board -->
+<div class="row g-4 mt-3">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-building text-warning me-2"></i> School Institution Workspace</h5>
+            <p class="text-muted small">Welcome to the School Management Portal. Here you can monitor student registrations, manage teacher profiles, and view academic reports.</p>
+
+            <div class="alert alert-warning border-0 rounded-3 mt-3 small text-dark d-flex align-items-center">
+                <i class="bi bi-info-circle-fill fs-5 me-2 text-warning"></i>
+                <span>Your institution profile is currently under review by the administrator. Full features will unlock once verified.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-bell-fill text-danger me-2"></i> Announcements</h5>
+            <ul class="list-unstyled small text-muted m-0 d-flex flex-column gap-3">
+                <li class="border-bottom pb-2">
+                    <strong class="text-dark d-block">Welcome School Partner!</strong>
+                    <span>Complete your branch details to start enrolling students.</span>
+                </li>
+                <li>
+                    <strong class="text-dark d-block">Guidelines Uploaded</strong>
+                    <span>Check out the new academic year guidelines in settings.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

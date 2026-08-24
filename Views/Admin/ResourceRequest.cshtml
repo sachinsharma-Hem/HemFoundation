@@ -1,0 +1,354 @@
+﻿@{
+    ViewData["Title"] = "Resource & Material Requests";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h3 class="fw-bold text-dark m-0"><i class="bi bi-boxes text-warning me-2"></i> Resource Requests</h3>
+        <p class="text-muted small m-0">Process material requisitions from affiliates. Modify quantity and assign dispatch dates.</p>
+    </div>
+    <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openItemManagerModal()">
+        <i class="bi bi-gear me-1"></i> Manage Items
+    </button>
+</div>
+
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-3 mb-4">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label text-muted small fw-semibold m-0">Status</label>
+                <select id="fltStatus" class="form-select form-select-sm rounded-3 shadow-none">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" selected>Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Dispatched">Dispatched</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button class="btn btn-primary btn-sm w-100 rounded-3 fw-semibold shadow-sm" onclick="loadAdminRequests()">Filter</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light text-muted">
+                    <tr>
+                        <th>Affiliate</th>
+                        <th>Item Details</th>
+                        <th>Shipping & Target</th>
+                        <th>Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="adminReqTableBody">
+                    <tr><td colspan="5" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="processModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3 bg-white">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-dark m-0">Process Request</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <input type="hidden" id="hdnReqId">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Update Status</label>
+                        <select id="pStatus" class="form-select rounded-3 shadow-none">
+                            <option value="Approved">Approve</option>
+                            <option value="Dispatched">Dispatch</option>
+                            <option value="Rejected">Reject</option>
+                            <option value="Pending">Keep Pending</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Approved Qty <span class="text-danger">*</span></label>
+                        <input type="number" id="pQty" class="form-control rounded-3 shadow-none" min="0" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Expected Dispatch/Delivery Date</label>
+                        <input type="date" id="pExpDate" class="form-control rounded-3 shadow-none">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Admin Remarks</label>
+                        <textarea id="pRemarks" class="form-control rounded-3 shadow-none" rows="2" placeholder="Tracking details, reasons etc..."></textarea>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm mt-4" onclick="submitProcess()">Save & Notify</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="itemManagerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3 bg-white">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-dark m-0"><i class="bi bi-gear-fill text-primary me-2"></i> Manage Requisition Items</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                
+                <form id="frmItemManager" class="mb-4 bg-light p-3 rounded-3 border">
+                    <input type="hidden" id="hdnItemId" value="0">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-7">
+                            <label class="form-label small fw-bold">Item Name <span class="text-danger">*</span></label>
+                            <input type="text" id="txtItemName" class="form-control form-control-sm rounded-3 shadow-none" placeholder="e.g. Pamphlet, T-Shirt..." required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Status</label>
+                            <select id="ddlItemStatus" class="form-select form-select-sm rounded-3 shadow-none">
+                                <option value="true" selected>Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-success btn-sm w-100 rounded-3 fw-bold">Save</button>
+                            <button type="button" class="btn btn-secondary btn-sm rounded-3" onclick="resetItemForm()"><i class="bi bi-x-lg"></i></button>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light text-muted" style="position: sticky; top: 0; z-index: 1;">
+                            <tr>
+                                <th>ID</th>
+                                <th>Item Name</th>
+                                <th>Status</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemManagerTableBody">
+                            <tr><td colspan="4" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function() {
+            loadAdminRequests();
+        });
+
+        function getAuthToken() { 
+            return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || ''; 
+        }
+
+        // ================= DATE FORMATTERS (Timezone Safe) =================
+        function formatDateOnly(dateStr) {
+            if (!dateStr || dateStr === 'null') return '-';
+            let d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '-';
+            let day = String(d.getDate()).padStart(2, '0');
+            let month = String(d.getMonth() + 1).padStart(2, '0');
+            let year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function getSafeDateInputStr(dateStr) {
+            if (!dateStr || dateStr === 'null') return '';
+            let d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '';
+            let yyyy = d.getFullYear();
+            let mm = String(d.getMonth() + 1).padStart(2, '0');
+            let dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        // ================= ADMIN REQUESTS MANAGEMENT =================
+        function loadAdminRequests() {
+            let status = $('#fltStatus').val();
+            $('#adminReqTableBody').html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Fetching requests...</td></tr>');
+
+            $.ajax({
+                url: `/api/material-request/admin/all-requests?status=${status}`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if(res.success && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(r => {
+                            let badge = r.status == 'Approved' || r.status == 'Dispatched' ? 'success' : (r.status == 'Rejected' ? 'danger' : 'warning');
+                            
+                            // Edit / Process button
+                            let actBtn = `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-none fw-semibold" onclick="openProcessModal(${r.id}, ${r.requestedQuantity}, '${r.status}', '${r.expectedDate}', '${(r.adminRemarks || '').replace(/'/g, "\\'")}')">Process</button>`;
+
+                            html += `<tr>
+                                <td><b>${r.affiliateName}</b><br><small class="text-muted">Req: ${formatDateOnly(r.createdDate)}</small></td>
+                                <td><span class="text-dark fw-bold">${r.itemName}</span><br>
+                                    <span class="badge bg-light text-dark border">Req Qty: ${r.requestedQuantity}</span>
+                                    ${r.approvedQuantity != null ? `<span class="badge bg-success-subtle text-success border">Apprv Qty: ${r.approvedQuantity}</span>` : ''}
+                                </td>
+                                <td><small class="d-block text-muted mb-1" style="max-width:200px; white-space:normal;">${r.shippingAddress}</small>
+                                    <span class="text-danger" style="font-size:0.75rem;"><i class="bi bi-clock"></i> Need by: ${formatDateOnly(r.needDate)}</span>
+                                </td>
+                                <td><span class="badge bg-${badge}-subtle text-${badge}">${r.status}</span><br><small class="text-muted">${r.priority} Priority</small></td>
+                                <td class="text-center">${actBtn}</td>
+                            </tr>`;
+                        });
+                        $('#adminReqTableBody').html(html);
+                    } else {
+                        $('#adminReqTableBody').html('<tr><td colspan="5" class="text-center py-5 text-muted">No requests found for this status.</td></tr>');
+                    }
+                }
+            });
+        }
+
+        function openProcessModal(id, reqQty, status, expDate, remarks) {
+            $('#hdnReqId').val(id);
+            $('#pQty').val(reqQty); // By default set to requested qty
+            $('#pStatus').val(status == 'Pending' ? 'Approved' : status);
+            $('#pExpDate').val(getSafeDateInputStr(expDate)); // Safe timezone conversion
+            $('#pRemarks').val(remarks !== 'null' ? remarks : '');
+            $('#processModal').modal('show');
+        }
+
+        function submitProcess() {
+            let payload = {
+                RequestId: parseInt($('#hdnReqId').val()),
+                Status: $('#pStatus').val(),
+                ApprovedQuantity: parseInt($('#pQty').val()),
+                ExpectedDate: $('#pExpDate').val() || null,
+                AdminRemarks: $('#pRemarks').val()
+            };
+
+            let $btn = $('#processModal .btn-primary');
+            let originalText = $btn.html();
+            $btn.html('<div class="spinner-border spinner-border-sm"></div> Saving...').prop('disabled', true);
+
+            $.ajax({
+                url: '/api/material-request/admin/process',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    if(res.success) {
+                        $('#processModal').modal('hide');
+                        loadAdminRequests();
+                    }
+                },
+                complete: function() {
+                    $btn.html(originalText).prop('disabled', false);
+                }
+            });
+        }
+
+        // ================= ITEM MANAGEMENT SCRIPTS =================
+
+        function openItemManagerModal() {
+            resetItemForm();
+            $('#itemManagerModal').modal('show');
+            loadManagerItems();
+        }
+
+        function resetItemForm() {
+            $('#hdnItemId').val('0');
+            $('#txtItemName').val('');
+            $('#ddlItemStatus').val('true');
+        }
+
+        function loadManagerItems() {
+            $('#itemManagerTableBody').html('<tr><td colspan="4" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>');
+            
+            $.ajax({
+                url: '/api/material-request/admin/items',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if(res.success && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(i => {
+                            let badge = i.isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
+                            
+                            // Edit & Delete Buttons
+                            let editBtn = `<button type="button" class="btn btn-sm btn-light border shadow-none me-1" onclick="editItem(${i.id}, '${i.itemName.replace(/'/g, "\\'")}', ${i.isActive})"><i class="bi bi-pencil-square text-primary"></i></button>`;
+                            let delBtn = `<button type="button" class="btn btn-sm btn-light border shadow-none" onclick="deleteItem(${i.id})"><i class="bi bi-trash text-danger"></i></button>`;
+
+                            html += `<tr>
+                                <td>#${i.id}</td>
+                                <td class="fw-bold text-dark">${i.itemName}</td>
+                                <td>${badge}</td>
+                                <td class="text-center">${editBtn} ${delBtn}</td>
+                            </tr>`;
+                        });
+                        $('#itemManagerTableBody').html(html);
+                    } else {
+                        $('#itemManagerTableBody').html('<tr><td colspan="4" class="text-center py-4 text-muted">No items found. Add one above.</td></tr>');
+                    }
+                }
+            });
+        }
+
+        // Save (Create/Update) Item
+        $('#frmItemManager').on('submit', function(e) {
+            e.preventDefault();
+            let payload = {
+                Id: parseInt($('#hdnItemId').val()),
+                ItemName: $('#txtItemName').val(),
+                IsActive: $('#ddlItemStatus').val() === "true"
+            };
+
+            let $btn = $(this).find('button[type="submit"]');
+            let originalText = $btn.text();
+            $btn.text('...').prop('disabled', true);
+
+            $.ajax({
+                url: '/api/material-request/admin/items',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    if(res.success) {
+                        resetItemForm();
+                        loadManagerItems(); // Reload table
+                    }
+                },
+                complete: function() {
+                    $btn.text(originalText).prop('disabled', false);
+                }
+            });
+        });
+
+        // Edit Item
+        function editItem(id, name, isActive) {
+            $('#hdnItemId').val(id);
+            $('#txtItemName').val(name);
+            $('#ddlItemStatus').val(isActive ? "true" : "false");
+            $('#txtItemName').focus();
+        }
+
+        // Delete Item
+        function deleteItem(id) {
+            if(confirm("Are you sure you want to delete this item? It will be removed from the dropdown.")) {
+                $.ajax({
+                    url: `/api/material-request/admin/items/${id}`,
+                    type: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                    success: function(res) {
+                        if(res.success) {
+                            loadManagerItems();
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+}

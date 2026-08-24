@@ -1,0 +1,221 @@
+﻿/* ==========================================================================
+   GLOBAL SCROLL PROGRESS & QUICK DRAWER (HEM THEME - NEXT LEVEL)
+   ========================================================================== */
+
+/* 1. Top Gradient Progress Bar */
+#scrollProgress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 4px;
+    width: 0;
+    background: linear-gradient(90deg, var(--primary-purple, #4b2c73), var(--secondary-pink, #E51E86), #00F2FE);
+    z-index: 99999;
+    border-radius: 0 4px 4px 0;
+    transition: width 0.1s ease-out;
+    box-shadow: 0 0 10px rgba(229, 30, 134, 0.5);
+}
+
+/* 2. Floating Scroll To Top Button */
+#scrollTopBtn {
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-purple, #4b2c73), #633FA4);
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(75, 46, 131, 0.4);
+    z-index: 9990;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(25px) scale(0.9);
+    transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+
+    #scrollTopBtn.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+    }
+
+    #scrollTopBtn:hover {
+        background: linear-gradient(135deg, var(--secondary-pink, #E51E86), #C2156E);
+        transform: translateY(-6px) scale(1.05);
+        box-shadow: 0 15px 30px rgba(229, 30, 134, 0.5);
+    }
+
+#scrollPercent {
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    margin-top: 3px;
+    letter-spacing: -0.5px;
+}
+
+#scrollTopBtn i {
+    font-size: 16px;
+    line-height: 1;
+    margin-top: -1px;
+    transition: transform 0.2s ease;
+}
+
+#scrollTopBtn:hover i {
+    transform: translateY(-2px);
+}
+
+/* 3. Quick Access Floating Drawer */
+#quickDrawer {
+    position: fixed;
+    top: 35%;
+    right: 0;
+    z-index: 9995;
+    display: flex;
+    align-items: center;
+}
+
+/* Toggle Floating Button with Pulse Effect */
+#drawerToggle {
+    width: 48px;
+    height: 54px;
+    border: none;
+    border-radius: 14px 0 0 14px;
+    background: linear-gradient(135deg, var(--primary-purple, #4b2c73), var(--secondary-pink, #E51E86));
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    box-shadow: -5px 5px 20px rgba(75, 46, 131, 0.3);
+}
+
+    #drawerToggle:hover {
+        width: 54px;
+        background: linear-gradient(135deg, var(--secondary-pink, #E51E86), var(--primary-purple, #4b2c73));
+    }
+
+    #drawerToggle i {
+        transition: transform 0.4s ease;
+    }
+
+/* Drawer Panel (Next-Level Glassmorphism) */
+.drawer-content {
+    position: absolute;
+    right: -290px; /* Hidden off-screen */
+    top: -70px;
+    width: 260px;
+    padding: 22px 18px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 20px 0 0 20px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-right: none;
+    box-shadow: -15px 20px 40px rgba(0, 0, 0, 0.08);
+    transition: right 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1;
+}
+
+    .drawer-content.show {
+        right: 48px; /* Slides in neatly beside the toggle button */
+    }
+
+.drawer-header-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.drawer-title {
+    font-weight: 800;
+    color: var(--text-dark, #222);
+    margin: 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.drawer-badge {
+    font-size: 9px;
+    font-weight: 700;
+    background: rgba(75, 46, 131, 0.1);
+    color: var(--primary-purple, #4b2c73);
+    padding: 3px 6px;
+    border-radius: 6px;
+}
+
+.drawer-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.08), rgba(0,0,0,0));
+    margin: 12px 0 14px;
+}
+
+/* Enhanced Links Styling */
+.drawer-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    text-decoration: none;
+    color: #555;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 6px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid transparent;
+}
+
+    .drawer-link i {
+        font-size: 17px;
+        transition: transform 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+    }
+
+    /* Smooth Hover Micro-Interactions */
+    .drawer-link:hover {
+        background: #fff;
+        color: var(--primary-purple, #4b2c73);
+        transform: translateX(-6px);
+        border-color: rgba(75, 46, 131, 0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+
+        .drawer-link:hover i {
+            transform: scale(1.25) rotate(-5deg);
+        }
+
+    /* Brand-Specific Interactive Hover Highlights */
+    .drawer-link.whatsapp:hover {
+        color: #25D366;
+        background: rgba(37, 211, 102, 0.08);
+        border-color: rgba(37, 211, 102, 0.2);
+    }
+
+    .drawer-link.contact:hover {
+        color: #0d6efd;
+        background: rgba(13, 110, 253, 0.08);
+        border-color: rgba(13, 110, 253, 0.2);
+    }
+
+    .drawer-link.donate:hover {
+        color: var(--secondary-pink, #E51E86);
+        background: rgba(229, 30, 134, 0.08);
+        border-color: rgba(229, 30, 134, 0.2);
+    }

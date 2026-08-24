@@ -1,0 +1,86 @@
+﻿<!-- ================= STATISTIC CARDS PARTIAL ================= -->
+<div class="row g-3 mb-4">
+    <!-- 1. Total Active Volunteers -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-semibold d-block mb-1">Active Volunteers</span>
+                    <h3 class="fw-bold text-dark m-0" id="statActiveVols">0</h3>
+                </div>
+                <div class="p-3 bg-primary-subtle text-primary rounded-4">
+                    <i class="bi bi-people-fill fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. School Mapping -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-semibold d-block mb-1">My Schools Mapped</span>
+                    <h3 class="fw-bold text-dark m-0" id="statSchoolMapped">0</h3>
+                </div>
+                <div class="p-3 bg-success-subtle text-success rounded-4">
+                    <i class="bi bi-building-check fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Assigned Tasks -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-semibold d-block mb-1">Assigned Tasks</span>
+                    <h3 class="fw-bold text-dark m-0" id="statAssignedTasks">0</h3>
+                </div>
+                <div class="p-3 bg-warning-subtle text-warning rounded-4">
+                    <i class="bi bi-clipboard-check-fill fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Reports -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-semibold d-block mb-1">Total Reports</span>
+                    <h3 class="fw-bold text-dark m-0" id="statReports">0</h3>
+                </div>
+                <div class="p-3 bg-danger-subtle text-danger rounded-4">
+                    <i class="bi bi-file-earmark-text-fill fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        loadVolunteerStatsCardData();
+    });
+
+    function loadVolunteerStatsCardData() {
+        let token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '';
+        
+        $.ajax({
+            url: '/api/volunteer/stats',
+            type: 'GET',
+            headers: { 'Authorization': 'Bearer ' + token },
+            success: function (res) {
+                if (res.success) {
+                    $('#statActiveVols').text(res.activeVolunteers || 0);
+                    $('#statSchoolMapped').text(res.schoolMapped || 0);
+                    $('#statAssignedTasks').text(res.assignedTasks || 0);
+                    $('#statReports').text(res.reports || 0);
+                }
+            }
+        });
+    }
+</script>

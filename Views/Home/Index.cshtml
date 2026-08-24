@@ -1,0 +1,22 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+@section Styles
+{
+    <link rel="stylesheet"
+          href="~/css/home/home-hero.css"
+          asp-append-version="true" />
+}
+
+<partial name="Partials/_HeroSection" />
+@await Html.PartialAsync("Partials/_UserManualModal")
+@await Html.PartialAsync("Partials/_BrochureDrawer")
+@await Html.PartialAsync("Partials/_ContactDrawer")
+
+
+@section Scripts
+{
+    <script src="~/js/home/home-hero.js"
+            asp-append-version="true"></script>
+}

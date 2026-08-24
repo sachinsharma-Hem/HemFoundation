@@ -1,0 +1,118 @@
+﻿<!-- Top Scroll Progress Bar -->
+<div id="scrollProgress"></div>
+
+<!-- Floating Scroll to Top Button -->
+<button id="scrollTopBtn" title="Go to top">
+    <span id="scrollPercent">0%</span>
+    <i class="bi bi-chevron-up"></i>
+</button>
+
+<!-- Quick Access Floating Drawer -->
+<div id="quickDrawer">
+    <button id="drawerToggle" class="shadow-lg" aria-label="Toggle Quick Menu">
+        <i class="bi bi-grid-fill"></i>
+    </button>
+
+    <div class="drawer-content shadow-lg">
+        <div class="drawer-header-flex">
+            <h6 class="drawer-title">Quick Access</h6>
+            <span class="drawer-badge">HEM</span>
+        </div>
+        <hr class="drawer-divider">
+
+        <a href="https://wa.me/917228001342" target="_blank" class="drawer-link whatsapp">
+            <i class="bi bi-whatsapp"></i> WhatsApp Us
+        </a>
+        
+        <!-- Contact Us Drawer Link with Offcanvas Integration -->
+        <a href="#contactDrawer" data-bs-toggle="offcanvas" class="drawer-link contact">
+            <i class="bi bi-envelope-paper"></i> Contact Us
+        </a>
+        
+        @* <a href="/Donate" class="drawer-link donate">
+            <i class="bi bi-heart-fill"></i> Donate Now
+        </a> *@
+        
+        <a href="#" id="drawerTop" class="drawer-link">
+            <i class="bi bi-arrow-up-circle"></i> Back to Top
+        </a>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const progress = document.getElementById("scrollProgress");
+        const btn = document.getElementById("scrollTopBtn");
+        const percent = document.getElementById("scrollPercent");
+        const toggle = document.getElementById("drawerToggle");
+        const drawer = document.querySelector(".drawer-content");
+
+        // --- Scroll & Percentage Logic ---
+        window.addEventListener("scroll", () => {
+            let h = document.documentElement.scrollHeight - window.innerHeight;
+            let sc = window.scrollY;
+            let p = h > 0 ? Math.round((sc / h) * 100) : 0;
+
+            // Top Progress Bar width
+            if (progress) progress.style.width = p + "%";
+            // Button Percentage Text
+            if (percent) percent.innerHTML = p + "%";
+
+            // Show/Hide Top Button smoothly
+            if (sc > 250) {
+                btn.classList.add("show");
+            } else {
+                btn.classList.remove("show");
+            }
+        });
+
+        // Scroll to Top action from floating button
+        if (btn) {
+            btn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        // Back to Top action inside the drawer
+        const drawerTop = document.getElementById("drawerTop");
+        if (drawerTop) {
+            drawerTop.onclick = (e) => {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                if (drawer) drawer.classList.remove("show");
+                if (toggle) toggle.querySelector("i").classList.replace("bi-x-lg", "bi-grid-fill");
+            };
+        }
+
+        // --- Drawer Toggle Logic ---
+        if (toggle && drawer) {
+            toggle.onclick = (e) => {
+                e.stopPropagation();
+                drawer.classList.toggle("show");
+
+                const icon = toggle.querySelector("i");
+                if (drawer.classList.contains("show")) {
+                    icon.classList.replace("bi-grid-fill", "bi-x-lg");
+                } else {
+                    icon.classList.replace("bi-x-lg", "bi-grid-fill");
+                }
+            };
+
+            // Close drawer automatically when clicking any link inside it (like Contact Us offcanvas)
+            drawer.querySelectorAll(".drawer-link").forEach(link => {
+                link.addEventListener("click", () => {
+                    // If it's not the 'Back to top' link, close the quick drawer smoothly
+                    if (link.getAttribute("id") !== "drawerTop") {
+                        drawer.classList.remove("show");
+                        toggle.querySelector("i").classList.replace("bi-x-lg", "bi-grid-fill");
+                    }
+                });
+            });
+        }
+
+        // Click outside document to close drawer
+        document.addEventListener("click", (e) => {
+            if (drawer && toggle && drawer.classList.contains("show") && !quickDrawer.contains(e.target)) {
+                drawer.classList.remove("show");
+                toggle.querySelector("i").classList.replace("bi-x-lg", "bi-grid-fill");
+            }
+        });
+    });
+</script>

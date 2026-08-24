@@ -1,0 +1,199 @@
+﻿@{
+    ViewData["Title"] = "Request Material";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="bi bi-box-seam text-primary me-2"></i> Material & Resource Requests</h3>
+            <p class="text-muted small m-0">Request promotional materials, kits, and resources for your visits.</p>
+        </div>
+        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openMaterialModal()">
+            <i class="bi bi-plus-lg me-1"></i> New Request
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light text-muted">
+                    <tr>
+                        <th>Req. Date</th>
+                        <th>Item Details</th>
+                        <th>Need By & Priority</th>
+                        <th class="text-center">Status</th>
+                        <th>Admin Update (Expected)</th>
+                    </tr>
+                </thead>
+                <tbody id="materialTableBody">
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <div class="spinner-border spinner-border-sm"></div> Fetching requests...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="materialRequestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3 bg-white">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-dark m-0"><i class="bi bi-cart-plus text-primary me-2"></i> Raise a Resource Request</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-3">
+                <form id="frmMaterial">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">Select Item <span class="text-danger">*</span></label>
+                            <select id="ddlItem" class="form-select rounded-3 shadow-none" required>
+                                <option value="">Loading items...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Quantity <span class="text-danger">*</span></label>
+                            <input type="number" id="txtQty" class="form-control rounded-3 shadow-none" min="1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Needed By Date <span class="text-danger">*</span></label>
+                            <input type="date" id="txtNeedDate" class="form-control rounded-3 shadow-none" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Priority <span class="text-danger">*</span></label>
+                            <select id="ddlPriority" class="form-select rounded-3 shadow-none" required>
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High (Urgent)</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Shipping Address <span class="text-danger">*</span></label>
+                            <textarea id="txtAddress" class="form-control rounded-3 shadow-none" rows="2" placeholder="Complete address for courier delivery..." required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Remarks (Reason / Usage)</label>
+                            <textarea id="txtRemarks" class="form-control rounded-3 shadow-none" rows="2" placeholder="E.g., For school visit event on next week..."></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm mt-4">Submit Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            loadItems();
+            loadMyRequests();
+
+            // Submit Handler
+            $('#frmMaterial').on('submit', function (e) {
+                e.preventDefault();
+                let payload = {
+                    RequisitionItemId: parseInt($('#ddlItem').val()),
+                    RequestedQuantity: parseInt($('#txtQty').val()),
+                    NeedDate: $('#txtNeedDate').val(),
+                    Priority: $('#ddlPriority').val(),
+                    ShippingAddress: $('#txtAddress').val(),
+                    UserRemarks: $('#txtRemarks').val()
+                };
+
+                let $btn = $(this).find('button[type="submit"]');
+                let originalText = $btn.html();
+                $btn.html('<div class="spinner-border spinner-border-sm"></div> Submitting...').prop('disabled', true);
+
+                $.ajax({
+                    url: '/api/material-request/create',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                    data: JSON.stringify(payload),
+                    success: function (res) {
+                        if (res.success) {
+                            $('#materialRequestModal').modal('hide');
+                            $('#frmMaterial')[0].reset();
+                            loadMyRequests();
+                        }
+                    },
+                    complete: function() {
+                        $btn.html(originalText).prop('disabled', false);
+                    }
+                });
+            });
+        });
+
+        function getAuthToken() { 
+            return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || ''; 
+        }
+
+        function formatDateOnly(dateStr) {
+            if (!dateStr || dateStr === 'null') return '-';
+            let d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '-';
+            let day = String(d.getDate()).padStart(2, '0');
+            let month = String(d.getMonth() + 1).padStart(2, '0');
+            let year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function loadItems() {
+            $.ajax({
+                url: '/api/material-request/items',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if(res.success && res.data) {
+                        let html = '<option value="">-- Choose Item --</option>';
+                        res.data.forEach(i => html += `<option value="${i.id}">${i.itemName}</option>`);
+                        $('#ddlItem').html(html);
+                    }
+                }
+            });
+        }
+
+        function loadMyRequests() {
+            $('#materialTableBody').html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Fetching requests...</td></tr>');
+
+            $.ajax({
+                url: '/api/material-request/my-requests',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if(res.success && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(r => {
+                            let badge = r.status == 'Approved' || r.status == 'Dispatched' ? 'success' : (r.status == 'Rejected' ? 'danger' : 'warning');
+                            let qtyDisplay = r.approvedQuantity != null ? `<br><span class="text-success small fw-bold">Approved Qty: ${r.approvedQuantity}</span>` : '';
+                            
+                            html += `<tr>
+                                <td class="fw-semibold text-muted">${formatDateOnly(r.createdDate)}</td>
+                                <td><b class="text-dark">${r.itemName}</b><br><small class="text-muted">Req Qty: ${r.requestedQuantity}</small>${qtyDisplay}</td>
+                                <td>${formatDateOnly(r.needDate)} <br><span class="badge bg-light text-dark border">${r.priority} Priority</span></td>
+                                <td class="text-center"><span class="badge bg-${badge}-subtle text-${badge} border border-${badge}-subtle px-3 py-2 rounded-pill">${r.status}</span></td>
+                                <td>
+                                    <div class="bg-light p-2 rounded-3 border">
+                                        <small class="d-block fw-bold text-dark mb-1">Expected: <span class="text-primary">${formatDateOnly(r.expectedDate)}</span></small>
+                                        <small class="text-muted" style="font-size:0.75rem;">${r.adminRemarks || 'Awaiting update from Admin.'}</small>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        });
+                        $('#materialTableBody').html(html);
+                    } else {
+                        $('#materialTableBody').html('<tr><td colspan="5" class="text-center py-5 text-muted">No material requests found. Click "New Request" to create one.</td></tr>');
+                    }
+                }
+            });
+        }
+
+        function openMaterialModal() {
+            $('#materialRequestModal').modal('show');
+        }
+    </script>
+}

@@ -1,0 +1,311 @@
+﻿@{
+    ViewData["Title"] = "Manage Affiliate Leaves";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="bi bi-calendar2-check text-danger me-2"></i> Affiliate Leave Management</h3>
+            <p class="text-muted small m-0">Review, approve, or reject leave requests submitted by affiliates.</p>
+        </div>
+    </div>
+
+    <!-- ================= DASHBOARD STAT CARDS ================= -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-primary text-white h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-white-50 small d-block mb-1">Today's Requests</span>
+                        <h2 class="fw-bold m-0" id="statTodayNew">0</h2>
+                    </div>
+                    <i class="bi bi-calendar-plus fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-warning text-dark h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-dark opacity-75 small d-block mb-1">Pending Approvals</span>
+                        <h2 class="fw-bold m-0" id="statPending">0</h2>
+                    </div>
+                    <i class="bi bi-hourglass-split fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-success text-white h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-white-50 small d-block mb-1">Total Approved</span>
+                        <h2 class="fw-bold m-0" id="statApproved">0</h2>
+                    </div>
+                    <i class="bi bi-check-circle-fill fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-danger text-white h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-white-50 small d-block mb-1">Total Rejected</span>
+                        <h2 class="fw-bold m-0" id="statRejected">0</h2>
+                    </div>
+                    <i class="bi bi-x-circle-fill fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= FILTERS TOOLBAR ================= -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label text-muted small fw-semibold m-0">Filter by Status</label>
+                <select id="fltStatus" class="form-select form-select-sm rounded-3 shadow-none" onchange="loadLeaveList()">
+                    <option value="All">All Statuses</option>
+                    <option value="Pending" selected>Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small fw-semibold m-0">Filter by Affiliate</label>
+                <select id="fltAffiliate" class="form-select form-select-sm rounded-3 shadow-none" onchange="loadLeaveList()">
+                    <option value="">All Affiliates</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small fw-semibold m-0">From Date</label>
+                <input type="date" id="fltFromDate" class="form-control form-control-sm rounded-3 shadow-none" onchange="loadLeaveList()">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small fw-semibold m-0">To Date</label>
+                <input type="date" id="fltToDate" class="form-control form-control-sm rounded-3 shadow-none" onchange="loadLeaveList()">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary btn-sm w-100 rounded-3 fw-semibold shadow-sm" onclick="resetFilters()">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= LEAVE REQUESTS TABLE ================= -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light text-muted">
+                    <tr>
+                        <th>Affiliate Name</th>
+                        <th>From Date</th>
+                        <th>To Date</th>
+                        <th>Reason</th>
+                        <th>Applied On</th>
+                        <th>Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tblLeaveRequests">
+                    <tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading leave requests...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ================= ACTION MODAL (APPROVE / REJECT) ================= -->
+<div class="modal fade" id="actionLeaveModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3 bg-white">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-dark m-0" id="modalActionTitle">Process Leave Request</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <input type="hidden" id="hdnLeaveId">
+                <input type="hidden" id="hdnTargetStatus">
+                
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Admin Remarks / Note</label>
+                    <textarea id="txtAdminRemarks" class="form-control rounded-3 shadow-none" rows="3" placeholder="Provide reason for approval or rejection..."></textarea>
+                </div>
+
+                <button type="button" id="btnConfirmAction" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm py-2" onclick="submitLeaveAction()">Confirm & Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            loadAffiliateDropdown();
+            loadDashboardStats();
+            loadLeaveList();
+        });
+
+        function getAuthToken() {
+            return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '';
+        }
+
+        function formatDateDDMMYYYY(dateString) {
+            if (!dateString) return '-';
+            let d = new Date(dateString);
+            if (isNaN(d.getTime())) return '-';
+            return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+        }
+
+        function loadAffiliateDropdown() {
+            $.ajax({
+                url: '/api/affiliate-attendance/admin/affiliate-list',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function (res) {
+                    if (res.success && res.data) {
+                        let html = '<option value="">All Affiliates</option>';
+                        res.data.forEach(a => {
+                            html += `<option value="${a.userID}">${a.name} (${a.userCode})</option>`;
+                        });
+                        $('#fltAffiliate').html(html);
+                    }
+                }
+            });
+        }
+
+        function loadDashboardStats() {
+            $.ajax({
+                url: '/api/affiliate-attendance/admin/leave/stats',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function (res) {
+                    if (res.success) {
+                        $('#statTodayNew').text(res.todayNew);
+                        $('#statPending').text(res.pending);
+                        $('#statApproved').text(res.approved);
+                        $('#statRejected').text(res.rejected);
+                    }
+                }
+            });
+        }
+
+        function loadLeaveList() {
+            let status = $('#fltStatus').val();
+            let affId = $('#fltAffiliate').val();
+            let from = $('#fltFromDate').val();
+            let to = $('#fltToDate').val();
+
+            let url = `/api/affiliate-attendance/admin/leave/list?status=${status}`;
+            if (affId) url += `&affiliateId=${affId}`;
+            if (from) url += `&fromDate=${from}`;
+            if (to) url += `&toDate=${to}`;
+
+            $('#tblLeaveRequests').html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>');
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function (res) {
+                    if (res.success && res.data.length > 0) {
+                        let rows = '';
+                        res.data.forEach(item => {
+                            let statusBadge = '';
+                            if (item.status === 'Approved') statusBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle">Approved</span>';
+                            else if (item.status === 'Rejected') statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Rejected</span>';
+                            else statusBadge = '<span class="badge bg-warning-subtle text-dark border border-warning-subtle">Pending</span>';
+
+                            let actionButtons = '';
+                            if (item.status === 'Pending') {
+                                actionButtons = `
+                                    <button class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-semibold me-1 shadow-sm" onclick="openActionModal(${item.id}, 'Approved')"><i class="bi bi-check-lg"></i> Approve</button>
+                                    <button class="btn btn-sm btn-danger rounded-pill px-3 py-1 fw-semibold shadow-sm" onclick="openActionModal(${item.id}, 'Rejected')"><i class="bi bi-x-lg"></i> Reject</button>
+                                `;
+                            } else {
+                                actionButtons = `<span class="text-muted small fst-italic">Processed</span>`;
+                            }
+
+                            rows += `<tr>
+                                <td><b class="text-dark">${item.affiliateName}</b><br><small class="text-muted font-monospace">${item.userCode}</small></td>
+                                <td class="fw-semibold">${formatDateDDMMYYYY(item.fromDate)}</td>
+                                <td class="fw-semibold">${formatDateDDMMYYYY(item.toDate)}</td>
+                                <td style="max-width: 250px;" class="text-truncate" title="${item.reason}">${item.reason}</td>
+                                <td class="text-muted">${formatDateDDMMYYYY(item.createdDate)}</td>
+                                <td>${statusBadge}</td>
+                                <td class="text-center">${actionButtons}</td>
+                            </tr>`;
+                        });
+                        $('#tblLeaveRequests').html(rows);
+                    } else {
+                        $('#tblLeaveRequests').html('<tr><td colspan="7" class="text-center py-5 text-muted">No leave requests found matching criteria.</td></tr>');
+                    }
+                }
+            });
+        }
+
+        function resetFilters() {
+            $('#fltStatus').val('Pending');
+            $('#fltAffiliate').val('');
+            $('#fltFromDate').val('');
+            $('#fltToDate').val('');
+            loadLeaveList();
+        }
+
+        function openActionModal(leaveId, status) {
+            $('#hdnLeaveId').val(leaveId);
+            $('#hdnTargetStatus').val(status);
+            $('#txtAdminRemarks').val('');
+
+            if (status === 'Approved') {
+                $('#modalActionTitle').text('Approve Leave Request').removeClass('text-danger').addClass('text-success');
+                $('#btnConfirmAction').removeClass('btn-danger').addClass('btn-success').text('Confirm Approval');
+            } else {
+                $('#modalActionTitle').text('Reject Leave Request').removeClass('text-success').addClass('text-danger');
+                $('#btnConfirmAction').removeClass('btn-success').addClass('btn-danger').text('Confirm Rejection');
+            }
+
+            $('#actionLeaveModal').modal('show');
+        }
+
+        function submitLeaveAction() {
+            let leaveId = $('#hdnLeaveId').val();
+            let status = $('#hdnTargetStatus').val();
+            let remarks = $('#txtAdminRemarks').val();
+
+            let payload = {
+                leaveId: parseInt(leaveId),
+                status: status,
+                remarks: remarks
+            };
+
+            let $btn = $('#btnConfirmAction');
+            $btn.prop('disabled', true).text('Processing...');
+
+            $.ajax({
+                url: '/api/affiliate-attendance/admin/leave/update-status',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                data: JSON.stringify(payload),
+                success: function (res) {
+                    if (res.success) {
+                        $('#actionLeaveModal').modal('hide');
+                        loadDashboardStats();
+                        loadLeaveList();
+                    } else {
+                        console.warn(res.message || 'Failed to update leave status.');
+                    }
+                },
+                error: function (err) {
+                    console.error(err.responseJSON?.message || 'Error updating leave status.');
+                },
+                complete: function () {
+                    $btn.prop('disabled', false).text('Confirm & Submit');
+                }
+            });
+        }
+    </script>
+}

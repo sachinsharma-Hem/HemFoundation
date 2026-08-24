@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    string portal = ViewData["PortalName"]?.ToString() ?? "User";
+}
+
+<div class="container-fluid py-4">
+
+    <!-- Dynamic Role-Based Content Loading -->
+    @switch (portal.ToLower())
+    {
+        case "affiliate":
+            <partial name="~/Views/Dashboard/Partials/_AffiliateDashboard.cshtml" />
+            break;
+
+        case "school":
+            <partial name="~/Views/Dashboard/Partials/_SchoolDashboard.cshtml" />
+            break;
+       case "volunteer":
+            <partial name="~/Views/Dashboard/Partials/_VolunteerDashboard.cshtml" />
+            break;
+
+        case "teacher":
+            <partial name="~/Views/Dashboard/Partials/_TeacherDashboard.cshtml" />
+            break;
+
+        case "testeremployee":
+            // Agar TesterEmployee ka pehle se koi apna view hai, ya partial view banana chahein
+            <partial name="~/Views/Dashboard/Partials/_TesterDashboard.cshtml" />
+            break;
+
+        default:
+            <div class="alert alert-info rounded-4">
+                <h4>Welcome, @portal!</h4>
+                <p class="m-0">Your custom dashboard layout is under construction.</p>
+            </div>
+            break;
+    }
+
+</div>

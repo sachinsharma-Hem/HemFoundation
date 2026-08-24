@@ -1,0 +1,376 @@
+﻿@{
+    ViewData["Title"] = "Course Setup Masters";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+        <h3 class="fw-bold text-dark mb-1"><i class="bi bi-gear-fill text-success me-2"></i> Course Setup & Configurations</h3>
+        <p class="text-muted small m-0">Click any master module below to manage its records instantly via large drawer panel.</p>
+    </div>
+
+    <!-- 14 Master Cards Grid (Numbers removed from h6 text) -->
+    <div class="row g-3" id="mastersGrid">
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="maincourse"><i class="bi bi-book fs-1 text-success mb-2"></i><h6 class="fw-bold text-dark m-0">Main Course</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="category"><i class="bi bi-tags fs-1 text-primary mb-2"></i><h6 class="fw-bold text-dark m-0">Category</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="subcategory"><i class="bi bi-diagram-3 fs-1 text-info mb-2"></i><h6 class="fw-bold text-dark m-0">SubCategory</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="ordernumber"><i class="bi bi-sort-numeric-up fs-1 text-warning mb-2"></i><h6 class="fw-bold text-dark m-0">Display Order</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="years"><i class="bi bi-calendar-event fs-1 text-danger mb-2"></i><h6 class="fw-bold text-dark m-0">Years</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="author"><i class="bi bi-person-badge fs-1 text-secondary mb-2"></i><h6 class="fw-bold text-dark m-0">Author</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="manager"><i class="bi bi-person-workspace fs-1 text-dark mb-2"></i><h6 class="fw-bold text-dark m-0">Manager</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="coursesfor"><i class="bi bi-people fs-1 text-success mb-2"></i><h6 class="fw-bold text-dark m-0">Courses For</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="customertype"><i class="bi bi-person-lines-fill fs-1 text-primary mb-2"></i><h6 class="fw-bold text-dark m-0">Customer Type</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="durationtype"><i class="bi bi-clock-history fs-1 text-info mb-2"></i><h6 class="fw-bold text-dark m-0">Duration Type</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="courseallotedto"><i class="bi bi-person-check fs-1 text-warning mb-2"></i><h6 class="fw-bold text-dark m-0">Course Alloted To</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="mcqlevel"><i class="bi bi-award fs-1 text-danger mb-2"></i><h6 class="fw-bold text-dark m-0">MCQ Level</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="levels"><i class="bi bi-layers fs-1 text-secondary mb-2"></i><h6 class="fw-bold text-dark m-0">Levels</h6></div></div>
+        <div class="col-xl-3 col-md-4 col-sm-6"><div class="master-card card border-0 shadow-sm rounded-4 p-3 text-center cursor-pointer bg-white" data-type="webinarmcqcategory"><i class="bi bi-collection-play fs-1 text-success mb-2"></i><h6 class="fw-bold text-dark m-0">Webinar MCQ Category</h6></div></div>
+    </div>
+</div>
+
+<!-- Modal Drawer -->
+<div class="modal fade" id="masterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:95vw;">
+        <div class="modal-content border-0 rounded-4 shadow-lg" style="height:95vh;">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="drawerTitle">Manage Master</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body overflow-auto bg-light p-4">
+                
+                <!-- Form Card -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                    <h6 class="fw-bold text-success mb-3" id="formHeaderTitle"><i class="bi bi-plus-circle me-1"></i> Add New Record</h6>
+                    <form id="masterForm">
+                        <input type="hidden" id="recordId" value="0" />
+                        <div id="formFieldsContainer" class="row g-3"></div>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button" class="btn btn-light btn-sm rounded-pill px-4 fw-medium" onclick="resetForm()">Cancel</button>
+                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm" id="btnSaveRecord">Save Record</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Existing Records Container -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                        <h6 class="fw-bold text-dark m-0" id="existingRecordsTitle"><i class="bi bi-table me-2 text-primary"></i> Existing Records</h6>
+                        <div class="input-group input-group-sm" style="width: 280px;">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="text" id="tableSearchBox" class="form-control bg-light border-start-0 shadow-none" placeholder="Search records...">
+                        </div>
+                    </div>
+
+                    <!-- Standard Table View for 1-13 Masters -->
+                    <div class="table-responsive" id="tableViewWrapper" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover align-middle small mb-0" id="drawerTable">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th id="thName">Name / Title</th>
+                                    <th>Description</th>
+                                    <th style="width: 140px;">Created Date</th>
+                                    <th class="text-center" style="width: 90px;">Status</th>
+                                    <th class="text-end" style="width: 110px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="drawerTableBody">
+                                <tr><td colspan="6" class="text-center py-4 text-muted">Select a master card</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Dedicated Grid Card View for 14. Webinar MCQ Category -->
+                    <div id="cardViewWrapper" style="max-height: 450px; overflow-y: auto; display: none;" class="p-2">
+                        <div class="row g-3" id="webinarCardsContainer"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+    <div id="liveToast" class="toast align-items-center text-white border-0 shadow-lg rounded-4" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold" id="toastMessage"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto shadow-none" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .master-card { transition: all 0.2s ease-in-out; border: 1px solid rgba(0,0,0,0.03) !important; }
+    .master-card:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,0.08) !important; border-color: rgba(25, 135, 84, 0.3) !important; }
+    .cursor-pointer { cursor: pointer; }
+    .modal-content{ overflow:hidden; }
+    .modal-body{ overflow-y:auto; }
+    .modal-header{ background:#fff; position:sticky; top:0; z-index:100; }
+    .table thead{ position:sticky; top:0; z-index:10; }
+    .webinar-item-card { transition: all 0.2s ease; border: 1px solid rgba(0,0,0,0.06); }
+    .webinar-item-card:hover { box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.08); }
+</style>
+
+@section Scripts {
+    <script>
+        let currentMasterType = "";
+        let masterRawData = [];
+        let globalOrderNumbers = []; // Cache order numbers
+
+        $(document).ready(function () {
+            $('.master-card').on('click', function () {
+                currentMasterType = $(this).data('type');
+                let title = $(this).find('h6').text();
+                $('#drawerTitle').html(`<i class="bi bi-folder2-open text-success me-2"></i> Manage: ${title}`);
+                
+                resetForm();
+                setupFormFields(currentMasterType);
+                loadMasterData(currentMasterType);
+
+                var modal = new bootstrap.Modal(document.getElementById('masterModal'));
+                modal.show();
+            });
+
+            // Live Search Filter
+            $('#tableSearchBox').on('keyup', function () {
+                let value = $(this).val().toLowerCase();
+                let filtered = masterRawData.filter(item => {
+                    let name = (item.name || item.years || item.displayOrder || '').toString().toLowerCase();
+                    let desc = (item.description || item.remark || '').toString().toLowerCase();
+                    return name.includes(value) || desc.includes(value);
+                });
+                renderRecords(filtered, currentMasterType);
+            });
+
+            $('#masterForm').on('submit', function (e) {
+                e.preventDefault();
+                let formData = new FormData(this);
+                formData.append('id', $('#recordId').val());
+                
+                formData.set('isActive', $('#checkActive').is(':checked') ? 'true' : 'false');
+                if($('#checkLocked').length) {
+                    formData.set('isLocked', $('#checkLocked').is(':checked') ? 'true' : 'false');
+                }
+
+                $.ajax({
+                    url: `/api/course-setup/save/${currentMasterType}`,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        if (res.success) {
+                            resetForm();
+                            loadMasterData(currentMasterType);
+                            showToast(res.message || 'Saved successfully!', 'success');
+                        }
+                    },
+                    error: function (err) {
+                        let errorMsg = err.responseJSON?.message || 'Error saving record';
+                        showToast(errorMsg, 'danger');
+                    }
+                });
+            });
+        });
+
+        // Load Order Numbers for Dropdown
+        function loadOrderNumbersDropdown(selectedId = '') {
+            $.get('/api/course-setup/list/ordernumber', function (res) {
+                if (res.success) {
+                    globalOrderNumbers = res.data;
+                    let options = '<option value="">-- Select Display Order --</option>';
+                    globalOrderNumbers.forEach(item => {
+                        let sel = (item.id == selectedId) ? 'selected' : '';
+                        options += `<option value="${item.id}" ${sel}>${item.displayOrder}</option>`;
+                    });
+                    $('#inputOrderNumberId').html(options);
+                }
+            });
+        }
+
+        function setupFormFields(type) {
+            let html = '';
+            if (type === 'ordernumber') {
+                html = `<div class="col-md-12"><label class="form-label small fw-semibold">Display Order</label><input type="number" name="displayOrder" id="inputDisplayOrder" class="form-control form-control-sm rounded-3 shadow-none" required /></div>`;
+            } else if (type === 'years') {
+                html = `<div class="col-md-6"><label class="form-label small fw-semibold">Years (e.g. 2025-2026)</label><input type="text" name="years" id="inputYears" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-12"><label class="form-label small fw-semibold">Remark (Optional)</label><textarea name="remark" id="inputRemark" class="form-control form-control-sm rounded-3 shadow-none" rows="2"></textarea></div>`;
+            } else if (type === 'webinarmcqcategory') {
+                html = `<div class="col-md-6"><label class="form-label small fw-semibold">Name</label><input type="text" name="name" id="inputName" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-6"><label class="form-label small fw-semibold">Display Order</label><select name="orderNumberId" id="inputOrderNumberId" class="form-select form-select-sm rounded-3 shadow-none"></select></div>
+                        <div class="col-md-6"><label class="form-label small fw-semibold">Category Image</label><input type="file" name="imageFile" class="form-control form-control-sm rounded-3 shadow-none" accept="image/*" /></div>
+                        <div class="col-md-6"><div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox" name="isLocked" value="true" id="checkLocked"><label class="form-check-label small fw-semibold" for="checkLocked">Lock Status (Locked)</label></div></div>
+                        <div class="col-md-12"><label class="form-label small fw-semibold">Description (Optional)</label><textarea name="description" id="inputDescription" class="form-control form-control-sm rounded-3 shadow-none" rows="2"></textarea></div>`;
+                
+                // Trigger populating dropdown options
+                setTimeout(() => loadOrderNumbersDropdown(), 100);
+            } else {
+                html = `<div class="col-md-12"><label class="form-label small fw-semibold">Name</label><input type="text" name="name" id="inputName" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-12"><label class="form-label small fw-semibold">Description (Optional)</label><textarea name="description" id="inputDescription" class="form-control form-control-sm rounded-3 shadow-none" rows="2"></textarea></div>`;
+            }
+
+            // Append Active status switch universally to all master forms
+            html += `<div class="col-md-6"><div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" name="isActive" value="true" id="checkActive" checked><label class="form-check-label small fw-semibold" for="checkActive">Active Status</label></div></div>`;
+
+            $('#formFieldsContainer').html(html);
+        }
+
+        function loadMasterData(type) {
+            if (type === 'webinarmcqcategory') {
+                $('#tableViewWrapper').hide();
+                $('#cardViewWrapper').show();
+                $('#existingRecordsTitle').html(`<i class="bi bi-grid-3x3-gap me-2 text-primary"></i> Webinar MCQ Category Cards`);
+            } else {
+                $('#cardViewWrapper').hide();
+                $('#tableViewWrapper').show();
+                $('#existingRecordsTitle').html(`<i class="bi bi-table me-2 text-primary"></i> Existing Records`);
+            }
+
+            $.get(`/api/course-setup/list/${type}`, function (res) {
+                if (res.success) {
+                    masterRawData = res.data;
+                    renderRecords(masterRawData, type);
+                }
+            });
+        }
+
+        function renderRecords(data, type) {
+            if (type === 'webinarmcqcategory') {
+                renderWebinarCards(data);
+            } else {
+                renderTableRows(data);
+            }
+        }
+
+        function renderTableRows(data) {
+            let rows = '';
+            data.forEach((item, index) => {
+                let displayName = item.name || item.years || `Order: ${item.displayOrder}`;
+                let displayDesc = item.description || item.remark || '<span class="text-muted fst-italic">No description</span>';
+                let dateStr = item.createdDate ? new Date(item.createdDate).toLocaleDateString() : 'N/A';
+                let statusBadge = item.isActive ? '<span class="badge bg-success-subtle text-success rounded-pill px-2">Active</span>' : '<span class="badge bg-danger-subtle text-danger rounded-pill px-2">Inactive</span>';
+
+                rows += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td class="fw-medium text-dark">${displayName}</td>
+                        <td class="text-muted">${displayDesc}</td>
+                        <td>${dateStr}</td>
+                        <td class="text-center">${statusBadge}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick='editRecord(${JSON.stringify(item)})' title="Edit"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteRecord('${currentMasterType}', ${item.id})" title="Delete"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            $('#drawerTableBody').html(rows.length ? rows : '<tr><td colspan="6" class="text-center py-4 text-muted">No records found</td></tr>');
+        }
+
+        function renderWebinarCards(data) {
+            let cards = '';
+            data.forEach((item) => {
+                let img = item.imageUrl ? item.imageUrl : 'https://placehold.co/600x300?text=No+Image';
+                let lockBadge = item.isLocked 
+                    ? '<span class="badge bg-danger-subtle text-danger"><i class="bi bi-lock-fill me-1"></i> Locked</span>' 
+                    : '<span class="badge bg-success-subtle text-success"><i class="bi bi-unlock-fill me-1"></i> Unlocked</span>';
+                
+                let statusBadge = item.isActive 
+                    ? '<span class="badge bg-success-subtle text-success rounded-pill px-2">Active</span>' 
+                    : '<span class="badge bg-danger-subtle text-danger rounded-pill px-2">Inactive</span>';
+
+                // Optional: Order badge display on card if orderNumber loaded via include
+                let orderBadge = item.orderNumber ? `<span class="badge bg-info-subtle text-info me-1">Order: ${item.orderNumber.displayOrder}</span>` : '';
+
+                cards += `
+                    <div class="col-xl-3 col-md-4 col-sm-6">
+                        <div class="card webinar-item-card border-0 shadow-sm rounded-4 h-100 bg-white overflow-hidden">
+                            <div class="position-relative">
+                                <img src="${img}" class="card-img-top object-fit-cover" style="height: 150px;" alt="Category Image">
+                                <div class="position-absolute top-0 end-0 m-2">${lockBadge}</div>
+                            </div>
+                            <div class="card-body d-flex flex-column p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="fw-bold text-dark mb-0 text-truncate">${item.name}</h6>
+                                    <div>${statusBadge}</div>
+                                </div>
+                                <div class="mb-2">${orderBadge}</div>
+                                <p class="text-muted small mb-3 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${item.description || 'No description provided.'}</p>
+                                <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-auto">
+                                    <span class="text-muted" style="font-size: 11px;">${new Date(item.createdDate).toLocaleDateString()}</span>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick='editRecord(${JSON.stringify(item)})' title="Edit"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteRecord('${currentMasterType}', ${item.id})" title="Delete"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            $('#webinarCardsContainer').html(cards.length ? cards : '<div class="col-12 text-center py-4 text-muted">No webinar records found</div>');
+        }
+
+        function editRecord(item) {
+            $('#recordId').val(item.id);
+            $('#inputName').val(item.name || item.years || '');
+            $('#inputYears').val(item.years || '');
+            $('#inputRemark').val(item.remark || '');
+            $('#inputDescription').val(item.description || item.remark || '');
+            if(item.displayOrder) $('#inputDisplayOrder').val(item.displayOrder);
+            if(item.isLocked !== undefined) $('#checkLocked').prop('checked', item.isLocked);
+            
+            // Handle Order Number Dropdown Selection for Webinar MCQ Category
+            if (currentMasterType === 'webinarmcqcategory') {
+                loadOrderNumbersDropdown(item.orderNumberId || '');
+            }
+
+            // Set Active switch status accurately
+            if(item.isActive !== undefined) {
+                $('#checkActive').prop('checked', item.isActive);
+            }
+            
+            $('#formHeaderTitle').html(`<i class="bi bi-pencil-square me-1"></i> Edit Record (ID: ${item.id})`);
+            $('#btnSaveRecord').text('Update Record');
+            
+            $('.modal-body').animate({ scrollTop: 0 }, 300);
+        }
+
+        function deleteRecord(type, id) {
+            if (confirm('Are you sure you want to delete this record?')) {
+                $.ajax({
+                    url: `/api/course-setup/delete/${type}/${id}`,
+                    type: 'DELETE',
+                    success: function (res) {
+                        if (res.success) {
+                            loadMasterData(type);
+                            showToast('Deleted successfully!', 'success');
+                        }
+                    }
+                });
+            }
+        }
+
+        function resetForm() {
+            $('#recordId').val('0');
+            $('#masterForm')[0].reset();
+            $('#checkActive').prop('checked', true); // Default active on new
+            if (currentMasterType === 'webinarmcqcategory') {
+                loadOrderNumbersDropdown(''); // Reset dropdown
+            }
+            $('#formHeaderTitle').html(`<i class="bi bi-plus-circle me-1"></i> Add New Record`);
+            $('#btnSaveRecord').text('Save Record');
+        }
+
+        function showToast(message, type = 'success') {
+            const $toast = $('#liveToast');
+            $toast.removeClass('bg-success bg-danger').addClass(type === 'success' ? 'bg-success' : 'bg-danger');
+            $('#toastMessage').html(`<i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} me-2"></i> ${message}`);
+            
+            let toast = new bootstrap.Toast($toast[0], { delay: 3000 });
+            toast.show();
+        }
+    </script>
+}

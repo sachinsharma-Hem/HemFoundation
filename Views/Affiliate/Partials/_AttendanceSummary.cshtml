@@ -1,0 +1,316 @@
+﻿<div class="card shadow-sm rounded-4 bg-white p-4 animate-fade-in" style="border: 1px solid #d9dfe5 !important;">
+    
+    <!-- ================= 1. ATTENDANCE & LEAVE SUMMARY SECTION ================= -->
+    <div class="mb-5">
+        <!-- Header & Date Filters -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-3 border-bottom gap-3">
+            <div>
+                <h4 class="fw-bold text-danger mb-1"><i class="bi bi-calendar-range me-2"></i> My Attendance & Leave Summary</h4>
+                <p class="text-muted small m-0">Monitor your attendance, approved leaves and absence within the selected date range.</p>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <label class="small fw-semibold text-muted m-0">From:</label>
+                    <input type="text" id="myFilterFrom" class="form-control form-control-sm rounded-3 shadow-none bg-white" placeholder="DD/MM/YYYY" autocomplete="off" style="width: 130px;">
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <label class="small fw-semibold text-muted m-0">To:</label>
+                    <input type="text" id="myFilterTo" class="form-control form-control-sm rounded-3 shadow-none bg-white" placeholder="DD/MM/YYYY" autocomplete="off" style="width: 130px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stat Highlights -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3 border border-secondary-subtle d-flex align-items-center justify-content-between h-100">
+                    <div>
+                        <span class="text-muted small d-block">Total Tracked Days</span>
+                        <h3 class="fw-bold text-dark m-0" id="myStatTotalDays">0</h3>
+                    </div>
+                    <i class="bi bi-calendar-event fs-2 text-primary opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3 border border-secondary-subtle d-flex align-items-center justify-content-between h-100">
+                    <div>
+                        <span class="text-muted small d-block">Days Visited</span>
+                        <h3 class="fw-bold text-success m-0" id="myStatPresent">0</h3>
+                    </div>
+                    <i class="bi bi-check-circle fs-2 text-success opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3 border border-secondary-subtle d-flex align-items-center justify-content-between h-100">
+                    <div>
+                        <span class="text-muted small d-block">Approved Leaves</span>
+                        <h3 class="fw-bold text-warning m-0" id="myStatLeave">0</h3>
+                    </div>
+                    <i class="bi bi-calendar-minus fs-2 text-warning opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3 border border-secondary-subtle d-flex align-items-center justify-content-between h-100">
+                    <div>
+                        <span class="text-muted small d-block">Days Absent</span>
+                        <h3 class="fw-bold text-danger m-0" id="myStatAbsent">0</h3>
+                    </div>
+                    <i class="bi bi-x-circle fs-2 text-danger opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Data Table -->
+        <div class="table-responsive border rounded-3 overflow-hidden shadow-sm">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-primary text-dark">
+                    <tr>
+                        <th class="py-3 px-3">Affiliate</th>
+                        <th class="py-3 px-3">Total Days</th>
+                        <th class="py-3 px-3">Days Visited</th>
+                        <th class="py-3 px-3">Approved Leaves</th>
+                        <th class="py-3 px-3">Days Absent</th>
+                        <th class="py-3 px-3">User ID</th>
+                    </tr>
+                </thead>
+                <tbody id="mySummaryTableBody">
+                    <tr><td colspan="6" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div> Loading your attendance data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Divider Separator -->
+    <hr class="my-4 border-secondary-subtle">
+
+    <!-- ================= 2. YEARLY ACTIVITY SUMMARY DASHBOARD ================= -->
+    <div>
+        <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+            <div>
+                <h4 class="fw-bold text-danger mb-1"><i class="bi bi-bar-chart-line-fill me-2"></i> Yearly Activity Summary Dashboard</h4>
+                <p class="text-muted small m-0">Comprehensive breakdown of your performance, engagement, and progression across the entire year.</p>
+            </div>
+        </div>
+
+        <!-- Yearly Mini Metric Grid Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-xl-4 col-md-6">
+                <div class="card text-white bg-primary border-0 shadow-sm h-100 rounded-3 overflow-hidden">
+                    <div class="card-body p-3">
+                        <span class="text-white-50 small d-block">Yearly Total Visits</span>
+                        <h2 class="fw-bold mb-1" id="yearlyVisitsCount">-</h2>
+                        <span class="badge bg-white bg-opacity-20 text-white small">Live Record</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-md-6">
+                <div class="card text-white bg-success border-0 shadow-sm h-100 rounded-3 overflow-hidden">
+                    <div class="card-body p-3">
+                        <span class="text-white-50 small d-block">Approved Leaves Taken</span>
+                        <h2 class="fw-bold mb-1" id="yearlyLeavesCount">-</h2>
+                        <span class="badge bg-white bg-opacity-20 text-white small">Verified</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-md-12">
+                <div class="card text-dark bg-warning border-0 shadow-sm h-100 rounded-3 overflow-hidden">
+                    <div class="card-body p-3">
+                        <span class="text-dark opacity-75 small d-block">Attendance Consistency</span>
+                        <h2 class="fw-bold mb-1" id="yearlyConsistencyRate">-</h2>
+                        <span class="badge bg-dark bg-opacity-10 text-dark small">Performance Metric</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    "use strict";
+
+    function getAuthToken() {
+        return localStorage.getItem("jwt_token") || sessionStorage.getItem("jwt_token") || "";
+    }
+
+    async function apiRequest(url, options = {}) {
+        const token = getAuthToken();
+        const headers = { "Authorization": "Bearer " + token };
+        if (options.body) {
+            headers["Content-Type"] = "application/json";
+        }
+        const response = await fetch(url, {
+            ...options,
+            headers: { ...headers, ...(options.headers || {}) }
+        });
+        let data = null;
+        try { data = await response.json(); } catch { data = null; }
+        if (!response.ok) {
+            throw { status: response.status, data: data };
+        }
+        return data;
+    }
+
+    function convertDDMMYYYYToISO(value) {
+        if (!value) return null;
+        const parts = value.split("/");
+        if (parts.length !== 3) return null;
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+
+    let summaryFromPicker = null;
+    let summaryToPicker = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeSummaryDatePickers();
+        loadMySummaryData();
+        loadYearlyStats();
+    });
+
+    function initializeSummaryDatePickers() {
+        if (typeof flatpickr === "undefined") return;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        summaryFromPicker = flatpickr("#myFilterFrom", {
+            dateFormat: "d/m/Y",
+            defaultDate: firstDay,
+            maxDate: today,
+            disableMobile: true,
+            allowInput: false,
+            onChange: function (selectedDates) {
+                if (selectedDates && selectedDates.length > 0) {
+                    const selectedDate = selectedDates[0];
+                    summaryToPicker.set("minDate", selectedDate);
+                    
+                    const currentTo = summaryToPicker.selectedDates[0];
+                    if (currentTo && currentTo < selectedDate) {
+                        summaryToPicker.setDate(selectedDate, true);
+                    }
+                    loadMySummaryData();
+                }
+            }
+        });
+
+        summaryToPicker = flatpickr("#myFilterTo", {
+            dateFormat: "d/m/Y",
+            defaultDate: today,
+            maxDate: today,
+            minDate: firstDay,
+            disableMobile: true,
+            allowInput: false,
+            onChange: function () {
+                loadMySummaryData();
+            }
+        });
+    }
+
+    window.loadMySummaryData = async function () {
+        const fromVal = document.getElementById("myFilterFrom").value;
+        const toVal = document.getElementById("myFilterTo").value;
+
+        const fromISO = convertDDMMYYYYToISO(fromVal);
+        const toISO = convertDDMMYYYYToISO(toVal);
+
+        if (!fromISO || !toISO) return;
+
+        try {
+            const res = await apiRequest(`/api/affiliate-attendance/my-summary?fromDate=${encodeURIComponent(fromISO)}&toDate=${encodeURIComponent(toISO)}`);
+            
+            if (res.success) {
+                document.getElementById("myStatTotalDays").textContent = res.totalDays;
+                document.getElementById("myStatPresent").textContent = res.presentCount;
+                document.getElementById("myStatLeave").textContent = res.leaveCount;
+                document.getElementById("myStatAbsent").textContent = res.absentCount;
+
+                const tableBody = document.getElementById("mySummaryTableBody");
+                tableBody.innerHTML = `
+                    <tr>
+                        <td class="px-3 fw-semibold text-primary">
+                            <i class="bi bi-person-circle me-1"></i> ${escapeHtml(res.affiliateName)}
+                        </td>
+                        <td class="px-3">${res.totalDays}</td>
+                        <td class="px-3">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">${res.presentCount}</span>
+                        </td>
+                        <td class="px-3">
+                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1">${res.leaveCount}</span>
+                        </td>
+                        <td class="px-3">
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">${res.absentCount}</span>
+                        </td>
+                        <td class="px-3 text-muted font-monospace small">${escapeHtml(res.affiliateCode)}</td>
+                    </tr>
+                `;
+            }
+        } catch (error) {
+            console.error("My summary load error:", error);
+            document.getElementById("mySummaryTableBody").innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger py-4">
+                        <i class="bi bi-exclamation-triangle me-1"></i> Unable to load your attendance data.
+                    </td>
+                </tr>
+            `;
+        }
+    };
+
+    async function loadYearlyStats() {
+        const currentYear = new Date().getFullYear();
+        try {
+            const historyResponse = await apiRequest(`/api/affiliate-attendance/history?year=${currentYear}`);
+            if (historyResponse && historyResponse.success) {
+                const history = Array.isArray(historyResponse.data) ? historyResponse.data : [];
+                const uniqueVisitDates = new Set();
+
+                history.forEach(function (item) {
+                    if (item.attendanceDate) {
+                        const d = new Date(item.attendanceDate);
+                        if (!isNaN(d.getTime())) {
+                            uniqueVisitDates.add(d.toISOString().split("T")[0]);
+                        }
+                    }
+                });
+
+                document.getElementById("yearlyVisitsCount").textContent = uniqueVisitDates.size;
+            }
+
+            const leaveResponse = await apiRequest(`/api/affiliate-attendance/leave/history`);
+            if (leaveResponse && leaveResponse.success) {
+                const leaves = Array.isArray(leaveResponse.data) ? leaveResponse.data : [];
+                const approvedLeavesCount = leaves.filter(x => String(x.status).toLowerCase() === "approved").length;
+                document.getElementById("yearlyLeavesCount").textContent = approvedLeavesCount;
+            }
+
+            // Consistency calculation estimate
+            const totalVisits = parseInt(document.getElementById("yearlyVisitsCount").textContent) || 0;
+            const startOfYear = new Date(currentYear, 0, 1);
+            const today = new Date();
+            const elapsedDays = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24)) + 1;
+            
+            let consistency = elapsedDays > 0 ? Math.round((totalVisits / elapsedDays) * 100) : 0;
+            if (consistency > 100) consistency = 100;
+            document.getElementById("yearlyConsistencyRate").textContent = consistency + "%";
+
+        } catch (error) {
+            console.error("Yearly stats error:", error);
+        }
+    }
+
+    function escapeHtml(value) {
+        if (value === null || value === undefined) return "";
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+})();
+</script>

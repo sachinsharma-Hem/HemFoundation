@@ -1,0 +1,250 @@
+﻿<div class="card border-0 shadow-sm rounded-4 bg-white p-4 animate-fade-in" style="border: 1px solid #d9dfe5 !important;">
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+        <div>
+            <h4 class="fw-bold text-primary mb-1"><i class="bi bi-geo-alt me-2"></i> School Visit Execution</h4>
+            <p class="text-muted small m-0">Report and execute your scheduled visits with live location and photo.</p>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills mb-4 border-bottom pb-2" id="visitTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill px-4 fw-semibold" id="pending-tab" data-bs-toggle="pill" data-bs-target="#pendingPane" type="button" role="tab" onclick="loadVisits('Pending')">Pending Schedules</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4 fw-semibold" id="completed-tab" data-bs-toggle="pill" data-bs-target="#completedPane" type="button" role="tab" onclick="loadVisits('Completed')">Completed</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4 fw-semibold text-danger" id="cancelled-tab" data-bs-toggle="pill" data-bs-target="#cancelledPane" type="button" role="tab" onclick="loadVisits('Cancelled')">Cancelled</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="visitTabsContent">
+        
+        <div class="tab-pane fade show active" id="pendingPane" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th>Date</th>
+                            <th>School Name</th>
+                            <th>Purpose</th>
+                            <th>Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tblPending">
+                        <tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="completedPane" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th>Date</th>
+                            <th>School Name</th>
+                            <th>Purpose</th>
+                            <th>Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tblCompleted"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="cancelledPane" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th>Date</th>
+                            <th>School Name</th>
+                            <th>Purpose</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tblCancelled"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reportVisitModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3 bg-white">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-dark m-0"><i class="bi bi-camera-fill text-primary me-2"></i> Report Visit</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-3">
+                <form id="frmReportVisit">
+                    <input type="hidden" id="hdnReportVisitId">
+                    <input type="hidden" id="hdnLat">
+                    <input type="hidden" id="hdnLng">
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Activity Type <span class="text-danger">*</span></label>
+                        <select id="ddlActivityType" class="form-select rounded-3 shadow-none" required>
+                            <option value="">-- Select Activity --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Capture Photo <span class="text-danger">*</span></label>
+                        <input type="file" id="filePhoto" class="form-control rounded-3 shadow-none" accept="image/*" capture="environment" required>
+                        <small class="text-muted" style="font-size: 0.7rem;">Takes a live picture or selects from gallery.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description</label>
+                        <textarea id="txtReportDesc" class="form-control rounded-3 shadow-none" rows="3" placeholder="Summary of the visit..."></textarea>
+                    </div>
+
+                    <div class="mb-3 p-2 bg-light rounded-3 border d-flex align-items-center">
+                        <i class="bi bi-geo-alt-fill text-danger fs-4 me-2"></i>
+                        <div>
+                            <small class="d-block fw-bold text-dark">Live Location</small>
+                            <span id="locationStatus" class="text-muted" style="font-size: 0.75rem;">Waiting for location...</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnSubmitReport" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm mt-2" disabled>
+                        Submit & Complete Visit
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        loadActivityTypes();
+        loadVisits('Pending'); // Default load
+
+        // Handle Report Form Submit
+        $('#frmReportVisit').on('submit', function (e) {
+            e.preventDefault();
+            
+            let formData = new FormData();
+            formData.append("VisitPlanId", $('#hdnReportVisitId').val());
+            formData.append("ActivityTypeId", $('#ddlActivityType').val());
+            formData.append("Description", $('#txtReportDesc').val());
+            formData.append("Latitude", $('#hdnLat').val());
+            formData.append("Longitude", $('#hdnLng').val());
+            formData.append("PhotoFile", $('#filePhoto')[0].files[0]);
+
+            let $btn = $('#btnSubmitReport');
+            $btn.html('<div class="spinner-border spinner-border-sm"></div> Submitting...').prop('disabled', true);
+
+            $.ajax({
+                url: '/api/visit-reporting/submit-report',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '') },
+                success: function (res) {
+                    if (res.success) {
+                        $('#reportVisitModal').modal('hide');
+                        alert(res.message);
+                        loadVisits('Pending'); // Refresh list
+                    }
+                },
+                error: function (err) {
+                    alert('Error submitting report.');
+                    $btn.html('Submit & Complete Visit').prop('disabled', false);
+                }
+            });
+        });
+    });
+
+    function loadActivityTypes() {
+        $.ajax({
+            url: '/api/visit-reporting/activity-types',
+            type: 'GET',
+            headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '') },
+            success: function (res) {
+                if (res.success && res.data) {
+                    let opts = '<option value="">-- Select Activity --</option>';
+                    res.data.forEach(a => { opts += `<option value="${a.id}">${a.activityName}</option>`; });
+                    $('#ddlActivityType').html(opts);
+                }
+            }
+        });
+    }
+
+    function loadVisits(statusTab) {
+        let tableId = `#tbl${statusTab}`;
+        $(tableId).html('<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>');
+
+        $.ajax({
+            url: `/api/visit-reporting/list/${statusTab}`,
+            type: 'GET',
+            headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '') },
+            success: function (res) {
+                if (res.success && res.data.length > 0) {
+                    let html = '';
+                    res.data.forEach(v => {
+                        let d = new Date(v.scheduleDate);
+                        let dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} <br/> <small class="text-muted">${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>`;
+                        
+                        let badge = v.status == 'Completed' ? '<span class="badge bg-success-subtle text-success">Completed</span>' : 
+                                   (v.status == 'Cancelled' ? '<span class="badge bg-danger-subtle text-danger">Cancelled</span>' : 
+                                   '<span class="badge bg-warning-subtle text-warning">Pending</span>');
+
+                        let actionBtn = '';
+                        if (statusTab === 'Pending') {
+                            actionBtn = `<button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="openReportModal(${v.id})"><i class="bi bi-camera me-1"></i> Report Visit</button>`;
+                        } else if (statusTab === 'Completed') {
+                            actionBtn = `<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill"></i> Executed</span>`;
+                        }
+
+                        html += `<tr>
+                            <td class="fw-semibold">${dateStr}</td>
+                            <td><b>${v.schoolName}</b><br><small class="text-muted">${v.schoolCity || ''}</small></td>
+                            <td>${v.purpose}</td>
+                            <td>${badge}</td>
+                            ${statusTab !== 'Cancelled' ? `<td class="text-center">${actionBtn}</td>` : ''}
+                        </tr>`;
+                    });
+                    $(tableId).html(html);
+                } else {
+                    $(tableId).html(`<tr><td colspan="5" class="text-center py-5 text-muted">No ${statusTab.toLowerCase()} visits found.</td></tr>`);
+                }
+            }
+        });
+    }
+
+    function openReportModal(visitId) {
+        $('#hdnReportVisitId').val(visitId);
+        $('#frmReportVisit')[0].reset();
+        $('#btnSubmitReport').prop('disabled', true);
+        $('#locationStatus').removeClass('text-success text-danger').addClass('text-warning fw-bold').text('Fetching live location...');
+        $('#reportVisitModal').modal('show');
+
+        // Automatically fetch GeoLocation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    $('#hdnLat').val(position.coords.latitude);
+                    $('#hdnLng').val(position.coords.longitude);
+                    $('#locationStatus').removeClass('text-warning').addClass('text-success').text(`Captured: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+                    $('#btnSubmitReport').prop('disabled', false); // Enable submit button only if GPS is found
+                },
+                function (error) {
+                    $('#locationStatus').removeClass('text-warning').addClass('text-danger').text('Location Access Denied. Please enable GPS.');
+                    alert('You must enable location/GPS to submit this report.');
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            $('#locationStatus').addClass('text-danger').text('Geolocation not supported by browser.');
+        }
+    }
+</script>

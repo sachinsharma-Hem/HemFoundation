@@ -1,0 +1,390 @@
+﻿@{
+    ViewData["Title"] = "Manage Courses & Authoring";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+        <h3 class="fw-bold text-dark mb-1"><i class="bi bi-journal-code text-success me-2"></i> Manage Courses & Curriculum Authoring</h3>
+        <p class="text-muted small m-0">Search and select a course below to manage its Topics, Sub-Topics, MCQs, and Practical Labs sequentially.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+        <label class="form-label fw-bold small text-secondary">Search & Select Course</label>
+        <div class="position-relative">
+            <input type="text" id="courseSearchInput" class="form-control rounded-3 shadow-none" placeholder="Type course name to search..." autocomplete="off">
+            <div id="searchResults" class="list-group position-absolute w-100 shadow-lg rounded-3 mt-1 d-none" style="z-index: 1000; max-height: 250px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4 d-none" id="selectedCourseCard">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+            <h5 class="fw-bold text-success m-0" id="selectedCourseName">Course Name</h5>
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="clearSelectedCourse()"><i class="bi bi-x-lg me-1"></i> Change Course</button>
+        </div>
+        <div class="row g-3 small">
+            <div class="col-md-3"><b>Description:</b> <span id="lblDesc" class="text-muted"></span></div>
+            <div class="col-md-3"><b>Age Group:</b> <span id="lblAge" class="text-muted"></span></div>
+            <div class="col-md-3"><b>Sessions:</b> <span id="lblSessions" class="text-muted"></span></div>
+            <div class="col-md-3"><b>Delivery Date:</b> <span id="lblDate" class="text-muted"></span></div>
+        </div>
+    </div>
+
+    <div id="authoringTabsWrapper" class="opacity-50 pointer-events-none">
+        <ul class="nav nav-pills mb-4 gap-2" id="authoringTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active rounded-pill px-4 fw-semibold shadow-sm" id="tab-topic" data-bs-toggle="pill" data-bs-target="#pane-topic" type="button" disabled>
+                    <i class="bi bi-list-check me-2"></i> 1. Topics
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm text-dark bg-white border" id="tab-subtopic" data-bs-toggle="pill" data-bs-target="#pane-subtopic" type="button" disabled>
+                    <i class="bi bi-diagram-3 me-2"></i> 2. Sub-Topics
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm text-dark bg-white border" id="tab-mcq" data-bs-toggle="pill" data-bs-target="#pane-mcq" type="button" disabled>
+                    <i class="bi bi-ui-checks me-2"></i> 3. MCQ Questions
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm text-dark bg-white border" id="tab-lab" data-bs-toggle="pill" data-bs-target="#pane-lab" type="button" disabled>
+                    <i class="bi bi-laptop me-2"></i> 4. Practical Lab
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="authoringTabContent">
+
+            <div class="tab-pane fade show active" id="pane-topic" role="tabpanel">
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+                    <h6 class="fw-bold text-success mb-3" id="topicFormTitle"><i class="bi bi-plus-circle me-1"></i> Add Topic</h6>
+                    <form id="topicForm">
+                        <input type="hidden" id="topicId" value="0">
+                        <div class="row g-3">
+                            <div class="col-md-5"><label class="form-label small fw-semibold">Topic Name</label><input type="text" id="tp_name" class="form-control form-control-sm rounded-3 shadow-none" required></div>
+                            <div class="col-md-3"><label class="form-label small fw-semibold">Order Number</label><select id="tp_order" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                            <div class="col-md-4"><label class="form-label small fw-semibold">Language</label><select id="tp_lang" class="form-select form-select-sm rounded-3 shadow-none"><option value="English">English</option><option value="Hindi">Hindi</option></select></div>
+                            <div class="col-md-12"><label class="form-label small fw-semibold">Description</label><textarea id="tp_desc" class="form-control form-control-sm rounded-3 shadow-none" rows="2"></textarea></div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Save Topic</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-table me-2 text-primary"></i> Topics List</h6>
+                    <div class="table-responsive"><table class="table table-hover align-middle small"><thead class="table-light"><tr><th>#</th><th>Topic Name</th><th>Language</th><th>Order</th><th class="text-end">Actions</th></tr></thead><tbody id="topicTableBody"><tr><td colspan="5" class="text-center text-muted">No topics added</td></tr></tbody></table></div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="pane-subtopic" role="tabpanel">
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+                    <h6 class="fw-bold text-success mb-3" id="subTopicFormTitle"><i class="bi bi-plus-circle me-1"></i> Add Sub-Topic</h6>
+                    <form id="subTopicForm" enctype="multipart/form-data">
+                        <input type="hidden" id="subTopicId" value="0">
+                        <div class="row g-3">
+                            <div class="col-md-4"><label class="form-label small fw-semibold">Select Topic</label><select id="st_topic" name="courseTopicId" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                            <div class="col-md-4"><label class="form-label small fw-semibold">Sub-Topic Name</label><input type="text" id="st_name" name="subTopicName" class="form-control form-control-sm rounded-3 shadow-none" required></div>
+                            <div class="col-md-4"><label class="form-label small fw-semibold">Order Number</label><select id="st_order" name="displayOrderId" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                            <div class="col-md-6"><label class="form-label small fw-semibold">Video Link (YouTube/URL)</label><input type="url" id="st_video" name="videoLink" class="form-control form-control-sm rounded-3 shadow-none"></div>
+                            <div class="col-md-6"><label class="form-label small fw-semibold">Number of Questions</label><input type="number" id="st_qCount" name="numberOfQuestions" class="form-control form-control-sm rounded-3 shadow-none" value="0" required></div>
+
+                            <div class="col-md-6"><label class="form-label small fw-semibold">MCQ Thumbnail</label><input type="file" id="st_mcqThumb" name="mcqThumbFile" class="form-control form-control-sm rounded-3 shadow-none" accept="image/*"></div>
+                            <div class="col-md-6"><label class="form-label small fw-semibold">Video Thumbnail</label><input type="file" id="st_videoThumb" name="videoThumbFile" class="form-control form-control-sm rounded-3 shadow-none" accept="image/*"></div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Save Sub-Topic</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-table me-2 text-primary"></i> Sub-Topics List</h6>
+                    <div class="table-responsive"><table class="table table-hover align-middle small"><thead class="table-light"><tr><th>#</th><th>Topic</th><th>Sub-Topic</th><th>Questions</th><th class="text-end">Actions</th></tr></thead><tbody id="subTopicTableBody"><tr><td colspan="5" class="text-center text-muted">No sub-topics added</td></tr></tbody></table></div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="pane-mcq" role="tabpanel">
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+                    <h6 class="fw-bold text-success mb-3" id="mcqFormTitle"><i class="bi bi-plus-circle me-1"></i> Add MCQ Question</h6>
+                    <form id="mcqForm">
+                        <input type="hidden" id="mcqId" value="0">
+                        <div class="row g-3">
+                            <div class="col-md-4"><label class="form-label small fw-semibold">Select Topic</label><select id="mq_topic" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                            <div class="col-md-4"><label class="form-label small fw-semibold">Select Sub-Topic</label><select id="mq_subTopic" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                            <div class="col-md-4"><label class="form-label small fw-semibold">Complexity Level</label><select id="mq_level" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+
+                            <div class="col-md-12"><label class="form-label small fw-semibold">Question</label><textarea id="mq_question" class="form-control form-control-sm rounded-3 shadow-none" rows="2" required></textarea></div>
+
+                            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text"><input class="form-check-input mt-0 right-ans-chk" type="radio" name="rightAns" value="A" checked> A</span><input type="text" id="mq_optA" class="form-control shadow-none" placeholder="Option A" required></div></div>
+                            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text"><input class="form-check-input mt-0 right-ans-chk" type="radio" name="rightAns" value="B"> B</span><input type="text" id="mq_optB" class="form-control shadow-none" placeholder="Option B" required></div></div>
+                            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text"><input class="form-check-input mt-0 right-ans-chk" type="radio" name="rightAns" value="C"> C</span><input type="text" id="mq_optC" class="form-control shadow-none" placeholder="Option C"></div></div>
+                            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text"><input class="form-check-input mt-0 right-ans-chk" type="radio" name="rightAns" value="D"> D</span><input type="text" id="mq_optD" class="form-control shadow-none" placeholder="Option D"></div></div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Save MCQ</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-table me-2 text-primary"></i> MCQ Questions List</h6>
+                    <div class="table-responsive"><table class="table table-hover align-middle small"><thead class="table-light"><tr><th>#</th><th>Question</th><th>Right Ans</th><th class="text-end">Actions</th></tr></thead><tbody id="mcqTableBody"><tr><td colspan="4" class="text-center text-muted">No MCQs added</td></tr></tbody></table></div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="pane-lab" role="tabpanel">
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+                    <h6 class="fw-bold text-success mb-3" id="labFormTitle"><i class="bi bi-plus-circle me-1"></i> Add Practical Lab</h6>
+                    <form id="labForm" enctype="multipart/form-data">
+                        <input type="hidden" id="labId" value="0">
+                        <div class="row g-3">
+                            <div class="col-md-4"><label class="form-label small fw-semibold">Title</label><input type="text" id="lb_title" name="title" class="form-control form-control-sm rounded-3 shadow-none" required></div>
+                            <div class="col-md-4"><label class="form-label small fw-semibold">Practical Topic</label><input type="text" id="lb_practicalTopic" name="practicalTopic" class="form-control form-control-sm rounded-3 shadow-none" required></div>
+                            <div class="col-md-4"><label class="form-label small fw-semibold">Standard</label><select id="lb_standard" name="standardMasterId" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+
+                            <div class="col-md-3"><label class="form-label small fw-semibold">Display Order</label><select id="lb_order" name="displayOrderId" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                            <div class="col-md-3"><label class="form-label small fw-semibold">Coins</label><input type="number" id="lb_coins" name="coins" class="form-control form-control-sm rounded-3 shadow-none" value="10" required></div>
+                            <div class="col-md-3"><label class="form-label small fw-semibold">Gems</label><input type="number" id="lb_gems" name="gems" class="form-control form-control-sm rounded-3 shadow-none" value="5" required></div>
+                            <div class="col-md-3"><label class="form-label small fw-semibold">Video Link</label><input type="url" id="lb_video" name="videoLink" class="form-control form-control-sm rounded-3 shadow-none"></div>
+
+                            <div class="col-md-6"><label class="form-label small fw-semibold">Thumbnail Image</label><input type="file" id="lb_thumb" name="thumbnailFile" class="form-control form-control-sm rounded-3 shadow-none" accept="image/*"></div>
+                            <div class="col-md-6"><label class="form-label small fw-semibold">Resource File (PDF / Img)</label><input type="file" id="lb_res" name="resourceFile" class="form-control form-control-sm rounded-3 shadow-none"></div>
+
+                            <div class="col-md-12"><label class="form-label small fw-semibold">Description</label><textarea id="lb_desc" name="description" class="form-control form-control-sm rounded-3 shadow-none" rows="2"></textarea></div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Save Practical Lab</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-table me-2 text-primary"></i> Practical Labs List</h6>
+                    <div class="table-responsive"><table class="table table-hover align-middle small"><thead class="table-light"><tr><th>#</th><th>Title</th><th>Practical Topic</th><th>Coins/Gems</th><th class="text-end">Actions</th></tr></thead><tbody id="labTableBody"><tr><td colspan="5" class="text-center text-muted">No practical labs added</td></tr></tbody></table></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+    <div id="liveToast" class="toast align-items-center text-white border-0 shadow-lg rounded-4" role="alert"><div class="d-flex"><div class="toast-body fw-semibold" id="toastMessage"></div><button type="button" class="btn-close btn-close-white me-2 m-auto shadow-none" data-bs-dismiss="toast"></button></div></div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedCourseId = null;
+        let dropCache = {};
+        let dataCache = { topics: [], subTopics: [], mcqs: [], labs: [] };
+
+        $(document).ready(function() {
+            $('#courseSearchInput').on('keyup', function() {
+                let q = $(this).val().trim();
+                if (q.length < 1) { $('#searchResults').addClass('d-none'); return; }
+                $.get(`/api/course-authoring/search-courses?query=${q}`, function(res) {
+                    if (res.success && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(c => {
+                            html += `<button type="button" class="list-group-item list-group-item-action py-2 px-3 small" onclick='selectCourse(${JSON.stringify(c)})'><div class="fw-bold">${c.courseName}</div><div class="text-muted" style="font-size:0.75rem;">Delivery: ${new Date(c.expectedDeliveryDate).toLocaleDateString()}</div></button>`;
+                        });
+                        $('#searchResults').html(html).removeClass('d-none');
+                    } else { $('#searchResults').html('<div class="p-2 small text-muted">No courses found</div>').removeClass('d-none'); }
+                });
+            });
+
+            $('#topicForm').on('submit', function(e) {
+                e.preventDefault();
+                let payload = { id: parseInt($('#topicId').val()), courseRegistrationId: selectedCourseId, topicName: $('#tp_name').val(), description: $('#tp_desc').val(), displayOrderId: parseInt($('#tp_order').val()), language: $('#tp_lang').val() };
+                saveRecord('/api/course-authoring/topic/save', payload, () => { $('#topicId').val('0'); $('#topicForm')[0].reset(); loadAllTabsData(); }, 'Topic saved successfully!');
+            });
+
+            $('#subTopicForm').on('submit', function(e) {
+                e.preventDefault();
+                let fd = new FormData(this);
+                fd.append('id', $('#subTopicId').val());
+                fd.append('courseRegistrationId', selectedCourseId);
+
+                $.ajax({
+                    url: '/api/course-authoring/subtopic/save', type: 'POST', data: fd, processData: false, contentType: false,
+                    success: function(res) {
+                        if (res.success) { $('#subTopicId').val('0'); $('#subTopicForm')[0].reset(); loadAllTabsData(); showToast('Sub-Topic saved successfully!', 'success'); }
+                    },
+                    error: function(err) { showToast('Error saving sub-topic', 'danger'); }
+                });
+            });
+
+            $('#mcqForm').on('submit', function(e) {
+                e.preventDefault();
+                let payload = { id: parseInt($('#mcqId').val()), courseRegistrationId: selectedCourseId, courseTopicId: parseInt($('#mq_topic').val()), courseSubTopicId: parseInt($('#mq_subTopic').val()), courseMcqLevelId: parseInt($('#mq_level').val()), question: $('#mq_question').val(), optionA: $('#mq_optA').val(), optionB: $('#mq_optB').val(), optionC: $('#mq_optC').val(), optionD: $('#mq_optD').val(), rightAnswer: $('input[name="rightAns"]:checked').val() };
+                saveRecord('/api/course-authoring/mcq/save', payload, () => { $('#mcqId').val('0'); $('#mcqForm')[0].reset(); loadAllTabsData(); }, 'MCQ saved successfully!');
+            });
+
+            $('#labForm').on('submit', function(e) {
+                e.preventDefault();
+                let fd = new FormData(this);
+                fd.append('id', $('#labId').val());
+                fd.append('courseRegistrationId', selectedCourseId);
+
+                $.ajax({
+                    url: '/api/course-authoring/lab/save', type: 'POST', data: fd, processData: false, contentType: false,
+                    success: function(res) {
+                        if (res.success) { $('#labId').val('0'); $('#labForm')[0].reset(); loadAllTabsData(); showToast('Practical Lab saved successfully!', 'success'); }
+                    },
+                    error: function(err) { showToast('Error saving lab', 'danger'); }
+                });
+            });
+
+            $('#mq_topic').on('change', function() {
+                let tId = $(this).val();
+                let filteredSub = dropCache.subTopics ? dropCache.subTopics.filter(x => x.courseTopicId == tId) : [];
+                populateDropdown('#mq_subTopic', filteredSub, 'id', 'subTopicName');
+            });
+        });
+
+        function selectCourse(c) {
+            selectedCourseId = c.id;
+            $('#courseSearchInput').val(c.courseName);
+            $('#searchResults').addClass('d-none');
+            $('#selectedCourseName').text(c.courseName);
+            $('#lblDesc').text(c.description || 'N/A');
+            $('#lblAge').text(`${c.fromAge} - ${c.toAge} yrs`);
+            $('#lblSessions').text(c.numberOfSessions);
+            $('#lblDate').text(new Date(c.expectedDeliveryDate).toLocaleDateString());
+            $('#selectedCourseCard').removeClass('d-none');
+
+            $('#authoringTabsWrapper').removeClass('opacity-50 pointer-events-none');
+            $('#authoringTabs button').prop('disabled', false);
+
+            loadCourseDropdowns();
+            loadAllTabsData();
+        }
+
+        function clearSelectedCourse() {
+            selectedCourseId = null;
+            $('#courseSearchInput').val('');
+            $('#selectedCourseCard').addClass('d-none');
+            $('#authoringTabsWrapper').addClass('opacity-50 pointer-events-none');
+            $('#authoringTabs button').prop('disabled', true);
+        }
+
+        function loadCourseDropdowns() {
+            $.get(`/api/course-authoring/dropdowns/${selectedCourseId}`, function(res) {
+                if (res.success) {
+                    dropCache = res;
+                    populateDropdown('#tp_order', res.orderNumbers, 'id', 'displayOrder');
+                    populateDropdown('#st_order', res.orderNumbers, 'id', 'displayOrder');
+                    populateDropdown('#lb_order', res.orderNumbers, 'id', 'displayOrder');
+                    populateDropdown('#st_topic', res.topics, 'id', 'topicName');
+                    populateDropdown('#mq_topic', res.topics, 'id', 'topicName');
+                    populateDropdown('#mq_level', res.mcqLevels, 'id', 'name');
+                    populateDropdown('#lb_standard', res.standards, 'id', 'standardName');
+                }
+            });
+        }
+
+        function loadAllTabsData() {
+            loadTopics(); loadSubTopics(); loadMcqs(); loadLabs();
+        }
+
+        function loadTopics() {
+            $.get(`/api/course-authoring/topic/list/${selectedCourseId}`, function(res) {
+                dataCache.topics = res.data || [];
+                let rows = '';
+                dataCache.topics.forEach((x, i) => {
+                    rows += `<tr><td>${i + 1}</td><td class="fw-medium">${x.topicName}</td><td>${x.language}</td><td>${x.displayOrderId}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editTopic(${x.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteRecord('/api/course-authoring/topic/delete/${x.id}', loadAllTabsData)"><i class="bi bi-trash"></i></button></td></tr>`;
+                });
+                $('#topicTableBody').html(rows.length ? rows : '<tr><td colspan="5" class="text-center text-muted">No topics added</td></tr>');
+            });
+        }
+
+        function loadSubTopics() {
+            $.get(`/api/course-authoring/subtopic/list/${selectedCourseId}`, function(res) {
+                dataCache.subTopics = res.data || [];
+                let rows = '';
+                dataCache.subTopics.forEach((x, i) => {
+                    let t = dataCache.topics.find(tp => tp.id == x.courseTopicId);
+                    rows += `<tr><td>${i + 1}</td><td>${t ? t.topicName : '-'}</td><td class="fw-medium">${x.subTopicName}</td><td>${x.numberOfQuestions}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editSubTopic(${x.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteRecord('/api/course-authoring/subtopic/delete/${x.id}', loadAllTabsData)"><i class="bi bi-trash"></i></button></td></tr>`;
+                });
+                $('#subTopicTableBody').html(rows.length ? rows : '<tr><td colspan="5" class="text-center text-muted">No sub-topics added</td></tr>');
+            });
+        }
+
+        function loadMcqs() {
+            $.get(`/api/course-authoring/mcq/list/${selectedCourseId}`, function(res) {
+                dataCache.mcqs = res.data || [];
+                let rows = '';
+                dataCache.mcqs.forEach((x, i) => {
+                    rows += `<tr><td>${i + 1}</td><td class="fw-medium">${x.question}</td><td><span class="badge bg-success-subtle text-success">Option ${x.rightAnswer}</span></td><td class="text-end"><button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editMcq(${x.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteRecord('/api/course-authoring/mcq/delete/${x.id}', loadAllTabsData)"><i class="bi bi-trash"></i></button></td></tr>`;
+                });
+                $('#mcqTableBody').html(rows.length ? rows : '<tr><td colspan="4" class="text-center text-muted">No MCQs added</td></tr>');
+            });
+        }
+
+        function loadLabs() {
+            $.get(`/api/course-authoring/lab/list/${selectedCourseId}`, function(res) {
+                dataCache.labs = res.data || [];
+                let rows = '';
+                dataCache.labs.forEach((x, i) => {
+                    rows += `<tr><td>${i + 1}</td><td class="fw-medium">${x.title}</td><td>${x.practicalTopic}</td><td>🪙 ${x.coins} | 💎 ${x.gems}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editLab(${x.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteRecord('/api/course-authoring/lab/delete/${x.id}', loadAllTabsData)"><i class="bi bi-trash"></i></button></td></tr>`;
+                });
+                $('#labTableBody').html(rows.length ? rows : '<tr><td colspan="5" class="text-center text-muted">No practical labs added</td></tr>');
+            });
+        }
+
+        function editTopic(id) {
+            let x = dataCache.topics.find(t => t.id === id);
+            if (!x) return;
+            $('#topicId').val(x.id); $('#tp_name').val(x.topicName); $('#tp_desc').val(x.description); $('#tp_order').val(x.displayOrderId); $('#tp_lang').val(x.language);
+        }
+        function editSubTopic(id) {
+            let x = dataCache.subTopics.find(s => s.id === id);
+            if (!x) return;
+            $('#subTopicId').val(x.id); $('#st_topic').val(x.courseTopicId); $('#st_name').val(x.subTopicName); $('#st_order').val(x.displayOrderId); $('#st_video').val(x.videoLink); $('#st_qCount').val(x.numberOfQuestions);
+        }
+        function editMcq(id) {
+            let x = dataCache.mcqs.find(m => m.id === id);
+            if (!x) return;
+            $('#mcqId').val(x.id); $('#mq_topic').val(x.courseTopicId); $('#mq_topic').trigger('change');
+            $('#mq_subTopic').val(x.courseSubTopicId); $('#mq_level').val(x.courseMcqLevelId);
+            $('#mq_question').val(x.question); $('#mq_optA').val(x.optionA); $('#mq_optB').val(x.optionB);
+            $('#mq_optC').val(x.optionC); $('#mq_optD').val(x.optionD);
+            $(`input[name="rightAns"][value="${x.rightAnswer}"]`).prop('checked', true);
+        }
+        function editLab(id) {
+            let x = dataCache.labs.find(l => l.id === id);
+            if (!x) return;
+            $('#labId').val(x.id); $('#lb_title').val(x.title); $('#lb_practicalTopic').val(x.practicalTopic);
+            $('#lb_standard').val(x.standardMasterId); $('#lb_order').val(x.displayOrderId); $('#lb_coins').val(x.coins);
+            $('#lb_gems').val(x.gems); $('#lb_video').val(x.videoLink); $('#lb_desc').val(x.description);
+        }
+
+        function populateDropdown(selector, list, valueField, textField) {
+            let html = '<option value="">-- Select --</option>';
+            if (list) { list.forEach(x => { html += `<option value="${x[valueField]}">${x[textField]}</option>`; }); }
+            $(selector).html(html);
+        }
+
+        function saveRecord(url, payload, successCallback, successMsg) {
+            $.ajax({
+                url: url, type: 'POST', contentType: 'application/json', data: JSON.stringify(payload),
+                success: function(res) { if (res.success) { successCallback(); loadCourseDropdowns(); showToast(successMsg, 'success'); } },
+                error: function(err) { showToast(err.responseJSON?.message || 'Error saving record', 'danger'); }
+            });
+        }
+
+        function deleteRecord(url, reloadCallback) {
+            Swal.fire({ title: 'Are you sure?', text: "You want to delete this record!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d', confirmButtonText: 'Yes, delete it!' }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({ url: url, type: 'DELETE', success: function(res) { if (res.success) { reloadCallback(); showToast('Deleted successfully!', 'success'); } } });
+                }
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const $toast = $('#liveToast');
+            $toast.removeClass('bg-success bg-danger').addClass(type === 'success' ? 'bg-success' : 'bg-danger');
+            $('#toastMessage').html(`<i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} me-2"></i> ${message}`);
+            new bootstrap.Toast($toast[0], { delay: 3000 }).show();
+        }
+    </script>
+}

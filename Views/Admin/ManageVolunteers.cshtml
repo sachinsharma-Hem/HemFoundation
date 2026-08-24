@@ -1,0 +1,351 @@
+﻿@{
+    ViewData["Title"] = "Manage Volunteers";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="bi bi-people text-primary me-2"></i> Volunteer Directory</h3>
+            <p class="text-muted small m-0">View all volunteers, filter by affiliate/school, and manage download formats.</p>
+        </div>
+        <button class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="$('#formatModal').modal('show')">
+            <i class="bi bi-file-earmark-arrow-up me-1"></i> Upload Excel Format
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label text-muted small fw-semibold m-0">Filter by Affiliate</label>
+                <select id="fltAffiliate" class="form-select form-select-sm rounded-3 shadow-none" onchange="onAffiliateChange()">
+                    <option value="">All Affiliates</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small fw-semibold m-0">Filter by School</label>
+                <select id="fltSchool" class="form-select form-select-sm rounded-3 shadow-none" onchange="loadTableData(1)">
+                    <option value="">All Schools</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small fw-semibold m-0">Search</label>
+                <input type="text" id="txtSearch" class="form-control form-control-sm rounded-3 shadow-none" placeholder="Name, Mobile, Email..." onkeyup="if(event.key === 'Enter') loadTableData(1)">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary btn-sm w-100 rounded-3 fw-semibold shadow-sm" onclick="loadTableData(1)">
+                    <i class="bi bi-search"></i> Find
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light text-muted">
+                    <tr>
+                        <th>Volunteer Name</th>
+                        <th>Contact Details</th>
+                        <th>Associated Affiliate</th>
+                        <th>Assigned School</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tblAdminVols">
+                    <tr><td colspan="5" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <span class="small text-muted" id="pageInfo">Showing 0 records</span>
+            <ul class="pagination pagination-sm m-0 shadow-sm" id="pagination"></ul>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="formatModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-success m-0"><i class="bi bi-cloud-upload me-2"></i> Update Bulk Upload Format</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <p class="small text-muted mb-3">Upload the latest Excel format (.xlsx) that Affiliates will download to fill out bulk volunteer details.</p>
+                <form id="frmUploadFormat">
+                    <div class="mb-3">
+                        <input type="file" id="fileFormat" class="form-control rounded-3 shadow-none" accept=".xlsx" required>
+                    </div>
+                    <button type="submit" id="btnUploadFormat" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm">Upload & Publish Format</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let allSchools = [];
+        let allAffiliates = [];
+        let currentPage = 1;
+
+        $(function () {
+            loadFiltersData();
+            loadTableData(1);
+        });
+
+        function getAuthToken() { return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || ''; }
+
+        // ================= FILTERS LOGIC =================
+        function loadFiltersData() {
+            $.ajax({
+                url: '/api/volunteer/admin/filters-data',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if(res.success) {
+                        allSchools = res.schools;
+                        allAffiliates = res.affiliates;
+
+                        let affHtml = '<option value="">All Affiliates</option>';
+                        allAffiliates.forEach(a => affHtml += `<option value="${a.userID}" data-code="${a.userCode}">${a.name}</option>`);
+                        $('#fltAffiliate').html(affHtml);
+
+                        populateSchoolsDropdown('');
+                    }
+                }
+            });
+        }
+
+        function onAffiliateChange() {
+            let selectedCode = $('#fltAffiliate').find(':selected').attr('data-code');
+            populateSchoolsDropdown(selectedCode || '');
+            loadTableData(1);
+        }
+
+        function populateSchoolsDropdown(affiliateCode) {
+            let filteredSchools = affiliateCode 
+                ? allSchools.filter(s => s.referredByAffiliateId === affiliateCode) 
+                : allSchools;
+
+            let schHtml = '<option value="">All Schools</option>';
+            filteredSchools.forEach(s => schHtml += `<option value="${s.id}">${s.name}</option>`);
+            $('#fltSchool').html(schHtml);
+        }
+
+        // ================= TABLE & PAGINATION =================
+        function loadTableData(page) {
+            currentPage = page;
+            $('#tblAdminVols').html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div></td></tr>');
+
+            let affId = $('#fltAffiliate').val();
+            let schId = $('#fltSchool').val();
+            let srch = $('#txtSearch').val();
+
+            $.ajax({
+                url: `/api/volunteer/admin/list?page=${page}&pageSize=10&affiliateId=${affId}&instituteId=${schId}&search=${srch}`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function (res) {
+                    if (res.success && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(v => {
+                            let badge = v.isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
+                            
+                            html += `<tr>
+                                <td><b class="text-dark">${v.name}</b><br><small class="text-muted">Joined: ${new Date(v.createdDate).toLocaleDateString('en-GB')}</small></td>
+                                <td><i class="bi bi-telephone text-muted"></i> ${v.mobileNo}<br><i class="bi bi-envelope text-muted"></i> <small>${v.email || 'N/A'}</small></td>
+                                <td><b class="text-primary">${v.affiliateName || 'N/A'}</b></td>
+                                <td><b>${v.schoolName || 'N/A'}</b></td>
+                                <td>${badge}</td>
+                            </tr>`;
+                        });
+                        $('#tblAdminVols').html(html);
+                        $('#pageInfo').text(`Showing Page ${res.currentPage} of ${res.totalPages} (Total ${res.totalRecords} Records)`);
+                        buildPagination(res.currentPage, res.totalPages);
+                    } else {
+                        $('#tblAdminVols').html('<tr><td colspan="5" class="text-center py-5 text-muted">No volunteers found matching your criteria.</td></tr>');
+                        $('#pageInfo').text('Showing 0 records');
+                        $('#pagination').html('');
+                    }
+                }
+            });
+        }
+
+        function buildPagination(current, total) {
+            let pgHtml = '';
+            // Prev Button
+            if (current > 1) {
+                pgHtml += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadTableData(${current - 1})">Prev</a></li>`;
+            } else {
+                pgHtml += `<li class="page-item disabled"><a class="page-link" href="javascript:void(0)">Prev</a></li>`;
+            }
+
+            // Pages (Simplified)
+            for (let i = 1; i <= total; i++) {
+                if(i === current) {
+                    pgHtml += `<li class="page-item active"><a class="page-link" href="javascript:void(0)">${i}</a></li>`;
+                } else {
+                    pgHtml += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadTableData(${i})">${i}</a></li>`;
+                }
+            }
+
+            // Next Button
+            if (current < total) {
+                pgHtml += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadTableData(${current + 1})">Next</a></li>`;
+            } else {
+                pgHtml += `<li class="page-item disabled"><a class="page-link" href="javascript:void(0)">Next</a></li>`;
+            }
+            $('#pagination').html(pgHtml);
+        }
+
+        // ================= UPLOAD EXCEL FORMAT =================
+        $('#frmUploadFormat').on('submit', function(e) {
+            e.preventDefault();
+            let formData = new FormData();
+            formData.append('formatFile', $('#fileFormat')[0].files[0]);
+
+            let $btn = $('#btnUploadFormat');
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Uploading...');
+
+            $.ajax({
+                url: '/api/volunteer/admin/upload-format',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function (res) {
+                    if(res.success) {
+                        alert(res.message);
+                        $('#formatModal').modal('hide');
+                        $('#frmUploadFormat')[0].reset();
+                    } else {
+                        alert(res.message);
+                    }
+                },
+                complete: function() { $btn.prop('disabled', false).text('Upload & Publish Format'); }
+            });
+        });
+
+        function openAssignSchoolModal() {
+        // Load volunteers dropdown for selection inside modal
+        $.ajax({
+            url: '/api/volunteer/list',
+            type: 'GET',
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+            success: function (res) {
+                if (res.success && res.data) {
+                    let html = '<option value="">-- Choose Volunteer --</option>';
+                    res.data.forEach(v => {
+                        html += `<option value="${v.id}">${v.name} (${v.mobileNo})</option>`;
+                    });
+                    $('#ddlAssignVolunteer').html(html);
+                }
+            }
+        });
+
+        $('#listUnassignedSchools').html('<li class="list-group-item text-muted text-center py-4">Please select a volunteer first</li>');
+        $('#listAssignedSchools').html('<li class="list-group-item text-muted text-center py-4">No schools assigned yet</li>');
+        $('#assignSchoolModal').modal('show');
+    }
+
+    function fetchVolunteerMappings(volunteerId) {
+        if (!volunteerId) {
+            $('#listUnassignedSchools').html('<li class="list-group-item text-muted text-center py-4">Please select a volunteer first</li>');
+            $('#listAssignedSchools').html('<li class="list-group-item text-muted text-center py-4">No schools assigned yet</li>');
+            return;
+        }
+
+        $.ajax({
+            url: `/api/volunteer/mapping-schools/${volunteerId}`,
+            type: 'GET',
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+            success: function (res) {
+                if (res.success) {
+                    let unassignedHtml = '';
+                    if (res.unassignedSchools.length > 0) {
+                        res.unassignedSchools.forEach(s => {
+                            unassignedHtml += `<li class="list-group-item list-group-item-action py-2" style="cursor:pointer;" data-id="${s.instituteID}" onclick="toggleSelect(this)">${s.name}</li>`;
+                        });
+                    } else {
+                        unassignedHtml = '<li class="list-group-item text-muted text-center py-3">No available schools</li>';
+                    }
+                    $('#listUnassignedSchools').html(unassignedHtml);
+
+                    let assignedHtml = '';
+                    if (res.assignedSchools.length > 0) {
+                        res.assignedSchools.forEach(s => {
+                            assignedHtml += `<li class="list-group-item list-group-item-action py-2" style="cursor:pointer;" data-id="${s.instituteID}" onclick="toggleSelect(this)">${s.name}</li>`;
+                        });
+                    } else {
+                        assignedHtml = '<li class="list-group-item text-muted text-center py-3">No schools assigned</li>';
+                    }
+                    $('#listAssignedSchools').html(assignedHtml);
+                }
+            }
+        });
+    }
+
+    function toggleSelect(element) {
+        $(element).toggleClass('active bg-primary text-white');
+    }
+
+    function moveSelectedToAssigned() {
+        $('#listUnassignedSchools .active').each(function() {
+            $(this).removeClass('active bg-primary text-white');
+            $('#listAssignedSchools').append(this);
+        });
+        // Remove 'no data' placeholder if exists
+        $('#listAssignedSchools .text-muted').remove();
+    }
+
+    function moveSelectedToUnassigned() {
+        $('#listAssignedSchools .active').each(function() {
+            $(this).removeClass('active bg-primary text-white');
+            $('#listUnassignedSchools').append(this);
+        });
+        $('#listUnassignedSchools .text-muted').remove();
+    }
+
+    function saveSchoolMappings() {
+        let volunteerId = $('#ddlAssignVolunteer').val();
+        if (!volunteerId) {
+            alert("Please select a volunteer.");
+            return;
+        }
+
+        let instituteIds = [];
+        $('#listAssignedSchools li[data-id]').each(function() {
+            instituteIds.push(parseInt($(this).attr('data-id')));
+        });
+
+        let payload = {
+            VolunteerId: parseInt(volunteerId),
+            InstituteIds: instituteIds
+        };
+
+        $.ajax({
+            url: '/api/volunteer/save-mapping',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+            data: JSON.stringify(payload),
+            success: function (res) {
+                if (res.success) {
+                    alert(res.message);
+                    $('#assignSchoolModal').modal('hide');
+                    loadVolunteers(); // Refresh table
+                } else {
+                    alert(res.message);
+                }
+            },
+            error: function () {
+                alert("Error saving mappings.");
+            }
+        });
+    }
+    </script>
+}

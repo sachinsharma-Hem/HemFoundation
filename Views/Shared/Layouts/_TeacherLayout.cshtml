@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - HemFoundation Portal</title>
+
+    <style>
+            #app-container {
+                display: none !important;
+            }
+            /* Fix scrolling issue across body and html */
+            html, body {
+                height: 100%;
+                margin: 0;
+                overflow-x: hidden;
+                overflow-y: auto !important;
+            }
+    </style>
+    <script>
+            (function() {
+                const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+                const userSession = localStorage.getItem('user_session') || sessionStorage.getItem('user_session');
+                if (!token || !userSession) {
+                    window.location.replace('/');
+                } else {
+                    document.write('<style>#app-container { display: block !important; }</style>');
+                }
+            })();
+    </script>
+
+    <partial name="~/Views/Shared/Partials/_Styles.cshtml" />
+    <link rel="stylesheet" href="~/css/admin-layout.css" asp-append-version="true" />
+    <style>
+            /* Top Navigation Specific Customizations */
+            .top-navbar-custom {
+                background-color: var(--card-bg, #ffffff);
+                border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+                position: sticky;
+                top: 0;
+                z-index: 1030;
+            }
+
+            .navbar-brand-img {
+                max-height: 38px;
+                object-fit: contain;
+            }
+
+            /* Dropdown menu styling for top nav items */
+            .navbar-nav .dropdown-menu {
+                margin-top: 0.5rem;
+                border-radius: 1rem;
+                box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.1);
+                border: none;
+            }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div id="app-container" class="min-vh-100 d-flex flex-column">
+        <!-- Top Horizontal Navigation Bar -->
+        <nav class="navbar navbar-expand-lg top-navbar-custom px-3 py-2 shadow-sm">
+            <div class="container-fluid">
+
+                <!-- Logo & Brand -->
+                <a class="navbar-brand d-flex align-items-center gap-2 me-4" href="/Teacher/Dashboard">
+                    <img src="~/images/logo/logo.png" alt="HemFoundation Logo" class="navbar-brand-img" />
+                </a>
+
+                <!-- Mobile Toggle Button -->
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbarContent" aria-controls="topNavbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Navbar Links & Controls Collapse Area -->
+                <div class="collapse navbar-collapse" id="topNavbarContent">
+
+                    <!-- Dynamic Top Menus -->
+                    <ul id="dynamic-menu-list" class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-2">
+                        <!-- Dynamic menus will be injected here via JavaScript -->
+                    </ul>
+
+                    <!-- Right Side Items: Theme Switcher & User Profile -->
+                    <div class="d-flex align-items-center gap-3 ms-auto mt-3 mt-lg-0">
+
+                        <!-- Theme Switcher -->
+                        <div class="d-flex align-items-center border rounded-pill px-3 py-1 shadow-sm" style="background-color: var(--card-bg);">
+                            <span class="small me-2 text-warning"><i class="bi bi-sun-fill fs-6"></i></span>
+                            <div class="form-check form-switch m-0 d-flex align-items-center">
+                                <input class="form-check-input cursor-pointer shadow-none m-0" type="checkbox" role="switch" id="themeSwitch" style="cursor: pointer;">
+                            </div>
+                            <span class="small ms-2 text-primary"><i class="bi bi-moon-stars-fill fs-6"></i></span>
+                        </div>
+
+                        <!-- Profile Dropdown -->
+                        <div class="dropdown">
+                            <a href="#" class="d-flex align-items-center justify-content-center text-decoration-none p-0 rounded-circle border shadow-sm profile-avatar-btn overflow-hidden"
+                               id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false"
+                               style="width: 44px; height: 44px; background: #e8f5e9; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                                <img id="nav-avatar-img" src="" class="w-100 h-100 object-fit-cover d-none" alt="Avatar" />
+                                <i id="nav-default-icon" class="bi bi-person-circle fs-3 text-success"></i>
+                            </a>
+
+                            <ul class="dropdown-menu dropdown-menu-end p-3 mt-2 rounded-4 shadow-lg border-0 profile-dropdown-card" aria-labelledby="profileDropdown" style="min-width: 270px;">
+                                <li class="text-center pb-3 border-bottom mb-2">
+                                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center mb-2 shadow-sm overflow-hidden border border-2 border-success"
+                                         style="width: 65px; height: 65px; background: #e8f5e9;">
+                                        <img id="dropdown-avatar-img" src="" class="w-100 h-100 object-fit-cover d-none" alt="Avatar" />
+                                        <i id="dropdown-default-icon" class="bi bi-person-circle fs-1 text-success"></i>
+                                    </div>
+                                    <h6 id="profile-name" class="fw-bold mb-0 text-dark">Loading...</h6>
+                                    <small id="profile-email" class="text-muted d-block text-truncate px-2" style="font-size: 0.8rem;">user@hemfoundation.org</small>
+                                    <span id="profile-role-badge" class="badge bg-success-subtle text-success rounded-pill mt-2 px-3 py-1 fw-medium" style="font-size: 0.75rem;">User</span>
+                                </li>
+                                <li>
+                                    <a href="/Profile/Index" class="dropdown-item fw-semibold rounded-3 py-2 px-3 d-flex align-items-center gap-2 text-dark mb-1 transition-all">
+                                        <i class="bi bi-person-gear fs-5 text-success"></i>
+                                        <span>View & Edit Profile</span>
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <button onclick="logoutAdmin()" class="dropdown-item text-danger fw-semibold rounded-3 py-2 px-3 d-flex align-items-center gap-2 transition-all w-100 border-0 bg-transparent text-start">
+                                        <i class="bi bi-box-arrow-right fs-5"></i>
+                                        <span>Log Out</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </nav>
+
+        <!-- Main Body Content Container (Scrollable) -->
+        <div class="container-fluid p-4 flex-grow-1">
+            @RenderBody()
+        </div>
+    </div>
+
+    <partial name="~/Views/Shared/Partials/_Scripts.cshtml" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+            $(document).ready(function() {
+                // 1. Retrieve session & profile info safely
+                let userSession = null;
+                try {
+                    userSession = JSON.parse(localStorage.getItem('user_session') || sessionStorage.getItem('user_session') || 'null');
+                } catch (e) { userSession = null; }
+
+                if (userSession) {
+                    $('#profile-name').text(userSession.fullName || userSession.email || 'User');
+                    $('#profile-email').text(userSession.email || '');
+                    if (userSession.roles && userSession.roles.length > 0) {
+                        $('#profile-role-badge').text(userSession.roles[0]);
+                    } else if (userSession.Roles && userSession.Roles.length > 0) {
+                        $('#profile-role-badge').text(userSession.Roles[0]);
+                    }
+                }
+
+                // Fetch live profile details to get accurate photo URL in navbar
+                const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+                if (token) {
+                    $.ajax({
+                        url: '/api/profile/details',
+                        type: 'GET',
+                        headers: { 'Authorization': 'Bearer ' + token },
+                        success: function(res) {
+                            if (res.success && res.profile) {
+                                const photo = res.profile.photoUrl || res.profile.profileImage;
+                                if (photo && photo !== '-') {
+                                    $('#nav-avatar-img').attr('src', photo).removeClass('d-none');
+                                    $('#nav-default-icon').addClass('d-none');
+
+                                    $('#dropdown-avatar-img').attr('src', photo).removeClass('d-none');
+                                    $('#dropdown-default-icon').addClass('d-none');
+                                }
+                                if (res.user && res.user.fullName) {
+                                    $('#profile-name').text(res.user.fullName);
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // 2. Theme Switcher Logic (Light / Dark)
+                const savedTheme = localStorage.getItem('hem_theme') || 'light';
+                $('html').attr('data-theme', savedTheme);
+                $('#themeSwitch').prop('checked', savedTheme === 'dark');
+
+                $('#themeSwitch').on('change', function() {
+                    const targetTheme = $(this).is(':checked') ? 'dark' : 'light';
+                    $('html').attr('data-theme', targetTheme);
+                    localStorage.setItem('hem_theme', targetTheme);
+                });
+
+                // 3. Render Parent-Child Hierarchical Menus for Top Navigation
+                let userMenus = [];
+                try {
+                    const rawMenus = localStorage.getItem('user_menus') || sessionStorage.getItem('user_menus') || '[]';
+                    userMenus = JSON.parse(rawMenus);
+                } catch (e) {
+                    userMenus = [];
+                }
+
+                if (Array.isArray(userMenus) && userMenus.length > 0) {
+                    const parentMenus = userMenus.filter(m => m && (m.parentId === null || m.parentId === 0));
+                    let menuHtml = '';
+
+                    parentMenus.forEach(parent => {
+                        const subMenus = userMenus.filter(m => m && m.parentId === parent.id);
+
+                        if (subMenus.length > 0) {
+                            menuHtml += `
+                                        <li class="nav-item dropdown">
+                                            <a class="nav-link dropdown-toggle text-dark fw-medium px-2 py-1" href="#" id="topMenu_${parent.id}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="${parent.icon || 'bi bi-folder'} me-1"></i> ${parent.menuName}
+                                            </a>
+                                            <ul class="dropdown-menu shadow-sm border-0 rounded-3 p-2" aria-labelledby="topMenu_${parent.id}">
+                                    `;
+                            subMenus.forEach(sub => {
+                                let subUrl = sub.routeUrl || `/${sub.controller}/${sub.action}`;
+                                menuHtml += `
+                                            <li>
+                                                <a class="dropdown-item rounded-2 py-2 px-3 small text-dark" href="${subUrl}">
+                                                    <i class="${sub.icon || 'bi bi-dash'} me-2"></i> ${sub.menuName}
+                                                </a>
+                                            </li>
+                                        `;
+                            });
+                            menuHtml += `</ul></li>`;
+                        } else {
+                            let parentUrl = parent.routeUrl || `/${parent.controller}/${parent.action}`;
+                            menuHtml += `
+                                        <li class="nav-item">
+                                            <a class="nav-link text-dark fw-medium px-2 py-1" href="${parentUrl}">
+                                                <i class="${parent.icon || 'bi bi-folder'} me-1"></i> ${parent.menuName}
+                                            </a>
+                                        </li>
+                                    `;
+                        }
+                    });
+
+                    $('#dynamic-menu-list').html(menuHtml);
+                } else {
+                    $('#dynamic-menu-list').html('<li class="nav-item text-muted px-2 py-1 small">No menus assigned</li>');
+                }
+            });
+
+            // 4. Secure Complete Cleanup Logout Function
+            function logoutAdmin() {
+                $.ajax({
+                    url: '/api/auth/logout',
+                    type: 'POST',
+                    success: function() {
+                        performCleanupAndRedirect();
+                    },
+                    error: function() {
+                        performCleanupAndRedirect();
+                    }
+                });
+            }
+
+            function performCleanupAndRedirect() {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.replace('/');
+            }
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

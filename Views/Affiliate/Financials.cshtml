@@ -1,0 +1,519 @@
+﻿@{
+    ViewData["Title"] = "Financials & Monthly Billing";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="bi bi-wallet2 text-success me-2"></i> Monthly Billing & Financials</h3>
+            <p class="text-muted small m-0">Generate monthly invoices, upload signed copies, and track reimbursement status.</p>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#tabGenerate" onclick="showDraftList()">Drafts & Generate</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold text-muted" data-bs-toggle="tab" data-bs-target="#tabHistory" onclick="loadMyBills()">Billing History & Status</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="tabGenerate">
+            
+            <div id="draftListSection" class="card border-0 shadow-sm rounded-4 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                    <div>
+                        <h5 class="fw-bold text-dark m-0">Pending Uploads (Drafts)</h5>
+                        <p class="text-muted small m-0">Bills waiting for signed PDF upload.</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="showCreateForm()">
+                        <i class="bi bi-plus-lg me-1"></i> Create New Bill
+                    </button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light text-muted">
+                            <tr>
+                                <th>Bill No & Date</th>
+                                <th>Particulars</th>
+                                <th>Total Amount</th>
+                                <th class="text-center">System PDF</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblDrafts">
+                            <tr><td colspan="5" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="billFormSection" class="card border-0 shadow-sm rounded-4 p-4 d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                    <h5 class="fw-bold m-0" id="formTitle">Create New Bill</h5>
+                    <button class="btn btn-light btn-sm border rounded-pill px-3 fw-semibold shadow-none" onclick="showDraftList()">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Drafts
+                    </button>
+                </div>
+
+                <form id="frmBill">
+                    <input type="hidden" id="hdnEditBillId" value="0">
+                    <div class="row g-4">
+                        <div class="col-md-12"><h6 class="fw-bold text-primary m-0">1. Bill Header Details</h6></div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Select Organization (Bill To) <span class="text-danger">*</span></label>
+                            <select id="ddlOrg" class="form-select shadow-none" required><option value="">Loading Organizations...</option></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Bill Date <span class="text-danger">*</span></label>
+                            <input type="date" id="txtBillDate" class="form-control shadow-none" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Particulars (Heading) <span class="text-danger">*</span></label>
+                            <input type="text" id="txtParticulars" class="form-control shadow-none" placeholder="e.g. Services for August" required>
+                        </div>
+
+                        <div class="col-md-12 mt-4"><h6 class="fw-bold text-primary m-0 border-top pt-3">2. Bank Details (Auto-Saved)</h6></div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Name on Account</label>
+                            <input type="text" id="bName" class="form-control shadow-none" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Account Number</label>
+                            <input type="text" id="bAccNo" class="form-control shadow-none" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Bank Name</label>
+                            <input type="text" id="bBank" class="form-control shadow-none" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">IFSC Code</label>
+                            <input type="text" id="bIfsc" class="form-control shadow-none" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">PAN Number</label>
+                            <input type="text" id="bPan" class="form-control shadow-none" required>
+                        </div>
+
+                        <div class="col-md-12 mt-4">
+                            <div class="d-flex justify-content-between align-items-center border-top border-bottom py-2 mb-3">
+                                <h6 class="fw-bold text-primary m-0">3. Annexure (Line Items)</h6>
+                                <button type="button" class="btn btn-sm btn-success rounded-pill px-3 shadow-none" onclick="addLineItem()">
+                                    <i class="bi bi-plus-lg"></i> Add Row
+                                </button>
+                            </div>
+                            <table class="table table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Description</th>
+                                        <th width="200">Amount (₹)</th>
+                                        <th width="50" class="text-center"><i class="bi bi-trash"></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblItems"></tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td class="text-end fw-bold">Total Amount:</td>
+                                        <td><input type="number" id="txtTotal" class="form-control fw-bold text-success shadow-none" readonly value="0"></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <div class="alert alert-light border mt-2">
+                                <span class="fw-bold text-muted small">Amount in Words:</span>
+                                <span id="lblWords" class="ms-2 fw-bold text-primary">Zero Only</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mt-3 text-end">
+                            <button type="submit" id="btnSubmitBill" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm py-2">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> Save & Generate PDF Bill
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tabHistory">
+            
+            <div class="row g-3 mb-4">
+                <div class="col"><div class="card border-0 shadow-sm rounded-4 p-3 bg-light border-start border-4 border-secondary"><h6 class="text-muted small fw-bold mb-1">Total Submitted</h6><h4 class="m-0 fw-bold text-dark" id="myTotal">-</h4></div></div>
+                <div class="col"><div class="card border-0 shadow-sm rounded-4 p-3 bg-primary-subtle border-start border-4 border-primary"><h6 class="text-primary small fw-bold mb-1">Approved/Paid</h6><h4 class="m-0 fw-bold text-primary" id="myAppr">-</h4></div></div>
+                <div class="col"><div class="card border-0 shadow-sm rounded-4 p-3 bg-danger-subtle border-start border-4 border-danger"><h6 class="text-danger small fw-bold mb-1">Rejected</h6><h4 class="m-0 fw-bold text-danger" id="myRej">-</h4></div></div>
+                <div class="col"><div class="card border-0 shadow-sm rounded-4 p-3 bg-warning-subtle border-start border-4 border-warning"><h6 class="text-warning small fw-bold mb-1">Pending Clearance</h6><h4 class="m-0 fw-bold text-warning" id="myPendAmt">₹0</h4></div></div>
+                <div class="col"><div class="card border-0 shadow-sm rounded-4 p-3 bg-success-subtle border-start border-4 border-success"><h6 class="text-success small fw-bold mb-1">Cleared Amount</h6><h4 class="m-0 fw-bold text-success" id="myPaidAmt">₹0</h4></div></div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Bill No & Date</th>
+                                <th>Organization</th>
+                                <th>Particulars & Amount</th>
+                                <th>Status</th>
+                                <th class="text-center">Documents</th>
+                                <th>Admin Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblMyBills">
+                            <tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-primary m-0"><i class="bi bi-cloud-upload me-2"></i> Upload Signed Bill</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <p class="text-muted small mb-3">Please upload the scanned copy of the system generated PDF with your physical signature. Once uploaded, the bill will be locked and sent to Admin for payment.</p>
+                <form id="frmUploadSigned">
+                    <input type="hidden" id="hdnUploadBillId">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Signed PDF <span class="text-danger">*</span></label>
+                        <input type="file" id="fileSigned" class="form-control rounded-3 shadow-none" accept="application/pdf" required>
+                    </div>
+                    <button type="submit" id="btnUploadSigned" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm">
+                        Submit & Lock Bill
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let draftBillsData = [];
+
+        $(function () {
+            loadInitData();
+        });
+
+        function getAuthToken() { return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || ''; }
+
+        function formatDate(dateStr) {
+            if(!dateStr) return '-';
+            let d = new Date(dateStr);
+            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        }
+
+        function getSafeDateInputStr(dateStr) {
+            if (!dateStr) return '';
+            let d = new Date(dateStr);
+            let yyyy = d.getFullYear();
+            let mm = String(d.getMonth() + 1).padStart(2, '0');
+            let dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        // ================= 1. INITIAL LOAD =================
+        function loadInitData() {
+            $.ajax({
+                url: '/api/financials/init-data',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function (res) {
+                    if (res.success) {
+                        let orgHtml = '<option value="">-- Select Organization --</option>';
+                        res.organizations.forEach(o => orgHtml += `<option value="${o.id}">${o.orgName}</option>`);
+                        $('#ddlOrg').html(orgHtml);
+
+                        if (res.bankDetail) {
+                            $('#bName').val(res.bankDetail.accountName);
+                            $('#bAccNo').val(res.bankDetail.accountNumber);
+                            $('#bBank').val(res.bankDetail.bankName);
+                            $('#bIfsc').val(res.bankDetail.ifsc);
+                            $('#bPan').val(res.bankDetail.pan);
+                        }
+                        
+                        loadDraftBills(); // Orgs & Bank load hone ke baad drafts laao
+                    }
+                }
+            });
+        }
+
+        // ================= 2. DRAFT BILLS (TAB 1) =================
+        function loadDraftBills() {
+            $('#tblDrafts').html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div></td></tr>');
+            $.ajax({
+                url: '/api/financials/draft-bills',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if(res.success && res.data.length > 0) {
+                        draftBillsData = res.data;
+                        let html = '';
+                        res.data.forEach(b => {
+                            html += `<tr>
+                                <td><b>#${b.billNumber || 'Draft'}</b><br><small class="text-muted">${formatDate(b.billDate)}</small></td>
+                                <td>${b.particulars}</td>
+                                <td><b class="text-success">₹${b.totalAmount.toFixed(2)}</b></td>
+                                <td class="text-center"><a href="${b.generatedPdfUrl}" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0"><i class="bi bi-file-pdf"></i> View PDF</a></td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-light border text-primary shadow-none me-1" onclick="editDraftBill(${b.id})"><i class="bi bi-pencil-square"></i> Edit</button>
+                                    <button class="btn btn-sm btn-success shadow-none" onclick="openUploadModal(${b.id})"><i class="bi bi-cloud-upload"></i> Upload</button>
+                                </td>
+                            </tr>`;
+                        });
+                        $('#tblDrafts').html(html);
+                    } else {
+                        draftBillsData = [];
+                        $('#tblDrafts').html('<tr><td colspan="5" class="text-center py-5 text-muted">No pending drafts found. Click "Create New Bill" to start.</td></tr>');
+                    }
+                }
+            });
+        }
+        function loadMyStats() {
+            $.ajax({
+                url: '/api/financials/my-stats',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if(res.success) {
+                        $('#myTotal').text(res.data.totalBills);
+                        $('#myAppr').text(res.data.approved);
+                        $('#myRej').text(res.data.rejected);
+                        $('#myPendAmt').text('₹' + res.data.pendingAmount.toFixed(2));
+                        $('#myPaidAmt').text('₹' + res.data.paidAmount.toFixed(2));
+                    }
+                }
+            });
+        }
+
+        // ================= 3. UI TOGGLES =================
+        function showDraftList() {
+            $('#billFormSection').addClass('d-none');
+            $('#draftListSection').removeClass('d-none');
+            loadDraftBills();
+        }
+
+        function showCreateForm() {
+            $('#formTitle').text('Create New Bill');
+            $('#btnSubmitBill').html('<i class="bi bi-file-earmark-pdf me-1"></i> Save & Generate PDF Bill');
+            $('#hdnEditBillId').val('0');
+            $('#ddlOrg').val('');
+            $('#txtParticulars').val('');
+            $('#tblItems').html('');
+            addLineItem();
+            calculateTotal();
+            document.getElementById('txtBillDate').valueAsDate = new Date();
+
+            $('#draftListSection').addClass('d-none');
+            $('#billFormSection').removeClass('d-none');
+        }
+
+        function editDraftBill(id) {
+            let b = draftBillsData.find(x => x.id === id);
+            if(!b) return;
+
+            $('#formTitle').text('Edit Draft Bill #' + b.billNumber);
+            $('#btnSubmitBill').html('<i class="bi bi-arrow-repeat me-1"></i> Update & Regenerate PDF');
+            $('#hdnEditBillId').val(b.id);
+            $('#ddlOrg').val(b.organizationId);
+            $('#txtBillDate').val(getSafeDateInputStr(b.billDate));
+            $('#txtParticulars').val(b.particulars);
+            $('#txtTotal').val(b.totalAmount);
+            $('#lblWords').text(b.amountInWords);
+
+            $('#tblItems').html('');
+            b.items.forEach(function(item) {
+                let rowHtml = `
+                    <tr>
+                        <td><input type="text" class="form-control item-desc shadow-none" value="${item.description}" required></td>
+                        <td><input type="number" class="form-control item-amt shadow-none" min="0" step="0.01" value="${item.amount}" onkeyup="calculateTotal()" onchange="calculateTotal()" required></td>
+                        <td class="text-center"><button type="button" class="btn btn-sm btn-light border text-danger shadow-none" onclick="removeRow(this)"><i class="bi bi-x-lg"></i></button></td>
+                    </tr>`;
+                $('#tblItems').append(rowHtml);
+            });
+
+            $('#draftListSection').addClass('d-none');
+            $('#billFormSection').removeClass('d-none');
+        }
+
+        // ================= 4. LINE ITEMS LOGIC =================
+        function addLineItem() {
+            let rowHtml = `
+                <tr>
+                    <td><input type="text" class="form-control item-desc shadow-none" placeholder="Description..." required></td>
+                    <td><input type="number" class="form-control item-amt shadow-none" min="0" step="0.01" value="0" onkeyup="calculateTotal()" onchange="calculateTotal()" required></td>
+                    <td class="text-center"><button type="button" class="btn btn-sm btn-light border text-danger shadow-none" onclick="removeRow(this)"><i class="bi bi-x-lg"></i></button></td>
+                </tr>`;
+            $('#tblItems').append(rowHtml);
+        }
+
+        function removeRow(btn) {
+            if ($('#tblItems tr').length > 1) {
+                $(btn).closest('tr').remove();
+                calculateTotal();
+            } else {
+                alert("At least one line item is required.");
+            }
+        }
+
+        function calculateTotal() {
+            let total = 0;
+            $('.item-amt').each(function () { total += parseFloat($(this).val()) || 0; });
+            $('#txtTotal').val(total.toFixed(2));
+            $('#lblWords').text(numberToWords(total) + " Only");
+        }
+
+        // ================= 5. FORM SUBMIT (SAVE & PDF) =================
+        $('#frmBill').on('submit', function (e) {
+            e.preventDefault();
+            let items = [];
+            $('#tblItems tr').each(function () {
+                items.push({
+                    Description: $(this).find('.item-desc').val(),
+                    Amount: parseFloat($(this).find('.item-amt').val()) || 0
+                });
+            });
+
+            if (items.length === 0 || parseFloat($('#txtTotal').val()) <= 0) {
+                alert("Please enter valid amounts.");
+                return;
+            }
+
+            let payload = {
+                BillId: parseInt($('#hdnEditBillId').val()) || 0,
+                OrganizationId: parseInt($('#ddlOrg').val()),
+                BillDate: $('#txtBillDate').val(),
+                Particulars: $('#txtParticulars').val(),
+                TotalAmount: parseFloat($('#txtTotal').val()),
+                AmountInWords: $('#lblWords').text(),
+                AccountName: $('#bName').val(),
+                AccountNumber: $('#bAccNo').val(),
+                BankName: $('#bBank').val(),
+                IFSC: $('#bIfsc').val(),
+                PAN: $('#bPan').val(),
+                Items: items
+            };
+
+            let $btn = $('#btnSubmitBill');
+            let ogText = $btn.html();
+            $btn.html('<span class="spinner-border spinner-border-sm"></span> Processing...').prop('disabled', true);
+
+            $.ajax({
+                url: '/api/financials/generate-monthly-bill',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                data: JSON.stringify(payload),
+                success: function (res) {
+                    if (res.success) {
+                        alert("PDF Generated Successfully!");
+                        showDraftList(); // Wapas list par bhej do!
+                    }
+                },
+                error: function() { alert("Error generating bill."); },
+                complete: function() { $btn.html(ogText).prop('disabled', false); }
+            });
+        });
+
+        // ================= 6. UPLOAD MODAL =================
+        function openUploadModal(id) {
+            $('#hdnUploadBillId').val(id);
+            $('#fileSigned').val('');
+            $('#uploadModal').modal('show');
+        }
+
+        $('#frmUploadSigned').on('submit', function (e) {
+            e.preventDefault();
+            let $btn = $('#btnUploadSigned');
+            $btn.html('<span class="spinner-border spinner-border-sm"></span> Uploading...').prop('disabled', true);
+
+            let formData = new FormData();
+            formData.append('billId', $('#hdnUploadBillId').val());
+            formData.append('signedFile', $('#fileSigned')[0].files[0]);
+
+            $.ajax({
+                url: '/api/financials/upload-signed-bill',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function (res) {
+                    if (res.success) {
+                        $('#uploadModal').modal('hide');
+                        alert("Bill uploaded and sent to Admin successfully!");
+                        
+                        // Draft list se hat gaya hoga, History me chala jayega!
+                        showDraftList(); 
+                        $('.nav-tabs button[data-bs-target="#tabHistory"]').tab('show');
+                        loadMyBills();
+                    }
+                },
+                complete: function() { $btn.html('Submit & Lock Bill').prop('disabled', false); }
+            });
+        });
+
+        // ================= 7. HISTORY (TAB 2) =================
+        function loadMyBills() {
+            loadMyStats(); 
+            $('#tblMyBills').html('<tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div></td></tr>');
+            $.ajax({
+                url: '/api/financials/my-bills',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function (res) {
+                    if (res.success && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(b => {
+                            let badge = b.status == 'Paid' ? 'success' : (b.status == 'Approved' ? 'primary' : (b.status == 'Rejected' ? 'danger' : 'warning'));
+
+                            let pdfs = `<a href="${b.generatedPdfUrl}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0">System PDF</a>`;
+                            if (b.signedPdfUrl) {
+                                pdfs += ` <br><a href="${b.signedPdfUrl}" target="_blank" class="btn btn-sm btn-success rounded-pill px-2 py-0 mt-1"><i class="bi bi-check2-all"></i> Signed Copy</a>`;
+                            }
+
+                            html += `<tr>
+                                <td><b>#${b.billNumber}</b><br><small class="text-muted">${formatDate(b.billDate)}</small></td>
+                                <td><b>${b.orgName}</b></td>
+                                <td><b>₹${b.totalAmount.toFixed(2)}</b><br><small class="text-muted">${b.particulars}</small></td>
+                                <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>
+                                <td class="text-center">${pdfs}</td>
+                                <td><small class="text-muted">${b.adminRemarks || 'Waiting for review'}</small></td>
+                            </tr>`;
+                        });
+                        $('#tblMyBills').html(html);
+                    } else {
+                        $('#tblMyBills').html('<tr><td colspan="6" class="text-center py-5 text-muted">No completed bills found.</td></tr>');
+                    }
+                }
+            });
+        }
+
+        // ================= 8. NUMBER TO WORDS =================
+        function numberToWords(num) {
+            if (num === 0) return "Zero";
+            var a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+            var b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            if ((num = num.toString()).length > 9) return 'overflow';
+            let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+            if (!n) return; var str = '';
+            str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+            str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+            str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+            str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+            str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+            return str.trim();
+        }
+    </script>
+}

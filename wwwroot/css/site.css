@@ -1,0 +1,367 @@
+/* ==========================================================================
+   1. GLOBAL VARIABLES & CORE SETUP (HEM FOUNDATION THEME)
+   ========================================================================== */
+:root {
+    --primary-purple: #4B2E83;
+    --secondary-pink: #E51E86; /* Logo ka pink accent */
+    --accent-blue: #00A8E8; /* Logo ka blue accent */
+    --light-bg: #F8FAFC; /* Clean light canvas */
+    --text-dark: #1E293B;
+    --text-muted: #64748B;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--light-bg);
+    color: var(--text-dark);
+    overflow-x: hidden;
+    letter-spacing: -0.2px; /* Modern typography spacing */
+}
+
+a {
+    text-decoration: none;
+    transition: .3s;
+}
+
+img {
+    max-width: 100%;
+}
+
+.main-content {
+    min-height: calc(100vh - 350px); /* Ensures footer stays at bottom even on empty pages */
+}
+
+.section-space {
+    padding: 80px 0;
+}
+
+.shadow-xs {
+    box-shadow: 0 5px 20px rgba(0,0,0,.05);
+}
+
+/* ==========================================================================
+   2. CUSTOM UTILITY & BUTTON CLASSES
+   ========================================================================== */
+.text-purple {
+    color: var(--primary-purple);
+}
+
+.bg-purple {
+    background: var(--primary-purple);
+}
+
+.btn-purple {
+    background: var(--primary-purple);
+    color: #fff;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+    .btn-purple:hover {
+        background: #5d3ca1;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+/* Premium Gradient Login Button */
+.btn-success {
+    background: linear-gradient(135deg, var(--primary-purple), #633FA4);
+    border: none;
+    box-shadow: 0 4px 12px rgba(75, 46, 131, 0.25);
+    transition: all 0.3s ease;
+}
+
+    .btn-success:hover {
+        background: linear-gradient(135deg, var(--secondary-pink), #C2156E);
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(229, 30, 134, 0.35);
+    }
+
+/* Competition Outline Button Upgrade */
+.btn-outline-primary {
+    color: var(--primary-purple);
+    border-color: var(--primary-purple);
+    transition: all 0.3s ease;
+}
+
+    .btn-outline-primary:hover {
+        background: var(--primary-purple);
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(75, 46, 131, 0.2);
+    }
+
+/* ==========================================================================
+   3. HEADER & NAVBAR (GLASSMORPHISM EFFECT)
+   ========================================================================== */
+.navbar {
+    padding: 16px 0;
+    background: rgba(255, 255, 255, 0.90) !important;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.navbar-brand img {
+    transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover img {
+    transform: scale(1.02);
+}
+
+.nav-link {
+    color: var(--text-dark) !important;
+    font-weight: 500;
+    margin: 0 14px;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+    .nav-link:hover, .nav-link.active {
+        color: var(--primary-purple) !important;
+        font-weight: 600;
+    }
+
+    /* Navbar smooth bottom animated border */
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: -4px;
+        left: 50%;
+        background: var(--primary-purple);
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .nav-link:hover::after, .nav-link.active::after {
+        width: 100%;
+    }
+
+.offcanvas {
+    width: 290px;
+}
+
+    .offcanvas .nav-link {
+        padding: 12px 0;
+    }
+
+/* ==========================================================================
+   4. HEM FOUNDATION PREMIUM FOOTER
+   ========================================================================== */
+.hf-footer {
+    background: linear-gradient(180deg, #2A1454 0%, #1D0D3D 100%);
+    color: #fff;
+    padding: 60px 0 20px;
+    margin-top: 80px;
+    font-size: 14px;
+    position: relative;
+    border-top: 4px solid transparent;
+    border-image: linear-gradient(to right, var(--primary-purple), var(--secondary-pink), var(--accent-blue)) 1;
+}
+
+.footer-logo-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 15px;
+    display: inline-block;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+    .footer-logo-box:hover {
+        transform: translateY(-3px);
+    }
+
+    .footer-logo-box img {
+        max-width: 150px;
+    }
+
+.footer-about {
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 15px 0;
+    color: rgba(255, 255, 255, 0.80);
+}
+
+.footer-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    padding-bottom: 8px;
+}
+
+    /* Footer Title Accent Line */
+    .footer-title::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 35px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--secondary-pink), var(--accent-blue));
+        border-radius: 2px;
+    }
+
+/* Links & Slide Effect */
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    .footer-links li {
+        margin-bottom: 10px;
+    }
+
+    .footer-links a {
+        color: rgba(255, 255, 255, 0.75);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+        .footer-links a i {
+            margin-right: 8px;
+            color: var(--accent-blue);
+            transition: transform 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+            transform: translateX(6px);
+        }
+
+            .footer-links a:hover i {
+                color: var(--secondary-pink);
+            }
+
+/* Contact Section */
+.footer-contact {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    .footer-contact li {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+        color: rgba(255, 255, 255, 0.82);
+        line-height: 1.5;
+    }
+
+    .footer-contact i {
+        color: #fff;
+        font-size: 17px;
+        margin-top: 3px;
+        min-width: 20px;
+    }
+
+/* Social Glowing Icons */
+.footer-social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+    .footer-social a {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-size: 16px;
+    }
+
+        .footer-social a:hover {
+            background: linear-gradient(135deg, var(--secondary-pink), var(--primary-purple));
+            color: #fff;
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 8px 20px rgba(229, 30, 134, 0.5);
+        }
+
+/* Copyright & Bottom Section */
+.footer-divider {
+    border-color: rgba(255, 255, 255, 0.12);
+    margin: 22px 0 15px;
+}
+
+.footer-site {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+    .footer-site:hover {
+        color: #ffc107;
+    }
+
+/* ==========================================================================
+   5. RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+@media (max-width: 991px) {
+    .section-space {
+        padding: 60px 0;
+    }
+
+    .hf-footer {
+        padding: 40px 0 15px;
+    }
+
+    .footer-title {
+        margin-top: 15px;
+    }
+}
+
+@media (max-width: 767px) {
+    .section-space {
+        padding: 40px 0;
+    }
+
+    .hf-footer {
+        text-align: center;
+    }
+
+    .footer-logo-box {
+        margin: auto;
+    }
+
+    .footer-social {
+        justify-content: center;
+    }
+
+    .footer-contact li {
+        justify-content: center;
+        text-align: left;
+    }
+
+    .footer-site {
+        display: inline-block;
+        margin-top: 10px;
+    }
+
+    .footer-title::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+

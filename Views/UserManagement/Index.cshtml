@@ -1,0 +1,427 @@
+﻿@{
+    ViewData["Title"] = "User Management";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h3 class="fw-bold text-dark mb-1"><i class="bi bi-people-fill text-success me-2"></i> User Management</h3>
+                <p class="text-muted small m-0">Manage all registered system users and internal administrators from a compact single dashboard.</p>
+            </div>
+            <div>
+                <button type="button" class="btn btn-success rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" onclick="openAddUserModal()">
+                    <i class="bi bi-person-plus-fill fs-5"></i>
+                    <span>Add New Admin User</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Users Table Card -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+        <div class="row mb-3 align-items-center justify-content-between g-3 px-2">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Filter by Portal / Role:</label>
+                <select class="form-select form-select-sm rounded-3 shadow-none border" id="filterPortal" onchange="filterMasterUsers()">
+                    <option value="">-- All Portals & Roles --</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Teacher">Teacher</option>
+                    <option value="Student">Student</option>
+                    <option value="School">School</option>
+                    <option value="Parent">Parent</option>
+                    <option value="Affiliate">Affiliate</option>
+                </select>
+            </div>
+            <div class="col-md-3 text-md-end">
+                <span class="badge bg-light text-dark border px-3 py-2 fw-bold small" id="totalUsersCount">Total Users: 0</span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle mb-0 fs-7" id="masterUserTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="py-2" style="width: 50px;">S.No.</th>
+                        <th class="py-2">Code</th>
+                        <th class="py-2">Full Name & Portal</th>
+                        <th class="py-2">Mobile</th>
+                        <th class="py-2">Password</th>
+                        <th class="py-2">Registered Date</th>
+                        <th class="py-2 text-center">Status</th>
+                        <th class="py-2 text-end pe-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="masterUserTableBody">
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <div class="spinner-border spinner-border-sm text-success mb-2" role="status"></div>
+                            <p class="small m-0">Loading master user records...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- View Details Modal (Forced Clean Light Theme) -->
+<div class="modal fade" id="viewDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-white text-dark">
+            <div class="modal-header bg-success text-white px-4 py-3">
+                <h5 class="fw-bold m-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-badge fs-4"></i>
+                    <span>User Complete Details</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-light text-dark">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-dark">
+                    <ul class="list-group list-group-flush small bg-white text-dark">
+                        <li class="list-group-item d-flex justify-content-between py-2 bg-white text-dark"><strong>User Code:</strong> <span id="detCode" class="text-secondary fw-bold">-</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2 bg-white text-dark"><strong>Full Name:</strong> <span id="detName" class="text-dark fw-bold">-</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2 bg-white text-dark"><strong>Portal/Role:</strong> <span id="detPortal" class="badge bg-primary"></span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2 bg-white text-dark"><strong>Username:</strong> <span id="detUsername" class="text-dark">-</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2 bg-white text-dark"><strong>Email:</strong> <span id="detEmail" class="text-dark">-</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2 bg-white text-dark"><strong>Mobile:</strong> <span id="detMobile" class="text-dark">-</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2 bg-white text-dark"><strong>City:</strong> <span id="detCity" class="text-dark">-</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2 bg-white text-dark"><strong>State:</strong> <span id="detState" class="text-dark">-</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2 bg-white text-dark"><strong>Pincode:</strong> <span id="detPincode" class="text-dark">-</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2 bg-white text-dark"><strong>Address:</strong> <span id="detAddress" class="text-muted">-</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2 bg-white text-dark"><strong>Registered On:</strong> <span id="detDate" class="text-muted">-</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Admin Modal (Restored Role, Gender & Portal Dropdowns) -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-light border-bottom px-4 py-3">
+                <h5 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-plus text-success fs-4"></i>
+                    <span id="modalTitleText">Add New Admin User</span>
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form id="addUserForm" class="needs-validation">
+                <div class="modal-body p-4">
+                    <input type="hidden" id="editUserId" value="" />
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-secondary">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control rounded-3 shadow-none border" id="txtFullName" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-secondary">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control rounded-3 shadow-none border" id="txtEmail" required />
+                        </div>
+                        <div class="col-md-6" id="passwordFieldContainer">
+                            <label class="form-label small fw-bold text-secondary">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control rounded-3 shadow-none border" id="txtPassword" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-secondary">Assign Role <span class="text-danger">*</span></label>
+                            <select class="form-select rounded-3 shadow-none border" id="ddlRoles" required>
+                                <option value="">-- Select Role --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-secondary">Mobile No</label>
+                            <input type="text" class="form-control rounded-3 shadow-none border" id="txtMobile" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-secondary">Gender</label>
+                            <select class="form-select rounded-3 shadow-none border" id="ddlGenders">
+                                <option value="">-- Select Gender --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-secondary">Portal Type</label>
+                            <select class="form-select rounded-3 shadow-none border" id="ddlPortals">
+                                <option value="">-- Select Portal --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-secondary">Pincode</label>
+                            <input type="text" class="form-control rounded-3 shadow-none border" id="txtPincode" maxlength="6" onkeyup="fetchCityStateByPincode(this.value)" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-secondary">State</label>
+                            <input type="text" class="form-control rounded-3 shadow-none border bg-light" id="txtState" readonly />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-secondary">City</label>
+                            <input type="text" class="form-control rounded-3 shadow-none border bg-light" id="txtCity" readonly />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-secondary">Complete Address</label>
+                            <textarea class="form-control rounded-3 shadow-none border" id="txtAddress" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top px-4 py-3">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm" id="btnSaveUser">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let allMasterUsers = [];
+
+        $(document).ready(function () {
+            loadMasterUsers();
+            loadDropdowns(); // Dropdowns data fetch karne ke liye
+
+            $('#addUserForm').on('submit', function (e) { 
+                e.preventDefault(); 
+                saveUser(); 
+            });
+        });
+
+        function loadMasterUsers() {
+            $.get('/api/usermanagement/all-users', function (res) {
+                if (res.success) {
+                    allMasterUsers = res.data;
+                    renderMasterTable(allMasterUsers);
+                }
+            });
+        }
+
+        // Dropdowns Load Logic
+        function loadDropdowns() {
+            $.get('/api/lookup/roles', function (res) {
+                if (res.success) {
+                    let opts = '<option value="">-- Select Role --</option>';
+                    res.data.forEach(r => opts += `<option value="${r.text}">${r.text}</option>`);
+                    $('#ddlRoles').html(opts);
+                }
+            });
+            $.get('/api/lookup/genders', function (res) {
+                if (res.success) {
+                    let opts = '<option value="">-- Select Gender --</option>';
+                    res.data.forEach(g => opts += `<option value="${g.value}">${g.text}</option>`);
+                    $('#ddlGenders').html(opts);
+                }
+            });
+            $.get('/api/lookup/portals', function (res) {
+                if (res.success) {
+                    let opts = '<option value="">-- Select Portal --</option>';
+                    res.data.forEach(p => opts += `<option value="${p.value}">${p.text}</option>`);
+                    $('#ddlPortals').html(opts);
+                }
+            });
+        }
+
+        function renderMasterTable(data) {
+            let html = '';
+            $('#totalUsersCount').text(`Total Users: ${data.length}`);
+
+            if (data.length === 0) {
+                $('#masterUserTableBody').html(`<tr><td colspan="8" class="text-center py-4 text-muted">No records found.</td></tr>`);
+                return;
+            }
+
+            data.forEach((u, index) => {
+                let statusIcon = u.isActive
+                    ? `<span class="text-success fs-6" title="Active"><i class="bi bi-check-circle-fill"></i></span>`
+                    : `<span class="text-danger fs-6" title="Deactive"><i class="bi bi-x-circle-fill"></i></span>`;
+
+                let toggleTitle = u.isActive ? 'Deactive User' : 'Activate User';
+                let toggleIconClass = u.isActive ? 'bi-toggle-on text-success' : 'bi-toggle-off text-muted';
+
+                let pwdBox = u.password && u.password !== '-' ? `
+                    <div class="input-group input-group-sm" style="width: 110px;">
+                        <input type="password" class="form-control bg-light border-0 px-1" style="font-size: 11px;" id="pwd_${index}" value="${u.password}" readonly />
+                        <button class="btn btn-outline-secondary border-0 bg-transparent text-muted px-1" type="button" onclick="togglePassword(${index})" title="Show/Hide">
+                            <i class="bi bi-eye-slash" id="eye_${index}" style="font-size: 11px;"></i>
+                        </button>
+                    </div>` : `<span class="text-muted small">-</span>`;
+
+                let portalBadgeColor = 'bg-secondary-subtle text-secondary';
+                if (u.portalName === 'Admin') portalBadgeColor = 'bg-dark text-white';
+                else if (u.portalName === 'Teacher') portalBadgeColor = 'bg-info-subtle text-info';
+                else if (u.portalName === 'Student') portalBadgeColor = 'bg-primary-subtle text-primary';
+                else if (u.portalName === 'School') portalBadgeColor = 'bg-warning-subtle text-warning';
+                else if (u.portalName === 'Parent') portalBadgeColor = 'bg-danger-subtle text-danger';
+                else if (u.portalName === 'Affiliate') portalBadgeColor = 'bg-success-subtle text-success';
+
+                let userJson = encodeURIComponent(JSON.stringify(u));
+
+                html += `
+                    <tr>
+                        <td class="fw-bold text-secondary small">${index + 1}</td>
+                        <td class="fw-bold text-secondary small">${u.userCode}</td>
+                        <td>
+                            <div class="fw-bold text-dark small">${u.fullName}</div>
+                            <span class="badge ${portalBadgeColor} px-1 py-0" style="font-size: 10px;">${u.portalName}</span>
+                        </td>
+                        <td class="small">${u.phoneNumber || '-'}</td>
+                        <td>${pwdBox}</td>
+                        <td class="small text-muted">${u.createdDate}</td>
+                        <td class="text-center">${statusIcon}</td>
+                        <td class="text-end pe-2">
+                            <button class="btn btn-sm btn-outline-info rounded-circle p-1 me-1 shadow-none" style="width: 28px; height: 28px;" onclick="viewUserDetails('${userJson}')" title="View Details">
+                                <i class="bi bi-eye" style="font-size: 12px;"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary rounded-circle p-1 me-1 shadow-none" style="width: 28px; height: 28px;" onclick="openEditUserModal('${u.identityId}')" title="Edit">
+                                <i class="bi bi-pencil" style="font-size: 12px;"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-circle p-1 me-1 shadow-none" style="width: 28px; height: 28px;" onclick="toggleStatus('${u.identityId}')" title="${toggleTitle}">
+                                <i class="bi ${toggleIconClass}" style="font-size: 12px;"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-circle p-1 shadow-none" style="width: 28px; height: 28px;" onclick="deleteUser('${u.identityId}', '${u.email}')" title="Delete">
+                                <i class="bi bi-trash" style="font-size: 12px;"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            $('#masterUserTableBody').html(html);
+        }
+
+        function viewUserDetails(encodedJson) {
+            let u = JSON.parse(decodeURIComponent(encodedJson));
+            $('#detCode').text(u.userCode);
+            $('#detName').text(u.fullName);
+            $('#detPortal').text(u.portalName);
+            $('#detUsername').text(u.username);
+            $('#detEmail').text(u.email);
+            $('#detMobile').text(u.phoneNumber);
+            $('#detCity').text(u.city);
+            $('#detState').text(u.state);
+            $('#detPincode').text(u.pincode);
+            $('#detAddress').text(u.address);
+            $('#detDate').text(u.createdDate);
+            $('#viewDetailModal').modal('show');
+        }
+
+        function filterMasterUsers() {
+            let selectedPortal = $('#filterPortal').val();
+            if (!selectedPortal) {
+                renderMasterTable(allMasterUsers);
+            } else {
+                let filtered = allMasterUsers.filter(u => u.portalName === selectedPortal);
+                renderMasterTable(filtered);
+            }
+        }
+
+        function togglePassword(index) {
+            let input = document.getElementById(`pwd_${index}`);
+            let eye = document.getElementById(`eye_${index}`);
+            if (input.type === "password") {
+                input.type = "text";
+                eye.classList.remove("bi-eye-slash");
+                eye.classList.add("bi-eye");
+            } else {
+                input.type = "password";
+                eye.classList.remove("bi-eye");
+                eye.classList.add("bi-eye-slash");
+            }
+        }
+
+        function openAddUserModal() {
+            $('#addUserForm')[0].reset();
+            $('#editUserId').val('');
+            $('#modalTitleText').text('Add New Admin User');
+            $('#passwordFieldContainer').show();
+            $('#txtPassword').prop('required', true);
+            $('#addUserModal').modal('show');
+        }
+
+        function openEditUserModal(identityId) {
+            $.get(`/api/usermanagement/${identityId}`, function (res) {
+                if (res.success) {
+                    let u = res.data;
+                    $('#editUserId').val(u.id);
+                    $('#txtFullName').val(u.fullName);
+                    $('#txtEmail').val(u.email);
+                    $('#txtMobile').val(u.phoneNumber);
+                    $('#ddlRoles').val(u.roleName);
+                    $('#ddlGenders').val(u.genderId);
+                    $('#ddlPortals').val(u.portalId);
+                    $('#txtPincode').val(u.pinCode);
+                    $('#txtState').val(u.state);
+                    $('#txtCity').val(u.city);
+                    $('#txtAddress').val(u.address);
+                    $('#passwordFieldContainer').hide();
+                    $('#txtPassword').prop('required', false);
+                    $('#modalTitleText').text('Edit User Profile');
+                    $('#addUserModal').modal('show');
+                }
+            });
+        }
+
+        function saveUser() {
+            const editId = $('#editUserId').val();
+            const payload = {
+                id: editId || null,
+                fullName: $('#txtFullName').val().trim(),
+                email: $('#txtEmail').val().trim(),
+                password: $('#txtPassword').val().trim(),
+                roleName: $('#ddlRoles').val(),
+                mobileNo: $('#txtMobile').val().trim() || null,
+                genderId: $('#ddlGenders').val() ? parseInt($('#ddlGenders').val()) : null,
+                portalId: $('#ddlPortals').val() ? parseInt($('#ddlPortals').val()) : null,
+                pinCode: $('#txtPincode').val().trim() || null,
+                state: $('#txtState').val().trim() || null,
+                city: $('#txtCity').val().trim() || null,
+                address: $('#txtAddress').val().trim() || null
+            };
+
+            $.ajax({
+                url: editId ? '/api/usermanagement/update' : '/api/usermanagement/create',
+                type: editId ? 'PUT' : 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function (res) {
+                    if (res.success) {
+                        $('#addUserModal').modal('hide');
+                        loadMasterUsers();
+                    }
+                }
+            });
+        }
+
+        function toggleStatus(identityId) {
+            $.post(`/api/usermanagement/toggle-status/${identityId}`, function (res) {
+                if (res.success) loadMasterUsers();
+            });
+        }
+
+        function deleteUser(identityId, email) {
+            if (confirm(`Are you sure you want to delete user "${email}"?`)) {
+                $.ajax({
+                    url: `/api/usermanagement/delete/${identityId}`,
+                    type: 'DELETE',
+                    success: function (res) {
+                        if (res.success) loadMasterUsers();
+                    }
+                });
+            }
+        }
+
+        function fetchCityStateByPincode(pincode) {
+            pincode = pincode.replace(/\D/g, '');
+            if (pincode.length === 6) {
+                $.get(`https://api.postalpincode.in/pincode/${pincode}`, function (data) {
+                    if (data && data[0].Status === "Success") {
+                        let po = data[0].PostOffice[0];
+                        $('#txtState').val(po.State);
+                        $('#txtCity').val(po.District);
+                    }
+                });
+            }
+        }
+    </script>
+}

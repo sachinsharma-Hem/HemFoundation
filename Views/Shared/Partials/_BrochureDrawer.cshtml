@@ -1,0 +1,35 @@
+﻿
+<div class="modal fade" id="brochureModal" tabindex="-1" aria-labelledby="brochureModalLabel" aria-hidden="true" style="z-index: 1070;">
+    <div class="modal-dialog modal-fullscreen p-2 p-md-4">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-dark">
+
+            <!-- Modal Header -->
+            <div class="modal-header bg-dark text-white px-4 py-3 border-bottom border-secondary d-flex align-items-center">
+
+                <!-- Left Aligned Title & Icons -->
+                <div class="d-flex align-items-center gap-3 me-auto" id="brochureModalLabel">
+                    <div class="bg-danger bg-opacity-25 p-2 rounded-3 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-file-earmark-pdf-fill text-danger fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-white m-0 fs-5">HEM Virtues Brochure &amp; Leaflet</h5>
+                        <small class="text-white-50" style="font-size: 11px;"><i class="bi bi-book-half me-1"></i> Interactive Document Reader</small>
+                    </div>
+                </div>
+
+                <!-- Right Aligned Clean Text Close Button -->
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3 py-1 fw-bold d-inline-flex align-items-center gap-2 shadow-sm" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-lg"></i> Close
+                    </button>
+                </div>
+
+            </div>
+            <!-- Modal Body (Fullscreen PDF Iframe) -->
+            <div class="modal-body p-0 bg-black position-relative">
+                <iframe src="~/marketing-kit/Brochure.pdf" class="w-100 h-100 border-0" title="HEM Virtues Brochure"></iframe>
+            </div>
+
+        </div>
+    </div>
+</div>

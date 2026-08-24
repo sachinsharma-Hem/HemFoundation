@@ -1,0 +1,448 @@
+﻿@{
+    ViewData["Title"] = "Manage Billings & Finance";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="bi bi-cash-stack text-success me-2"></i> Finance & Billing Command Center</h3>
+            <p class="text-muted small m-0">Manage Organization Masters, process affiliate monthly bills, and record payments.</p>
+        </div>
+        <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openOrgModal()">
+            <i class="bi bi-building-add me-1"></i> Manage Organizations
+        </button>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="adminFinanceTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold" id="tab-bills" data-bs-toggle="tab" data-bs-target="#paneBills">Monthly Bills & Approvals</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold text-muted" id="tab-orgs" data-bs-toggle="tab" data-bs-target="#paneOrgs" onclick="loadOrgs()">Organizations Master</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="paneBills">
+            
+            <div class="row g-3 mb-4" id="adminStatsRow">
+                <div class="col">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-light border-start border-4 border-secondary">
+                        <h6 class="text-muted small fw-bold mb-1">Total Bills</h6>
+                        <h4 class="m-0 fw-bold text-dark" id="stTotal">-</h4>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-primary-subtle border-start border-4 border-primary">
+                        <h6 class="text-primary small fw-bold mb-1">Approved/Paid</h6>
+                        <h4 class="m-0 fw-bold text-primary" id="stAppr">-</h4>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-danger-subtle border-start border-4 border-danger">
+                        <h6 class="text-danger small fw-bold mb-1">Rejected</h6>
+                        <h4 class="m-0 fw-bold text-danger" id="stRej">-</h4>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-warning-subtle border-start border-4 border-warning">
+                        <h6 class="text-warning small fw-bold mb-1">Pending Amount</h6>
+                        <h4 class="m-0 fw-bold text-warning" id="stPendAmt">₹0</h4>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-success-subtle border-start border-4 border-success">
+                        <h6 class="text-success small fw-bold mb-1">Total Paid</h6>
+                        <h4 class="m-0 fw-bold text-success" id="stPaidAmt">₹0</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-semibold m-0">Filter by Affiliate</label>
+                        <select id="fltAffiliate" class="form-select form-select-sm rounded-3 shadow-none" onchange="loadBills()">
+                            <option value="">All Affiliates (Overall)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-semibold m-0">Filter by Status</label>
+                        <select id="fltStatus" class="form-select form-select-sm rounded-3 shadow-none" onchange="loadBills()">
+                            <option value="">All Statuses</option>
+                            <option value="Uploaded" selected>Uploaded (Pending Review)</option>
+                            <option value="Correction Requested">Correction Requested</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-sm w-100 rounded-3 fw-semibold shadow-sm" onclick="loadBills()"><i class="bi bi-search"></i> Search</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light text-muted">
+                            <tr>
+                                <th>Bill No & Date</th>
+                                <th>Affiliate & Billed To</th>
+                                <th>Particulars & Amount</th>
+                                <th>Status</th>
+                                <th class="text-center">Signed Document</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblAdminBills">
+                            <tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="paneOrgs">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold m-0">Organization Masters</h5>
+                    <button class="btn btn-sm btn-success rounded-pill px-3" onclick="openOrgModal()">+ Add Organization</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Logo</th>
+                                <th>Org Name</th>
+                                <th>Address</th>
+                                <th>Status</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblOrgs"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="orgModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
+            <div class="modal-header border-bottom">
+                <h5 class="fw-bold m-0">Organization Details</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <form id="frmOrg">
+                    <input type="hidden" id="hdnOrgId" value="0">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Organization Name <span class="text-danger">*</span></label>
+                        <input type="text" id="txtOrgName" class="form-control rounded-3 shadow-none" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Address <span class="text-danger">*</span></label>
+                        <textarea id="txtOrgAddr" class="form-control rounded-3 shadow-none" rows="2" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Logo (Image)</label>
+                        <input type="file" id="fileLogo" class="form-control rounded-3 shadow-none" accept="image/*">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Status</label>
+                        <select id="ddlOrgStatus" class="form-select rounded-3 shadow-none">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm">Save Organization</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="processBillModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
+            <div class="modal-header border-bottom">
+                <h5 class="fw-bold m-0">Process Bill & Record Payment</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <form id="frmProcessBill">
+                    <input type="hidden" id="hdnProcBillId">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Update Status</label>
+                            <select id="pStatus" class="form-select rounded-3 shadow-none" onchange="togglePaymentFields()">
+                                <option value="Approved">Approve</option>
+                                <option value="Paid">Mark as Paid (Record Payment)</option>
+                                <option value="Correction Requested">Correction Requested</option>
+                                <option value="Rejected">Reject</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Approved By</label>
+                            <input type="text" id="pApprovedBy" class="form-control rounded-3 shadow-none" placeholder="e.g. Finance Manager">
+                        </div>
+                        
+                        <div id="paymentFields" class="col-12 row g-3 m-0 p-3 bg-light rounded-3 border d-none">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Amount Paid (₹)</label>
+                                <input type="number" id="pAmountPaid" class="form-control rounded-3 shadow-none" step="0.01">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Payment Date</label>
+                                <input type="date" id="pPaymentDate" class="form-control rounded-3 shadow-none">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Transaction / UTR No.</label>
+                                <input type="text" id="pTxnNo" class="form-control rounded-3 shadow-none">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Payment Mode / By</label>
+                                <input type="text" id="pPaymentBy" class="form-control rounded-3 shadow-none" placeholder="e.g. HDFC Bank NetBanking">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Entry Made By</label>
+                                <input type="text" id="pEntryBy" class="form-control rounded-3 shadow-none" placeholder="e.g. Admin User">
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Admin Remarks / Correction Details</label>
+                            <textarea id="pRemarks" class="form-control rounded-3 shadow-none" rows="2" placeholder="Notes for affiliate..."></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm mt-4">Save & Update Status</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            loadAffiliateDropdown();
+            loadBills();
+        });
+
+        function getAuthToken() { return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || ''; }
+
+        function formatDate(dateStr) {
+            if(!dateStr) return '-';
+            let d = new Date(dateStr);
+            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        }
+
+        // ================= AFFILIATE DROPDOWN & STATS =================
+        function loadAffiliateDropdown() {
+            $.ajax({
+                url: '/api/financials/admin/affiliates-list',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if(res.success) {
+                        let html = '<option value="">All Affiliates (Overall)</option>';
+                        res.data.forEach(a => html += `<option value="${a.userID}">${a.name}</option>`);
+                        $('#fltAffiliate').html(html);
+                    }
+                }
+            });
+        }
+
+        function loadStats() {
+            let affId = $('#fltAffiliate').val();
+            $.ajax({
+                url: `/api/financials/admin/affiliate-stats/${affId || ''}`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if(res.success) {
+                        $('#stTotal').text(res.data.totalBills);
+                        $('#stAppr').text(res.data.approved);
+                        $('#stRej').text(res.data.rejected);
+                        $('#stPendAmt').text('₹' + res.data.pendingAmount.toFixed(2));
+                        $('#stPaidAmt').text('₹' + res.data.paidAmount.toFixed(2));
+                    }
+                }
+            });
+        }
+
+        // ================= BILLS LOGIC =================
+        function loadBills() {
+            let status = $('#fltStatus').val();
+            let affId = $('#fltAffiliate').val();
+
+            loadStats(); // Load stats on every filter/refresh
+
+            $('#tblAdminBills').html('<tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div></td></tr>');
+
+            $.ajax({
+                url: `/api/financials/admin/all-bills?status=${status}&affiliateId=${affId}`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function (res) {
+                    if (res.success && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(b => {
+                            let badge = b.status == 'Paid' ? 'success' : (b.status == 'Approved' ? 'primary' : (b.status == 'Rejected' ? 'danger' : 'warning'));
+
+                            // ONLY SHOWING SIGNED PDF NOW
+                            let pdfLink = b.signedPdfUrl 
+                                ? `<a href="${b.signedPdfUrl}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm"><i class="bi bi-file-earmark-check me-1"></i> View Bill</a>` 
+                                : '<span class="text-muted small">No File</span>';
+                            
+                            let payDetail = b.payment ? `<br><small class="text-success fw-bold">Txn: ${b.payment.transactionNumber} (₹${b.payment.amountPaid})</small>` : '';
+
+                            html += `<tr>
+                                <td><b>#${b.billNumber}</b><br><small class="text-muted">${formatDate(b.billDate)}</small></td>
+                                <td><span class="text-primary fw-bold">${b.affiliateName}</span><br><small class="text-muted">To: ${b.orgName}</small></td>
+                                <td><b>₹${b.totalAmount.toFixed(2)}</b><br><small class="text-muted">${b.particulars}</small>${payDetail}</td>
+                                <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>
+                                <td class="text-center">${pdfLink}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-dark rounded-pill px-3 shadow-none" onclick="openProcessModal(${b.id}, '${b.status}', ${b.totalAmount})">Process</button>
+                                </td>
+                            </tr>`;
+                        });
+                        $('#tblAdminBills').html(html);
+                    } else {
+                        $('#tblAdminBills').html('<tr><td colspan="6" class="text-center py-5 text-muted">No submitted bills found.</td></tr>');
+                    }
+                }
+            });
+        }
+
+        function openProcessModal(id, status, amount) {
+            $('#hdnProcBillId').val(id);
+            $('#pStatus').val(status == 'Uploaded' ? 'Approved' : status);
+            $('#pAmountPaid').val(amount);
+            $('#pApprovedBy').val('Finance Admin');
+            document.getElementById('pPaymentDate').valueAsDate = new Date();
+            togglePaymentFields();
+            $('#processBillModal').modal('show');
+        }
+
+        function togglePaymentFields() {
+            if ($('#pStatus').val() === 'Paid') {
+                $('#paymentFields').removeClass('d-none');
+            } else {
+                $('#paymentFields').addClass('d-none');
+            }
+        }
+
+        $('#frmProcessBill').on('submit', function (e) {
+            e.preventDefault();
+            let payload = {
+                BillId: parseInt($('#hdnProcBillId').val()),
+                Status: $('#pStatus').val(),
+                ApprovedBy: $('#pApprovedBy').val(),
+                AmountPaid: parseFloat($('#pAmountPaid').val()) || 0,
+                PaymentDate: $('#pPaymentDate').val() || null,
+                TransactionNumber: $('#pTxnNo').val(),
+                PaymentBy: $('#pPaymentBy').val(),
+                EntryBy: $('#pEntryBy').val(),
+                AdminRemarks: $('#pRemarks').val()
+            };
+
+            $.ajax({
+                url: '/api/financials/admin/process-bill',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                data: JSON.stringify(payload),
+                success: function (res) {
+                    if (res.success) {
+                        $('#processBillModal').modal('hide');
+                        loadBills();
+                    }
+                }
+            });
+        });
+
+        // ================= ORGANIZATION MASTER LOGIC =================
+        function loadOrgs() {
+            $('#tblOrgs').html('<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>');
+            $.ajax({
+                url: '/api/financials/admin/orgs',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function (res) {
+                    if (res.success && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(o => {
+                            let logo = o.logoUrl ? `<img src="${o.logoUrl}" style="height:35px;" />` : '-';
+                            let badge = o.isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
+
+                            html += `<tr>
+                                <td>${logo}</td>
+                                <td><b>${o.orgName}</b></td>
+                                <td>${o.address}</td>
+                                <td>${badge}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-light border" onclick="deleteOrg(${o.id})"><i class="bi bi-trash text-danger"></i></button>
+                                </td>
+                            </tr>`;
+                        });
+                        $('#tblOrgs').html(html);
+                    } else {
+                        $('#tblOrgs').html('<tr><td colspan="5" class="text-center py-4 text-muted">No organizations found. Add one above.</td></tr>');
+                    }
+                }
+            });
+        }
+
+        function openOrgModal() {
+            $('#hdnOrgId').val('0');
+            $('#frmOrg')[0].reset();
+            $('#orgModal').modal('show');
+        }
+
+        $('#frmOrg').on('submit', function (e) {
+            e.preventDefault();
+            let formData = new FormData();
+            formData.append('Id', $('#hdnOrgId').val());
+            formData.append('OrgName', $('#txtOrgName').val());
+            formData.append('Address', $('#txtOrgAddr').val());
+            formData.append('IsActive', $('#ddlOrgStatus').val() === 'true');
+            if ($('#fileLogo')[0].files[0]) {
+                formData.append('LogoFile', $('#fileLogo')[0].files[0]);
+            }
+
+            $.ajax({
+                url: '/api/financials/admin/save-org',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function (res) {
+                    if (res.success) {
+                        $('#orgModal').modal('hide');
+                        loadOrgs();
+                    }
+                }
+            });
+        });
+
+        function deleteOrg(id) {
+            if (confirm("Are you sure you want to delete this organization?")) {
+                $.ajax({
+                    url: `/api/financials/admin/delete-org/${id}`,
+                    type: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                    success: function (res) {
+                        if (res.success) loadOrgs();
+                    }
+                });
+            }
+        }
+    </script>
+}

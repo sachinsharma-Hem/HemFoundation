@@ -1,0 +1,1429 @@
+﻿/*=================================================
+ 1. HERO SECTION (Zero-Gap Centered Layout)
+=================================================*/
+.hero-section {
+    position: relative;
+    min-height: 650px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    perspective: 1000px;
+}
+
+.hero-image {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+}
+
+    .hero-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: right center;
+        animation: kenBurns 20s infinite alternate ease-in-out;
+    }
+
+@keyframes kenBurns {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1.08) translate(-10px, -5px);
+    }
+}
+
+.hero-content {
+    position: relative;
+    width: 58%;
+    min-height: 650px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 60px;
+    z-index: 5;
+}
+
+    .hero-content::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.96);
+        clip-path: ellipse(88% 120% at 0% 50%);
+        box-shadow: 30px 0 70px rgba(0, 0, 0, 0.08);
+        z-index: -1;
+    }
+
+.hero-inner {
+    max-width: 580px;
+    margin-top: -20px;
+}
+
+    .hero-inner h1, .hero-inner h2, .hero-inner h3, .hero-inner p, .hero-buttons {
+        opacity: 0;
+        animation: fadeUp 0.8s forwards ease-out;
+    }
+
+    .hero-inner h1 {
+        animation-delay: 0.1s;
+        margin: 0 0 8px 0;
+        color: #12A4E8;
+        font-size: clamp(34px, 3.2vw, 44px);
+        font-weight: 800;
+        line-height: 1.15;
+    }
+
+    .hero-inner h2 {
+        animation-delay: 0.3s;
+        margin: 0 0 10px 0;
+        color: #E24A2A;
+        font-size: clamp(24px, 2.2vw, 32px);
+        font-weight: 700;
+        line-height: 1.25;
+        white-space: nowrap;
+    }
+
+    .hero-inner h3 {
+        animation-delay: 0.5s;
+        color: #2E7D32;
+        font-size: clamp(18px, 1.6vw, 22px);
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+
+    .hero-inner p {
+        animation-delay: 0.7s;
+        font-size: 16px;
+        line-height: 1.8;
+        color: #555;
+        font-family: Georgia, serif;
+        font-style: italic;
+        margin-bottom: 28px;
+    }
+
+.hero-buttons {
+    animation-delay: 0.9s;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero-line {
+    width: 70px;
+    height: 5px;
+    border-radius: 10px;
+    background: #FFB300;
+    margin-bottom: 22px;
+    position: relative;
+    overflow: hidden;
+}
+
+    .hero-line::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+        animation: lineShine 3s infinite;
+    }
+
+@keyframes lineShine {
+    100% {
+        left: 100%;
+    }
+}
+
+.hero-inner strong {
+    color: #222;
+}
+
+.hero-inner b {
+    color: #333;
+}
+
+.hero-buttons a {
+    height: 46px;
+    padding: 0 22px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-register {
+    color: #fff !important;
+    background: linear-gradient(135deg, #5E2CED, #8E44FF);
+    box-shadow: 0 4px 15px rgba(94, 44, 237, 0.3);
+}
+
+    .btn-register:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 8px 25px rgba(94, 44, 237, 0.5);
+    }
+
+.btn-white {
+    background: #fff;
+    color: #333 !important;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+    .btn-white:hover {
+        color: #5E2CED !important;
+        border-color: #5E2CED;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+
+/*=================================================
+ 2. VALUE CARDS (Wave Pattern)
+=================================================*/
+.value-card {
+    position: absolute;
+    width: 220px;
+    height: 60px;
+    padding: 0 16px;
+    border-radius: 40px;
+    background: rgba(255, 255, 255, 0.92);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #222;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s, background 0.4s;
+    will-change: transform;
+}
+
+    .value-card:hover {
+        z-index: 100 !important;
+        background: #ffffff;
+        box-shadow: 0 18px 35px rgba(0, 0, 0, 0.16);
+    }
+
+    .value-card i {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+        transition: transform 0.4s ease;
+    }
+
+    .value-card:hover i {
+        transform: rotate(360deg) scale(1.15);
+    }
+
+.card1 {
+    top: 12%;
+    left: 48%;
+    z-index: 25;
+    animation: floatLeft 6s ease-in-out infinite;
+}
+
+.card2 {
+    top: 27%;
+    left: 53%;
+    z-index: 24;
+    animation: floatRight 6s ease-in-out infinite 0.7s;
+}
+
+.card3 {
+    top: 42%;
+    left: 49%;
+    z-index: 23;
+    animation: floatLeft 6s ease-in-out infinite 1.5s;
+}
+
+.card4 {
+    top: 57%;
+    left: 54%;
+    z-index: 22;
+    animation: floatRight 6s ease-in-out infinite 2.2s;
+}
+
+.card5 {
+    top: 72%;
+    left: 50%;
+    z-index: 21;
+    animation: floatLeft 6s ease-in-out infinite 3s;
+}
+
+.card1 i {
+    background: #635BFF;
+}
+
+.card1:hover {
+    border-color: #635BFF;
+    box-shadow: 0 15px 30px rgba(99, 91, 255, 0.25);
+}
+
+.card2 i {
+    background: #EC4899;
+}
+
+.card2:hover {
+    border-color: #EC4899;
+    box-shadow: 0 15px 30px rgba(236, 72, 153, 0.25);
+}
+
+.card3 i {
+    background: #14B87A;
+}
+
+.card3:hover {
+    border-color: #14B87A;
+    box-shadow: 0 15px 30px rgba(20, 184, 122, 0.25);
+}
+
+.card4 i {
+    background: #F59E0B;
+}
+
+.card4:hover {
+    border-color: #F59E0B;
+    box-shadow: 0 15px 30px rgba(245, 158, 11, 0.25);
+}
+
+.card5 i {
+    background: #EF4444;
+}
+
+.card5:hover {
+    border-color: #EF4444;
+    box-shadow: 0 15px 30px rgba(239, 68, 68, 0.25);
+}
+
+@keyframes floatLeft {
+    0%, 100% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(-4px, -8px);
+    }
+}
+
+@keyframes floatRight {
+    0%, 100% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(4px, 8px);
+    }
+}
+
+
+/*=================================================
+ 3. HEM IMPACT COUNTER SECTION
+=================================================*/
+.hem-imp-item {
+    transition: transform 0.3s ease;
+    cursor: default;
+}
+
+    .hem-imp-item:hover {
+        transform: translateY(-4px);
+    }
+
+.hem-imp-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hem-imp-item:hover .hem-imp-icon {
+    transform: scale(1.15) rotate(8deg);
+}
+
+.hem-imp-tricolor {
+    background: linear-gradient(135deg, #FF9933 0%, #FFFFFF 50%, #138808 100%);
+    color: #000080;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 8px 18px rgba(19, 136, 8, 0.15);
+}
+
+.hem-imp-purple {
+    color: #8A2BE2;
+    background-color: rgba(138, 43, 226, 0.1);
+}
+
+.hem-imp-blue {
+    color: #0066FF;
+    background-color: rgba(0, 102, 255, 0.1);
+}
+
+.hem-imp-green {
+    color: #108A44;
+    background-color: rgba(16, 138, 68, 0.1);
+}
+
+
+/*=================================================
+ 4. WHY CHOOSE HEM VIRTUES?
+=================================================*/
+.hem-why-title {
+    color: #0F172A;
+    font-size: clamp(24px, 2.5vw, 36px);
+    letter-spacing: -0.5px;
+}
+
+.hem-why-line {
+    width: 60px;
+    height: 4px;
+    background: #FFB300;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.hem-why-card {
+    border: 1.5px solid #eaeaea;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    background-color: #ffffff;
+}
+
+.hem-why-icon {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+    .hem-why-icon i {
+        font-size: 26px !important;
+        color: #ffffff !important;
+        background: transparent !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+.hem-why-card:hover {
+    transform: translateY(-8px);
+}
+
+    .hem-why-card:hover .hem-why-icon {
+        transform: scale(1.12) rotate(8deg);
+    }
+
+.hem-icon-green {
+    background: linear-gradient(135deg, #65a30d, #4d7c0f) !important;
+}
+
+.hem-card-green:hover {
+    border-color: #65a30d !important;
+    box-shadow: 0 15px 30px rgba(101, 163, 13, 0.18) !important;
+    background-color: #f7fceb !important;
+}
+
+.hem-icon-blue {
+    background: linear-gradient(135deg, #0084ff, #005ce6) !important;
+}
+
+.hem-card-blue:hover {
+    border-color: #0084ff !important;
+    box-shadow: 0 15px 30px rgba(0, 132, 255, 0.18) !important;
+    background-color: #f0f7ff !important;
+}
+
+.hem-icon-purple {
+    background: linear-gradient(135deg, #9333ea, #7e22ce) !important;
+}
+
+.hem-card-purple:hover {
+    border-color: #9333ea !important;
+    box-shadow: 0 15px 30px rgba(147, 51, 234, 0.18) !important;
+    background-color: #faf5ff !important;
+}
+
+.hem-icon-orange {
+    background: linear-gradient(135deg, #ea580c, #c2410c) !important;
+}
+
+.hem-card-orange:hover {
+    border-color: #ea580c !important;
+    box-shadow: 0 15px 30px rgba(234, 88, 12, 0.18) !important;
+    background-color: #fff7ed !important;
+}
+
+
+/*=================================================
+ 5. HOW IT WORKS SECTION
+=================================================*/
+.hem-how-title {
+    color: #0F172A;
+    font-size: clamp(24px, 2.5vw, 36px);
+    letter-spacing: -0.5px;
+}
+
+.hem-how-line {
+    width: 60px;
+    height: 4px;
+    background: #FFB300;
+    border-radius: 10px;
+}
+
+.hem-how-step {
+    transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 12px;
+    cursor: default;
+}
+
+    .hem-how-step:hover {
+        transform: translateY(-5px);
+        background: #f8fafc;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+    }
+
+.hem-how-badge {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    font-size: 22px;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hem-how-step:hover .hem-how-badge {
+    transform: scale(1.15) rotate(10deg);
+}
+
+.hem-step-title {
+    transition: color 0.3s ease;
+}
+
+.hem-how-step:hover .hem-step-title {
+    color: #0066FF !important;
+}
+
+.hem-bg-green {
+    background-color: #65a30d;
+    box-shadow: 0 8px 20px rgba(101, 163, 13, 0.3);
+}
+
+.hem-bg-blue {
+    background-color: #0084ff;
+    box-shadow: 0 8px 20px rgba(0, 132, 255, 0.3);
+}
+
+.hem-bg-purple {
+    background-color: #9333ea;
+    box-shadow: 0 8px 20px rgba(147, 51, 234, 0.3);
+}
+
+.hem-bg-orange {
+    background-color: #ea580c;
+    box-shadow: 0 8px 20px rgba(234, 88, 12, 0.3);
+}
+
+
+/*=================================================
+ 6. EXPLORE OUR PROGRAMS
+=================================================*/
+.hem-prog-title {
+    color: #0F172A;
+    font-size: clamp(26px, 2.8vw, 38px);
+    letter-spacing: -0.5px;
+}
+
+.hem-prog-line {
+    width: 60px;
+    height: 4px;
+    background: #FFB300;
+    border-radius: 10px;
+}
+
+.hem-prog-card {
+    border: 1.5px solid #eaeaea;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+
+    .hem-prog-card:hover {
+        transform: translateY(-8px);
+    }
+
+.hem-prog-img-wrap {
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hem-prog-card:hover .hem-prog-img-wrap {
+    transform: scale(1.12) rotate(6deg);
+    background: #ffffff;
+}
+
+.hem-prog-img-wrap img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.hem-card-green:hover {
+    border-color: #28A745;
+    box-shadow: 0 15px 30px rgba(40, 167, 69, 0.18);
+}
+
+.hem-card-pink:hover {
+    border-color: #E91E63;
+    box-shadow: 0 15px 30px rgba(233, 30, 99, 0.18);
+}
+
+.hem-card-orange:hover {
+    border-color: #F57C00;
+    box-shadow: 0 15px 30px rgba(245, 124, 0, 0.18);
+}
+
+.hem-card-purple:hover {
+    border-color: #6F42C1;
+    box-shadow: 0 15px 30px rgba(111, 66, 193, 0.18);
+}
+
+.hem-card-blue:hover {
+    border-color: #0D6EFD;
+    box-shadow: 0 15px 30px rgba(13, 110, 253, 0.18);
+}
+
+.hem-card-gold:hover {
+    border-color: #C79A00;
+    box-shadow: 0 15px 30px rgba(199, 154, 0, 0.18);
+}
+
+
+/*=================================================
+ 7. EXPERIENCE HEM VIRTUES VIDEO SECTION
+=================================================*/
+.hem-vid-wrapper {
+    border-color: #f1f5f9 !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+    .hem-vid-wrapper:hover {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06) !important;
+        transform: translateY(-4px);
+    }
+
+.hem-vid-title {
+    color: #0F172A;
+    font-size: clamp(26px, 2.8vw, 40px);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.hem-vid-desc {
+    font-size: clamp(15px, 1.2vw, 17px);
+    line-height: 1.7;
+}
+
+.hem-vid-thumb {
+    aspect-ratio: 16 / 9;
+    background: #000;
+}
+
+.hem-vid-img {
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+
+.hem-vid-thumb:hover .hem-vid-img {
+    transform: scale(1.08);
+    opacity: 0.9;
+}
+
+.hem-play-circle {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 2;
+}
+
+.hem-vid-thumb:hover .hem-play-circle {
+    transform: scale(1.15);
+    background: #0066FF !important;
+}
+
+    .hem-vid-thumb:hover .hem-play-circle i {
+        color: #ffffff !important;
+    }
+
+.hem-pulse-ring {
+    position: absolute;
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    animation: hemPulse 2s infinite cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1;
+}
+
+@keyframes hemPulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(2.2);
+        opacity: 0;
+    }
+}
+
+.hem-watch-btn {
+    background-color: #0F172A;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+    .hem-watch-btn:hover {
+        background-color: #0066FF;
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 10px 20px rgba(0, 102, 255, 0.3) !important;
+    }
+
+
+/*=================================================
+ 8. TESTIMONIAL & PARTNER SECTIONS
+=================================================*/
+.hvt-title {
+    color: #0F172A;
+    font-size: clamp(26px, 2.8vw, 38px);
+    letter-spacing: -0.5px;
+}
+
+.hvt-line, .hvt-modal-line {
+    width: 60px;
+    height: 4px;
+    background: #FFB300;
+    border-radius: 10px;
+}
+
+.hvt-card {
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+}
+
+    .hvt-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+        border-color: #cbd5e1;
+    }
+
+.hvt-card-top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+}
+
+.bg-purple {
+    background-color: #6F42C1 !important;
+}
+
+.hvt-quote-icon {
+    font-size: 32px;
+    color: #6366f1;
+    opacity: 0.2;
+    line-height: 1;
+}
+
+.hvt-text-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 80px;
+}
+
+.hvt-user-img {
+    width: 50px;
+    height: 50px;
+    border: 2px solid #f8fafc;
+}
+
+.hvt-nav-btn {
+    width: 48px;
+    height: 48px;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.9 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+    .hvt-nav-btn:hover {
+        background-color: #0066FF !important;
+        border-color: #0066FF;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+        .hvt-nav-btn:hover i {
+            color: #ffffff !important;
+        }
+
+.hvt-modal-avatar {
+    width: 100px;
+    height: 100px;
+    padding: 4px;
+    border: 2px solid #FFB300;
+    border-radius: 50%;
+}
+
+.hem-partner-title {
+    color: #0F172A;
+    font-size: clamp(22px, 2.5vw, 36px);
+    letter-spacing: 0.5px;
+}
+
+.hem-partner-line {
+    width: 60px;
+    height: 4px;
+    background: #FFB300;
+    border-radius: 10px;
+}
+
+.hem-partner-slider {
+    width: 100%;
+    overflow: hidden;
+    padding: 20px 0;
+}
+
+.hem-fade-mask {
+    position: absolute;
+    top: 0;
+    width: 120px;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.hem-fade-left {
+    left: 0;
+    background: linear-gradient(90deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.hem-fade-right {
+    right: 0;
+    background: linear-gradient(-90deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.hem-partner-track {
+    width: max-content;
+    animation: hemMarquee 35s linear infinite;
+    will-change: transform;
+}
+
+.hem-partner-slider:hover .hem-partner-track {
+    animation-play-state: paused;
+}
+
+@keyframes hemMarquee {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+
+    100% {
+        transform: translate3d(-50%, 0, 0);
+    }
+}
+
+.hem-partner-card {
+    width: 170px;
+    height: 100px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+
+    .hem-partner-card img {
+        max-width: 130px;
+        max-height: 65px;
+        filter: grayscale(100%) opacity(0.7);
+        transition: all 0.4s ease;
+    }
+
+    .hem-partner-card:hover {
+        transform: translateY(-6px) scale(1.08);
+        border-color: #cbd5e1;
+        box-shadow: 0 15px 30px rgba(0, 102, 255, 0.12) !important;
+        z-index: 10;
+    }
+
+        .hem-partner-card:hover img {
+            filter: grayscale(0%) opacity(1);
+            transform: scale(1.08);
+        }
+
+
+/*=================================================
+ 9. APP BANNER & CTA STYLING
+=================================================*/
+.hem-app-wrapper {
+    background: linear-gradient(135deg, #311854 0%, #4b2c73 50%, #251b69 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.hem-app-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hem-orb-1 {
+    width: 250px;
+    height: 250px;
+    background: rgba(236, 72, 153, 0.25);
+    top: -50px;
+    left: 10%;
+}
+
+.hem-orb-2 {
+    width: 300px;
+    height: 300px;
+    background: rgba(0, 102, 255, 0.25);
+    bottom: -50px;
+    right: 5%;
+}
+
+.hem-phone-container {
+    max-width: 320px;
+    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.4));
+    animation: hemFloat 6s ease-in-out infinite;
+}
+
+.hem-phone-img {
+    max-height: 420px;
+    width: auto;
+    object-fit: contain;
+}
+
+@keyframes hemFloat {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-12px) rotate(1deg);
+    }
+}
+
+.hem-app-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    min-height: 125px;
+}
+
+    .hem-app-card:hover {
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-6px) scale(1.04);
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+    }
+
+.hem-app-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    transition: transform 0.4s ease;
+}
+
+.hem-app-card:hover .hem-app-icon {
+    transform: scale(1.15) rotate(8deg);
+}
+
+.hem-icon-red i {
+    color: #FF3366;
+}
+
+.hem-icon-blue i {
+    color: #0066FF;
+}
+
+.hem-icon-green i {
+    color: #10B981;
+}
+
+.hem-icon-yellow i {
+    color: #F59E0B;
+}
+
+.hem-icon-cyan i {
+    color: #06B6D4;
+}
+
+.hem-icon-purple i {
+    color: #8B5CF6;
+}
+
+.hem-app-text {
+    font-size: clamp(13px, 1.1vw, 15px);
+    line-height: 1.35;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.hem-cta-wrapper {
+    background: linear-gradient(135deg, #1e1b4b 0%, #311854 50%, #4c1d95 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.hem-cta-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hem-orb-warning {
+    width: 280px;
+    height: 280px;
+    background: rgba(255, 179, 0, 0.3);
+    top: -80px;
+    left: 20%;
+}
+
+.hem-orb-info {
+    width: 300px;
+    height: 300px;
+    background: rgba(0, 102, 255, 0.3);
+    bottom: -80px;
+    right: 10%;
+}
+
+.hem-cta-title {
+    font-size: clamp(26px, 2.8vw, 38px);
+    letter-spacing: -0.5px;
+}
+
+.hem-cta-img-wrap {
+    max-width: 220px;
+    filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.4));
+    transition: transform 0.4s ease;
+}
+
+.hem-cta-wrapper:hover .hem-cta-img-wrap {
+    transform: scale(1.06) rotate(-2deg);
+}
+
+.hem-btn-demo {
+    background-color: #FFB300;
+    color: #0F172A !important;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+    .hem-btn-demo:hover {
+        background-color: #ffc107;
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 12px 25px rgba(255, 179, 0, 0.4) !important;
+    }
+
+.hem-btn-register {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+    .hem-btn-register:hover {
+        background: #ffffff;
+        color: #311854 !important;
+        transform: translateY(-4px);
+        box-shadow: 0 12px 25px rgba(255, 255, 255, 0.2) !important;
+    }
+
+.hem-reg-card {
+    border-color: #e2e8f0 !important;
+    transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+
+.hem-reg-icon {
+    width: 50px;
+    height: 50px;
+    transition: transform 0.4s ease;
+}
+
+.hem-reg-arrow {
+    transition: transform 0.3s ease;
+}
+
+.hem-reg-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08) !important;
+    background-color: #fcfcfc !important;
+}
+
+    .hem-reg-card:hover .hem-reg-icon {
+        transform: rotate(360deg) scale(1.1);
+    }
+
+    .hem-reg-card:hover .hem-reg-arrow {
+        transform: translateX(6px) scale(1.15);
+    }
+
+#hemDemoForm .form-control, #hemDemoForm .input-group-text {
+    border-color: #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+    #hemDemoForm .form-control:focus {
+        background-color: #ffffff !important;
+        box-shadow: none;
+        border-color: #0066FF;
+    }
+
+#hemDemoForm .input-group:focus-within .input-group-text,
+#hemDemoForm .input-group:focus-within .form-control {
+    background-color: #ffffff !important;
+    border-color: #0066FF;
+}
+
+.hem-btn-submit {
+    background: linear-gradient(135deg, #0066FF 0%, #4c1d95 100%);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+    .hem-btn-submit:hover {
+        background: linear-gradient(135deg, #0052cc 0%, #3b1675 100%);
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 12px 25px rgba(0, 102, 255, 0.35) !important;
+    }
+
+
+/*=================================================
+ 10. UNIFIED RESPONSIVE & MOBILE OPTIMIZATIONS
+=================================================*/
+@media (max-width: 1199px) {
+    .hero-inner h2 {
+        white-space: normal;
+    }
+
+    .hero-content {
+        width: 65%;
+    }
+}
+
+@media (max-width: 991px) {
+    /* Hero section mobile adjustments with home21 banner */
+    .hero-section {
+        display: flex;
+        flex-direction: column;
+        min-height: auto;
+        background: #ffffff;
+    }
+
+    .hero-image {
+        display: none !important;
+    }
+
+    .hero-content {
+        width: 100%;
+        min-height: auto;
+        padding: 40px 25px;
+        order: 2;
+        background: #ffffff;
+    }
+
+        .hero-content::before {
+            display: none !important;
+        }
+
+    .hero-inner {
+        margin-top: 0;
+    }
+
+        .hero-inner h2 {
+            white-space: normal;
+        }
+
+    .value-card {
+        display: none !important;
+    }
+
+    .hero-section::after {
+        display: none !important;
+    }
+
+    .hero-mobile-img-wrap {
+        display: block !important;
+        width: 100%;
+        height: 320px;
+        order: 1;
+        overflow: hidden;
+        background: #f8fafc;
+    }
+
+        .hero-mobile-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+    .hem-how-step {
+        background: #fdfdfd;
+        border: 1px solid #f0f0f0;
+        padding: 15px !important;
+    }
+}
+
+@media (min-width: 992px) {
+    .hero-mobile-img-wrap {
+        display: none !important;
+    }
+
+    .hem-imp-border-end {
+        border-right: 1px solid #f1f5f9;
+    }
+}
+
+@media (max-width: 767px) {
+    #hvtTestimonialSlider {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    .hvt-nav-btn {
+        width: 38px !important;
+        height: 38px !important;
+    }
+
+    .carousel-control-prev.hvt-nav-btn {
+        left: -5px !important;
+    }
+
+    .carousel-control-next.hvt-nav-btn {
+        right: -5px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .hem-why-card {
+        padding: 20px !important;
+    }
+
+    .hem-prog-card {
+        padding: 20px !important;
+    }
+
+    .hem-phone-img {
+        max-height: 320px;
+    }
+
+    .hem-app-card {
+        min-height: 115px;
+        padding: 15px !important;
+    }
+
+    .hem-app-icon {
+        width: 45px;
+        height: 45px;
+    }
+
+        .hem-app-icon i {
+            font-size: 1.3rem !important;
+        }
+
+    .hem-cta-wrapper {
+        padding: 30px 20px !important;
+    }
+
+    .hem-reg-card {
+        padding: 12px !important;
+    }
+
+    .hem-reg-icon {
+        width: 42px;
+        height: 42px;
+    }
+}
+/*=================================================
+  UNIQUE APP SECTION & ICON FIXES (NO CONFLICTS)
+=================================================*/
+.hem-app-wrapper {
+    background: linear-gradient(135deg, #311854 0%, #4b2c73 50%, #251b69 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.hem-app-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hem-orb-1 {
+    width: 250px;
+    height: 250px;
+    background: rgba(236, 72, 153, 0.25);
+    top: -50px;
+    left: 10%;
+}
+
+.hem-orb-2 {
+    width: 300px;
+    height: 300px;
+    background: rgba(0, 102, 255, 0.25);
+    bottom: -50px;
+    right: 5%;
+}
+
+.hem-phone-container {
+    max-width: 320px;
+    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.4));
+    animation: hemFloat 6s ease-in-out infinite;
+}
+
+.hem-phone-img {
+    max-height: 420px;
+    width: auto;
+    object-fit: contain;
+}
+
+@keyframes hemFloat {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-12px) rotate(1deg);
+    }
+}
+
+.hem-app-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    min-height: 125px;
+}
+
+    .hem-app-card:hover {
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-6px) scale(1.04);
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+    }
+
+/* Unique Icon Box Container to Prevent External Conflicts */
+.hem-app-icon-box {
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    min-height: 50px !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: transform 0.4s ease !important;
+    margin: 0 auto !important;
+}
+
+    .hem-app-icon-box i {
+        font-size: 22px !important;
+        line-height: 1 !important;
+        display: inline-block !important;
+    }
+
+.hem-app-card:hover .hem-app-icon-box {
+    transform: scale(1.15) rotate(8deg);
+}
+
+/* Specific Unique Icon Colors */
+.hem-box-red i {
+    color: #FF3366 !important;
+}
+
+.hem-box-blue i {
+    color: #0066FF !important;
+}
+
+.hem-box-green i {
+    color: #10B981 !important;
+}
+
+.hem-box-yellow i {
+    color: #F59E0B !important;
+}
+
+.hem-box-cyan i {
+    color: #06B6D4 !important;
+}
+
+.hem-box-purple i {
+    color: #8B5CF6 !important;
+}
+
+.hem-app-text {
+    font-size: clamp(12px, 1vw, 14px);
+    line-height: 1.35;
+    letter-spacing: 0.3px;
+    color: #ffffff;
+}

@@ -1,0 +1,250 @@
+﻿@{
+    // Affiliate Dashboard Main Hub Component
+}
+
+<div class="container-fluid px-0">
+    
+    <partial name="~/Views/Affiliate/Partials/_AttendanceWidget.cshtml" />
+
+    <div class="row g-4 mb-4 align-items-stretch">
+        <div class="col-lg-4 d-flex align-items-stretch">
+            <div class="card shadow-sm rounded-4 bg-white p-4 w-100 d-flex flex-column justify-content-between position-relative overflow-hidden" style="border: 1px solid #d9dfe5 !important; height: 91%;">
+                <div class="position-absolute top-0 end-0 translate-middle-y opacity-10 pe-none" style="margin-right: -20px; margin-top: -20px;">
+                    <i class="bi bi-shield-check text-success" style="font-size: 10rem;"></i>
+                </div>
+                <div>
+                    <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill mb-3 fw-semibold border border-success-subtle" style="font-size: 0.75rem;">
+                        <i class="bi bi-patch-check-fill me-1"></i> Verified Partner
+                    </span>
+                    <h4 class="fw-bold text-dark mb-2">
+                        Affiliate Workspace
+                    </h4>
+                    <p class="text-muted small mb-2" id="dynamicGreeting" style="line-height: 1.5;">
+                        Welcome back! Track your Workspace real-time.
+                    </p>
+                </div>
+                <div class="d-flex align-items-center gap-2 pt-2 border-top mt-2">
+                    <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm flex-fill text-center load-module-btn" data-module="network">
+                        <i class="bi bi-diagram-3 me-1"></i> Network
+                    </button>
+                    <button class="btn btn-light btn-sm rounded-pill px-3 fw-semibold border flex-fill text-center load-module-btn" data-module="rewards">
+                        <i class="bi bi-wallet2 me-1"></i> Rewards
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8 d-flex align-items-stretch">
+            <div class="w-100" style="height: 100%;">
+                <partial name="~/Views/Dashboard/Partials/_UserProfileCard.cshtml" />
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-5">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h4 class="fw-bold m-0 d-flex align-items-center">
+                    <span class="text-secondary fw-semibold me-2">Dashboard</span> 
+                    <span class="text-muted fw-light me-2">/</span> 
+                    <span class="text-primary"><i class="bi bi-window-sidebar me-1"></i> Single View Site</span>
+                </h4>
+                <p class="text-muted small m-0">Explore and manage your core site perspectives instantly.</p>
+            </div>
+            <button id="btnBackToSingleView" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-none shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Single View
+            </button>
+        </div>
+
+        <div id="single-view-grid" class="row g-4">
+            
+            <div class="col-xl-3 col-md-6 single-view-card" data-module="performancedashboard">
+                <div class="card shadow-sm rounded-4 h-100 glow-card bg-white p-4 d-flex flex-column align-items-center text-center cursor-pointer" style="border: 1px solid #d9dfe5 !important;">
+                    <div class="icon-box bg-danger-subtle text-danger rounded-circle d-flex align-items-center justify-content-center mb-3 border border-danger-subtle" style="width: 65px; height: 65px;">
+                        <i class="bi bi-speedometer2 fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Performance Dashboard</h5>
+                    <p class="text-muted small mb-0">Real-time stats and overall site snapshot for quick auditing.</p>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 single-view-card" data-module="focusedperformance">
+                <div class="card shadow-sm rounded-4 h-100 glow-card bg-white p-4 d-flex flex-column align-items-center text-center cursor-pointer" style="border: 1px solid #d9dfe5 !important;">
+                    <div class="icon-box bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center mb-3 border border-success-subtle" style="width: 65px; height: 65px;">
+                        <i class="bi bi-journal-bookmark fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Focused Performance</h5>
+                    <p class="text-muted small mb-0">Browse structural links, pages, and sub-portal mappings.</p>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 single-view-card" data-module="activitydashboard">
+                <div class="card shadow-sm rounded-4 h-100 glow-card bg-white p-4 d-flex flex-column align-items-center text-center cursor-pointer" style="border: 1px solid #d9dfe5 !important;">
+                    <div class="icon-box bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center mb-3 border border-primary-subtle" style="width: 65px; height: 65px;">
+                        <i class="bi bi-activity fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Activity Dashboard</h5>
+                    <p class="text-muted small mb-0">Track real-time logs, user joins, and system events.</p>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 single-view-card" data-module="attendancesummary">
+                <div class="card shadow-sm rounded-4 h-100 glow-card bg-white p-4 d-flex flex-column align-items-center text-center cursor-pointer" style="border: 1px solid #d9dfe5 !important;">
+                    <div class="icon-box bg-warning-subtle text-warning rounded-circle d-flex align-items-center justify-content-center mb-3 border border-warning-subtle" style="width: 65px; height: 65px;">
+                        <i class="bi bi-folder2-open fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Attendance Summary</h5>
+                    <p class="text-muted small mb-0">Access marketing assets, banners, and promotional content.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="single-view-dynamic-container" class="mt-3"></div>
+    </div>
+
+    <div class="mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h4 class="fw-bold m-0 d-flex align-items-center">
+                    <span class="text-secondary fw-semibold me-2">Dashboard</span> 
+                    <span class="text-muted fw-light me-2">/</span> 
+                    <span class="text-success"><i class="bi bi-grid-1x2-fill me-1"></i> Management Hub</span>
+                </h4>
+                <p class="text-muted small m-0">Click any module below to manage your affiliate operations instantly.</p>
+            </div>
+            <button id="btnBackToAffDashboard" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-none shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Overview
+            </button>
+        </div>
+
+        <div id="affiliate-hub-grid" class="row g-4">
+            
+            <div class="col-xl-3 col-md-6 affiliate-card" data-module="planvisit">
+                <div class="card shadow-sm rounded-4 h-100 glow-card bg-white p-4 d-flex flex-column align-items-center text-center cursor-pointer" style="border: 1px solid #d9dfe5 !important;">
+                    <div class="icon-box bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center mb-3 border border-success-subtle" style="width: 65px; height: 65px;">
+                        <i class="bi bi-calendar-check fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Plan Visit</h5>
+                    <p class="text-muted small mb-0">Schedule and manage your school or institutional partnership visits.</p>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 affiliate-card" data-module="network">
+    <div class="card shadow-sm rounded-4 h-100 glow-card bg-white p-4 d-flex flex-column align-items-center text-center cursor-pointer" style="border: 1px solid #d9dfe5 !important;">
+        <div class="icon-box bg-danger-subtle text-danger rounded-circle d-flex align-items-center justify-content-center mb-3 border border-danger-subtle" style="width: 65px; height: 65px;">
+            <i class="bi bi-calendar-check fs-3"></i>
+        </div>
+        <h5 class="fw-bold text-dark mb-2">School Visits</h5>
+        <p class="text-muted small mb-0">View your scheduled school visits, track completed check-ins, and manage upcoming routes.</p>
+    </div>
+</div>
+
+            <div class="col-xl-3 col-md-6 affiliate-card" data-module="rewards">
+                <div class="card shadow-sm rounded-4 h-100 glow-card bg-white p-4 d-flex flex-column align-items-center text-center cursor-pointer" style="border: 1px solid #d9dfe5 !important;">
+                    <div class="icon-box bg-warning-subtle text-warning rounded-circle d-flex align-items-center justify-content-center mb-3 border border-warning-subtle" style="width: 65px; height: 65px;">
+                        <i class="bi bi-wallet2 fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Rewards & Payouts</h5>
+                    <p class="text-muted small mb-0">Check your earned commissions, wallet balance, and payout history.</p>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 affiliate-card" data-module="reports">
+                <div class="card shadow-sm rounded-4 h-100 glow-card bg-white p-4 d-flex flex-column align-items-center text-center cursor-pointer" style="border: 1px solid #d9dfe5 !important;">
+                    <div class="icon-box bg-info-subtle text-info rounded-circle d-flex align-items-center justify-content-center mb-3 border border-info-subtle" style="width: 65px; height: 65px;">
+                        <i class="bi bi-graph-up-arrow fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Performance Reports</h5>
+                    <p class="text-muted small mb-0">Analyze conversion rates, monthly earnings, and statistical insights.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="affiliate-dynamic-container" class="mt-3"></div>
+    </div>
+
+</div>
+
+<style>
+    .glow-card {
+        transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+    .glow-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 2rem rgba(25, 135, 84, 0.15) !important;
+        border-color: #198754 !important;
+    }
+    .cursor-pointer { cursor: pointer; }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const hours = new Date().getHours();
+        let greeting = "Good Evening";
+        if (hours < 12) greeting = "Good Morning";
+        else if (hours < 17) greeting = "Good Afternoon";
+
+        const greetingEl = document.getElementById("dynamicGreeting");
+        if (greetingEl) {
+            greetingEl.innerHTML = `<b>${greeting}!</b> Welcome back! Track your Workspace real-time.`;
+        }
+
+        // 1. Management Hub Module Loader
+        const cards = document.querySelectorAll('.affiliate-card, .load-module-btn');
+        const grid = document.getElementById('affiliate-hub-grid');
+        const container = document.getElementById('affiliate-dynamic-container');
+        const backBtn = document.getElementById('btnBackToAffDashboard');
+
+        cards.forEach(card => {
+            card.addEventListener('click', function () {
+                let moduleName = this.getAttribute('data-module');
+                $(grid).fadeOut(200, function () {
+                    backBtn.classList.remove('d-none');
+                    $.get('/Affiliate/LoadModule/' + moduleName, function (htmlResponse) {
+                        $(container).html(htmlResponse).hide().fadeIn(300);
+                    }).fail(function () {
+                        $(container).html(`<div class="card shadow-sm rounded-4 bg-white p-4 text-center text-muted border" style="border: 1px solid #d9dfe5 !important;"><h4>${moduleName.toUpperCase()} Module</h4><p>Module content under construction.</p></div>`).hide().fadeIn(300);
+                    });
+                });
+            });
+        });
+
+        backBtn.addEventListener('click', function () {
+            $(container).fadeOut(200, function () {
+                $(this).html('');
+                backBtn.classList.add('d-none');
+                $(grid).fadeIn(300);
+            });
+        });
+
+        // 2. Single View Site Module Loader
+        const svCards = document.querySelectorAll('.single-view-card');
+        const svGrid = document.getElementById('single-view-grid');
+        const svContainer = document.getElementById('single-view-dynamic-container');
+        const svBackBtn = document.getElementById('btnBackToSingleView');
+
+        svCards.forEach(card => {
+            card.addEventListener('click', function () {
+                let moduleName = this.getAttribute('data-module');
+                $(svGrid).fadeOut(200, function () {
+                    svBackBtn.classList.remove('d-none');
+                    $.get('/Affiliate/LoadModule/' + moduleName, function (htmlResponse) {
+                        $(svContainer).html(htmlResponse).hide().fadeIn(300);
+                    }).fail(function () {
+                        $(svContainer).html(`<div class="card shadow-sm rounded-4 bg-white p-4 text-center text-muted border" style="border: 1px solid #d9dfe5 !important;"><h4>${moduleName.toUpperCase()} View</h4><p>Module content under construction.</p></div>`).hide().fadeIn(300);
+                    });
+                });
+            });
+        });
+
+        svBackBtn.addEventListener('click', function () {
+            $(svContainer).fadeOut(200, function () {
+                $(this).html('');
+                svBackBtn.classList.add('d-none');
+                $(svGrid).fadeIn(300);
+            });
+        });
+    });
+</script>

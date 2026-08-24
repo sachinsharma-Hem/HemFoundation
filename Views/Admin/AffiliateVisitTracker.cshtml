@@ -1,0 +1,1295 @@
+﻿@{
+    ViewData["Title"] = "Affiliate Visit Tracker";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<!-- Flatpickr CSS -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<div class="container-fluid py-4">
+
+    <!-- PAGE HEADER -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-dark m-0">
+                <i class="bi bi-pin-map-fill text-danger me-2"></i>
+                Affiliate Visit Tracker
+            </h3>
+
+            <p class="text-muted small m-0">
+                Monitor field schedules, real-time executions, locations, and photo evidence.
+            </p>
+        </div>
+    </div>
+
+
+    <!-- FILTER CARD -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-3 mb-4">
+
+        <div class="row g-2 align-items-end">
+
+            <!-- AFFILIATE -->
+            <div class="col-md-3">
+
+                <label class="form-label text-muted small fw-semibold m-0">
+                    Select Affiliate
+                </label>
+
+                <select id="fltAffiliate"
+                        class="form-select form-select-sm rounded-3 shadow-none">
+
+                    <option value="">
+                        All Affiliates (Overall View)
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- FROM DATE -->
+            <div class="col-md-3">
+
+                <label class="form-label text-muted small fw-semibold m-0">
+                    From Date
+                </label>
+
+                <input type="text"
+                       id="fltFromDate"
+                       class="form-control form-control-sm rounded-3 shadow-none bg-white"
+                       placeholder="Select from date"
+                       autocomplete="off" />
+
+            </div>
+
+
+            <!-- TO DATE -->
+            <div class="col-md-3">
+
+                <label class="form-label text-muted small fw-semibold m-0">
+                    To Date
+                </label>
+
+                <input type="text"
+                       id="fltToDate"
+                       class="form-control form-control-sm rounded-3 shadow-none bg-white"
+                       placeholder="Select to date"
+                       autocomplete="off" />
+
+            </div>
+
+
+            <!-- BUTTONS -->
+            <div class="col-md-3 d-flex gap-2">
+
+                <button type="button"
+                        class="btn btn-danger btn-sm w-100 rounded-3 fw-semibold shadow-sm"
+                        onclick="loadTrackerData()">
+
+                    <i class="bi bi-search me-1"></i>
+                    Track
+
+                </button>
+
+
+                <button type="button"
+                        class="btn btn-light btn-sm border rounded-3"
+                        onclick="resetFilters()"
+                        title="Reset Filters">
+
+                    <i class="bi bi-arrow-counterclockwise"></i>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- STATISTICS -->
+    <div class="row g-3 mb-4">
+
+        <!-- TOTAL -->
+        <div class="col-md-3">
+
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-4 border-info">
+
+                <p class="text-muted small fw-semibold mb-1">
+                    Total Scheduled
+                </p>
+
+                <h3 class="fw-bold text-dark m-0" id="stTotal">
+                    <span class="spinner-border spinner-border-sm"></span>
+                </h3>
+
+            </div>
+
+        </div>
+
+
+        <!-- PENDING -->
+        <div class="col-md-3">
+
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-4 border-warning">
+
+                <p class="text-muted small fw-semibold mb-1">
+                    Pending / Active
+                </p>
+
+                <h3 class="fw-bold text-warning m-0" id="stPending">
+                    <span class="spinner-border spinner-border-sm"></span>
+                </h3>
+
+            </div>
+
+        </div>
+
+
+        <!-- COMPLETED -->
+        <div class="col-md-3">
+
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-4 border-success">
+
+                <p class="text-muted small fw-semibold mb-1">
+                    Successfully Completed
+                </p>
+
+                <h3 class="fw-bold text-success m-0" id="stCompleted">
+                    <span class="spinner-border spinner-border-sm"></span>
+                </h3>
+
+            </div>
+
+        </div>
+
+
+        <!-- CANCELLED -->
+        <div class="col-md-3">
+
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-4 border-danger">
+
+                <p class="text-muted small fw-semibold mb-1">
+                    Cancelled
+                </p>
+
+                <h3 class="fw-bold text-danger m-0" id="stCancelled">
+                    <span class="spinner-border spinner-border-sm"></span>
+                </h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- VISIT TABLE -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <h5 class="fw-bold text-dark mb-0">
+
+                <i class="bi bi-card-list text-primary me-2"></i>
+
+                Visit Execution Logs
+
+            </h5>
+
+            <span id="recordCount"
+                  class="badge bg-light text-dark border">
+                0 Records
+            </span>
+
+        </div>
+
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle small">
+
+                <thead class="table-light text-muted">
+
+                    <tr>
+
+                        <th>
+                            Schedule Date
+                        </th>
+
+                        <th>
+                            Affiliate Name
+                        </th>
+
+                        <th>
+                            School / Target
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th class="text-center">
+                            Execution Evidence
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="trackerTableBody">
+
+                    <tr>
+
+                        <td colspan="5"
+                            class="text-center py-5">
+
+                            <div class="spinner-border spinner-border-sm"></div>
+
+                            Loading...
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- PHOTO MODAL -->
+<div class="modal fade"
+     id="photoModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content border-0 rounded-4 shadow">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title fw-bold">
+
+                    <i class="bi bi-image me-2 text-primary"></i>
+
+                    Visit Evidence
+
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <div class="text-center mb-3">
+
+                    <img id="evidenceImage"
+                         src=""
+                         alt="Visit Evidence"
+                         class="img-fluid rounded-3 shadow-sm"
+                         style="max-height:500px; object-fit:contain;" />
+
+                </div>
+
+
+                <div class="border-top pt-3">
+
+                    <div class="row">
+
+                        <div class="col-md-3">
+
+                            <small class="text-muted">
+                                Executed Date
+                            </small>
+
+                            <div id="evidenceDate"
+                                 class="fw-semibold">
+                                -
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-9">
+
+                            <small class="text-muted">
+                                Description
+                            </small>
+
+                            <div id="evidenceDesc"
+                                 class="fw-semibold">
+                                -
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+@section Scripts {
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+
+    <script>
+
+        let fromDatePicker = null;
+        let toDatePicker = null;
+
+
+        // ============================================================
+        // PAGE LOAD
+        // ============================================================
+
+        $(function () {
+
+            // Flatpickr configuration
+            const flatpickrConfig = {
+
+                altInput: true,
+
+                altFormat: "d/m/Y",
+
+                dateFormat: "Y-m-d",
+
+                allowInput: false,
+
+                clickOpens: true
+
+            };
+
+
+            // IMPORTANT:
+            // NO DEFAULT DATE
+            // Page open hote hi ALL records load honge.
+
+            fromDatePicker = flatpickr("#fltFromDate", {
+                ...flatpickrConfig
+            });
+
+
+            toDatePicker = flatpickr("#fltToDate", {
+                ...flatpickrConfig
+            });
+
+
+            // Load affiliate dropdown
+            loadDropdown();
+
+
+            // Load ALL records
+            loadTrackerData();
+
+        });
+
+
+
+        // ============================================================
+        // JWT TOKEN
+        // ============================================================
+
+        function getAuthToken() {
+
+            return localStorage.getItem('jwt_token')
+                || sessionStorage.getItem('jwt_token')
+                || '';
+
+        }
+
+
+
+        // ============================================================
+        // DATE FORMAT
+        // ============================================================
+
+        function formatDate(dateStr) {
+
+            if (!dateStr)
+                return '-';
+
+
+            const d = new Date(dateStr);
+
+
+            if (isNaN(d.getTime()))
+                return '-';
+
+
+            const day = String(d.getDate()).padStart(2, '0');
+
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+
+            const year = d.getFullYear();
+
+
+            const time = d.toLocaleTimeString([], {
+
+                hour: '2-digit',
+
+                minute: '2-digit',
+
+                hour12: true
+
+            });
+
+
+            return `${day}/${month}/${year} ${time}`;
+
+        }
+
+
+
+        // ============================================================
+        // LOAD AFFILIATES
+        // ============================================================
+
+        function loadDropdown() {
+
+            $.ajax({
+
+                url: '/api/admin-visit-tracker/affiliates',
+
+                type: 'GET',
+
+                headers: {
+
+                    'Authorization':
+                        'Bearer ' + getAuthToken()
+
+                },
+
+
+                success: function (res) {
+
+                    if (!res || !res.success) {
+
+                        console.error(
+                            'Affiliate API returned unsuccessful response.',
+                            res
+                        );
+
+                        return;
+
+                    }
+
+
+                    let html =
+                        '<option value="">All Affiliates (Overall View)</option>';
+
+
+                    if (Array.isArray(res.data)) {
+
+                        res.data.forEach(function (a) {
+
+                            html += `
+                                <option value="${a.userID}">
+                                    ${escapeHtml(a.name || 'Unknown Affiliate')}
+                                </option>
+                            `;
+
+                        });
+
+                    }
+
+
+                    $('#fltAffiliate').html(html);
+
+                },
+
+
+                error: function (xhr) {
+
+                    console.error(
+                        'Affiliate dropdown API error:',
+                        xhr
+                    );
+
+                }
+
+            });
+
+        }
+
+
+
+        // ============================================================
+        // RESET FILTERS
+        // ============================================================
+
+        function resetFilters() {
+
+            // Affiliate reset
+            $('#fltAffiliate').val('');
+
+
+            // Date reset
+            if (fromDatePicker)
+                fromDatePicker.clear();
+
+
+            if (toDatePicker)
+                toDatePicker.clear();
+
+
+            // Load complete table
+            loadTrackerData();
+
+        }
+
+
+
+        // ============================================================
+        // LOAD TRACKER DATA
+        // ============================================================
+
+        function loadTrackerData() {
+
+            const fDate = $('#fltFromDate').val();
+
+            const tDate = $('#fltToDate').val();
+
+            const affId = $('#fltAffiliate').val();
+
+
+            // Loading stats
+            $('#stTotal')
+                .html('<span class="spinner-border spinner-border-sm"></span>');
+
+            $('#stPending')
+                .html('<span class="spinner-border spinner-border-sm"></span>');
+
+            $('#stCompleted')
+                .html('<span class="spinner-border spinner-border-sm"></span>');
+
+            $('#stCancelled')
+                .html('<span class="spinner-border spinner-border-sm"></span>');
+
+
+            // Loading table
+            $('#trackerTableBody').html(`
+
+                <tr>
+
+                    <td colspan="5"
+                        class="text-center py-5 text-muted">
+
+                        <div class="spinner-border spinner-border-sm"></div>
+
+                        Fetching data...
+
+                    </td>
+
+                </tr>
+
+            `);
+
+
+            // Record counter
+            $('#recordCount').text('Loading...');
+
+
+            // ========================================================
+            // BUILD API URL
+            // ========================================================
+
+            let url =
+                '/api/admin-visit-tracker/track';
+
+
+            const params = new URLSearchParams();
+
+
+            // Only send fromDate when selected
+            if (fDate) {
+
+                params.append(
+                    'fromDate',
+                    fDate
+                );
+
+            }
+
+
+            // Only send toDate when selected
+            if (tDate) {
+
+                params.append(
+                    'toDate',
+                    tDate
+                );
+
+            }
+
+
+            // Only send affiliate when selected
+            if (affId) {
+
+                params.append(
+                    'affiliateId',
+                    affId
+                );
+
+            }
+
+
+            const queryString = params.toString();
+
+
+            if (queryString) {
+
+                url += '?' + queryString;
+
+            }
+
+
+
+            console.log(
+                'Tracker API:',
+                url
+            );
+
+
+
+            // ========================================================
+            // AJAX
+            // ========================================================
+
+            $.ajax({
+
+                url: url,
+
+                type: 'GET',
+
+                headers: {
+
+                    'Authorization':
+                        'Bearer ' + getAuthToken()
+
+                },
+
+
+                success: function (res) {
+
+                    console.log(
+                        'Tracker Response:',
+                        res
+                    );
+
+
+                    if (!res || !res.success) {
+
+                        showTrackerError(
+                            'API returned an unsuccessful response.'
+                        );
+
+                        return;
+
+                    }
+
+
+                    // =================================================
+                    // STATS
+                    // =================================================
+
+                    const stats = res.stats || {};
+
+
+                    $('#stTotal')
+                        .text(stats.totalScheduled ?? 0);
+
+
+                    $('#stPending')
+                        .text(stats.totalPending ?? 0);
+
+
+                    $('#stCompleted')
+                        .text(stats.totalCompleted ?? 0);
+
+
+                    $('#stCancelled')
+                        .text(stats.totalCancelled ?? 0);
+
+
+
+                    // =================================================
+                    // DATA
+                    // =================================================
+
+                    const data =
+                        Array.isArray(res.data)
+                            ? res.data
+                            : [];
+
+
+                    $('#recordCount')
+                        .text(
+                            `${data.length} Records`
+                        );
+
+
+
+                    // No records
+                    if (data.length === 0) {
+
+                        $('#trackerTableBody').html(`
+
+                            <tr>
+
+                                <td colspan="5"
+                                    class="text-center py-5 text-muted">
+
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+
+                                    No visit records found.
+
+                                </td>
+
+                            </tr>
+
+                        `);
+
+                        return;
+
+                    }
+
+
+
+                    // =================================================
+                    // BUILD TABLE
+                    // =================================================
+
+                    let html = '';
+
+
+                    data.forEach(function (v) {
+
+
+                        // ---------------------------------------------
+                        // STATUS BADGE
+                        // ---------------------------------------------
+
+                        let badge = '';
+
+
+                        const status =
+                            v.status || 'Pending';
+
+
+                        if (
+                            status.toLowerCase() === 'completed'
+                        ) {
+
+                            badge = `
+                                <span class="badge bg-success-subtle text-success">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Completed
+                                </span>
+                            `;
+
+                        }
+                        else if (
+                            status.toLowerCase() === 'cancelled'
+                        ) {
+
+                            badge = `
+                                <span class="badge bg-danger-subtle text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    Cancelled
+                                </span>
+                            `;
+
+                        }
+                        else if (
+                            status.toLowerCase() === 'active'
+                        ) {
+
+                            badge = `
+                                <span class="badge bg-primary-subtle text-primary">
+                                    <i class="bi bi-play-circle me-1"></i>
+                                    Active
+                                </span>
+                            `;
+
+                        }
+                        else {
+
+                            badge = `
+                                <span class="badge bg-warning-subtle text-warning">
+                                    <i class="bi bi-clock me-1"></i>
+                                    Pending
+                                </span>
+                            `;
+
+                        }
+
+
+
+                        // ---------------------------------------------
+                        // EVIDENCE
+                        // ---------------------------------------------
+
+                        let evidenceHtml = `
+
+                            <span class="text-muted">
+                                -
+                            </span>
+
+                        `;
+
+
+                        if (
+                            status.toLowerCase() === 'completed'
+                            && v.reportedDate
+                        ) {
+
+
+                            // -----------------------------------------
+                            // MAP
+                            // -----------------------------------------
+
+                            let mapLink = '';
+
+
+                            if (
+                                v.latitude !== null
+                                && v.latitude !== undefined
+                                && v.longitude !== null
+                                && v.longitude !== undefined
+                            ) {
+
+                                const mapUrl =
+                                    `https://www.google.com/maps?q=${encodeURIComponent(v.latitude)},${encodeURIComponent(v.longitude)}`;
+
+
+                                mapLink = `
+
+                                    <a href="${mapUrl}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0 shadow-none">
+
+                                        <i class="bi bi-geo-alt-fill"></i>
+
+                                        Map
+
+                                    </a>
+
+                                `;
+
+                            }
+
+
+
+                            // -----------------------------------------
+                            // PHOTO
+                            // -----------------------------------------
+
+                            let photoBtn = '';
+
+
+                            if (v.photoUrl) {
+
+                                const photoUrl =
+                                    escapeHtml(v.photoUrl);
+
+
+                                const description =
+                                    escapeHtml(
+                                        v.reportDescription
+                                        || 'No description'
+                                    );
+
+
+                                const reportDate =
+                                    formatDate(v.reportedDate);
+
+
+                                photoBtn = `
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0 ms-1 shadow-none"
+                                            onclick="showPhoto(
+                                                '${escapeJsString(v.photoUrl)}',
+                                                '${escapeJsString(v.reportDescription || 'No description')}',
+                                                '${escapeJsString(reportDate)}'
+                                            )">
+
+                                        <i class="bi bi-image"></i>
+
+                                        Photo
+
+                                    </button>
+
+                                `;
+
+                            }
+
+
+
+                            evidenceHtml = `
+
+                                <div class="d-flex justify-content-center align-items-center gap-1">
+
+                                    ${mapLink}
+
+                                    ${photoBtn}
+
+                                </div>
+
+
+                                <div class="mt-1 text-muted"
+                                     style="font-size:0.68rem;">
+
+                                    Executed:
+                                    ${formatDate(v.reportedDate)}
+
+                                </div>
+
+                            `;
+
+                        }
+
+
+
+                        // ---------------------------------------------
+                        // SCHOOL
+                        // ---------------------------------------------
+
+                        const schoolName =
+                            v.schoolName
+                            || 'Unknown School';
+
+
+                        const city =
+                            v.city
+                            || '-';
+
+
+                        // ---------------------------------------------
+                        // PURPOSE
+                        // ---------------------------------------------
+
+                        const purpose =
+                            v.purpose
+                            || '-';
+
+
+                        // ---------------------------------------------
+                        // AFFILIATE
+                        // ---------------------------------------------
+
+                        const affiliateName =
+                            v.affiliateName
+                            || 'Unknown Affiliate';
+
+
+
+                        // ---------------------------------------------
+                        // TABLE ROW
+                        // ---------------------------------------------
+
+                        html += `
+
+                            <tr>
+
+                                <td class="fw-semibold text-dark">
+
+                                    ${formatDate(v.scheduleDate)}
+
+                                </td>
+
+
+                                <td>
+
+                                    <span class="text-primary fw-bold">
+
+                                        <i class="bi bi-person me-1"></i>
+
+                                        ${escapeHtml(affiliateName)}
+
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    <b>
+                                        ${escapeHtml(schoolName)}
+                                    </b>
+
+                                    <br>
+
+                                    <span class="text-muted">
+
+                                        ${escapeHtml(city)}
+
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    ${badge}
+
+                                    <br>
+
+                                    <span class="text-muted"
+                                          style="font-size:0.7rem;">
+
+                                        ${escapeHtml(purpose)}
+
+                                    </span>
+
+                                </td>
+
+
+                                <td class="text-center align-middle">
+
+                                    ${evidenceHtml}
+
+                                </td>
+
+                            </tr>
+
+                        `;
+
+                    });
+
+
+
+                    $('#trackerTableBody')
+                        .html(html);
+
+                },
+
+
+                // =====================================================
+                // AJAX ERROR
+                // =====================================================
+
+                error: function (xhr) {
+
+                    console.error(
+                        'Tracker API Error:',
+                        xhr
+                    );
+
+
+                    let message =
+                        'Unable to load visit records.';
+
+
+                    if (xhr.status === 401) {
+
+                        message =
+                            'Unauthorized. Please login again.';
+
+                    }
+                    else if (xhr.status === 403) {
+
+                        message =
+                            'You do not have permission to view visit records.';
+
+                    }
+                    else if (xhr.status === 404) {
+
+                        message =
+                            'Tracker API endpoint not found.';
+
+                    }
+                    else if (xhr.status >= 500) {
+
+                        message =
+                            'Server error occurred while loading visit records.';
+
+                    }
+
+
+                    showTrackerError(message);
+
+                }
+
+            });
+
+        }
+
+
+
+        // ============================================================
+        // ERROR UI
+        // ============================================================
+
+        function showTrackerError(message) {
+
+            $('#stTotal').text('0');
+
+            $('#stPending').text('0');
+
+            $('#stCompleted').text('0');
+
+            $('#stCancelled').text('0');
+
+            $('#recordCount').text('0 Records');
+
+
+            $('#trackerTableBody').html(`
+
+                <tr>
+
+                    <td colspan="5"
+                        class="text-center py-5 text-danger">
+
+                        <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>
+
+                        ${escapeHtml(message)}
+
+                    </td>
+
+                </tr>
+
+            `);
+
+        }
+
+
+
+        // ============================================================
+        // PHOTO MODAL
+        // ============================================================
+
+        function showPhoto(url, desc, date) {
+
+            $('#evidenceImage')
+                .attr('src', url);
+
+
+            $('#evidenceDesc')
+                .text(desc || 'No description');
+
+
+            $('#evidenceDate')
+                .text(date || '-');
+
+
+            const modalElement =
+                document.getElementById('photoModal');
+
+
+            if (
+                typeof bootstrap !== 'undefined'
+                && bootstrap.Modal
+            ) {
+
+                const modal =
+                    bootstrap.Modal.getOrCreateInstance(
+                        modalElement
+                    );
+
+                modal.show();
+
+            }
+            else {
+
+                $('#photoModal').modal('show');
+
+            }
+
+        }
+
+
+
+        // ============================================================
+        // ESCAPE HTML
+        // ============================================================
+
+        function escapeHtml(value) {
+
+            if (
+                value === null
+                || value === undefined
+            ) {
+
+                return '';
+
+            }
+
+
+            return String(value)
+
+                .replace(/&/g, '&amp;')
+
+                .replace(/</g, '&lt;')
+
+                .replace(/>/g, '&gt;')
+
+                .replace(/"/g, '&quot;')
+
+                .replace(/'/g, '&#039;');
+
+        }
+
+
+
+        // ============================================================
+        // ESCAPE JAVASCRIPT STRING
+        // ============================================================
+
+        function escapeJsString(value) {
+
+            if (
+                value === null
+                || value === undefined
+            ) {
+
+                return '';
+
+            }
+
+
+            return String(value)
+
+                .replace(/\\/g, '\\\\')
+
+                .replace(/'/g, "\\'")
+
+                .replace(/"/g, '\\"')
+
+                .replace(/\r/g, '\\r')
+
+                .replace(/\n/g, '\\n');
+
+        }
+
+    </script>
+
+}

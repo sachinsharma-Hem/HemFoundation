@@ -1,0 +1,428 @@
+﻿@{
+    ViewData["Title"] = "Course Hub & Academics";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+        <h3 class="fw-bold text-dark mb-1"><i class="bi bi-journal-bookmark-fill text-success me-2"></i> Course Hub & Academics Management</h3>
+        <p class="text-muted small m-0">Manage Syllabus configuration, Course Registrations, and Quiz creation from a unified dashboard.</p>
+    </div>
+
+    <ul class="nav nav-pills mb-4 gap-2" id="courseHubTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm text-dark bg-white border" id="courses-tab" data-bs-toggle="pill" data-bs-target="#courses-pane" type="button" role="tab">
+                <i class="bi bi-book-fill me-2"></i> Courses Register
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill px-4 fw-semibold shadow-sm" id="syllabus-tab" data-bs-toggle="pill" data-bs-target="#syllabus-pane" type="button" role="tab">
+                <i class="bi bi-file-earmark-text-fill me-2"></i> Syllabus Master
+            </button>
+        </li>
+
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm text-dark bg-white border" id="quiz-tab" data-bs-toggle="pill" data-bs-target="#quiz-pane" type="button" role="tab">
+                <i class="bi bi-patch-question-fill me-2"></i> Quiz Create
+            </button>
+        </li>
+       
+    </ul>
+
+    <div class="tab-content" id="courseHubTabContent">
+        
+        <div class="tab-pane fade show active" id="syllabus-pane" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4" id="syllabusListCard">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark m-0"><i class="bi bi-table me-2 text-primary"></i> Syllabus List</h5>
+                    <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="showSyllabusForm(0)"><i class="bi bi-plus-lg me-1"></i> Add Syllabus</button>
+                </div>
+                <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light sticky-top">
+                            <tr><th>#</th><th>Remarks</th><th>Created Date</th><th class="text-center">Status</th><th class="text-end">Actions</th></tr>
+                        </thead>
+                        <tbody id="syllabusTableBody"><tr><td colspan="5" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 d-none" id="syllabusFormCard">
+                <h5 class="fw-bold text-success mb-3" id="syllabusFormTitle"><i class="bi bi-plus-circle me-1"></i> Add New Syllabus</h5>
+                <form id="syllabusForm">
+                    <input type="hidden" id="syllabusId" value="0" />
+                    <div class="row g-3">
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Course Year</label><select id="sy_year" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Main Course</label><select id="sy_mainCourse" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Category</label><select id="sy_category" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Sub Category</label><select id="sy_subCategory" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Display Order</label><select id="sy_order" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Course</label><select id="sy_course" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Quiz</label><select id="sy_quiz" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Standard (Optional)</label><select id="sy_standard" class="form-select form-select-sm rounded-3 shadow-none"><option value="">-- Select Standard --</option></select></div>
+                        
+                        <div class="col-md-12 bg-light p-3 rounded-3 border">
+                            <label class="form-label small fw-bold text-dark d-block mb-2">Target Audience Selection</label>
+                            <div class="d-flex gap-4">
+                                <div class="form-check"><input class="form-check-input" type="checkbox" id="sy_forTeachers"><label class="form-check-label small" for="sy_forTeachers">For Teachers</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" id="sy_forAll"><label class="form-check-label small" for="sy_forAll">For All</label></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12"><label class="form-label small fw-semibold">Remarks</label><textarea id="sy_remarks" class="form-control form-control-sm rounded-3 shadow-none" rows="2"></textarea></div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-light btn-sm rounded-pill px-4" onclick="hideSyllabusForm()">Cancel</button>
+                        <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm">Save Syllabus</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="courses-pane" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4" id="courseListCard">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark m-0"><i class="bi bi-table me-2 text-primary"></i> Registered Courses List</h5>
+                    <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="showCourseForm(0)"><i class="bi bi-plus-lg me-1"></i> Register Course</button>
+                </div>
+                <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light sticky-top">
+                            <tr><th>#</th><th>Course Name</th><th>Sessions</th><th>Delivery Date</th><th class="text-center">Status</th><th class="text-end">Actions</th></tr>
+                        </thead>
+                        <tbody id="courseTableBody"><tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 d-none" id="courseFormCard">
+                <h5 class="fw-bold text-success mb-3" id="courseFormTitle"><i class="bi bi-plus-circle me-1"></i> Register New Course</h5>
+                <form id="courseForm">
+                    <input type="hidden" id="courseId" value="0" />
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label small fw-semibold">Course Name</label><input type="text" id="co_name" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-6"><label class="form-label small fw-semibold">Expected Delivery Date</label><input type="date" id="co_date" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-4"><label class="form-label small fw-semibold">From Age</label><input type="number" id="co_fromAge" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-4"><label class="form-label small fw-semibold">To Age</label><input type="number" id="co_toAge" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-4"><label class="form-label small fw-semibold">Number of Sessions</label><input type="number" id="co_sessions" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+
+                        <div class="col-md-4"><label class="form-label small fw-semibold">Author</label><select id="co_author" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-4"><label class="form-label small fw-semibold">Manager</label><select id="co_manager" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-4"><label class="form-label small fw-semibold">Main Course</label><select id="co_mainCourse" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-6"><label class="form-label small fw-semibold">Courses For</label><select id="co_for" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-6"><label class="form-label small fw-semibold">Customer Type</label><select id="co_customerType" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+
+                        <div class="col-md-12"><label class="form-label small fw-semibold">Description</label><textarea id="co_desc" class="form-control form-control-sm rounded-3 shadow-none" rows="2"></textarea></div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-light btn-sm rounded-pill px-4" onclick="hideCourseForm()">Cancel</button>
+                        <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm">Save Course</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="quiz-pane" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4" id="quizListCard">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark m-0"><i class="bi bi-table me-2 text-primary"></i> Created Quizzes List</h5>
+                    <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="showQuizForm(0)"><i class="bi bi-plus-lg me-1"></i> Create Quiz</button>
+                </div>
+                <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light sticky-top">
+                            <tr><th>#</th><th>Quiz Name</th><th>Total Marks</th><th>Passing</th><th class="text-center">Exam Active</th><th class="text-end">Actions</th></tr>
+                        </thead>
+                        <tbody id="quizTableBody"><tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 d-none" id="quizFormCard">
+                <h5 class="fw-bold text-success mb-3" id="quizFormTitle"><i class="bi bi-plus-circle me-1"></i> Create New Quiz</h5>
+                <form id="quizForm">
+                    <input type="hidden" id="quizId" value="0" />
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label small fw-semibold">Quiz Name</label><input type="text" id="qz_name" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-6"><label class="form-label small fw-semibold">Linked Course</label><select id="qz_course" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Start Date</label><input type="date" id="qz_startDate" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">End Date</label><input type="date" id="qz_endDate" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Start Time</label><input type="time" id="qz_startTime" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">End Time</label><input type="time" id="qz_endTime" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Duration Type</label><select id="qz_durationType" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Passing Marks</label><input type="number" id="qz_passingMarks" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Total Marks</label><input type="number" id="qz_totalMarks" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+                        <div class="col-md-3"><label class="form-label small fw-semibold">Attempts Allowed</label><input type="number" id="qz_attempts" class="form-control form-control-sm rounded-3 shadow-none" required /></div>
+
+                        <div class="col-md-4"><label class="form-label small fw-semibold">Alloted To</label><select id="qz_allotedTo" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-4"><label class="form-label small fw-semibold">MCQ Level</label><select id="qz_mcqLevel" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+                        <div class="col-md-4"><label class="form-label small fw-semibold">Level</label><select id="qz_level" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
+
+                        <div class="col-md-12">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="qz_examActive" checked>
+                                <label class="form-check-label small fw-semibold" for="qz_examActive">Exam Active Status</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-light btn-sm rounded-pill px-4" onclick="hideQuizForm()">Cancel</button>
+                        <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm">Save Quiz</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+    <div id="liveToast" class="toast align-items-center text-white border-0 shadow-lg rounded-4" role="alert">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold" id="toastMessage"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto shadow-none" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let allSyllabus = [], allCourses = [], allQuizzes = [];
+
+        $(document).ready(function () {
+            loadDropdowns();
+            loadSyllabusList();
+            loadCourseList();
+            loadQuizList();
+
+            $('#syllabusForm').on('submit', function (e) {
+                e.preventDefault();
+                let payload = {
+                    id: parseInt($('#syllabusId').val()),
+                    courseYearId: parseInt($('#sy_year').val()),
+                    mainCourseId: parseInt($('#sy_mainCourse').val()),
+                    courseCategoryId: parseInt($('#sy_category').val()),
+                    courseSubCategoryId: parseInt($('#sy_subCategory').val()),
+                    displayOrderId: parseInt($('#sy_order').val()),
+                    courseId: parseInt($('#sy_course').val()),
+                    quizId: parseInt($('#sy_quiz').val()),
+                    standardMasterId: $('#sy_standard').val() ? parseInt($('#sy_standard').val()) : null,
+                    isForTeachers: $('#sy_forTeachers').is(':checked'),
+                    isForAll: $('#sy_forAll').is(':checked'),
+                    remarks: $('#sy_remarks').val()
+                };
+                saveRecord('/api/course-hub/syllabus/save', payload, hideSyllabusForm, loadSyllabusList);
+            });
+
+            $('#courseForm').on('submit', function (e) {
+                e.preventDefault();
+                let payload = {
+                    id: parseInt($('#courseId').val()),
+                    courseName: $('#co_name').val(),
+                    expectedDeliveryDate: $('#co_date').val(),
+                    fromAge: parseInt($('#co_fromAge').val()),
+                    toAge: parseInt($('#co_toAge').val()),
+                    numberOfSessions: parseInt($('#co_sessions').val()),
+                    courseAuthorId: parseInt($('#co_author').val()),
+                    courseManagerId: parseInt($('#co_manager').val()),
+                    mainCourseId: parseInt($('#co_mainCourse').val()),
+                    courseForId: parseInt($('#co_for').val()),
+                    courseCustomerTypeId: parseInt($('#co_customerType').val()),
+                    description: $('#co_desc').val()
+                };
+                saveRecord('/api/course-hub/course/save', payload, hideCourseForm, loadCourseList);
+            });
+
+            $('#quizForm').on('submit', function (e) {
+                e.preventDefault();
+                let payload = {
+                    id: parseInt($('#quizId').val()),
+                    quizName: $('#qz_name').val(),
+                    courseId: parseInt($('#qz_course').val()),
+                    startDate: $('#qz_startDate').val(),
+                    endDate: $('#qz_endDate').val(),
+                    startTime: $('#qz_startTime').val().length === 5 ? $('#qz_startTime').val() + ":00" : $('#qz_startTime').val(),
+                    endTime: $('#qz_endTime').val().length === 5 ? $('#qz_endTime').val() + ":00" : $('#qz_endTime').val(),
+                    courseDurationTypeId: parseInt($('#qz_durationType').val()),
+                    passingMarks: parseInt($('#qz_passingMarks').val()),
+                    totalMarks: parseInt($('#qz_totalMarks').val()),
+                    noOfAttemptsAllowed: parseInt($('#qz_attempts').val()),
+                    courseAllotedToId: parseInt($('#qz_allotedTo').val()),
+                    courseMcqLevelId: parseInt($('#qz_mcqLevel').val()),
+                    courseLevelId: parseInt($('#qz_level').val()),
+                    examActive: $('#qz_examActive').is(':checked')
+                };
+                saveRecord('/api/course-hub/quiz/save', payload, hideQuizForm, loadQuizList);
+            });
+        });
+
+        function loadDropdowns() {
+            $.get('/api/course-hub/dropdowns', function (res) {
+                if (res.success) {
+                    populateDropdown('#sy_year', res.years, 'id', 'years');
+                    populateDropdown('#sy_mainCourse', res.mainCourses, 'id', 'name');
+                    populateDropdown('#sy_category', res.categories, 'id', 'name');
+                    populateDropdown('#sy_subCategory', res.subCategories, 'id', 'name');
+                    populateDropdown('#sy_order', res.orderNumbers, 'id', 'displayOrder');
+                    populateDropdown('#sy_course', res.courses, 'id', 'courseName');
+                    populateDropdown('#sy_quiz', res.quizzes, 'id', 'quizName');
+                    populateDropdown('#sy_standard', res.standards, 'id', 'standardName');
+
+                    populateDropdown('#co_author', res.authors, 'id', 'name');
+                    populateDropdown('#co_manager', res.managers, 'id', 'name');
+                    populateDropdown('#co_mainCourse', res.mainCourses, 'id', 'name');
+                    populateDropdown('#co_for', res.coursesFor, 'id', 'name');
+                    populateDropdown('#co_customerType', res.customerTypes, 'id', 'name');
+
+                    populateDropdown('#qz_course', res.courses, 'id', 'courseName');
+                    populateDropdown('#qz_durationType', res.durationTypes, 'id', 'name');
+                    populateDropdown('#qz_allotedTo', res.allotedTos, 'id', 'name');
+                    populateDropdown('#qz_mcqLevel', res.mcqLevels, 'id', 'name');
+                    populateDropdown('#qz_level', res.levels, 'id', 'name');
+                }
+            });
+        }
+
+        function populateDropdown(selector, list, valueField, textField) {
+            let html = '<option value="">-- Select --</option>';
+            if(list) { list.forEach(x => { html += `<option value="${x[valueField]}">${x[textField]}</option>`; }); }
+            $(selector).html(html);
+        }
+
+        function saveRecord(url, payload, hideFunc, reloadFunc) {
+            $.ajax({
+                url: url, type: 'POST', contentType: 'application/json', data: JSON.stringify(payload),
+                success: function (res) {
+                    if (res.success) { hideFunc(); reloadFunc(); showToast(res.message, 'success'); loadDropdowns(); }
+                },
+                error: function (err) { showToast(err.responseJSON?.message || 'Error saving record', 'danger'); }
+            });
+        }
+
+        function loadSyllabusList() {
+            $.get('/api/course-hub/syllabus/list', function (res) {
+                allSyllabus = res.data || [];
+                let rows = '';
+                allSyllabus.forEach((x, i) => {
+                    let statusBadge = x.isActive ? `<span class="badge bg-success cursor-pointer" onclick="toggleStatus('syllabus', ${x.id})" title="Click to Deactivate">Active</span>` : `<span class="badge bg-secondary cursor-pointer" onclick="toggleStatus('syllabus', ${x.id})" title="Click to Activate">Inactive</span>`;
+                    rows += `<tr><td>${i+1}</td><td>${x.remarks || '-'}</td><td>${new Date(x.createdDate).toLocaleDateString()}</td><td class="text-center">${statusBadge}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editSyllabus(${x.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="confirmDelete('/api/course-hub/syllabus/delete/${x.id}', loadSyllabusList)"><i class="bi bi-trash"></i></button></td></tr>`;
+                });
+                $('#syllabusTableBody').html(rows.length ? rows : '<tr><td colspan="5" class="text-center text-muted">No records found</td></tr>');
+            });
+        }
+
+        function loadCourseList() {
+            $.get('/api/course-hub/course/list', function (res) {
+                allCourses = res.data || [];
+                let rows = '';
+                allCourses.forEach((x, i) => {
+                    let statusBadge = x.isActive ? `<span class="badge bg-success cursor-pointer" onclick="toggleStatus('course', ${x.id})" title="Click to Deactivate">Active</span>` : `<span class="badge bg-secondary cursor-pointer" onclick="toggleStatus('course', ${x.id})" title="Click to Activate">Inactive</span>`;
+                    rows += `<tr><td>${i+1}</td><td class="fw-medium">${x.courseName}</td><td>${x.numberOfSessions}</td><td>${new Date(x.expectedDeliveryDate).toLocaleDateString()}</td><td class="text-center">${statusBadge}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editCourse(${x.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="confirmDelete('/api/course-hub/course/delete/${x.id}', loadCourseList)"><i class="bi bi-trash"></i></button></td></tr>`;
+                });
+                $('#courseTableBody').html(rows.length ? rows : '<tr><td colspan="6" class="text-center text-muted">No records found</td></tr>');
+            });
+        }
+
+        function loadQuizList() {
+            $.get('/api/course-hub/quiz/list', function (res) {
+                allQuizzes = res.data || [];
+                let rows = '';
+                allQuizzes.forEach((x, i) => {
+                    let statusBadge = x.isActive ? `<span class="badge bg-success cursor-pointer" onclick="toggleStatus('quiz', ${x.id})" title="Click to Deactivate">Active</span>` : `<span class="badge bg-secondary cursor-pointer" onclick="toggleStatus('quiz', ${x.id})" title="Click to Activate">Inactive</span>`;
+                    rows += `<tr><td>${i+1}</td><td class="fw-medium">${x.quizName}</td><td>${x.totalMarks}</td><td>${x.passingMarks}</td><td class="text-center">${statusBadge}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editQuiz(${x.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="confirmDelete('/api/course-hub/quiz/delete/${x.id}', loadQuizList)"><i class="bi bi-trash"></i></button></td></tr>`;
+                });
+                $('#quizTableBody').html(rows.length ? rows : '<tr><td colspan="6" class="text-center text-muted">No records found</td></tr>');
+            });
+        }
+
+        function editSyllabus(id) {
+            let x = allSyllabus.find(s => s.id === id);
+            if (!x) return;
+            $('#syllabusId').val(x.id);
+            $('#sy_year').val(x.courseYearId); $('#sy_mainCourse').val(x.mainCourseId);
+            $('#sy_category').val(x.courseCategoryId); $('#sy_subCategory').val(x.courseSubCategoryId);
+            $('#sy_order').val(x.displayOrderId); $('#sy_course').val(x.courseId);
+            $('#sy_quiz').val(x.quizId); $('#sy_standard').val(x.standardMasterId || '');
+            $('#sy_forTeachers').prop('checked', x.isForTeachers); $('#sy_forAll').prop('checked', x.isForAll);
+            $('#sy_remarks').val(x.remarks);
+            $('#syllabusFormTitle').html(`<i class="bi bi-pencil-square me-1"></i> Edit Syllabus (ID: ${x.id})`);
+            showSyllabusForm(1);
+        }
+
+        function editCourse(id) {
+            let x = allCourses.find(c => c.id === id);
+            if (!x) return;
+            $('#courseId').val(x.id);
+            $('#co_name').val(x.courseName); $('#co_date').val(x.expectedDeliveryDate.split('T')[0]);
+            $('#co_fromAge').val(x.fromAge); $('#co_toAge').val(x.toAge); $('#co_sessions').val(x.numberOfSessions);
+            $('#co_author').val(x.courseAuthorId); $('#co_manager').val(x.courseManagerId);
+            $('#co_mainCourse').val(x.mainCourseId); $('#co_for').val(x.courseForId);
+            $('#co_customerType').val(x.courseCustomerTypeId); $('#co_desc').val(x.description);
+            $('#courseFormTitle').html(`<i class="bi bi-pencil-square me-1"></i> Edit Course (ID: ${x.id})`);
+            showCourseForm(1);
+        }
+
+        function editQuiz(id) {
+            let x = allQuizzes.find(q => q.id === id);
+            if (!x) return;
+            $('#quizId').val(x.id);
+            $('#qz_name').val(x.quizName); $('#qz_course').val(x.courseId);
+            $('#qz_startDate').val(x.startDate.split('T')[0]); $('#qz_endDate').val(x.endDate.split('T')[0]);
+            $('#qz_startTime').val(x.startTime ? x.startTime.substring(0, 5) : ''); $('#qz_endTime').val(x.endTime ? x.endTime.substring(0, 5) : '');
+            $('#qz_durationType').val(x.courseDurationTypeId); $('#qz_passingMarks').val(x.passingMarks);
+            $('#qz_totalMarks').val(x.totalMarks); $('#qz_attempts').val(x.noOfAttemptsAllowed);
+            $('#qz_allotedTo').val(x.courseAllotedToId); $('#qz_mcqLevel').val(x.courseMcqLevelId);
+            $('#qz_level').val(x.courseLevelId); $('#qz_examActive').prop('checked', x.examActive);
+            $('#quizFormTitle').html(`<i class="bi bi-pencil-square me-1"></i> Edit Quiz (ID: ${x.id})`);
+            showQuizForm(1);
+        }
+
+        function toggleStatus(type, id) {
+            $.ajax({
+                url: `/api/course-hub/${type}/toggle/${id}`, type: 'PATCH',
+                success: function (res) {
+                    if (res.success) {
+                        if (type === 'syllabus') loadSyllabusList();
+                        if (type === 'course') loadCourseList();
+                        if (type === 'quiz') loadQuizList();
+                        showToast('Status updated successfully!', 'success');
+                    }
+                }
+            });
+        }
+
+        function confirmDelete(url, reloadCallback) {
+            Swal.fire({
+                title: 'Are you sure?', text: "You want to delete this record!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d', confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url, type: 'DELETE',
+                        success: function (res) {
+                            if (res.success) { reloadCallback(); showToast('Deleted successfully!', 'success'); }
+                        }
+                    });
+                }
+            });
+        }
+
+        function showSyllabusForm(isEdit) { if(!isEdit) { $('#syllabusId').val('0'); $('#syllabusForm')[0].reset(); $('#syllabusFormTitle').html(`<i class="bi bi-plus-circle me-1"></i> Add New Syllabus`); } $('#syllabusListCard').addClass('d-none'); $('#syllabusFormCard').removeClass('d-none'); }
+        function hideSyllabusForm() { $('#syllabusFormCard').addClass('d-none'); $('#syllabusListCard').removeClass('d-none'); }
+
+        function showCourseForm(isEdit) { if(!isEdit) { $('#courseId').val('0'); $('#courseForm')[0].reset(); $('#courseFormTitle').html(`<i class="bi bi-plus-circle me-1"></i> Register New Course`); } $('#courseListCard').addClass('d-none'); $('#courseFormCard').removeClass('d-none'); }
+        function hideCourseForm() { $('#courseFormCard').addClass('d-none'); $('#courseListCard').removeClass('d-none'); }
+
+        function showQuizForm(isEdit) { if(!isEdit) { $('#quizId').val('0'); $('#quizForm')[0].reset(); $('#quizFormTitle').html(`<i class="bi bi-plus-circle me-1"></i> Create New Quiz`); } $('#quizListCard').addClass('d-none'); $('#quizFormCard').removeClass('d-none'); }
+        function hideQuizForm() { $('#quizFormCard').addClass('d-none'); $('#quizListCard').removeClass('d-none'); }
+
+        function showToast(message, type = 'success') {
+            const $toast = $('#liveToast');
+            $toast.removeClass('bg-success bg-danger').addClass(type === 'success' ? 'bg-success' : 'bg-danger');
+            $('#toastMessage').html(`<i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} me-2"></i> ${message}`);
+            new bootstrap.Toast($toast[0], { delay: 3000 }).show();
+        }
+    </script>
+}

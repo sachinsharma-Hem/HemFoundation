@@ -1,0 +1,13 @@
+﻿@media(max-width:991px) {
+
+    .section-space {
+        padding: 60px 0;
+    }
+}
+
+@media(max-width:767px) {
+
+    .section-space {
+        padding: 40px 0;
+    }
+}

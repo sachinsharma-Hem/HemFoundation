@@ -1,0 +1,435 @@
+﻿@{
+    ViewData["Title"] = "Role & Permission Management";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h3 class="fw-bold text-dark mb-1"><i class="bi bi-shield-lock text-success me-2"></i> Role & Permission Management</h3>
+                <p class="text-muted small m-0">Create/delete roles and dynamically assign granular menu access rights (View, Add, Edit, Delete).</p>
+            </div>
+            <div>
+                <button type="button" class="btn btn-success rounded-pill px-5 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" id="btnSavePermissions" disabled onclick="savePermissions()">
+                    <i class="bi bi-check2-circle fs-5"></i>
+                    <span>Save Permissions</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-3 col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+                <div class="d-flex align-items-center justify-content-between mb-3 px-2">
+                    <h6 class="fw-bold text-secondary text-uppercase small m-0"><i class="bi bi-person-badge me-1"></i> Roles</h6>
+                    <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#createRoleModal">
+                        <i class="bi bi-plus-lg"></i> Add Role
+                    </button>
+                </div>
+                <div class="list-group list-group-flush gap-1" id="rolesListContainer">
+                    <div class="text-center py-4 text-muted small">
+                        <div class="spinner-border spinner-border-sm text-success mb-2"></div>
+                        <p class="m-0">Loading roles...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9 col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                    <h5 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-key-fill text-primary"></i>
+                        <span id="selectedRoleTitle">Select a role from the left panel</span>
+                    </h5>
+                    <div class="form-check form-switch m-0 d-none" id="selectAllWrapper">
+                        <input class="form-check-input cursor-pointer shadow-none" type="checkbox" role="switch" id="selectAllRights">
+                        <label class="form-check-label small fw-bold text-dark cursor-pointer" for="selectAllRights">Select All Permissions</label>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="permissionsTable">
+                        <thead class="table-light text-secondary small text-uppercase">
+                            <tr>
+                                <th>Menu / Module Name</th>
+                                <th class="text-center" style="width: 100px;">View</th>
+                                <th class="text-center" style="width: 100px;">Add</th>
+                                <th class="text-center" style="width: 100px;">Edit</th>
+                                <th class="text-center" style="width: 100px;">Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody id="permissionsTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-arrow-left-circle fs-3 d-block mb-2 text-success"></i>
+                                    Please click on any role from the left sidebar to configure its permissions.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createRoleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 p-3">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold text-dark m-0"><i class="bi bi-shield-plus text-success me-2"></i> Create New Portal Role</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">Enter the name of the new role (e.g., BranchManager, Auditor, SupportStaff).</p>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control rounded-3 shadow-none" id="txtNewRoleName" placeholder="Role Name">
+                    <label for="txtNewRoleName">Role Name</label>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm" onclick="createNewRole()">Create Role</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editRoleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 p-3">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold text-dark m-0"><i class="bi bi-pencil-square text-primary me-2"></i> Edit Portal Role</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="txtEditRoleId">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control rounded-3 shadow-none" id="txtEditRoleName" placeholder="Role Name">
+                    <label for="txtEditRoleName">Role Name</label>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="updateRoleName()">Update Role</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        let currentSelectedRoleId = null;
+        let currentSelectedRoleName = "";
+
+        $(document).ready(function () {
+            loadRolesList();
+
+            // Toggle All Checkboxes
+            $('#selectAllRights').on('change', function () {
+                const isChecked = $(this).is(':checked');
+                $('.perm-checkbox').prop('checked', isChecked);
+            });
+        });
+        function openEditRoleModal(event, roleId, roleName) {
+    event.stopPropagation();
+    $('#txtEditRoleId').val(roleId);
+    $('#txtEditRoleName').val(roleName);
+    $('#editRoleModal').modal('show');
+}
+
+function updateRoleName() {
+    const roleId = $('#txtEditRoleId').val();
+    const newName = $('#txtEditRoleName').val().trim();
+
+    if (!newName) {
+        showToast('Role name cannot be empty.', 'danger');
+        return;
+    }
+
+    $.ajax({
+        url: `/api/role/update/${roleId}`,
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify({ roleName: newName }),
+        success: function (response) {
+            if (response.success) {
+                showToast(response.message, 'success');
+                $('#editRoleModal').modal('hide');
+                loadRolesList();
+                if (currentSelectedRoleId === roleId) {
+                    $('#selectedRoleTitle').html(`Configuring Rights for: <b class="text-success">${newName}</b>`);
+                }
+            }
+        },
+        error: function (xhr) {
+            showToast(xhr.responseJSON?.message || 'Error updating role.', 'danger');
+        }
+    });
+}
+        // =========================================================================
+        // 1. LOAD ALL ROLES WITH DELETE BUTTON
+        // =========================================================================
+        function loadRolesList() {
+            $.get('/api/role/list', function (response) {
+                if (response.success && response.data.length > 0) {
+                    let html = '';
+                    response.data.forEach((role) => {
+                        let editBtn = `
+    <button type="button" class="btn btn-sm btn-outline-primary border-0 p-1 rounded-circle shadow-none me-1"
+            onclick="openEditRoleModal(event, '${role.id}', '${role.name}')" title="Edit Role">
+        <i class="bi bi-pencil fs-6"></i>
+    </button>`;
+
+let deleteBtn = role.name !== "Admin" ? `
+    <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1 rounded-circle shadow-none"
+            onclick="deleteRole(event, '${role.id}', '${role.name}')" title="Delete Role">
+        <i class="bi bi-trash fs-6"></i>
+    </button>` : '';
+
+html += `
+    <div class="list-group-item list-group-item-action rounded-3 py-2 px-3 d-flex align-items-center justify-content-between role-item fw-medium text-dark border-0 mb-1 cursor-pointer"
+         id="role-btn-${role.id}" onclick="selectRole('${role.id}', '${role.name}')">
+        <div class="d-flex align-items-center text-truncate me-2">
+            <i class="bi bi-shield-check text-success me-2 fs-5"></i>
+            <span class="text-truncate">${role.name}</span>
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            ${editBtn}
+            ${deleteBtn}
+            <i class="bi bi-chevron-right small text-muted ms-1"></i>
+        </div>
+    </div>
+`;
+                    });
+                    $('#rolesListContainer').html(html);
+                } else {
+                    $('#rolesListContainer').html('<p class="text-muted small text-center py-3">No roles found.</p>');
+                }
+            });
+        }
+
+        // =========================================================================
+        // 2. CREATE NEW ROLE VIA AJAX
+        // =========================================================================
+        function createNewRole() {
+            const roleName = $('#txtNewRoleName').val().trim();
+            if (!roleName) {
+                showToast('Please enter a valid role name.', 'danger');
+                return;
+            }
+
+            $.ajax({
+                url: '/api/role/create',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ roleName: roleName }),
+                success: function (response) {
+                    if (response.success) {
+                        showToast(response.message, 'success');
+                        $('#txtNewRoleName').val('');
+                        $('#createRoleModal').modal('hide');
+                        loadRolesList(); // Refresh list
+                    }
+                },
+                error: function (xhr) {
+                    showToast(xhr.responseJSON?.message || 'Error creating role.', 'danger');
+                }
+            });
+        }
+
+        // =========================================================================
+        // 3. DELETE ROLE VIA AJAX
+        // =========================================================================
+        function deleteRole(event, roleId, roleName) {
+            event.stopPropagation(); // Prevent triggering selectRole click event
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `You want to delete the role "${roleName}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/api/role/delete/${roleId}`,
+                        type: 'DELETE',
+                        success: function (response) {
+                            if (response.success) {
+                                showToast(response.message, 'success');
+                                if (currentSelectedRoleId === roleId) {
+                                    currentSelectedRoleId = null;
+                                    $('#selectedRoleTitle').text('Select a role from the left panel');
+                                    $('#selectAllWrapper').addClass('d-none');
+                                    $('#btnSavePermissions').prop('disabled', true);
+                                    $('#permissionsTableBody').html(`<tr><td colspan="5" class="text-center py-5 text-muted">Please click on any role from the left sidebar.</td></tr>`);
+                                }
+                                loadRolesList();
+                            }
+                        },
+                        error: function (xhr) {
+                            showToast(xhr.responseJSON?.message || 'Failed to delete role.', 'danger');
+                        }
+                    });
+                }
+            });
+        }
+
+        // =========================================================================
+        // 4. SELECT ROLE & FETCH PERMISSION MATRIX
+        // =========================================================================
+        function selectRole(roleId, roleName) {
+            currentSelectedRoleId = roleId;
+            currentSelectedRoleName = roleName;
+
+            // Highlight active button
+            $('.role-item').removeClass('active bg-success text-white shadow-sm').addClass('text-dark');
+            $(`#role-btn-${roleId}`).removeClass('text-dark').addClass('active bg-success text-white shadow-sm');
+            $(`#role-btn-${roleId} i`).removeClass('text-success text-muted').addClass('text-white');
+
+            $('#selectedRoleTitle').html(`Configuring Rights for: <b class="text-success">${roleName}</b>`);
+            $('#selectAllWrapper').removeClass('d-none');
+            $('#btnSavePermissions').prop('disabled', false);
+
+            $('#permissionsTableBody').html(`
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <div class="spinner-border text-success mb-2" role="status"></div>
+                        <p class="small m-0">Loading assigned rights for ${roleName}...</p>
+                    </td>
+                </tr>
+            `);
+
+            $.get(`/api/role/rights/${roleId}`, function (response) {
+                if (response.success) {
+                    renderPermissionsTable(response.data);
+                }
+            });
+        }
+
+        // =========================================================================
+        // 5. RENDER PARENT-CHILD CHECKBOX TABLE
+        // =========================================================================
+        function renderPermissionsTable(menus) {
+            if (menus.length === 0) {
+                $('#permissionsTableBody').html(`<tr><td colspan="5" class="text-center py-4 text-muted">No active menus found in database.</td></tr>`);
+                return;
+            }
+
+            let html = '';
+            const parents = menus.filter(m => m.parentId === null || m.parentId === 0);
+
+            parents.forEach(parent => {
+                html += generateCheckboxRow(parent, false);
+
+                const submenus = menus.filter(m => m.parentId === parent.id);
+                submenus.forEach(sub => {
+                    html += generateCheckboxRow(sub, true, parent.menuName);
+                });
+            });
+
+            $('#permissionsTableBody').html(html);
+
+            // Auto-check "View" if Add, Edit, or Delete is checked
+            $('.perm-checkbox').on('change', function () {
+                const menuId = $(this).data('menu-id');
+                const type = $(this).data('type');
+                if ((type === 'add' || type === 'edit' || type === 'delete') && $(this).is(':checked')) {
+                    $(`#view-${menuId}`).prop('checked', true);
+                }
+            });
+        }
+
+        function generateCheckboxRow(menu, isSubmenu, parentName = '') {
+            let indentStyle = isSubmenu ? 'ps-5' : 'fw-bold text-dark bg-light';
+            let badgeText = isSubmenu ? `<span class="badge bg-light text-secondary border fw-normal ms-2 small">↳ Submenu</span>` : '';
+
+            return `
+                <tr class="${isSubmenu ? '' : 'bg-light'}">
+                    <td class="${indentStyle}">
+                        <i class="${menu.icon || 'bi bi-folder'} text-success me-2 fs-6"></i>
+                        <span>${menu.menuName}</span>
+                        ${badgeText}
+                    </td>
+                    <td class="text-center">
+                        <input class="form-check-input cursor-pointer shadow-none perm-checkbox" type="checkbox"
+                               id="view-${menu.id}" data-menu-id="${menu.id}" data-type="view" ${menu.canView ? 'checked' : ''}>
+                    </td>
+                    <td class="text-center">
+                        <input class="form-check-input cursor-pointer shadow-none perm-checkbox" type="checkbox"
+                               id="add-${menu.id}" data-menu-id="${menu.id}" data-type="add" ${menu.canAdd ? 'checked' : ''}>
+                    </td>
+                    <td class="text-center">
+                        <input class="form-check-input cursor-pointer shadow-none perm-checkbox" type="checkbox"
+                               id="edit-${menu.id}" data-menu-id="${menu.id}" data-type="edit" ${menu.canEdit ? 'checked' : ''}>
+                    </td>
+                    <td class="text-center">
+                        <input class="form-check-input cursor-pointer shadow-none perm-checkbox" type="checkbox"
+                               id="delete-${menu.id}" data-menu-id="${menu.id}" data-type="delete" ${menu.canDelete ? 'checked' : ''}>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // 6. SAVE PERMISSIONS VIA AJAX
+        function savePermissions() {
+            if (!currentSelectedRoleId) return;
+
+            const $btn = $('#btnSavePermissions');
+            const originalHtml = $btn.html();
+            $btn.prop('disabled', true).html(`<span class="spinner-border spinner-border-sm me-2"></span>Saving...`);
+
+            const rightsList = [];
+            $('#permissionsTableBody tr').each(function () {
+                const $row = $(this);
+                const $viewChk = $row.find('input[data-type="view"]');
+                if ($viewChk.length > 0) {
+                    const menuId = parseInt($viewChk.data('menu-id'));
+                    rightsList.push({
+                        roleId: currentSelectedRoleId,
+                        menuId: menuId,
+                        canView: $(`#view-${menuId}`).is(':checked'),
+                        canAdd: $(`#add-${menuId}`).is(':checked'),
+                        canEdit: $(`#edit-${menuId}`).is(':checked'),
+                        canDelete: $(`#delete-${menuId}`).is(':checked')
+                    });
+                }
+            });
+
+            const payload = {
+                roleId: currentSelectedRoleId,
+                rights: rightsList
+            };
+
+            $.ajax({
+                url: '/api/role/save-rights',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function (response) {
+                    $btn.prop('disabled', false).html(originalHtml);
+                    if (response.success) {
+                        showToast(response.message, 'success');
+                    }
+                },
+                error: function (xhr) {
+                    $btn.prop('disabled', false).html(originalHtml);
+                    showToast(xhr.responseJSON?.message || 'Error saving permissions.', 'danger');
+                }
+            });
+        }
+
+        // Universal Toast Helper
+        function showToast(message, type = 'success') {
+            $('#liveToast').removeClass('bg-success bg-danger').addClass(`bg-${type}`);
+            let icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+            $('#toastMessage').html(`<i class="bi ${icon} me-2"></i> ${message}`);
+            const toast = new bootstrap.Toast(document.getElementById('liveToast'));
+            toast.show();
+        }
+    </script>
+}

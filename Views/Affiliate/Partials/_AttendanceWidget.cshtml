@@ -1,0 +1,2174 @@
+﻿<!-- Flatpickr CSS -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+
+<!-- ========================================================= -->
+<!-- ATTENDANCE STATUS CARD -->
+<!-- ========================================================= -->
+
+<div class="card shadow-sm rounded-4 bg-white p-4 mb-4 animate-fade-in"
+     style="border: 1px solid #d9dfe5 !important;">
+
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+
+        <div>
+
+            <span class="badge bg-primary-subtle text-primary px-3 py-1 rounded-pill mb-2 fw-semibold border border-primary-subtle"
+                  style="font-size: 0.75rem;">
+
+                <i class="bi bi-clock-history me-1"></i>
+                Daily Attendance & Leave Portal
+
+            </span>
+
+            <h5 class="fw-bold text-dark m-0"
+                id="attStatusText">
+                Checking status...
+            </h5>
+
+            <p class="text-muted small m-0 mt-1"
+               id="attSubText">
+                Please punch in to start your work shift.
+            </p>
+
+        </div>
+
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+
+            <button id="btnPunchAction"
+                    type="button"
+                    class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm py-2 d-none">
+
+                <i class="bi bi-fingerprint me-1"></i>
+                Punch In
+
+            </button>
+
+
+            <button id="btnAttendanceRecords"
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold py-2 shadow-sm">
+
+                <i class="bi bi-calendar3 me-1"></i>
+                Records & Leaves
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ========================================================= -->
+<!-- ATTENDANCE & LEAVE MAIN MODAL -->
+<!-- ========================================================= -->
+
+<div class="modal fade"
+     id="attendanceHistoryModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3 bg-white">
+
+            <div class="modal-header border-bottom pb-3">
+
+                <h5 class="fw-bold text-dark m-0">
+
+                    <i class="bi bi-journal-text text-primary me-2"></i>
+
+                    Attendance & Leave Management
+
+                </h5>
+
+                <button type="button"
+                        class="btn-close shadow-none"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+
+            <div class="modal-body py-3">
+
+                <!-- TABS -->
+
+                <ul class="nav nav-pills mb-3 gap-2"
+                    id="portalTab"
+                    role="tablist">
+
+                    <li class="nav-item"
+                        role="presentation">
+
+                        <button class="nav-link active rounded-pill px-4 fw-semibold btn-sm"
+                                id="attendance-tab"
+                                data-bs-toggle="pill"
+                                data-bs-target="#attendancePane"
+                                type="button"
+                                role="tab">
+
+                            <i class="bi bi-calendar-check me-1"></i>
+                            Attendance History
+
+                        </button>
+
+                    </li>
+
+
+                    <li class="nav-item"
+                        role="presentation">
+
+                        <button class="nav-link rounded-pill px-4 fw-semibold btn-sm"
+                                id="leave-tab"
+                                data-bs-toggle="pill"
+                                data-bs-target="#leavePane"
+                                type="button"
+                                role="tab">
+
+                            <i class="bi bi-calendar-x me-1"></i>
+                            Leave Requests & Apply
+
+                        </button>
+
+                    </li>
+
+                </ul>
+
+
+
+                <div class="tab-content"
+                     id="portalTabContent">
+
+
+                    <!-- ================================================= -->
+                    <!-- ATTENDANCE TAB -->
+                    <!-- ================================================= -->
+
+                    <div class="tab-pane fade show active"
+                         id="attendancePane"
+                         role="tabpanel">
+
+
+                        <div class="row g-2 mb-3 bg-light p-2 rounded-3 border">
+
+                            <div class="col-md-3">
+
+                                <label class="form-label text-muted extra-small m-0 fw-semibold">
+                                    From Date
+                                </label>
+
+                                <input type="date"
+                                       id="filterFromDate"
+                                       class="form-control form-control-sm rounded-2 shadow-none">
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <label class="form-label text-muted extra-small m-0 fw-semibold">
+                                    To Date
+                                </label>
+
+                                <input type="date"
+                                       id="filterToDate"
+                                       class="form-control form-control-sm rounded-2 shadow-none">
+
+                            </div>
+
+
+                            <div class="col-md-2">
+
+                                <label class="form-label text-muted extra-small m-0 fw-semibold">
+                                    Month
+                                </label>
+
+                                <select id="filterMonth"
+                                        class="form-select form-select-sm rounded-2 shadow-none">
+
+                                    <option value="">All Months</option>
+
+                                    <option value="1">Jan</option>
+                                    <option value="2">Feb</option>
+                                    <option value="3">Mar</option>
+                                    <option value="4">Apr</option>
+                                    <option value="5">May</option>
+                                    <option value="6">Jun</option>
+                                    <option value="7">Jul</option>
+                                    <option value="8">Aug</option>
+                                    <option value="9">Sep</option>
+                                    <option value="10">Oct</option>
+                                    <option value="11">Nov</option>
+                                    <option value="12">Dec</option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-2">
+
+                                <label class="form-label text-muted extra-small m-0 fw-semibold">
+                                    Year
+                                </label>
+
+                                <input type="number"
+                                       id="filterYear"
+                                       class="form-control form-control-sm rounded-2 shadow-none"
+                                       placeholder="YYYY">
+
+                            </div>
+
+
+                            <div class="col-md-2 d-flex align-items-end gap-1">
+
+                                <button type="button"
+                                        id="btnFilterAttendance"
+                                        class="btn btn-primary btn-sm w-100 rounded-2 fw-semibold">
+
+                                    <i class="bi bi-funnel me-1"></i>
+                                    Filter
+
+                                </button>
+
+
+                                <button type="button"
+                                        id="btnResetFilters"
+                                        class="btn btn-light btn-sm border rounded-2">
+
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="table-responsive"
+                             style="max-height: 320px; overflow-y: auto;">
+
+                            <table class="table table-hover align-middle small">
+
+                                <thead class="table-light">
+
+                                    <tr>
+
+                                        <th>Date</th>
+                                        <th>Punch In</th>
+                                        <th>Punch Out</th>
+                                        <th>Total Hrs</th>
+                                        <th>Status</th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody id="attendanceTableBody">
+
+                                    <tr>
+
+                                        <td colspan="5"
+                                            class="text-center text-muted py-3">
+
+                                            Loading logs...
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- ================================================= -->
+                    <!-- LEAVE TAB -->
+                    <!-- ================================================= -->
+
+                    <div class="tab-pane fade"
+                         id="leavePane"
+                         role="tabpanel">
+
+
+                        <div class="d-flex justify-content-between align-items-center mb-3 bg-light p-3 rounded-3 border">
+
+                            <div>
+
+                                <h6 class="fw-bold text-dark m-0">
+                                    Leave Applications
+                                </h6>
+
+                                <p class="text-muted extra-small m-0">
+                                    Apply for leaves and track their approval status from administration.
+                                </p>
+
+                            </div>
+
+
+                            <button type="button"
+                                    id="btnOpenApplyLeave"
+                                    class="btn btn-success btn-sm rounded-pill fw-semibold px-3 shadow-sm">
+
+                                <i class="bi bi-plus-lg me-1"></i>
+                                Apply For Leave
+
+                            </button>
+
+                        </div>
+
+
+
+                        <div class="table-responsive"
+                             style="max-height: 320px; overflow-y: auto;">
+
+                            <table class="table table-hover align-middle small">
+
+                                <thead class="table-light">
+
+                                    <tr>
+
+                                        <th>From Date</th>
+                                        <th>To Date</th>
+                                        <th>Reason</th>
+                                        <th>Admin Remarks</th>
+                                        <th>Status</th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody id="leaveTableBody">
+
+                                    <tr>
+
+                                        <td colspan="5"
+                                            class="text-center text-muted py-3">
+
+                                            Loading leave requests...
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ========================================================= -->
+<!-- APPLY LEAVE MODAL -->
+<!-- ========================================================= -->
+
+<div class="modal fade"
+     id="applyLeaveModal"
+     tabindex="-1"
+     aria-hidden="true"
+     data-bs-backdrop="static">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3 bg-white">
+
+
+            <div class="modal-header border-bottom pb-3">
+
+                <h5 class="fw-bold text-success m-0">
+
+                    <i class="bi bi-calendar-plus me-2"></i>
+
+                    New Leave Application
+
+                </h5>
+
+
+                <button type="button"
+                        class="btn-close shadow-none"
+                        id="btnCloseLeaveModal"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+
+
+            <div class="modal-body py-3">
+
+                <form id="frmApplyLeave">
+
+                    <div class="row g-3">
+
+
+                        <!-- FROM -->
+
+                        <div class="col-md-6">
+
+                            <label class="form-label small fw-bold">
+
+                                From Date
+
+                                <span class="text-danger">*</span>
+
+                            </label>
+
+
+                            <input type="text"
+                                   id="txtLeaveFrom"
+                                   class="form-control rounded-3 shadow-none"
+                                   placeholder="DD/MM/YYYY"
+                                   autocomplete="off"
+                                   required>
+
+                        </div>
+
+
+
+                        <!-- TO -->
+
+                        <div class="col-md-6">
+
+                            <label class="form-label small fw-bold">
+
+                                To Date
+
+                                <span class="text-danger">*</span>
+
+                            </label>
+
+
+                            <input type="text"
+                                   id="txtLeaveTo"
+                                   class="form-control rounded-3 shadow-none"
+                                   placeholder="DD/MM/YYYY"
+                                   autocomplete="off"
+                                   required>
+
+                        </div>
+
+
+
+                        <!-- REASON -->
+
+                        <div class="col-12">
+
+                            <label class="form-label small fw-bold">
+
+                                Reason for Leave
+
+                                <span class="text-danger">*</span>
+
+                            </label>
+
+
+                            <textarea id="txtLeaveReason"
+                                      class="form-control rounded-3 shadow-none"
+                                      rows="3"
+                                      placeholder="Enter valid reason..."
+                                      required></textarea>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <button type="submit"
+                            id="btnSubmitLeave"
+                            class="btn btn-success w-100 rounded-pill fw-bold shadow-sm mt-4">
+
+                        Submit Leave Request
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<style>
+
+    .extra-small {
+        font-size: 0.7rem;
+    }
+
+    .flatpickr-calendar {
+        z-index: 99999 !important;
+    }
+
+</style>
+
+
+
+<script>
+
+(function () {
+
+    "use strict";
+
+
+    /* =========================================================
+       AUTH
+    ========================================================= */
+
+    function getAuthToken() {
+
+        return localStorage.getItem("jwt_token")
+            || sessionStorage.getItem("jwt_token")
+            || "";
+
+    }
+
+
+    /* =========================================================
+       API HELPER
+    ========================================================= */
+
+    async function apiRequest(url, options = {}) {
+
+        const token = getAuthToken();
+
+        const headers = {
+
+            "Authorization": "Bearer " + token
+
+        };
+
+
+        if (options.body) {
+
+            headers["Content-Type"] = "application/json";
+
+        }
+
+
+        const response = await fetch(url, {
+
+            ...options,
+
+            headers: {
+
+                ...headers,
+
+                ...(options.headers || {})
+
+            }
+
+        });
+
+
+        let data = null;
+
+        try {
+
+            data = await response.json();
+
+        } catch {
+
+            data = null;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw {
+
+                status: response.status,
+
+                data: data
+
+            };
+
+        }
+
+
+        return data;
+
+    }
+
+
+
+    /* =========================================================
+       DATE HELPERS
+    ========================================================= */
+
+    function formatDateDDMMYYYY(dateString) {
+
+        if (!dateString) return "-";
+
+
+        const d = new Date(dateString);
+
+
+        if (isNaN(d.getTime())) return "-";
+
+
+        const day = String(d.getDate()).padStart(2, "0");
+
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+
+        const year = d.getFullYear();
+
+
+        return `${day}/${month}/${year}`;
+
+    }
+
+
+    function formatTime(dateString) {
+
+        if (!dateString) return "-";
+
+
+        const d = new Date(dateString);
+
+
+        if (isNaN(d.getTime())) return "-";
+
+
+        return d.toLocaleTimeString([], {
+
+            hour: "2-digit",
+
+            minute: "2-digit"
+
+        });
+
+    }
+
+
+    /*
+       Flatpickr DD/MM/YYYY ko API ke liye
+       yyyy-MM-dd mein convert karega.
+    */
+
+    function convertDDMMYYYYToISO(value) {
+
+        if (!value) return null;
+
+
+        const parts = value.split("/");
+
+
+        if (parts.length !== 3) return null;
+
+
+        const day = parts[0];
+
+        const month = parts[1];
+
+        const year = parts[2];
+
+
+        return `${year}-${month}-${day}`;
+
+    }
+
+
+    /* =========================================================
+       LOCATION
+    ========================================================= */
+
+    function renderLocationBadge(locString) {
+
+        if (!locString) {
+
+            return '<span class="text-muted">-</span>';
+
+        }
+
+
+        const coordsMatch = locString.match(
+            /(-?\d+(?:\.\d+)),\s*(-?\d+(?:\.\d+))/
+        );
+
+
+        if (coordsMatch) {
+
+            const lat = coordsMatch[1];
+
+            const lng = coordsMatch[2];
+
+            const mapUrl =
+                `https://www.google.com/maps?q=${encodeURIComponent(lat + "," + lng)}`;
+
+
+            return `
+                <a href="${mapUrl}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn btn-outline-danger btn-sm py-0 px-2 rounded-pill shadow-none"
+                   style="font-size:0.72rem;">
+
+                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+
+                    View Map
+
+                </a>
+            `;
+
+        }
+
+
+        return `
+            <span class="badge bg-light text-dark border fw-normal"
+                  style="font-size:0.72rem;">
+
+                <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+
+                ${escapeHtml(locString)}
+
+            </span>
+        `;
+
+    }
+
+
+    function escapeHtml(value) {
+
+        if (value === null || value === undefined) {
+
+            return "";
+
+        }
+
+
+        return String(value)
+
+            .replace(/&/g, "&amp;")
+
+            .replace(/</g, "&lt;")
+
+            .replace(/>/g, "&gt;")
+
+            .replace(/"/g, "&quot;")
+
+            .replace(/'/g, "&#039;");
+
+    }
+
+
+
+    /* =========================================================
+       ATTENDANCE STATUS
+    ========================================================= */
+
+    let currentPunchState = false;
+
+
+    async function fetchAttendanceStatus() {
+
+        try {
+
+            const res = await apiRequest(
+                "/api/affiliate-attendance/status"
+            );
+
+
+            if (!res.success) {
+
+                return;
+
+            }
+
+
+            const btn = document.getElementById("btnPunchAction");
+
+            if (!btn) return;
+
+
+            btn.classList.remove("d-none");
+
+
+            if (res.isCheckedIn) {
+
+                currentPunchState = true;
+
+
+                btn.disabled = false;
+
+                btn.classList.remove(
+                    "btn-success",
+                    "btn-secondary"
+                );
+
+                btn.classList.add("btn-danger");
+
+
+                btn.innerHTML = `
+                    <i class="bi bi-stop-circle me-1"></i>
+                    Punch Out
+                `;
+
+
+                const inTime =
+                    formatTime(res.todayRecord?.punchInTime);
+
+
+                const mapBadge =
+                    renderLocationBadge(
+                        res.todayRecord?.punchInLocation
+                    );
+
+
+                document.getElementById("attStatusText").innerHTML = `
+                    <span class="text-success">
+
+                        <i class="bi bi-dot fs-3 align-middle"></i>
+
+                        Status: Punched In
+
+                    </span>
+                `;
+
+
+                document.getElementById("attSubText").innerHTML = `
+                    Punched in today at
+                    <b>${inTime}</b>
+                    |
+                    In Location: ${mapBadge}
+                `;
+
+            }
+
+            else {
+
+                currentPunchState = false;
+
+
+                if (
+                    res.todayRecord &&
+                    res.todayRecord.punchOutTime
+                ) {
+
+                    const outTime =
+                        formatTime(res.todayRecord.punchOutTime);
+
+
+                    const modeText =
+                        res.todayRecord.punchOutMode === "System"
+                            ? `<span class="text-warning small">
+                                  (Auto closed by System)
+                               </span>`
+                            : "";
+
+
+                    document.getElementById("attStatusText").innerHTML = `
+                        <span class="text-secondary">
+                            Status: Shift Completed Today
+                        </span>
+
+                        ${modeText}
+                    `;
+
+
+                    document.getElementById("attSubText").innerHTML = `
+                        Punched out today at
+                        <b>${outTime}</b>
+                        |
+                        Total logged:
+                        <b>${res.todayRecord.totalHoursWorked || 0} hrs</b>
+                    `;
+
+
+                    btn.disabled = true;
+
+                    btn.classList.remove(
+                        "btn-success",
+                        "btn-danger"
+                    );
+
+                    btn.classList.add("btn-secondary");
+
+
+                    btn.innerHTML = `
+                        <i class="bi bi-check-all me-1"></i>
+                        Completed Today
+                    `;
+
+                }
+
+                else {
+
+                    btn.disabled = false;
+
+                    btn.classList.remove(
+                        "btn-danger",
+                        "btn-secondary"
+                    );
+
+                    btn.classList.add("btn-success");
+
+
+                    btn.innerHTML = `
+                        <i class="bi bi-fingerprint me-1"></i>
+                        Punch In
+                    `;
+
+
+                    document.getElementById("attStatusText").innerHTML = `
+                        <span class="text-dark">
+                            Status: Ready to Punch In
+                        </span>
+                    `;
+
+
+                    if (res.lastRecord) {
+
+                        const lastDate =
+                            formatDateDDMMYYYY(
+                                res.lastRecord.attendanceDate
+                            );
+
+
+                        const lastOut =
+                            formatTime(
+                                res.lastRecord.punchOutTime
+                            );
+
+
+                        document.getElementById("attSubText").innerHTML = `
+                            Last shift on
+                            <b>${lastDate}</b>
+                            |
+                            Last Punch Out:
+                            ${lastOut}
+                        `;
+
+                    }
+
+                    else {
+
+                        document.getElementById("attSubText").innerHTML =
+                            "No previous attendance found. Click Punch In to start.";
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Attendance status error:",
+                error
+            );
+
+        }
+
+    }
+
+
+
+    /* =========================================================
+       PUNCH
+    ========================================================= */
+
+    async function togglePunch() {
+
+        const actionType =
+            currentPunchState ? "Out" : "In";
+
+
+        const button =
+            document.getElementById("btnPunchAction");
+
+
+        button.disabled = true;
+
+
+        const originalText =
+            button.innerHTML;
+
+
+        button.innerHTML = `
+            <span class="spinner-border spinner-border-sm me-1"></span>
+            Processing...
+        `;
+
+
+        if (navigator.geolocation) {
+
+            navigator.geolocation.getCurrentPosition(
+
+                function (position) {
+
+                    const location =
+                        `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+
+
+                    sendPunchRequest(
+                        actionType,
+                        location
+                    );
+
+                },
+
+                function () {
+
+                    sendPunchRequest(
+                        actionType,
+                        "GPS Location Unavailable"
+                    );
+
+                },
+
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+
+            );
+
+        }
+
+        else {
+
+            sendPunchRequest(
+                actionType,
+                "Geolocation Not Supported"
+            );
+
+        }
+
+    }
+
+
+    async function sendPunchRequest(
+        action,
+        location
+    ) {
+
+        try {
+
+            const res = await apiRequest(
+                "/api/affiliate-attendance/punch",
+                {
+                    method: "POST",
+
+                    body: JSON.stringify({
+
+                        action: action,
+
+                        location: location
+
+                    })
+
+                }
+            );
+
+
+            if (res.success) {
+
+                await fetchAttendanceStatus();
+
+                await loadAttendanceHistory();
+
+            }
+
+            else {
+
+                alert(
+                    res.message ||
+                    "Error processing attendance."
+                );
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+
+            alert(
+                error.data?.message ||
+                "Error processing attendance."
+            );
+
+
+            fetchAttendanceStatus();
+
+        }
+
+    }
+
+
+
+    /* =========================================================
+       ATTENDANCE HISTORY
+    ========================================================= */
+
+    async function loadAttendanceHistory() {
+
+        const fromDate =
+            document.getElementById("filterFromDate").value;
+
+
+        const toDate =
+            document.getElementById("filterToDate").value;
+
+
+        const month =
+            document.getElementById("filterMonth").value;
+
+
+        const year =
+            document.getElementById("filterYear").value;
+
+
+        const params =
+            new URLSearchParams();
+
+
+        if (fromDate)
+            params.append("fromDate", fromDate);
+
+
+        if (toDate)
+            params.append("toDate", toDate);
+
+
+        if (month)
+            params.append("month", month);
+
+
+        if (year)
+            params.append("year", year);
+
+
+        const url =
+            "/api/affiliate-attendance/history" +
+            (params.toString()
+                ? "?" + params.toString()
+                : "");
+
+
+        const tbody =
+            document.getElementById(
+                "attendanceTableBody"
+            );
+
+
+        try {
+
+            const res =
+                await apiRequest(url);
+
+
+            if (
+                res.success &&
+                res.data &&
+                res.data.length > 0
+            ) {
+
+                let rows = "";
+
+
+                res.data.forEach(item => {
+
+                    const dateFormatted =
+                        formatDateDDMMYYYY(
+                            item.attendanceDate
+                        );
+
+
+                    const inTime =
+                        formatTime(
+                            item.punchInTime
+                        );
+
+
+                    const outTime =
+                        formatTime(
+                            item.punchOutTime
+                        );
+
+
+                    const inLocBadge =
+                        renderLocationBadge(
+                            item.punchInLocation
+                        );
+
+
+                    const outLocBadge =
+                        renderLocationBadge(
+                            item.punchOutLocation
+                        );
+
+
+                    const badge =
+                        item.status === "CheckedIn"
+
+                            ? `
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                    Active
+                                </span>
+                              `
+
+                            : `
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                    Completed
+                                    (${escapeHtml(item.punchOutMode || "User")})
+                                </span>
+                              `;
+
+
+                    rows += `
+                        <tr>
+
+                            <td class="fw-semibold text-dark">
+                                ${dateFormatted}
+                            </td>
+
+
+                            <td>
+
+                                ${inTime}
+
+                                <div class="mt-1">
+                                    ${inLocBadge}
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                ${outTime}
+
+                                <div class="mt-1">
+                                    ${outLocBadge}
+                                </div>
+
+                            </td>
+
+
+                            <td>
+                                <b>
+                                    ${item.totalHoursWorked || 0} hrs
+                                </b>
+                            </td>
+
+
+                            <td>
+                                ${badge}
+                            </td>
+
+                        </tr>
+                    `;
+
+                });
+
+
+                tbody.innerHTML = rows;
+
+            }
+
+            else {
+
+                tbody.innerHTML = `
+                    <tr>
+
+                        <td colspan="5"
+                            class="text-center text-muted py-4">
+
+                            <i class="bi bi-info-circle me-1"></i>
+
+                            No attendance logs found for selected filter.
+
+                        </td>
+
+                    </tr>
+                `;
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Attendance history error:",
+                error
+            );
+
+
+            tbody.innerHTML = `
+                <tr>
+
+                    <td colspan="5"
+                        class="text-center text-danger py-4">
+
+                        Unable to load attendance history.
+
+                    </td>
+
+                </tr>
+            `;
+
+        }
+
+    }
+
+
+
+    /* =========================================================
+       RESET FILTER
+    ========================================================= */
+
+    function resetFilters() {
+
+        document.getElementById("filterFromDate").value = "";
+
+        document.getElementById("filterToDate").value = "";
+
+        document.getElementById("filterMonth").value = "";
+
+        document.getElementById("filterYear").value = "";
+
+
+        loadAttendanceHistory();
+
+    }
+
+
+
+    /* =========================================================
+       LEAVE HISTORY
+    ========================================================= */
+
+    async function loadLeaveHistory() {
+
+        const tbody =
+            document.getElementById(
+                "leaveTableBody"
+            );
+
+
+        try {
+
+            const res =
+                await apiRequest(
+                    "/api/affiliate-attendance/leave/history"
+                );
+
+
+            if (
+                res.success &&
+                res.data &&
+                res.data.length > 0
+            ) {
+
+                let rows = "";
+
+
+                res.data.forEach(item => {
+
+                    const from =
+                        formatDateDDMMYYYY(
+                            item.fromDate
+                        );
+
+
+                    const to =
+                        formatDateDDMMYYYY(
+                            item.toDate
+                        );
+
+
+                    let statusBadge = "";
+
+
+                    if (item.status === "Approved") {
+
+                        statusBadge = `
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                Approved
+                            </span>
+                        `;
+
+                    }
+
+                    else if (item.status === "Rejected") {
+
+                        statusBadge = `
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                Rejected
+                            </span>
+                        `;
+
+                    }
+
+                    else {
+
+                        statusBadge = `
+                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
+                                Pending
+                            </span>
+                        `;
+
+                    }
+
+
+                    rows += `
+                        <tr>
+
+                            <td class="fw-semibold text-dark">
+                                ${from}
+                            </td>
+
+
+                            <td class="fw-semibold text-dark">
+                                ${to}
+                            </td>
+
+
+                            <td>
+                                ${escapeHtml(item.reason)}
+                            </td>
+
+
+                            <td class="text-muted">
+                                ${escapeHtml(item.adminRemarks || "N/A")}
+                            </td>
+
+
+                            <td>
+                                ${statusBadge}
+                            </td>
+
+                        </tr>
+                    `;
+
+                });
+
+
+                tbody.innerHTML = rows;
+
+            }
+
+            else {
+
+                tbody.innerHTML = `
+                    <tr>
+
+                        <td colspan="5"
+                            class="text-center text-muted py-4">
+
+                            <i class="bi bi-info-circle me-1"></i>
+
+                            No leave requests found.
+
+                        </td>
+
+                    </tr>
+                `;
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Leave history error:",
+                error
+            );
+
+
+            tbody.innerHTML = `
+                <tr>
+
+                    <td colspan="5"
+                        class="text-center text-danger py-4">
+
+                        Unable to load leave requests.
+
+                    </td>
+
+                </tr>
+            `;
+
+        }
+
+    }
+
+
+
+    /* =========================================================
+       FLATPICKR
+    ========================================================= */
+
+    let leaveFromPicker = null;
+
+    let leaveToPicker = null;
+
+
+    function initializeLeaveDatePickers() {
+
+        const today = new Date();
+
+        today.setHours(0, 0, 0, 0);
+
+
+        leaveFromPicker =
+            flatpickr("#txtLeaveFrom", {
+
+                dateFormat: "d/m/Y",
+
+                minDate: today,
+
+                disableMobile: true,
+
+                allowInput: false,
+
+                onChange: function (selectedDates) {
+
+                    if (
+                        selectedDates &&
+                        selectedDates.length > 0
+                    ) {
+
+                        const selectedDate =
+                            selectedDates[0];
+
+
+                        leaveToPicker.set(
+                            "minDate",
+                            selectedDate
+                        );
+
+
+                        const currentTo =
+                            leaveToPicker.selectedDates[0];
+
+
+                        if (
+                            currentTo &&
+                            currentTo < selectedDate
+                        ) {
+
+                            leaveToPicker.clear();
+
+                        }
+
+                    }
+
+                }
+
+            });
+
+
+        leaveToPicker =
+            flatpickr("#txtLeaveTo", {
+
+                dateFormat: "d/m/Y",
+
+                minDate: today,
+
+                disableMobile: true,
+
+                allowInput: false
+
+            });
+
+    }
+
+
+
+    /* =========================================================
+       OPEN / CLOSE LEAVE MODAL
+    ========================================================= */
+
+    function openApplyLeaveModal() {
+
+        const historyElement =
+            document.getElementById(
+                "attendanceHistoryModal"
+            );
+
+
+        const leaveElement =
+            document.getElementById(
+                "applyLeaveModal"
+            );
+
+
+        const historyModal =
+            bootstrap.Modal.getInstance(
+                historyElement
+            );
+
+
+        if (historyModal) {
+
+            historyModal.hide();
+
+        }
+
+
+        setTimeout(function () {
+
+            const leaveModal =
+                bootstrap.Modal.getOrCreateInstance(
+                    leaveElement
+                );
+
+
+            leaveModal.show();
+
+        }, 250);
+
+    }
+
+
+
+    function closeApplyLeaveModal() {
+
+        const leaveElement =
+            document.getElementById(
+                "applyLeaveModal"
+            );
+
+
+        const leaveModal =
+            bootstrap.Modal.getInstance(
+                leaveElement
+            );
+
+
+        if (leaveModal) {
+
+            leaveModal.hide();
+
+        }
+
+
+        setTimeout(function () {
+
+            const historyElement =
+                document.getElementById(
+                    "attendanceHistoryModal"
+                );
+
+
+            const historyModal =
+                bootstrap.Modal.getOrCreateInstance(
+                    historyElement
+                );
+
+
+            historyModal.show();
+
+
+            // Leave tab activate
+
+            setTimeout(function () {
+
+                const leaveTab =
+                    document.getElementById(
+                        "leave-tab"
+                    );
+
+
+                if (leaveTab) {
+
+                    bootstrap.Tab
+                        .getOrCreateInstance(
+                            leaveTab
+                        )
+                        .show();
+
+                }
+
+            }, 100);
+
+        }, 250);
+
+    }
+
+
+
+    /* =========================================================
+       APPLY LEAVE
+    ========================================================= */
+
+    async function submitLeave(e) {
+
+        e.preventDefault();
+
+
+        const fromValue =
+            document.getElementById(
+                "txtLeaveFrom"
+            ).value;
+
+
+        const toValue =
+            document.getElementById(
+                "txtLeaveTo"
+            ).value;
+
+
+        const reason =
+            document.getElementById(
+                "txtLeaveReason"
+            ).value.trim();
+
+
+        if (!fromValue) {
+
+            alert("Please select From Date.");
+
+            return;
+
+        }
+
+
+        if (!toValue) {
+
+            alert("Please select To Date.");
+
+            return;
+
+        }
+
+
+        if (!reason) {
+
+            alert("Please enter reason for leave.");
+
+            return;
+
+        }
+
+
+        const fromISO =
+            convertDDMMYYYYToISO(
+                fromValue
+            );
+
+
+        const toISO =
+            convertDDMMYYYYToISO(
+                toValue
+            );
+
+
+        if (!fromISO || !toISO) {
+
+            alert(
+                "Invalid date selected."
+            );
+
+            return;
+
+        }
+
+
+        /*
+          Client-side date validation
+        */
+
+        const fromDate =
+            new Date(fromISO + "T00:00:00");
+
+
+        const toDate =
+            new Date(toISO + "T00:00:00");
+
+
+        const today =
+            new Date();
+
+
+        today.setHours(0, 0, 0, 0);
+
+
+        if (fromDate < today) {
+
+            alert(
+                "From Date cannot be before today."
+            );
+
+            return;
+
+        }
+
+
+        if (toDate < today) {
+
+            alert(
+                "To Date cannot be before today."
+            );
+
+            return;
+
+        }
+
+
+        if (toDate < fromDate) {
+
+            alert(
+                "To Date cannot be before From Date."
+            );
+
+            return;
+
+        }
+
+
+        const button =
+            document.getElementById(
+                "btnSubmitLeave"
+            );
+
+
+        button.disabled = true;
+
+
+        button.innerHTML = `
+            <span class="spinner-border spinner-border-sm me-1"></span>
+            Submitting...
+        `;
+
+
+        try {
+
+            const res =
+                await apiRequest(
+                    "/api/affiliate-attendance/leave/apply",
+                    {
+
+                        method: "POST",
+
+                        body: JSON.stringify({
+
+                            fromDate: fromISO,
+
+                            toDate: toISO,
+
+                            reason: reason
+
+                        })
+
+                    }
+                );
+
+
+            if (res.success) {
+
+                alert(
+                    res.message ||
+                    "Leave application submitted successfully."
+                );
+
+
+                document
+                    .getElementById(
+                        "frmApplyLeave"
+                    )
+                    .reset();
+
+
+                if (leaveFromPicker) {
+
+                    leaveFromPicker.clear();
+
+                }
+
+
+                if (leaveToPicker) {
+
+                    leaveToPicker.clear();
+
+                }
+
+
+                const leaveModalElement =
+                    document.getElementById(
+                        "applyLeaveModal"
+                    );
+
+
+                const leaveModal =
+                    bootstrap.Modal.getInstance(
+                        leaveModalElement
+                    );
+
+
+                if (leaveModal) {
+
+                    leaveModal.hide();
+
+                }
+
+
+                await loadLeaveHistory();
+
+
+                /*
+                  History modal dobara open
+                */
+
+                setTimeout(function () {
+
+                    const historyElement =
+                        document.getElementById(
+                            "attendanceHistoryModal"
+                        );
+
+
+                    const historyModal =
+                        bootstrap.Modal.getOrCreateInstance(
+                            historyElement
+                        );
+
+
+                    historyModal.show();
+
+
+                    setTimeout(function () {
+
+                        const leaveTab =
+                            document.getElementById(
+                                "leave-tab"
+                            );
+
+
+                        if (leaveTab) {
+
+                            bootstrap.Tab
+                                .getOrCreateInstance(
+                                    leaveTab
+                                )
+                                .show();
+
+                        }
+
+                    }, 100);
+
+                }, 250);
+
+            }
+
+            else {
+
+                alert(
+                    res.message ||
+                    "Unable to submit leave request."
+                );
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Leave apply error:",
+                error
+            );
+
+
+            console.error(
+                "API response:",
+                error.data
+            );
+
+
+            alert(
+                error.data?.message ||
+                "Error submitting leave application."
+            );
+
+        }
+
+        finally {
+
+            button.disabled = false;
+
+            button.innerHTML =
+                "Submit Leave Request";
+
+        }
+
+    }
+
+
+
+    /* =========================================================
+       INITIALIZE
+    ========================================================= */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            /*
+              IMPORTANT:
+              Ab yahan jQuery ki koi dependency nahi hai.
+            */
+
+            fetchAttendanceStatus();
+
+            loadAttendanceHistory();
+
+            loadLeaveHistory();
+
+            initializeLeaveDatePickers();
+
+
+            /* Punch */
+
+            document
+                .getElementById(
+                    "btnPunchAction"
+                )
+                .addEventListener(
+                    "click",
+                    togglePunch
+                );
+
+
+            /* Attendance Records */
+
+            document
+                .getElementById(
+                    "btnAttendanceRecords"
+                )
+                .addEventListener(
+                    "click",
+                    function () {
+
+                        const modalElement =
+                            document.getElementById(
+                                "attendanceHistoryModal"
+                            );
+
+
+                        const modal =
+                            bootstrap.Modal
+                                .getOrCreateInstance(
+                                    modalElement
+                                );
+
+
+                        modal.show();
+
+                    }
+                );
+
+
+            /* Attendance Filter */
+
+            document
+                .getElementById(
+                    "btnFilterAttendance"
+                )
+                .addEventListener(
+                    "click",
+                    loadAttendanceHistory
+                );
+
+
+            /* Reset */
+
+            document
+                .getElementById(
+                    "btnResetFilters"
+                )
+                .addEventListener(
+                    "click",
+                    resetFilters
+                );
+
+
+            /* Open Leave */
+
+            document
+                .getElementById(
+                    "btnOpenApplyLeave"
+                )
+                .addEventListener(
+                    "click",
+                    openApplyLeaveModal
+                );
+
+
+            /* Close Leave */
+
+            document
+                .getElementById(
+                    "btnCloseLeaveModal"
+                )
+                .addEventListener(
+                    "click",
+                    closeApplyLeaveModal
+                );
+
+
+            /* Submit Leave */
+
+            document
+                .getElementById(
+                    "frmApplyLeave"
+                )
+                .addEventListener(
+                    "submit",
+                    submitLeave
+                );
+
+        }
+    );
+
+
+})();
+
+</script>

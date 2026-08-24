@@ -1,0 +1,399 @@
+﻿@{
+    ViewData["Title"] = "Portal Registration";
+    Layout = "~/Views/Shared/Layouts/_Layout.cshtml";
+    int portalId = Context.Request.Query["portalId"].ToString() != "" ? Convert.ToInt32(Context.Request.Query["portalId"]) : 6;
+}
+
+<div class="register-hero-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-9 col-lg-10">
+
+                <div id="alertBox" class="alert d-none shadow-sm rounded-4 mb-4 border-0 text-center fw-semibold py-3" role="alert"></div>
+
+                <div class="card border-0 shadow-xl rounded-5 p-4 p-md-5 bg-white position-relative overflow-hidden">
+
+                    <div class="position-absolute top-0 start-0 w-100 bg-success" style="height: 6px;"></div>
+
+                    <div class="text-center mb-4 pb-2">
+                        <div class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold mb-2 shadow-sm" id="badgeRole">
+                            <i class="bi bi-shield-check me-1"></i> Secure Onboarding
+                        </div>
+                        <h3 class="fw-extrabold text-dark tracking-tight mb-1" id="formHeader">Account Registration</h3>
+                        <p class="text-muted small m-0">Your Mobile Number will act as your Login Username & Password.</p>
+                    </div>
+
+                    <form id="universalRegisterForm" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        <input type="hidden" id="hdnPortalId" value="@portalId" />
+
+                        <div class="row g-3">
+
+                            <!-- Student Specific: Standard Dropdown -->
+                            <div class="col-md-6 student-field d-none">
+                                <label class="form-label small fw-bold text-secondary mb-1">Standard / Class <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-primary"><i class="bi bi-book"></i></span>
+                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="ddlStandard">
+                                        <option value="">-- Loading Standards --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Student Specific: Division -->
+                            <div class="col-md-6 student-field d-none">
+                                <label class="form-label small fw-bold text-secondary mb-1">Division</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-primary"><i class="bi bi-grid"></i></span>
+                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtDivision" placeholder="e.g. A, B, C" />
+                                </div>
+                            </div>
+
+                            <!-- Student Specific: Guardian Name -->
+                            <div class="col-md-6 student-field d-none">
+                                <label class="form-label small fw-bold text-secondary mb-1">Guardian / Parent Name <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-primary"><i class="bi bi-people"></i></span>
+                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtGuardianName" placeholder="Guardian Full Name" />
+                                </div>
+                            </div>
+
+                            <!-- Teacher Specific: Qualification -->
+                            <div class="col-md-6 teacher-field d-none">
+                                <label class="form-label small fw-bold text-secondary mb-1">Qualification <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-info"><i class="bi bi-award"></i></span>
+                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtQualification" placeholder="e.g. B.Ed, M.Sc" />
+                                </div>
+                            </div>
+
+                            <!-- Parent Specific: Relation with Student -->
+                            <div class="col-md-6 parent-field d-none">
+                                <label class="form-label small fw-bold text-secondary mb-1">Relation with Student <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-warning"><i class="bi bi-heart"></i></span>
+                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="ddlRelation">
+                                        <option value="">-- Select Relation --</option>
+                                        <option value="Father">Father</option>
+                                        <option value="Mother">Mother</option>
+                                        <option value="Guardian">Guardian</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Organisation / School Name -->
+                            <div class="col-md-6 org-field">
+                                <label class="form-label small fw-bold text-secondary mb-1" id="lblOrgName">Organisation / Institution Name <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-building"></i></span>
+                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtOrgName" placeholder="Enter Name" required />
+                                </div>
+                            </div>
+
+                            <!-- Type Of Organisation -->
+                            <div class="col-md-6 org-field" id="orgTypeContainer">
+                                <label class="form-label small fw-bold text-secondary mb-1">Type Of Organisation <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-diagram-3"></i></span>
+                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="ddlOrgType" required>
+                                        <option value="">-- Select Type --</option>
+                                        <option value="Social Organisation">Social Organisation</option>
+                                        <option value="Corporate">Corporate</option>
+                                        <option value="Private School">Private School</option>
+                                        <option value="Government School">Government School</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- First Name -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-secondary mb-1" id="lblFirstName">First Name <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtFirstName" placeholder="First Name" required />
+                                </div>
+                            </div>
+
+                            <!-- Last Name -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-secondary mb-1" id="lblLastName">Last Name <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-person-fill"></i></span>
+                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtLastName" placeholder="Last Name" required />
+                                </div>
+                            </div>
+
+                            <!-- Gender Dropdown (Loaded from Database API) -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-secondary mb-1">Gender <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-gender-ambiguous"></i></span>
+                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="ddlGender" required>
+                                        <option value="">-- Loading Genders --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Mobile No -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-secondary mb-1" id="lblMobile">Mobile No (Username & Password) <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-phone"></i></span>
+                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtMobileNo" maxlength="10" placeholder="10-digit Mobile Number" oninput="this.value = this.value.replace(/\D/g, '')" required />
+                                </div>
+                            </div>
+
+                            <!-- Email ID -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-secondary mb-1" id="lblEmail">Email ID <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtEmailID" placeholder="name@example.com" required />
+                                </div>
+                                <small id="emailError" class="text-danger d-none ms-1" style="font-size: 11px;">Please enter a valid email address.</small>
+                            </div>
+
+                            <!-- Profile Photo -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-secondary mb-1" id="lblPhoto">Upload Photo</label>
+                                <input type="file" class="form-control form-control-lg rounded-4 border-0 bg-light shadow-none fs-6 py-2" id="filePhoto" accept="image/*" />
+                            </div>
+
+                            <!-- Branch Name -->
+                            <div class="col-md-6 org-field">
+                                <label class="form-label small fw-bold text-secondary mb-1">Branch Name</label>
+                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-light shadow-none fs-6 py-2" id="txtBranchName" placeholder="Branch Name (Optional)" />
+                            </div>
+
+                            <!-- Referred By Dropdown -->
+                            <div class="col-md-12" id="referredByContainer">
+                                <label class="form-label small fw-bold text-secondary mb-1">Referred By (Affiliate)</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-share"></i></span>
+                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="ddlReferredBy">
+                                        <option value="">-- Please Select Affiliate (Optional) --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Address -->
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-secondary mb-1">Address <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtAddress" placeholder="Street Address" required />
+                            </div>
+
+                            <!-- Pincode -->
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-secondary mb-1">Pincode <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtPincode" maxlength="6" placeholder="Pincode" oninput="this.value = this.value.replace(/\D/g, '')" onkeyup="fetchCityState(this.value)" required />
+                            </div>
+
+                            <!-- City -->
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-secondary mb-1">City <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-white border req-field fs-6 py-2" id="txtCity" placeholder="City" readonly required />
+                            </div>
+
+                            <!-- State -->
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-secondary mb-1">State <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-white border req-field fs-6 py-2" id="txtState" placeholder="State" readonly required />
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="col-12 mt-4 pt-2">
+                                <button type="submit" class="btn btn-success rounded-pill w-100 py-3 fw-bold shadow-lg transition-all hover-scale" id="btnRegister" disabled>
+                                    <span class="fs-6">Complete Registration</span> <i class="bi bi-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .shadow-xl { box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.08) !important; }
+    .hover-scale { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hover-scale:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 0.5rem 1.5rem rgba(25, 135, 84, 0.25) !important; }
+    .form-control:focus, .form-select:focus { background-color: #fff !important; box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.12) !important; border-color: #198754 !important; }
+</style>
+
+@section Scripts {
+    <script>
+        let portalId = $('#hdnPortalId').val();
+
+        function customizeFormLabels() {
+            if (portalId == "3") { // Student
+                $('#formHeader').text("Student Registration");
+                $('#badgeRole').html(`<i class="bi bi-mortarboard-fill text-primary me-1"></i> Student Portal`);
+                $('#lblFirstName').text("Student First Name");
+                $('#lblLastName').text("Student Last Name");
+                $('#lblMobile').text("Guardian Mobile No (Username & Password)");
+                $('#lblEmail').text("Guardian Email ID");
+
+                $('.student-field').removeClass('d-none');
+                $('.org-field').hide();
+                $('#referredByContainer').hide();
+
+                $('#ddlStandard, #txtGuardianName').addClass('req-field');
+                $('#txtOrgName, #ddlOrgType').removeClass('req-field');
+                loadStandardsDropdown();
+            } 
+            else if (portalId == "4") { // School
+                $('#formHeader').text("School Registration");
+                $('#badgeRole').html(`<i class="bi bi-building text-warning me-1"></i> School Portal`);
+                $('#lblOrgName').html(`School Name <span class="text-danger">*</span>`);
+                loadAffiliatesDropdown();
+            }
+            else if (portalId == "2") { // Teacher
+                $('#formHeader').text("Teacher Registration");
+                $('#badgeRole').html(`<i class="bi bi-person-badge text-info me-1"></i> Teacher Portal`);
+                $('.teacher-field').removeClass('d-none');
+                $('.org-field').hide();
+                $('#referredByContainer').hide();
+                $('#txtQualification').addClass('req-field');
+                $('#txtOrgName, #ddlOrgType').removeClass('req-field');
+            }
+            else if (portalId == "5") { // Parent
+                $('#formHeader').text("Parent Registration");
+                $('#badgeRole').html(`<i class="bi bi-people-fill text-warning me-1"></i> Parent Portal`);
+                $('.parent-field').removeClass('d-none');
+                $('.org-field').hide();
+                $('#referredByContainer').hide();
+                $('#ddlRelation').addClass('req-field');
+                $('#txtOrgName, #ddlOrgType').removeClass('req-field');
+            }
+            else if (portalId == "6") { // Affiliate
+                $('#formHeader').text("Affiliate Partner Registration");
+                $('#badgeRole').html(`<i class="bi bi-star-fill text-info me-1"></i> Affiliate Partner`);
+                $('#referredByContainer').hide();
+            }
+        }
+
+        // Database-driven Gender Dropdown Loader (Assuming route is /api/lookup/genders)
+        function loadGendersDropdown() {
+            $.get('/api/lookup/genders', function(res) {
+                let $dropdown = $('#ddlGender');
+                $dropdown.empty().append('<option value="">-- Select Gender --</option>');
+                if (res && res.success && res.data) {
+                    res.data.forEach(item => {
+                        $dropdown.append(`<option value="${item.text}">${item.text}</option>`);
+                    });
+                }
+            });
+        }
+
+        function loadStandardsDropdown() {
+            $.get('/api/universal/standards-list', function(data) {
+                let $dropdown = $('#ddlStandard');
+                $dropdown.empty().append('<option value="">-- Select Standard --</option>');
+                if (data) data.forEach(item => $dropdown.append(`<option value="${item.id}">${item.name}</option>`));
+            });
+        }
+
+        function loadAffiliatesDropdown() {
+            $.get('/api/universal/affiliates-list', function(data) {
+                let $dropdown = $('#ddlReferredBy');
+                $dropdown.empty().append('<option value="">-- Please Select Affiliate (Optional) --</option>');
+                if (data) data.forEach(item => $dropdown.append(`<option value="${item.id}">${item.name}</option>`));
+            });
+        }
+
+        function validateForm() {
+            let isValid = true;
+            $('.req-field:visible').each(function() {
+                if (!$(this).val() || $(this).val().trim() === "") isValid = false;
+            });
+            if ($('#txtMobileNo').val().trim().length !== 10) isValid = false;
+            let emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+            if (!emailRegex.test($('#txtEmailID').val().trim())) isValid = false;
+
+            $('#btnRegister').prop('disabled', !isValid);
+        }
+
+        $(document).on('input change', '.req-field, #txtMobileNo, #txtEmailID', validateForm);
+
+        function fetchCityState(pincode) {
+            if (pincode.length === 6) {
+                $.get(`https://api.postalpincode.in/pincode/${pincode}`, function(data) {
+                    if (data && data[0].Status === "Success") {
+                        $('#txtCity').val(data[0].PostOffice[0].District);
+                        $('#txtState').val(data[0].PostOffice[0].State);
+                        validateForm();
+                    }
+                });
+            }
+        }
+
+        function showAlert(message, type = 'success') {
+            const $box = $('#alertBox');
+            $box.removeClass('d-none bg-success-subtle bg-danger-subtle text-success text-danger')
+                .addClass(type === 'success' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger')
+                .html(`<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'} me-2"></i> ${message}`);
+            $('html, body').animate({ scrollTop: 0 }, 'fast');
+        }
+
+        $(document).ready(function() {
+            customizeFormLabels();
+            loadGendersDropdown(); // <-- Loaded dynamically from Lookup API
+
+            $('#universalRegisterForm').on('submit', function(e) {
+                e.preventDefault();
+                const $btn = $('#btnRegister');
+                $btn.prop('disabled', true).html(`<span class="spinner-border spinner-border-sm me-2"></span>Processing...`);
+
+                let formData = new FormData();
+                formData.append("portalId", $('#hdnPortalId').val());
+                formData.append("firstName", $('#txtFirstName').val().trim());
+                formData.append("lastName", $('#txtLastName').val().trim());
+                formData.append("gender", $('#ddlGender').val());
+                formData.append("mobileNo", $('#txtMobileNo').val().trim());
+                formData.append("emailID", $('#txtEmailID').val().trim());
+                formData.append("address", $('#txtAddress').val().trim());
+                formData.append("pincode", $('#txtPincode').val().trim());
+                formData.append("city", $('#txtCity').val().trim());
+                formData.append("state", $('#txtState').val().trim());
+
+                if (portalId == "3") {
+                    formData.append("standard", $('#ddlStandard').val());
+                    formData.append("division", $('#txtDivision').val().trim() || 'A');
+                    formData.append("guardianName", $('#txtGuardianName').val().trim());
+                } else if (portalId == "2") { // Teacher
+                    formData.append("qualification", $('#txtQualification').val().trim());
+                } else if (portalId == "5") { // Parent
+                    formData.append("relationWithStudent", $('#ddlRelation').val());
+                } else {
+                    formData.append("organisationName", $('#txtOrgName').val().trim());
+                    formData.append("typeOfOrganisation", $('#ddlOrgType').val());
+                    formData.append("branchName", $('#txtBranchName').val().trim() || '');
+                    let ref = $('#ddlReferredBy').val();
+                    if (ref) formData.append("referredBy", ref);
+                }
+
+                let photo = $('#filePhoto')[0].files[0];
+                if (photo) formData.append("profilePhoto", photo);
+
+                $.ajax({
+                    url: '/api/universal/register',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        if (res.success) {
+                            showAlert(res.message, 'success');
+                            setTimeout(() => { window.location.href = '/Home/Index'; }, 2500);
+                        }
+                    },
+                    error: function(xhr) {
+                        $btn.prop('disabled', false).html('Complete Registration <i class="bi bi-arrow-right ms-2"></i>');
+                        showAlert(xhr.responseJSON?.message || 'Registration failed.', 'danger');
+                        validateForm();
+                    }
+                });
+            });
+        });
+    </script>
+}

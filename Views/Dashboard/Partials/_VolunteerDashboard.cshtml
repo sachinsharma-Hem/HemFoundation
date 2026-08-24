@@ -1,0 +1,1126 @@
+﻿<partial name="~/Views/Dashboard/Partials/_UserProfileCard.cshtml" />
+
+<div class="container-fluid py-2">
+
+    <!-- =========================================================
+         TOP STATS
+    ========================================================== -->
+    <div class="row g-4 mb-4">
+
+        <!-- Total Students -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 transition-hover bg-white position-relative overflow-hidden">
+
+                <div class="d-flex align-items-center justify-content-between">
+
+                    <div>
+                        <span class="text-muted small fw-semibold text-uppercase tracking-wider">
+                            Total Students
+                        </span>
+
+                        <h2 class="fw-bold text-dark mt-2 mb-0">
+                            54
+                        </h2>
+
+                        <span class="badge bg-success-subtle text-success rounded-pill mt-2 px-2 py-1"
+                              style="font-size:0.75rem;">
+                            <i class="bi bi-arrow-up-short"></i>
+                            Active Batch
+                        </span>
+                    </div>
+
+                    <div class="rounded-4 d-flex align-items-center justify-content-center text-white shadow-sm"
+                         style="width:55px;height:55px;background:linear-gradient(135deg,#0d6efd,#0b5ed7);">
+
+                        <i class="bi bi-mortarboard-fill fs-4"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- Plan Schedule -->
+        <div class="col-xl-3 col-sm-6">
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 transition-hover bg-white position-relative overflow-hidden">
+
+                <div class="d-flex align-items-center justify-content-between">
+
+                    <div>
+
+                        <span class="text-muted small fw-semibold text-uppercase tracking-wider">
+                            Plan Schedule
+                        </span>
+
+                        <h2 class="fw-bold text-dark mt-2 mb-0">
+                            29
+                        </h2>
+
+                        <span class="badge rounded-pill mt-2 px-2 py-1"
+                              style="font-size:0.75rem;background-color:#f3e8ff;color:#7c3aed;">
+
+                            <i class="bi bi-journal-check"></i>
+                            Assessments
+
+                        </span>
+
+                    </div>
+
+                    <div class="rounded-4 d-flex align-items-center justify-content-center text-white shadow-sm"
+                         style="width:55px;height:55px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
+
+                        <i class="bi bi-journal-richtext fs-4"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- School Visit -->
+        <div class="col-xl-3 col-sm-6">
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 transition-hover bg-white position-relative overflow-hidden">
+
+                <div class="d-flex align-items-center justify-content-between">
+
+                    <div>
+
+                        <span class="text-muted small fw-semibold text-uppercase tracking-wider">
+                            School Visit
+                        </span>
+
+                        <h2 class="fw-bold text-dark mt-2 mb-0">
+                            27
+                        </h2>
+
+                        <span class="badge bg-success-subtle text-success rounded-pill mt-2 px-2 py-1"
+                              style="font-size:0.75rem;">
+
+                            <i class="bi bi-check-circle"></i>
+                            Completed
+
+                        </span>
+
+                    </div>
+
+                    <div class="rounded-4 d-flex align-items-center justify-content-center text-white shadow-sm"
+                         style="width:55px;height:55px;background:linear-gradient(135deg,#10b981,#059669);">
+
+                        <i class="bi bi-laptop fs-4"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Certificates -->
+       <div class="col-xl-3 col-sm-6">
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 transition-hover bg-white position-relative overflow-hidden">
+
+        <div class="d-flex align-items-center justify-content-between">
+
+            <div>
+
+                <span class="text-muted small fw-semibold text-uppercase tracking-wider">
+                    Active School
+                </span>
+
+                <h2 id="lblActiveSchoolCount"
+                    class="fw-bold text-dark mt-2 mb-0">
+
+                    <span class="spinner-border spinner-border-sm text-danger"
+                          role="status"
+                          aria-hidden="true">
+                    </span>
+
+                </h2>
+
+                <span class="badge bg-danger-subtle text-danger rounded-pill mt-2 px-2 py-1"
+                      style="font-size:0.75rem;">
+
+                    <i class="bi bi-building-check"></i>
+                    Active
+
+                </span>
+
+            </div>
+
+
+            <div class="rounded-4 d-flex align-items-center justify-content-center text-white shadow-sm"
+                 style="width:55px;height:55px;background:linear-gradient(135deg,#ef4444,#dc2626);">
+
+                <i class="bi bi-building-check-fill fs-4"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+    <!-- =========================================================
+         QUICK ACTIONS HEADING
+    ========================================================== -->
+
+    <div class="d-flex align-items-center justify-content-between mb-3 mt-4">
+
+        <div>
+
+            <h4 class="fw-bold text-dark m-0">
+
+                <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
+
+                Quick Actions
+
+            </h4>
+
+            <p class="text-muted small m-0">
+                Access your teaching modules, live classes, and reports instantly.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         QUICK ACTION CARDS
+    ========================================================== -->
+
+    <div class="row g-4">
+
+        <!-- =====================================================
+             ASSIGNED SCHOOLS
+        ====================================================== -->
+
+        <div class="col-xl-4 col-md-6">
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 transition-card bg-white position-relative">
+
+                <div class="d-flex align-items-start justify-content-between mb-3">
+
+                    <div class="rounded-4 d-flex align-items-center justify-content-center text-white shadow-sm"
+                         style="width:55px;height:55px;background:linear-gradient(135deg,#6366f1,#4f46e5);">
+
+                        <i class="bi bi-building-fill fs-4"></i>
+
+                    </div>
+
+                    <span class="badge rounded-pill px-3 py-1 fw-medium"
+                          style="background-color:#e0e7ff;color:#4f46e5;font-size:0.75rem;">
+
+                        Assigned Schools
+
+                    </span>
+
+                </div>
+
+
+                <h5 class="fw-bold text-dark mb-1">
+                    My Assigned Schools
+                </h5>
+
+
+                <p class="text-muted small mb-2">
+
+                    You are currently assigned to
+
+                    <span id="lblAssignedSchoolCount"
+                          class="text-primary fw-bold">
+
+                        <span class="spinner-border spinner-border-sm text-primary"
+                              role="status"
+                              aria-hidden="true">
+                        </span>
+
+                    </span>
+
+                    schools.
+
+                </p>
+
+
+                <div class="mt-auto pt-3">
+
+                    <button type="button"
+                            id="btnOpenAssignedSchools"
+                            class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-semibold w-100 d-flex align-items-center justify-content-center gap-2">
+
+                        <span>
+                            Open Details
+                        </span>
+
+                        <i class="bi bi-arrow-right"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             MCQ
+        ====================================================== -->
+
+        <div class="col-xl-4 col-md-6">
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 transition-card bg-white position-relative">
+
+                <div class="d-flex align-items-start justify-content-between mb-3">
+
+                    <div class="rounded-4 d-flex align-items-center justify-content-center text-white shadow-sm"
+                         style="width:55px;height:55px;background:linear-gradient(135deg,#10b981,#059669);">
+
+                        <i class="bi bi-ui-checks-grid fs-4"></i>
+
+                    </div>
+
+                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1 fw-medium"
+                          style="font-size:0.75rem;">
+
+                        Assessments
+
+                    </span>
+
+                </div>
+
+
+                <h5 class="fw-bold text-dark mb-1">
+                    MCQ Manager
+                </h5>
+
+                <p class="text-muted small mb-4">
+                    Create and manage multiple choice questions for evaluations.
+                </p>
+
+
+                <div class="mt-auto">
+
+                    <button type="button"
+                            class="btn btn-outline-success btn-sm rounded-pill px-4 fw-semibold w-100 d-flex align-items-center justify-content-center gap-2"
+                            onclick="window.location.href='/Teacher/McqHub'">
+
+                        <span>
+                            Open Manager
+                        </span>
+
+                        <i class="bi bi-arrow-right"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             PBL REPORTS
+        ====================================================== -->
+
+        <div class="col-xl-4 col-md-6">
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 transition-card bg-white position-relative">
+
+                <div class="d-flex align-items-start justify-content-between mb-3">
+
+                    <div class="rounded-4 d-flex align-items-center justify-content-center text-white shadow-sm"
+                         style="width:55px;height:55px;background:linear-gradient(135deg,#ef4444,#dc2626);">
+
+                        <i class="bi bi-file-earmark-pdf-fill fs-4"></i>
+
+                    </div>
+
+                    <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1 fw-medium"
+                          style="font-size:0.75rem;">
+
+                        Reports
+
+                    </span>
+
+                </div>
+
+
+                <h5 class="fw-bold text-dark mb-1">
+                    PBL Reports
+                </h5>
+
+                <p class="text-muted small mb-4">
+                    Generate and download comprehensive performance reports.
+                </p>
+
+
+                <div class="mt-auto">
+
+                    <a href="/Pbl/Cognitive"
+                       class="btn btn-outline-danger btn-sm rounded-pill px-4 fw-semibold w-100 d-flex align-items-center justify-content-center gap-2">
+
+                        <span>
+                            PBL Report
+                        </span>
+
+                        <i class="bi bi-download"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =============================================================
+     ASSIGNED SCHOOLS MODAL
+============================================================= -->
+
+<div class="modal fade"
+     id="volunteerSchoolsModal"
+     tabindex="-1"
+     aria-labelledby="volunteerSchoolsModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content rounded-4 border-0 shadow-lg bg-white">
+
+            <!-- HEADER -->
+
+            <div class="modal-header border-bottom px-4 py-3">
+
+                <div>
+
+                    <h5 class="fw-bold text-dark m-0"
+                        id="volunteerSchoolsModalLabel">
+
+                        <i class="bi bi-building text-primary me-2"></i>
+
+                        My Assigned Schools
+
+                    </h5>
+
+                    <small class="text-muted">
+                        Schools currently assigned to you
+                    </small>
+
+                </div>
+
+
+                <button type="button"
+                        class="btn-close shadow-none"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+
+            <!-- BODY -->
+
+            <div class="modal-body p-4">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle small mb-0">
+
+                        <thead class="table-light text-muted">
+
+                            <tr>
+
+                                <th style="width:60px;">
+                                    #
+                                </th>
+
+                                <th>
+                                    School
+                                </th>
+
+                                <th>
+                                    Assigned Date
+                                </th>
+
+                                <th>
+                                    Assigned By
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="tblAssignedSchoolsList">
+
+                            <tr>
+
+                                <td colspan="4"
+                                    class="text-center py-5 text-muted">
+
+                                    <span class="spinner-border spinner-border-sm me-2">
+                                    </span>
+
+                                    Loading schools...
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER -->
+
+            <div class="modal-footer border-top px-4 py-3">
+
+                <span class="text-muted small me-auto">
+
+                    Total Assigned:
+                    <strong id="modalAssignedSchoolCount">0</strong>
+
+                </span>
+
+                <button type="button"
+                        class="btn btn-secondary btn-sm rounded-pill px-4"
+                        data-bs-dismiss="modal">
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =============================================================
+     CSS
+============================================================= -->
+
+<style>
+
+    .transition-hover {
+        transition: all 0.3s ease-in-out;
+    }
+
+    .transition-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.08) !important;
+    }
+
+
+    .transition-card {
+        transition: all 0.3s ease-in-out;
+        border: 1px solid rgba(0,0,0,0.03) !important;
+    }
+
+    .transition-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 1rem 2rem rgba(0,0,0,0.06) !important;
+        border-color: rgba(13,110,253,0.2) !important;
+    }
+
+
+    #tblAssignedSchoolsList tr {
+        transition: background-color .2s ease;
+    }
+
+
+    #tblAssignedSchoolsList td {
+        vertical-align: middle;
+    }
+
+
+    .school-name {
+        font-weight: 600;
+        color: #212529;
+    }
+
+
+    .school-id {
+        font-size: 0.72rem;
+        color: #6c757d;
+    }
+
+</style>
+
+
+<!-- =============================================================
+     JAVASCRIPT
+
+     IMPORTANT:
+     No jQuery is used here.
+     Therefore "$ is not defined" issue nahi aayega.
+============================================================= -->
+
+<script>
+
+(function () {
+
+    "use strict";
+
+
+    // =========================================================
+    // GET JWT TOKEN
+    // =========================================================
+
+    function getAuthToken() {
+
+        return localStorage.getItem("jwt_token")
+            || sessionStorage.getItem("jwt_token")
+            || "";
+
+    }
+
+
+    // =========================================================
+    // HTML ENCODE
+    // =========================================================
+
+    function escapeHtml(value) {
+
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        var div = document.createElement("div");
+
+        div.textContent = String(value);
+
+        return div.innerHTML;
+
+    }
+
+
+    // =========================================================
+    // SET COUNT
+    // =========================================================
+
+    function setSchoolCount(count) {
+
+    var finalCount = Number.isFinite(Number(count))
+        ? Number(count)
+        : 0;
+
+
+    // Assigned Schools quick action card
+    var assignedCountElement =
+        document.getElementById("lblAssignedSchoolCount");
+
+    if (assignedCountElement) {
+
+        assignedCountElement.textContent = finalCount;
+
+    }
+
+
+    // Active School top dashboard card
+    var activeSchoolCountElement =
+        document.getElementById("lblActiveSchoolCount");
+
+    if (activeSchoolCountElement) {
+
+        activeSchoolCountElement.textContent = finalCount;
+
+    }
+
+
+    // Modal footer count
+    var modalCount =
+        document.getElementById("modalAssignedSchoolCount");
+
+    if (modalCount) {
+
+        modalCount.textContent = finalCount;
+
+    }
+
+}
+
+
+    // =========================================================
+    // COUNT LOADING
+    // =========================================================
+
+    function showCountLoading() {
+
+        var countElement =
+            document.getElementById("lblAssignedSchoolCount");
+
+        if (!countElement) {
+            return;
+        }
+
+        countElement.innerHTML = `
+            <span class="spinner-border spinner-border-sm text-primary"
+                  role="status"
+                  aria-hidden="true">
+            </span>
+        `;
+
+    }
+
+
+    // =========================================================
+    // FETCH ASSIGNED SCHOOLS
+    // =========================================================
+
+    async function fetchAssignedSchools() {
+
+        var token = getAuthToken();
+
+        var headers = {
+            "Accept": "application/json"
+        };
+
+
+        if (token) {
+
+            headers["Authorization"] =
+                "Bearer " + token;
+
+        }
+
+
+        try {
+
+            var response = await fetch(
+                "/api/volunteer/my-assigned-schools",
+                {
+                    method: "GET",
+                    headers: headers,
+                    credentials: "same-origin",
+                    cache: "no-store"
+                }
+            );
+
+
+            if (!response.ok) {
+
+                console.error(
+                    "Assigned schools API failed:",
+                    response.status,
+                    response.statusText
+                );
+
+                throw new Error(
+                    "API returned " + response.status
+                );
+
+            }
+
+
+            var result =
+                await response.json();
+
+
+            if (
+                result &&
+                result.success &&
+                Array.isArray(result.data)
+            ) {
+
+                return result.data;
+
+            }
+
+
+            return [];
+
+        }
+        catch (error) {
+
+            console.error(
+                "Unable to load assigned schools:",
+                error
+            );
+
+            return null;
+
+        }
+
+    }
+
+
+    // =========================================================
+    // LOAD COUNT ON DASHBOARD
+    // =========================================================
+
+    async function loadVolunteerAssignedSchoolCount() {
+
+        showCountLoading();
+
+
+        var schools =
+            await fetchAssignedSchools();
+
+
+        if (schools === null) {
+
+            setSchoolCount(0);
+
+            return;
+
+        }
+
+
+        setSchoolCount(schools.length);
+
+    }
+
+
+    // =========================================================
+    // FORMAT DATE
+    // =========================================================
+
+    function formatAssignedDate(dateValue) {
+
+        if (!dateValue) {
+
+            return "-";
+
+        }
+
+
+        var date =
+            new Date(dateValue);
+
+
+        if (isNaN(date.getTime())) {
+
+            return "-";
+
+        }
+
+
+        return date.toLocaleDateString(
+            "en-IN",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            }
+        );
+
+    }
+
+
+    // =========================================================
+    // RENDER SCHOOL TABLE
+    // =========================================================
+
+    function renderAssignedSchools(schools) {
+
+        var tableBody =
+            document.getElementById(
+                "tblAssignedSchoolsList"
+            );
+
+
+        if (!tableBody) {
+            return;
+        }
+
+
+        if (
+            !schools ||
+            schools.length === 0
+        ) {
+
+            tableBody.innerHTML = `
+
+                <tr>
+
+                    <td colspan="4"
+                        class="text-center py-5 text-muted">
+
+                        <i class="bi bi-building fs-1 d-block mb-3"></i>
+
+                        <div class="fw-semibold">
+                            No schools assigned
+                        </div>
+
+                        <small>
+                            No school is currently assigned to you.
+                        </small>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+            return;
+
+        }
+
+
+        var rows = "";
+
+
+        schools.forEach(function (school, index) {
+
+            var schoolName =
+                school.name || "-";
+
+
+            var instituteId =
+                school.instituteID
+                ?? school.InstituteID
+                ?? "-";
+
+
+            var assignedDate =
+                formatAssignedDate(
+                    school.assignedDate
+                    ?? school.AssignedDate
+                );
+
+
+            var assignedBy =
+                school.assignedBy
+                ?? school.AssignedBy
+                ?? "-";
+
+
+            rows += `
+
+                <tr>
+
+                    <td class="fw-bold text-muted">
+                        ${index + 1}
+                    </td>
+
+
+                    <td>
+
+                        <div class="school-name">
+                            ${escapeHtml(schoolName)}
+                        </div>
+
+                        <div class="school-id">
+                            School ID:
+                            ${escapeHtml(instituteId)}
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
+
+                            ${escapeHtml(assignedDate)}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="fw-medium text-dark">
+
+                            ${escapeHtml(assignedBy)}
+
+                        </span>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+        });
+
+
+        tableBody.innerHTML = rows;
+
+    }
+
+
+    // =========================================================
+    // OPEN ASSIGNED SCHOOLS MODAL
+    // =========================================================
+
+    async function openAssignedSchoolsModal() {
+
+        var modalElement =
+            document.getElementById(
+                "volunteerSchoolsModal"
+            );
+
+
+        if (!modalElement) {
+
+            console.error(
+                "volunteerSchoolsModal not found."
+            );
+
+            return;
+
+        }
+
+
+        var tableBody =
+            document.getElementById(
+                "tblAssignedSchoolsList"
+            );
+
+
+        if (tableBody) {
+
+            tableBody.innerHTML = `
+
+                <tr>
+
+                    <td colspan="4"
+                        class="text-center py-5 text-muted">
+
+                        <span class="spinner-border spinner-border-sm me-2">
+                        </span>
+
+                        Loading assigned schools...
+
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+
+
+        // Bootstrap 5 modal
+        var modal =
+            bootstrap.Modal.getOrCreateInstance(
+                modalElement
+            );
+
+
+        modal.show();
+
+
+        // API call
+        var schools =
+            await fetchAssignedSchools();
+
+
+        if (schools === null) {
+
+            if (tableBody) {
+
+                tableBody.innerHTML = `
+
+                    <tr>
+
+                        <td colspan="4"
+                            class="text-center py-5 text-danger">
+
+                            <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
+
+                            Failed to load assigned schools.
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+
+            return;
+
+        }
+
+
+        // Count update
+        setSchoolCount(schools.length);
+
+
+        // Table render
+        renderAssignedSchools(schools);
+
+    }
+
+
+    // =========================================================
+    // BUTTON EVENT
+    // =========================================================
+
+    function initializeAssignedSchools() {
+
+        var button =
+            document.getElementById(
+                "btnOpenAssignedSchools"
+            );
+
+
+        if (button) {
+
+            button.addEventListener(
+                "click",
+                openAssignedSchoolsModal
+            );
+
+        }
+
+
+        // Dashboard open hote hi count load
+        loadVolunteerAssignedSchoolCount();
+
+    }
+
+
+    // =========================================================
+    // INITIALIZE
+    // =========================================================
+
+    if (document.readyState === "loading") {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializeAssignedSchools
+        );
+
+    }
+    else {
+
+        initializeAssignedSchools();
+
+    }
+
+
+})();
+
+</script>

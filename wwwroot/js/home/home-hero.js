@@ -1,0 +1,524 @@
+﻿// document.addEventListener("DOMContentLoaded", function() {
+//     const heroSection = document.querySelector('.hero-section');
+//     const cards = document.querySelectorAll('.value-card');
+
+//     if (window.innerWidth > 991) {
+//         heroSection.addEventListener('mousemove', (e) => {
+//             const { width, height } = heroSection.getBoundingClientRect();
+//             const offsetX = (e.clientX / width - 0.5) * 25;
+//             const offsetY = (e.clientY / height - 0.5) * 25;
+
+//             cards.forEach((card, index) => {
+//                 const speed = (index + 1) * 0.18;
+//                 const x = offsetX * speed;
+//                 const y = offsetY * speed;
+
+//                 // Ye aage-peeche position ko bina tode smoothly float karwayega
+//                 card.style.transform = `translate(${x}px, ${y}px)`;
+//             });
+//         });
+
+//         heroSection.addEventListener('mouseleave', () => {
+//         cards.forEach(card => {
+//             card.style.transform = `translate(0px, 0px)`;
+//         });
+//         });
+//     }
+//     });
+
+document.addEventListener("DOMContentLoaded", function () {
+    const heroSection = document.querySelector('.hero-section');
+    const cards = document.querySelectorAll('.value-card');
+
+    if (heroSection && cards.length > 0) {
+        // Run parallax only on desktop screens
+        if (window.innerWidth > 991) {
+            heroSection.addEventListener('mousemove', (e) => {
+                const { width, height } = heroSection.getBoundingClientRect();
+                // Smooth multiplier calculation
+                const offsetX = (e.clientX / width - 0.5) * 20;
+                const offsetY = (e.clientY / height - 0.5) * 20;
+
+                cards.forEach((card, index) => {
+                    const speed = (index + 1) * 0.15;
+                    const x = offsetX * speed;
+                    const y = offsetY * speed;
+
+                    // Applies 3D movement cleanly without breaking CSS keyframes
+                    card.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+                });
+            });
+
+            // Smoothly snap back to original wave position on mouse leave
+            heroSection.addEventListener('mouseleave', () => {
+                cards.forEach(card => {
+                    card.style.transform = `translate3d(0px, 0px, 0)`;
+                });
+            });
+        }
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const hemCounters = document.querySelectorAll(".hem-counter");
+
+    if (hemCounters.length > 0) {
+        const speed = 80; // Speed of counting
+
+        const startCounting = (counter) => {
+            const target = +counter.getAttribute("data-target");
+            let count = 0;
+            const inc = target / speed;
+
+            const updateCount = () => {
+                count += inc;
+                if (count < target) {
+                    counter.innerText = Math.ceil(count).toLocaleString('en-US');
+                    setTimeout(updateCount, 20);
+                } else {
+                    counter.innerText = target.toLocaleString('en-US');
+                }
+            };
+            updateCount();
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    startCounting(entry.target);
+                    observer.unobserve(entry.target); // Run only once
+                }
+            });
+        }, { threshold: 0.3 });
+
+        hemCounters.forEach(counter => observer.observe(counter));
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const whyCards = document.querySelectorAll(".hem-why-card");
+
+    if (whyCards.length > 0) {
+        // Initial setup: 3D Pop effect ke liye scale-down aur translate set kiya hai
+        whyCards.forEach((card, index) => {
+            card.style.opacity = "0";
+            card.style.transform = "translateY(45px) scale(0.85)";
+            // Staggered delay: har card line se 0.12s ke gap me pop hoga
+            card.style.transition = `opacity 0.7s ease, transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${index * 0.12}s`;
+        });
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Viewport me aate hi smoothly original size aur position pe aayega
+                    entry.target.style.opacity = "1";
+                    entry.target.style.transform = "translateY(0) scale(1)";
+
+                    // Entry animation khatam hone ke baad normal hover transition wapas laga dega
+                    setTimeout(() => {
+                        entry.target.style.transition = "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                    }, 1200);
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.15, // Screen par 15% dikhte hi trigger ho jayega
+            rootMargin: "0px 0px -30px 0px" // Scroll karte time thoda pehle hi activate hoga
+        });
+
+        whyCards.forEach(card => observer.observe(card));
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Select both steps and arrows in order of DOM
+    const howElements = document.querySelectorAll(".hem-how-step-col, .hem-how-arrow");
+    const howHeader = document.querySelector(".hem-how-header");
+
+    if (howElements.length > 0) {
+        // Initial setup: Hide elements slightly scaled down and below
+        if (howHeader) {
+            howHeader.style.opacity = "0";
+            howHeader.style.transform = "translateY(-20px)";
+            howHeader.style.transition = "all 0.6s ease-out";
+        }
+
+        howElements.forEach((el) => {
+            el.style.opacity = "0";
+            el.style.transform = "translateY(30px) scale(0.95)";
+        });
+
+        // Create Intersection Observer
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+
+                    // 1. Animate Header First
+                    if (howHeader) {
+                        howHeader.style.opacity = "1";
+                        howHeader.style.transform = "translateY(0)";
+                    }
+
+                    // 2. Animate Steps & Arrows sequentially with stagger delay
+                    howElements.forEach((el, index) => {
+                        setTimeout(() => {
+                            el.style.transition = "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)";
+                            el.style.opacity = "1";
+                            el.style.transform = "translateY(0) scale(1)";
+                        }, index * 150); // 150ms delay between each step/arrow
+                    });
+
+                    // Stop observing once animated
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 }); // Triggers when 20% of the section is visible
+
+        // Observe the first element to trigger the whole sequence
+        observer.observe(howElements[0]);
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const progCols = document.querySelectorAll(".hem-prog-col");
+    const progHeader = document.querySelector(".hem-prog-header");
+
+    if (progCols.length > 0) {
+        // Hide header initially
+        if (progHeader) {
+            progHeader.style.opacity = "0";
+            progHeader.style.transform = "translateY(-20px)";
+            progHeader.style.transition = "all 0.6s ease-out";
+        }
+
+        // Hide cards slightly scaled down and translated below
+        progCols.forEach((col, index) => {
+            col.style.opacity = "0";
+            col.style.transform = "translateY(45px) scale(0.85)";
+            // Staggered delay: 0.1s gap between each card entry
+            col.style.transition = `opacity 0.7s ease, transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${index * 0.1}s`;
+        });
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+
+                    // 1. Animate Header First
+                    if (progHeader) {
+                        progHeader.style.opacity = "1";
+                        progHeader.style.transform = "translateY(0)";
+                    }
+
+                    // 2. Animate all cards sequentially
+                    progCols.forEach((col) => {
+                        col.style.opacity = "1";
+                        col.style.transform = "translateY(0) scale(1)";
+
+                        // Reset transition for normal hover effects after entry animation completes
+                        setTimeout(() => {
+                            col.style.transition = "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                        }, 1200);
+                    });
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.15, // Triggers as soon as 15% of the card is visible
+            rootMargin: "0px 0px -20px 0px"
+        });
+
+        // Observe the first card to start the sequence
+        observer.observe(progCols[0]);
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Entry Animation for Video Banner
+    const vidCols = document.querySelectorAll(".hem-vid-col");
+
+    if (vidCols.length > 0) {
+        vidCols.forEach((col, index) => {
+            col.style.opacity = "0";
+            col.style.transform = index === 0 ? "translateX(-40px) scale(0.95)" : "translateX(40px) scale(0.95)";
+            col.style.transition = `all 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.15}s`;
+        });
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    vidCols.forEach(col => {
+                        col.style.opacity = "1";
+                        col.style.transform = "translate(0) scale(1)";
+                    });
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
+
+        observer.observe(vidCols[0]);
+    }
+
+    // 2. Smart Video Modal Autoplay & Cleanup
+    const videoModal = document.getElementById("hemVideoModal");
+    const videoContainer = document.getElementById("videoContainer");
+
+    if (videoModal && videoContainer) {
+        // Embed URL of your youtube video with autoplay enabled
+        const embedUrl = "https://www.youtube.com/embed/_KjRB1egRqk?autoplay=1&rel=0";
+
+        // When modal opens, inject iframe
+        videoModal.addEventListener("show.bs.modal", () => {
+            videoContainer.innerHTML = `<iframe src="${embedUrl}" title="HEMA Foundation: Introduction" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen class="w-100 h-100 border-0"></iframe>`;
+        });
+
+        // When modal closes, remove iframe to stop audio/video
+        videoModal.addEventListener("hidden.bs.modal", () => {
+            videoContainer.innerHTML = "";
+        });
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Modal Dynamic Data Binding (With Automatic Path Fix)
+    const readMoreButtons = document.querySelectorAll(".read-more");
+
+    readMoreButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            const name = this.getAttribute("data-name");
+            const role = this.getAttribute("data-role");
+            let img = this.getAttribute("data-img") || "";
+            const text = this.getAttribute("data-text");
+
+            // Fix: Ye line path ke aage se tilde (~) aur extra slash ko hata kar sahi web path banayeigi
+            img = img.replace(/^(\/?~)/, '');
+
+            const tmName = document.getElementById("tmName");
+            const tmRole = document.getElementById("tmRole");
+            const tmImg = document.getElementById("tmImg");
+            const tmText = document.getElementById("tmText");
+
+            if (tmName) tmName.innerText = name || "";
+            if (tmRole) tmRole.innerText = role || "";
+            if (tmImg) tmImg.src = img;
+            if (tmText) tmText.innerText = text || "";
+        });
+    });
+
+    // 2. Viewport Entry Animation for Cards (Fixed for First Load & Refresh)
+    const hvtCols = document.querySelectorAll(".hvt-col");
+    const hvtHeader = document.querySelector(".hvt-header");
+
+    if (hvtCols.length > 0) {
+        if (hvtHeader) {
+            hvtHeader.style.opacity = "0";
+            hvtHeader.style.transform = "translateY(-20px)";
+            hvtHeader.style.transition = "all 0.6s ease-out";
+        }
+
+        hvtCols.forEach((col, index) => {
+            col.style.opacity = "0";
+            col.style.transform = "translateY(40px) scale(0.92)";
+            col.style.transition = `all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${index * 0.15}s`;
+        });
+
+        let isAnimated = false;
+
+        // Function to reveal cards
+        const showCards = () => {
+            if (isAnimated) return;
+            isAnimated = true;
+
+            if (hvtHeader) {
+                hvtHeader.style.opacity = "1";
+                hvtHeader.style.transform = "translateY(0)";
+            }
+
+            hvtCols.forEach(col => {
+                col.style.opacity = "1";
+                col.style.transform = "translateY(0) scale(1)";
+
+                setTimeout(() => {
+                    col.style.transition = "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                }, 1200);
+            });
+        };
+
+        // Scroll Observer
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    showCards();
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: "0px 0px 50px 0px" // Screen me aane se 50px pehle hi trigger hoga
+        });
+
+        observer.observe(hvtCols[0]);
+
+        // Safety Fallback: Agar page load pe scroll nahi hua ya slow Internet hai,
+        // to 800ms (0.8s) baad apne aap cards show ho jaayenge bina kisi issue ke!
+        setTimeout(() => {
+            showCards();
+        }, 800);
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Automatic Marquee Cloner for 100% Seamless Infinite Loop
+    const partnerTrack = document.getElementById("partnerTrack");
+
+    if (partnerTrack && !partnerTrack.getAttribute("data-cloned")) {
+        // Clone all logo cards and append them to the same track
+        const cards = Array.from(partnerTrack.children);
+        cards.forEach(card => {
+            const clone = card.cloneNode(true);
+            partnerTrack.appendChild(clone);
+        });
+        // Mark as cloned to prevent double cloning on re-renders
+        partnerTrack.setAttribute("data-cloned", "true");
+    }
+
+    // 2. Viewport Entry Animation
+    const partnerHeader = document.querySelector(".hem-partner-header");
+    const partnerSlider = document.querySelector(".hem-partner-slider");
+
+    if (partnerHeader && partnerSlider) {
+        partnerHeader.style.opacity = "0";
+        partnerHeader.style.transform = "translateY(-20px)";
+        partnerHeader.style.transition = "all 0.6s ease-out";
+
+        partnerSlider.style.opacity = "0";
+        partnerSlider.style.transform = "translateY(30px) scale(0.96)";
+        partnerSlider.style.transition = "all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s";
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    partnerHeader.style.opacity = "1";
+                    partnerHeader.style.transform = "translateY(0)";
+
+                    partnerSlider.style.opacity = "1";
+                    partnerSlider.style.transform = "translateY(0) scale(1)";
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+
+        observer.observe(partnerHeader);
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const phoneCol = document.querySelector(".hem-app-phone-col");
+    const appCols = document.querySelectorAll(".hem-app-col");
+
+    if (phoneCol && appCols.length > 0) {
+        // Initial setup for Phone
+        phoneCol.style.opacity = "0";
+        phoneCol.style.transform = "translateX(-50px)";
+        phoneCol.style.transition = "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)";
+
+        // Initial setup for Feature Cards
+        appCols.forEach((col, index) => {
+            col.style.opacity = "0";
+            col.style.transform = "translateY(40px) scale(0.9)";
+            col.style.transition = `all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${index * 0.12}s`;
+        });
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Animate Phone
+                    phoneCol.style.opacity = "1";
+                    phoneCol.style.transform = "translateX(0)";
+
+                    // Animate Cards
+                    appCols.forEach(col => {
+                        col.style.opacity = "1";
+                        col.style.transform = "translateY(0) scale(1)";
+                    });
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
+
+        observer.observe(phoneCol);
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Viewport Entry Animation for CTA Banner
+    const ctaImgCol = document.querySelector(".hem-cta-img-col");
+    const ctaTextCol = document.querySelector(".hem-cta-text-col");
+    const ctaBtnCol = document.querySelector(".hem-cta-btn-col");
+
+    if (ctaImgCol && ctaTextCol && ctaBtnCol) {
+        ctaImgCol.style.opacity = "0";
+        ctaImgCol.style.transform = "translateX(-40px)";
+        ctaImgCol.style.transition = "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)";
+
+        ctaTextCol.style.opacity = "0";
+        ctaTextCol.style.transform = "translateY(40px)";
+        ctaTextCol.style.transition = "all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s";
+
+        ctaBtnCol.style.opacity = "0";
+        ctaBtnCol.style.transform = "translateX(40px)";
+        ctaBtnCol.style.transition = "all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s";
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    ctaImgCol.style.opacity = "1";
+                    ctaImgCol.style.transform = "translateX(0)";
+
+                    ctaTextCol.style.opacity = "1";
+                    ctaTextCol.style.transform = "translateY(0)";
+
+                    ctaBtnCol.style.opacity = "1";
+                    ctaBtnCol.style.transform = "translateX(0)";
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
+
+        observer.observe(ctaTextCol);
+    }
+
+    // 2. Demo Form Submission Handler
+    const demoForm = document.getElementById("hemDemoForm");
+    if (demoForm) {
+        demoForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            // Close the modal automatically
+            const modalEl = document.getElementById("modalcontact");
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+
+            // Show Success Notification (Uses SweetAlert2 if loaded, otherwise fallback to alert)
+            if (typeof Swal !== "undefined") {
+                Swal.fire({
+                    title: "Request Received!",
+                    text: "Thank you for scheduling a live demo. Our value education team will contact you within 24 hours.",
+                    icon: "success",
+                    confirmButtonColor: "#0066FF",
+                    confirmButtonText: "Great, Thanks!"
+                });
+            } else {
+                alert("Thank you! Your demo request has been submitted successfully.");
+            }
+
+            this.reset(); // Reset form inputs
+        });
+    }
+});
