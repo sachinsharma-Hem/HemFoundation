@@ -43,5 +43,42 @@ namespace HemFoundation.Controllers.Api
                 }
             });
         }
+
+        // 1. Fetch all bulk upload logs with School Name
+        [HttpGet("bulk-logs")]
+        public async Task<IActionResult> GetBulkLogs()
+        {
+            var logs = await (from l in _context.BulkUploadLogs
+                              join i in _context.Institutes on l.InstituteID equals i.InstituteID
+                              orderby l.UploadedDate descending
+                              select new
+                              {
+                                  l.LogID,
+                                  SchoolName = i.Name,
+                                  l.UploadType,
+                                  l.FileName,
+                                  l.FilePath,
+                                  l.Status,
+                                  l.UploadedDate
+                              }).ToListAsync();
+
+            return Ok(new { success = true, data = logs });
+        }
+
+        // 2. Update status of a specific log
+        [HttpPost("update-bulk-status")]
+        public async Task<IActionResult> UpdateBulkStatus([FromForm] int logId, [FromForm] string status)
+        {
+            var log = await _context.BulkUploadLogs.FindAsync(logId);
+            if (log == null)
+            {
+                return NotFound(new { success = false, message = "Upload record not found." });
+            }
+
+            log.Status = status;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Bulk upload status updated successfully!" });
+        }
     }
 }

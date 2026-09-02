@@ -71,6 +71,7 @@ namespace HemFoundation.Data
         public DbSet<AffiliateExpense> AffiliateExpenses { get; set; }
         public DbSet<VolunteerInstituteMapping> VolunteerInstituteMappings { get; set; }
 
+
         public DbSet<Quiz> Quiz { get; set; }
         public DbSet<Examination> Examination { get; set; }
         public DbSet<ExaminationRecords> ExaminationRecords { get; set; }
@@ -95,6 +96,18 @@ namespace HemFoundation.Data
         public DbSet<QuestionOption> QuestionOption { get; set; }
 
         public DbSet<View_WJ_Course_Topics> View_WJ_Course_Topics { get; set; }
+
+        public DbSet<VolunteerVisitPlan> VolunteerVisitPlans { get; set; }
+        public DbSet<BulkUploadLog> BulkUploadLogs { get; set; }
+        public DbSet<ValueGradeMaster> ValueGradeMasters { get; set; }
+        public DbSet<ValueItemMaster> ValueItemMasters { get; set; }
+        public DbSet<ActivityGroup> ActivityGroups { get; set; }
+        public DbSet<ActivityGroupStudent> ActivityGroupStudents { get; set; }
+        public DbSet<ActivitySubmission> ActivitySubmissions { get; set; }
+        public DbSet<TrainingGuideMaster> TrainingGuideMasters { get; set; }
+        public DbSet<StudentCourseMaster> StudentCourseMasters { get; set; }
+        public DbSet<StudentCourseModule> StudentCourseModules { get; set; }
+        public DbSet<StudentModuleContent> StudentModuleContents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

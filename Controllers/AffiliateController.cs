@@ -102,5 +102,17 @@ namespace HemFoundation.Controllers
 
             return View("~/Views/Affiliate/OtherActivity.cshtml");
         }
+        [HttpGet("Affiliate/Guides")]
+        public IActionResult Guides()
+        {
+            // Yahan Affiliate ka session check lagayein (Agar zaroorat ho)
+            var isLoggedIn = HttpContext.Session.GetString("IsAdminLoggedIn"); // Replace with Affiliate login check
+            if (string.IsNullOrEmpty(isLoggedIn) || isLoggedIn != "true")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View("~/Views/Affiliate/Guides.cshtml");
+        }
     }
 }

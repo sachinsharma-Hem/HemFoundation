@@ -6,6 +6,7 @@ namespace HemFoundation.Models.Entities
     {
         [Key]
         public int TeacherID { get; set; }
+        public int? InstituteID { get; set; } // Added for School mapping
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? MobileNo { get; set; }

@@ -78,5 +78,40 @@ namespace HemFoundation.Controllers
             // Aapki file ka naam Leave.cshtml hai, toh wahi path dein:
             return View("~/Views/Admin/Leave.cshtml");
         }
+
+        [HttpGet("ManageBulkReport")]
+        public IActionResult ManageBulkReport()
+        {
+            // Yahan aap Admin Session/Authentication check laga sakte hain
+            var isLoggedIn = HttpContext.Session.GetString("IsAdminLoggedIn");
+            if (string.IsNullOrEmpty(isLoggedIn) || isLoggedIn != "true")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View("~/Views/Admin/ManageBulkReport.cshtml");
+        }
+        [HttpGet("StudentDemo")]
+        public IActionResult StudentDemo()
+        {
+            var isLoggedIn = HttpContext.Session.GetString("IsAdminLoggedIn");
+            if (string.IsNullOrEmpty(isLoggedIn) || isLoggedIn != "true")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View("~/Views/Admin/StudentDemo.cshtml");
+        }
+        [HttpGet("StudentCourseSetup")]
+        public IActionResult StudentCourseSetup()
+        {
+            var isLoggedIn = HttpContext.Session.GetString("IsAdminLoggedIn");
+            if (string.IsNullOrEmpty(isLoggedIn) || isLoggedIn != "true")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View("~/Views/Admin/StudentCourseSetup.cshtml");
+        }
     }
 }

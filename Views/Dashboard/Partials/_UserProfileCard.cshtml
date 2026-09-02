@@ -1,4 +1,6 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Http
+
+@{
     // Session se user ki details uthana
     string fullName = Context.Session.GetString("UserFullName") ?? "Valued Partner";
     string email = Context.Session.GetString("UserEmail") ?? "N/A";

@@ -1,0 +1,341 @@
+﻿@{
+    ViewData["Title"] = "Plan Visit & Activities";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="bi bi-calendar-check text-primary me-2"></i> Visit Plan & Other Activities</h3>
+            <p class="text-muted small m-0">Schedule visits to your assigned schools or log other field activities.</p>
+        </div>
+        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openPlanModal()">
+            <i class="bi bi-plus-lg me-1"></i> Schedule New Visit / Activity
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light text-muted">
+                    <tr>
+                        <th>Type</th>
+                        <th>School / Location Name</th>
+                        <th>Schedule Date</th>
+                        <th>Purpose</th>
+                        <th>Locations (Plan / Report)</th>
+                        <th>Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="planTableBody">
+                    <tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL: SCHEDULE VISIT / ACTIVITY ================= -->
+<div class="modal fade" id="planModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-4 bg-white">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-dark m-0">Schedule Visit Plan</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <form id="frmPlan">
+                    <input type="hidden" id="txtLat">
+                    <input type="hidden" id="txtLng">
+
+                    <div class="mb-3 form-check bg-light p-3 rounded-3 border">
+                        <input type="checkbox" class="form-check-input" id="chkOtherActivity" onchange="toggleActivityType()">
+                        <label class="form-check-label fw-bold text-dark ms-2" for="chkOtherActivity">
+                            Is this an "Other Activity" (School not in assigned list)?
+                        </label>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12" id="divSchoolDropdown">
+                            <label class="form-label small fw-bold">Select Assigned School <span class="text-danger">*</span></label>
+                            <select id="ddlSchool" class="form-select rounded-3 shadow-none">
+                                <option value="">-- Choose School --</option>
+                            </select>
+                        </div>
+
+                        <div id="divOtherActivityFields" class="row g-3 d-none">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">School / Organization Name <span class="text-danger">*</span></label>
+                                <input type="text" id="txtSchoolName" class="form-control rounded-3 shadow-none">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Pincode <span class="text-danger">*</span></label>
+                                <input type="text" id="txtPincode" class="form-control rounded-3 shadow-none" maxlength="10">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Address <span class="text-danger">*</span></label>
+                                <input type="text" id="txtAddress" class="form-control rounded-3 shadow-none">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">City</label>
+                                <input type="text" id="txtCity" class="form-control rounded-3 shadow-none">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">State</label>
+                                <input type="text" id="txtState" class="form-control rounded-3 shadow-none">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Schedule Date & Time <span class="text-danger">*</span></label>
+                            <!-- Yahan min attribute add kar diya gaya hai -->
+                            <input type="datetime-local" id="txtScheduleDate" class="form-control rounded-3 shadow-none" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Purpose / Visit Reason <span class="text-danger">*</span></label>
+                            <textarea id="txtPurpose" class="form-control rounded-3 shadow-none" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm mt-4">Save Plan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL: UPDATE PROGRESS / COMPLETE VISIT ================= -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-4 bg-white">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-dark m-0">Update Visit Progress</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <form id="frmUpdate">
+                    <input type="hidden" id="updatePlanId">
+                    <input type="hidden" id="updateLat">
+                    <input type="hidden" id="updateLng">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Status <span class="text-danger">*</span></label>
+                        <select id="updateStatus" class="form-select rounded-3 shadow-none" required>
+                            <option value="Pending">Pending</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Remarks / Notes <span class="text-danger">*</span></label>
+                        <textarea id="updateRemarks" class="form-control rounded-3 shadow-none" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Upload Photo / Open Camera <span class="text-danger">*</span></label>
+                        <input type="file" id="updateImage" class="form-control rounded-3 shadow-none" accept="image/*" capture="environment" required>
+                        <small class="text-muted">Photo proof is mandatory.</small>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm mt-3">Update Status</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function() {
+            loadPlans();
+            loadAssignedSchoolsDropdown();
+        });
+
+        function captureLocation(callback) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        callback(position.coords.latitude, position.coords.longitude);
+                    },
+                    function(error) {
+                        console.warn("Geolocation error: ", error.message);
+                        callback(null, null);
+                    },
+                    { timeout: 10000, enableHighAccuracy: true }
+                );
+            } else {
+                callback(null, null);
+            }
+        }
+
+        function loadAssignedSchoolsDropdown() {
+            $.ajax({
+                url: '/api/volunteer-plan/assigned-schools',
+                type: 'GET',
+                success: function(res) {
+                    if (res.success) {
+                        let html = '<option value="">-- Choose School --</option>';
+                        res.data.forEach(s => html += `<option value="${s.instituteID}">${s.name}</option>`);
+                        $('#ddlSchool').html(html);
+                    }
+                }
+            });
+        }
+
+        function loadPlans() {
+            $('#planTableBody').html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>');
+            $.ajax({
+                url: '/api/volunteer-plan/list',
+                type: 'GET',
+                success: function(res) {
+                    if (res.success && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(p => {
+                            let typeBadge = p.isOtherActivity ? '<span class="badge bg-warning-subtle text-warning">Other Activity</span>' : '<span class="badge bg-primary-subtle text-primary">School Visit</span>';
+                            let statusBadge = p.status === 'Completed' ? 'bg-success-subtle text-success' : (p.status === 'Cancelled' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning');
+
+                            let planLoc = (p.planLatitude && p.planLongitude) ? `${parseFloat(p.planLatitude).toFixed(4)}, ${parseFloat(p.planLongitude).toFixed(4)}` : 'N/A';
+                            let reportLoc = (p.reportLatitude && p.reportLongitude) ? `${parseFloat(p.reportLatitude).toFixed(4)}, ${parseFloat(p.reportLongitude).toFixed(4)}` : 'Not Reported';
+
+                            html += `<tr>
+                                                <td>${typeBadge}</td>
+                                                <td><b>${p.schoolName || 'N/A'}</b></td>
+                                                <td>${new Date(p.scheduleDate).toLocaleString('en-GB')}</td>
+                                                <td>${p.purpose}</td>
+                                                <td class="small text-muted">
+                                                    <div><b>Plan:</b> ${planLoc}</div>
+                                                    <div><b>Report:</b> ${reportLoc}</div>
+                                                </td>
+                                                <td><span class="badge ${statusBadge}">${p.status}</span></td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-light border text-primary shadow-none" onclick="openUpdateModal(${p.id})"><i class="bi bi-pencil-square me-1"></i> Update</button>
+                                                </td>
+                                            </tr>`;
+                        });
+                        $('#planTableBody').html(html);
+                    } else {
+                        $('#planTableBody').html('<tr><td colspan="7" class="text-center py-5 text-muted">No visit plans scheduled yet.</td></tr>');
+                    }
+                }
+            });
+        }
+
+        function openPlanModal() {
+            $('#frmPlan')[0].reset();
+            $('#chkOtherActivity').prop('checked', false);
+            toggleActivityType();
+
+            let now = new Date();
+            let year = now.getFullYear();
+            let month = String(now.getMonth() + 1).padStart(2, '0');
+            let day = String(now.getDate()).padStart(2, '0');
+            let hours = String(now.getHours()).padStart(2, '0');
+            let minutes = String(now.getMinutes()).padStart(2, '0');
+            let minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+            $('#txtScheduleDate').attr('min', minDateTime);
+
+            captureLocation(function(lat, lng) {
+                $('#txtLat').val(lat);
+                $('#txtLng').val(lng);
+            });
+
+            $('#planModal').modal('show');
+        }
+
+        function toggleActivityType() {
+            if ($('#chkOtherActivity').is(':checked')) {
+                $('#divSchoolDropdown').addClass('d-none');
+                $('#ddlSchool').removeAttr('required');
+                $('#divOtherActivityFields').removeClass('d-none');
+                $('#txtSchoolName, #txtAddress, #txtPincode').attr('required', 'required');
+            } else {
+                $('#divOtherActivityFields').addClass('d-none');
+                $('#txtSchoolName, #txtAddress, #txtPincode').removeAttr('required');
+                $('#divSchoolDropdown').removeClass('d-none');
+                $('#ddlSchool').attr('required', 'required');
+            }
+        }
+
+        $('#frmPlan').on('submit', function(e) {
+            e.preventDefault();
+            let isOther = $('#chkOtherActivity').is(':checked');
+
+            let payload = {
+                IsOtherActivity: isOther,
+                InstituteId: isOther ? null : (parseInt($('#ddlSchool').val()) || null),
+                SchoolName: isOther ? $('#txtSchoolName').val() : null,
+                Address: isOther ? $('#txtAddress').val() : null,
+                Pincode: isOther ? $('#txtPincode').val() : null,
+                City: isOther ? $('#txtCity').val() : null,
+                State: isOther ? $('#txtState').val() : null,
+                ScheduleDate: $('#txtScheduleDate').val(),
+                Purpose: $('#txtPurpose').val(),
+                PlanLatitude: $('#txtLat').val(),
+                PlanLongitude: $('#txtLng').val()
+            };
+
+            $.ajax({
+                url: '/api/volunteer-plan/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    if (res.success) {
+                        $('#planModal').modal('hide');
+                        loadPlans();
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        });
+
+        function openUpdateModal(id) {
+            $('#updatePlanId').val(id);
+            $('#frmUpdate')[0].reset();
+
+            captureLocation(function(lat, lng) {
+                $('#updateLat').val(lat);
+                $('#updateLng').val(lng);
+            });
+
+            $('#updateModal').modal('show');
+        }
+
+        $('#frmUpdate').on('submit', function(e) {
+            e.preventDefault();
+            let formData = new FormData();
+            formData.append('id', $('#updatePlanId').val());
+            formData.append('status', $('#updateStatus').val());
+            formData.append('remarks', $('#updateRemarks').val());
+            formData.append('latitude', $('#updateLat').val());
+            formData.append('longitude', $('#updateLng').val());
+
+            let fileInput = $('#updateImage')[0].files[0];
+            if (fileInput) {
+                formData.append('visitImage', fileInput);
+            } else {
+                alert("Please click or upload a photo proof to submit.");
+                return;
+            }
+
+            $.ajax({
+                url: '/api/volunteer-plan/update-progress',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(res) {
+                    if (res.success) {
+                        $('#updateModal').modal('hide');
+                        loadPlans();
+                    } else {
+                        alert(res.message);
+                    }
+                },
+                error: function(xhr) {
+                    alert(xhr.responseJSON?.message || "Error updating progress.");
+                }
+            });
+        });
+    </script>
+}

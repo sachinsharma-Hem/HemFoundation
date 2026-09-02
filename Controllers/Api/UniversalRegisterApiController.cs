@@ -5,6 +5,7 @@ using HemFoundation.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims; // <-- YEH NAYA ADD KIYA HAI ClaimTypes.NameIdentifier KE LIYE
 
 namespace HemFoundation.Controllers.Api
 {
@@ -107,6 +108,17 @@ namespace HemFoundation.Controllers.Api
 
             await _userManager.AddToRoleAsync(appUser, roleName);
 
+            // =========================================================================
+            // UPDATE: Logged-in school user ki InstituteID nikalne ke liye logic
+            // =========================================================================
+            int? mappedInstituteId = null;
+            string? currentUserId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(currentUserId))
+            {
+                var inst = await _context.Institutes.FirstOrDefaultAsync(i => i.AspNetUserID == currentUserId);
+                if (inst != null) mappedInstituteId = inst.InstituteID;
+            }
+
             // Role-wise saving logic
             if (roleName == "Affiliate")
             {
@@ -163,7 +175,7 @@ namespace HemFoundation.Controllers.Api
             {
                 var student = new Student
                 {
-                    InstituteID = null,
+                    InstituteID = mappedInstituteId, // UPDATE: Changed from null to mappedInstituteId
                     Standard = standard,
                     Division = division,
                     GardianName = guardianName,
@@ -182,6 +194,7 @@ namespace HemFoundation.Controllers.Api
             {
                 var teacher = new Teacher
                 {
+                    InstituteID = mappedInstituteId, // UPDATE: Mapping added
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     MobileNo = baseMobile,
@@ -243,6 +256,91 @@ namespace HemFoundation.Controllers.Api
                 .Select(s => new { id = s.StandardName, name = s.StandardName })
                 .ToListAsync();
             return Ok(list);
+        }
+
+        // ====================================================================
+        // NAYE APIS: Bulk Upload, Sample Download, Aur School Lists ke liye
+        // ====================================================================
+
+        [HttpPost("bulk-upload")]
+        public async Task<IActionResult> BulkUpload([FromForm] IFormFile excelFile, [FromForm] string uploadType)
+        {
+            if (excelFile == null || excelFile.Length == 0)
+                return BadRequest(new { success = false, message = "Please select a valid Excel file." });
+
+            string? currentUserId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(currentUserId))
+                return Unauthorized(new { success = false, message = "User not logged in." });
+
+            var institute = await _context.Institutes.FirstOrDefaultAsync(i => i.AspNetUserID == currentUserId);
+
+            if (institute == null)
+                return BadRequest(new { success = false, message = "Authorized school institute not found." });
+
+            // Folder path: wwwroot/uploads/bulkUploads/
+            string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "bulkUploads");
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+            string uniqueFileName = $"{institute.Name?.Replace(" ", "_")}_{uploadType}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{Path.GetExtension(excelFile.FileName)}";
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await excelFile.CopyToAsync(stream);
+            }
+
+            // Database log save karna
+            var log = new BulkUploadLog
+            {
+                InstituteID = institute.InstituteID,
+                UploadType = uploadType,
+                FileName = excelFile.FileName,
+                FilePath = $"/uploads/bulkUploads/{uniqueFileName}",
+                TotalRecords = 0,
+                Status = "Uploaded Successfully",
+                UploadedDate = DateTime.UtcNow
+            };
+
+            _context.BulkUploadLogs.Add(log);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = $"{uploadType}s Excel file uploaded and saved successfully!" });
+        }
+
+        [HttpGet("download-sample/{fileType}")]
+        public IActionResult DownloadSample(string fileType)
+        {
+            string fileName = fileType.Equals("Teacher", StringComparison.OrdinalIgnoreCase)
+                ? "SampleTeacherRegistration.xlsx"
+                : "SampleStudentRegistration.xlsx";
+
+            // Path: wwwroot/images/bulkUploadSample/
+            var filePath = Path.Combine(_env.WebRootPath, "images", "bulkUploadSample", fileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound(new { success = false, message = "Sample file not found on server." });
+
+            var mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            return PhysicalFile(filePath, mimeType, fileName);
+        }
+
+        [HttpGet("school-lists")]
+        public async Task<IActionResult> GetSchoolLists()
+        {
+            string? currentUserId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(currentUserId))
+                return Unauthorized(new { success = false, message = "User not logged in." });
+
+            var institute = await _context.Institutes.FirstOrDefaultAsync(i => i.AspNetUserID == currentUserId);
+            if (institute == null) return BadRequest(new { success = false, message = "Unauthorized school user." });
+
+            var students = await _context.Students.Where(s => s.InstituteID == institute.InstituteID && s.IsActive).ToListAsync();
+            var teachers = await _context.Teachers.Where(t => t.InstituteID == institute.InstituteID && t.IsActive).ToListAsync();
+            var logs = await _context.BulkUploadLogs.Where(l => l.InstituteID == institute.InstituteID).OrderByDescending(l => l.UploadedDate).ToListAsync();
+
+            var volunteers = await _context.Volunteers.Where(v => v.InstituteId == institute.InstituteID && !v.IsDeleted).ToListAsync();
+
+            return Ok(new { success = true, students, teachers, logs, volunteers });
         }
     }
 }

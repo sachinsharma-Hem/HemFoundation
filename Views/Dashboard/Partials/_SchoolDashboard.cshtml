@@ -1,96 +1,396 @@
-﻿<!-- Include User Profile Card at Top -->
-<partial name="~/Views/Dashboard/Partials/_UserProfileCard.cshtml" />
+﻿@using HemFoundation.Models.Entities
 
-<!-- School Specific Management Workspace -->
-<div class="row g-4 mt-2">
-    <!-- Stat 1: Total Students -->
-    <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 border-start border-4 border-warning">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <h6 class="text-muted small mb-1">Total Students</h6>
-                    <h3 class="fw-bold text-dark m-0">0</h3>
+@{
+    var institute = ViewBag.Institute as Institute;
+    var currentHour = DateTime.Now.Hour;
+
+    string greeting = currentHour < 12
+        ? "Good Morning"
+        : currentHour < 17
+            ? "Good Afternoon"
+            : "Good Evening";
+
+    string displayName = !string.IsNullOrWhiteSpace(institute?.Name)
+        ? institute.Name
+        : "School Institution";
+
+    bool hasUploadedLetter = !string.IsNullOrEmpty(institute?.PartnershipLetterPath);
+}
+
+<div class="container-fluid py-3 bg-light min-vh-100">
+    <div class="row g-3 mt-1">
+        <div class="card border shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="p-4 p-lg-4">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-4">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge rounded-pill bg-light text-primary border px-3 py-2">
+                                <i class="bi bi-person-check-fill me-1"></i> School Portal
+                            </span>
+                        </div>
+
+                        <!-- Greeting with Institution Name -->
+                        <h2 class="fw-bold text-dark mb-1">
+                            @greeting, @displayName 👋
+                        </h2>
+
+                        <p class="text-muted small mb-0">
+                            Welcome back to your school management dashboard. Here is an overview of your institution profile.
+                        </p>
+                    </div>
+
+                    <div class="text-lg-end">
+                        <div class="text-muted small">
+                            <i class="bi bi-calendar3 me-1"></i> @DateTime.Now.ToString("dddd, dd MMMM yyyy")
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(institute?.ReferralCode))
+                        {
+                            <div class="mt-2">
+                                <span class="text-muted small">Referral Code:</span>
+                                <strong class="text-dark ms-1">@institute.ReferralCode</strong>
+                            </div>
+                        }
+                    </div>
                 </div>
-                <div class="bg-warning-subtle text-warning p-3 rounded-4 fs-4">
-                    <i class="bi bi-mortarboard-fill"></i>
+
+                <!-- Collapsible Toggle Button for Details -->
+                <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="text-muted small fw-semibold"><i class="bi bi-info-circle me-1"></i> Institution Profile & Info</span>
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#instituteDetailsCollapse" aria-expanded="false" aria-controls="instituteDetailsCollapse">
+                        <i class="bi bi-chevron-down me-1"></i> View Details / Expand
+                    </button>
                 </div>
+
+                <!-- Expandable / Collapsible Details Section -->
+                <div class="collapse mt-3" id="instituteDetailsCollapse">
+                    <div class="row g-3 pt-2">
+                        <div class="col-md-6 col-xl-4">
+                            <div class="bg-light border rounded-3 p-3 h-100">
+                                <div class="text-muted small mb-1"><i class="bi bi-building me-1"></i> Institution</div>
+                                <div class="fw-semibold text-dark">@(ViewBag.InstituteName ?? "Not Available")</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xl-4">
+                            <div class="bg-light border rounded-3 p-3 h-100">
+                                <div class="text-muted small mb-1"><i class="bi bi-diagram-3 me-1"></i> Branch</div>
+                                <div class="fw-semibold text-dark">@(string.IsNullOrWhiteSpace(institute?.BranchName) ? "Not Available" : institute.BranchName)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xl-4">
+                            <div class="bg-light border rounded-3 p-3 h-100">
+                                <div class="text-muted small mb-1"><i class="bi bi-mortarboard me-1"></i> Institution Type</div>
+                                <div class="fw-semibold text-dark">@(string.IsNullOrWhiteSpace(institute?.InstituteType) ? "School" : institute.InstituteType)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xl-4">
+                            <div class="bg-light border rounded-3 p-3 h-100">
+                                <div class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i> Location</div>
+                                <div class="fw-semibold text-dark">
+                                    @if (!string.IsNullOrWhiteSpace(institute?.City) || !string.IsNullOrWhiteSpace(institute?.State))
+                                    {
+                                        @($"{institute?.City}, {institute?.State}")
+                                    }
+                                    else
+                                    {
+                                        <span>Not Available</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xl-4">
+                            <div class="bg-light border rounded-3 p-3 h-100">
+                                <div class="text-muted small mb-1"><i class="bi bi-telephone me-1"></i> Mobile Number</div>
+                                <div class="fw-semibold text-dark">@(string.IsNullOrWhiteSpace(institute?.MobileNo) ? "Not Available" : institute.MobileNo)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xl-4">
+                            <div class="bg-light border rounded-3 p-3 h-100">
+                                <div class="text-muted small mb-1"><i class="bi bi-envelope me-1"></i> Email</div>
+                                <div class="fw-semibold text-dark text-break">@(string.IsNullOrWhiteSpace(institute?.EmailID) ? "Not Available" : institute.EmailID)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
-    <!-- Stat 2: Active Teachers -->
-    <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 border-start border-4 border-primary">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <h6 class="text-muted small mb-1">Active Teachers</h6>
-                    <h3 class="fw-bold text-dark m-0">0</h3>
+  <!-- ================= 4 STATS CARDS METRICS WITH HOVER ANIMATION ================= -->
+    <div class="row g-4 mt-2">
+        <!-- Stat 1: Total Students -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-hover-card border-0 rounded-4 bg-white position-relative overflow-hidden h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase tracking-wider">Total Students</span>
+                            <h2 class="fw-bold text-dark mt-2 mb-0">@(ViewBag.StudentsCount ?? 0)</h2>
+                        </div>
+                        <div class="bg-warning-subtle text-warning p-3 rounded-4 fs-4 shadow-sm icon-float">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-primary-subtle text-primary p-3 rounded-4 fs-4">
-                    <i class="bi bi-people-fill"></i>
-                </div>
+                <!-- UPDATED LINK: Points to student tab -->
+                <a href="/Registration/Index?tab=student" class="stat-footer-action bg-warning text-dark text-decoration-none fw-semibold small py-2 px-3 d-flex align-items-center justify-content-between">
+                    <span>Manage Students</span>
+                    <i class="bi bi-arrow-right-circle-fill fs-5"></i>
+                </a>
             </div>
         </div>
-    </div>
 
-    <!-- Stat 3: Assigned Classes -->
-    <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 border-start border-4 border-success">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <h6 class="text-muted small mb-1">Enrolled Classes</h6>
-                    <h3 class="fw-bold text-dark m-0">0</h3>
+        <!-- Stat 2: Active Students -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-hover-card border-0 rounded-4 bg-white position-relative overflow-hidden h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase tracking-wider">Active Students</span>
+                            <h2 class="fw-bold text-dark mt-2 mb-0">@(ViewBag.StudentsCount ?? 0)</h2>
+                        </div>
+                        <div class="bg-primary-subtle text-primary p-3 rounded-4 fs-4 shadow-sm icon-float">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-success-subtle text-success p-3 rounded-4 fs-4">
-                    <i class="bi bi-book-fill"></i>
-                </div>
+                <!-- UPDATED LINK: Points to student tab -->
+                <a href="/Registration/Index?tab=student" class="stat-footer-action bg-primary text-white text-decoration-none fw-semibold small py-2 px-3 d-flex align-items-center justify-content-between">
+                    <span>Student Active Rate</span>
+                    <i class="bi bi-graph-up-arrow fs-5"></i>
+                </a>
             </div>
         </div>
-    </div>
 
-    <!-- Stat 4: Institute Verification Status -->
-    <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 border-start border-4 border-info">
+        <!-- Stat 3: Total Teachers -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-hover-card border-0 rounded-4 bg-white position-relative overflow-hidden h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase tracking-wider">Total Teachers</span>
+                            <h2 class="fw-bold text-dark mt-2 mb-0">@(ViewBag.TeachersCount ?? 0)</h2>
+                        </div>
+                        <div class="bg-success-subtle text-success p-3 rounded-4 fs-4 shadow-sm icon-float">
+                            <i class="bi bi-person-badge-fill"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- UPDATED LINK: Points to teacher tab -->
+                <a href="/Registration/Index?tab=teacher" class="stat-footer-action bg-success text-white text-decoration-none fw-semibold small py-2 px-3 d-flex align-items-center justify-content-between">
+                    <span>Manage Teacher</span>
+                    <i class="bi bi-arrow-right-circle-fill fs-5"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Stat 4: Total Volunteers (Optional 4th card jo aapke pehle code me tha) -->
+       <div class="col-xl-3 col-md-6">
+    <div class="card stat-hover-card border-0 rounded-4 bg-white position-relative overflow-hidden h-100">
+        <div class="card-body p-4">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <h6 class="text-muted small mb-1">Verification Status</h6>
-                    <span class="badge bg-warning-subtle text-warning px-2 py-1 fw-bold rounded-pill mt-1">Pending Approval</span>
+                    <span class="text-muted small fw-bold text-uppercase tracking-wider">Total Volunteers</span>
+                    <!-- ClassesCount Hata Kar VolunteersCount Laga Diya Hai -->
+                    <h2 class="fw-bold text-dark mt-2 mb-0">@(ViewBag.VolunteersCount ?? 0)</h2>
                 </div>
-                <div class="bg-info-subtle text-info p-3 rounded-4 fs-4">
+                <div class="bg-info-subtle text-info p-3 rounded-4 fs-4 shadow-sm icon-float">
                     <i class="bi bi-shield-check"></i>
                 </div>
             </div>
         </div>
+        <!-- Action footer to navigate to Volunteers page -->
+        <a href="/Registration/Index?tab=volunteer" class="stat-footer-action bg-info text-white text-decoration-none fw-semibold small py-2 px-3 d-flex align-items-center justify-content-between">
+            <span>View Volunteers</span>
+            <i class="bi bi-arrow-right-circle-fill fs-5"></i>
+        </a>
     </div>
 </div>
+    </div>
 
-<!-- School Quick Actions & Notice Board -->
-<div class="row g-4 mt-3">
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
-            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-building text-warning me-2"></i> School Institution Workspace</h5>
-            <p class="text-muted small">Welcome to the School Management Portal. Here you can monitor student registrations, manage teacher profiles, and view academic reports.</p>
+      
 
-            <div class="alert alert-warning border-0 rounded-3 mt-3 small text-dark d-flex align-items-center">
-                <i class="bi bi-info-circle-fill fs-5 me-2 text-warning"></i>
-                <span>Your institution profile is currently under review by the administrator. Full features will unlock once verified.</span>
+    <!-- ================= SECTION 1: Partnership Confirmed / Upload Banner ================= -->
+    @if (hasUploadedLetter)
+    {
+        <div class="card border shadow-sm rounded-4 bg-success text-white p-3 mt-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill fs-4"></i>
+                    <span class="fw-semibold">Partnership Confirmed: You have already uploaded the Partnership Letter.</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="@institute.PartnershipLetterPath" target="_blank" class="btn btn-light btn-sm rounded-pill px-4 fw-bold text-success border-0">
+                        <i class="bi bi-eye-fill me-1"></i> View Letter
+                    </a>
+                    <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#uploadLetterModal">
+                        <i class="bi bi-arrow-repeat me-1"></i> Re-upload
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border shadow-sm rounded-4 bg-success text-white p-3 mt-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                    <span class="fw-semibold">Partnership Letter Pending: Please download, sign, and upload your letter.</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/Dashboard/DownloadSampleLetter" class="btn btn-light btn-sm rounded-pill px-3 fw-bold text-success border-0">
+                        <i class="bi bi-download me-1"></i> Download Sample
+                    </a>
+                    <button type="button" class="btn btn-dark btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#uploadLetterModal">
+                        <i class="bi bi-cloud-arrow-up-fill me-1"></i> Upload Signed Letter
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ================= SECTION 2: Value Of The Year Banner ================= -->
+    <div class="card border shadow-sm rounded-4 bg-warning text-dark p-3 mt-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-star-fill fs-4 text-dark"></i>
+                <span class="fw-bold">Value Of The Year.</span>
+            </div>
+            <a href="/ValueOfYear/Index" class="btn btn-dark btn-sm rounded-pill px-4 fw-bold">
+                <i class="bi bi-cloud-arrow-up-fill me-1"></i> Submit Now
+            </a>
+        </div>
+    </div>
+
+    <!-- ================= SECTION 3: Quick Management Utilities ================= -->
+    <div class="card border shadow-sm rounded-4 bg-white p-4 mt-3">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle-fill text-primary me-2"></i> Quick Management Utilities</h5>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <!-- LINK UPDATED -->
+                <a href="/Registration/Index?tab=student" class="card border border-warning shadow-none rounded-4 p-3 text-decoration-none bg-white h-100 transition-hover">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-warning text-white p-3 rounded-3 fs-4"><i class="bi bi-mortarboard-fill"></i></div>
+                        <div>
+                            <h6 class="fw-bold text-warning-emphasis m-0">Add Students</h6>
+                            <span class="text-muted small">Register individual students manually.</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <!-- LINK UPDATED -->
+                <a href="/Registration/Index?tab=teacher" class="card border border-success shadow-none rounded-4 p-3 text-decoration-none bg-white h-100 transition-hover">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-success text-white p-3 rounded-3 fs-4"><i class="bi bi-people-fill"></i></div>
+                        <div>
+                            <h6 class="fw-bold text-success-emphasis m-0">Add Teacher</h6>
+                            <span class="text-muted small">Add staff members to your directory.</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <p class="text-muted small mb-3">Choose an entry type below to upload your lists using our Excel templates.</p>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <!-- LINK UPDATED -->
+                <a href="/Registration/Index?tab=bulk" class="card border border-info shadow-none rounded-4 p-3 text-decoration-none bg-white h-100 transition-hover d-flex flex-row align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-info-subtle text-info p-3 rounded-3 fs-4"><i class="bi bi-file-earmark-spreadsheet-fill"></i></div>
+                        <div>
+                            <h6 class="fw-bold text-info-emphasis m-0">Students Bulk Upload</h6>
+                            <span class="text-muted small">Upload your student Excel file to add them to your school.</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <!-- LINK UPDATED -->
+                <a href="/Registration/Index?tab=bulk" class="card border shadow-none rounded-4 p-3 text-decoration-none bg-white h-100 transition-hover d-flex flex-row align-items-center justify-content-between" style="border-color: #6f42c1 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 rounded-3 fs-4" style="background-color: #f3e8ff; color: #6f42c1;"><i class="bi bi-file-earmark-spreadsheet-fill"></i></div>
+                        <div>
+                            <h6 class="fw-bold m-0" style="color: #6f42c1;">Teachers Bulk Upload</h6>
+                            <span class="text-muted small">Upload your teacher Excel file to add them to your staff directory.</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                </a>
             </div>
         </div>
     </div>
-
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
-            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-bell-fill text-danger me-2"></i> Announcements</h5>
-            <ul class="list-unstyled small text-muted m-0 d-flex flex-column gap-3">
-                <li class="border-bottom pb-2">
-                    <strong class="text-dark d-block">Welcome School Partner!</strong>
-                    <span>Complete your branch details to start enrolling students.</span>
-                </li>
-                <li>
-                    <strong class="text-dark d-block">Guidelines Uploaded</strong>
-                    <span>Check out the new academic year guidelines in settings.</span>
-                </li>
-            </ul>
+<!-- ================= MODAL FOR UPLOADING LETTER (ADDED TO FIX MODAL ERROR) ================= -->
+<div class="modal fade" id="uploadLetterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-4 bg-white">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-dark m-0">Upload Partnership Letter</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <form id="frmUploadLetter">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Signed PDF Document <span class="text-danger">*</span></label>
+                        <input type="file" id="letterFileInput" class="form-control rounded-3 shadow-none" accept=".pdf" required>
+                        <small class="text-muted">Only PDF files are allowed.</small>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm mt-3">
+                        <i class="bi bi-upload me-1"></i> Upload & Submit
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    .transition-hover {
+        transition: all 0.2s ease-in-out;
+    }
+
+        .transition-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 .25rem .75rem rgba(0,0,0,.08) !important;
+        }
+
+    .stat-hover-card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: all 0.35s cubic-bezier(0.165, 0.84, 0.44, 1);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+        .stat-hover-card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12) !important;
+        }
+
+            .stat-hover-card:hover .icon-float {
+                transform: scale(1.1) rotate(5deg);
+                transition: transform 0.3s ease;
+            }
+
+    .icon-float {
+        transition: transform 0.3s ease;
+    }
+
+    .stat-footer-action {
+        position: absolute;
+        bottom: -45px;
+        left: 0;
+        right: 0;
+        width: 100%;
+        transition: bottom 0.35s ease-in-out;
+        backdrop-filter: blur(10px);
+    }
+
+    .stat-hover-card:hover .stat-footer-action {
+        bottom: 0;
+    }
+</style>
+

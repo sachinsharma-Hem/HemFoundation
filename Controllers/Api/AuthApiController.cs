@@ -161,6 +161,7 @@ namespace HemFoundation.Controllers.Api
             }).ToList();
 
             HttpContext.Session.SetString("IsAdminLoggedIn", "true");
+            HttpContext.Session.SetString("UserId", user.Id);
             HttpContext.Session.SetString("UserEmail", user.Email ?? "");
             HttpContext.Session.SetString("UserFullName", user.UserName ?? "");
             HttpContext.Session.SetString("UserRole", primaryRole);
