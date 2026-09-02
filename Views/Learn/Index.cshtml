@@ -1,0 +1,1264 @@
+﻿@model IEnumerable<HemFoundation.Models.MainCourseVM>
+@{
+    ViewData["Title"] = "Interactive-Learning-Workspace";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+
+    var firstItem = Model != null ? Model.FirstOrDefault() : null;
+    int assignedCount = firstItem != null ? firstItem.GlobalAssigned : 0;
+    int completedCount = firstItem != null ? firstItem.GlobalCompleted : 0;
+    int pointScore = firstItem != null ? firstItem.GlobalTotalMarks : 0;
+    int CertifiedCount = firstItem != null ? firstItem.CertifiedCount : 0;
+    int certificatesAwarded = CertifiedCount;
+
+    bool isStudentBool = ViewBag.IsStudent != null && Convert.ToBoolean(ViewBag.IsStudent);
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    #workspaceStage, .lms-content-stage {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .hero-learning-banner, .activity-deck-grid {
+        width: 100% !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    .lms-track-sidebar {
+        max-width: 100% !important;
+    }
+
+    .main-course-header-btn, .week-nav-card {
+        display: block !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100% !important;
+    }
+
+    @@media (max-width: 768px) {
+        .container-fluid, .row {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+    }
+</style>
+<style>
+    :root {
+        --slate-900: #0f172a;
+        --slate-800: #1e293b;
+        --slate-700: #334155;
+        --slate-100: #f1f5f9;
+        --brand-blue: #0284c7;
+        --brand-blue-glow: rgba(2, 132, 199, 0.15);
+        --emerald-500: #10b981;
+        --amber-500: #f59e0b;
+    }
+
+    body {
+        background-color: #f8fafc;
+        color: var(--slate-900);
+    }
+
+    .lms-workspace-container {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 30px;
+        margin-top: 20px;
+        min-height: calc(100vh - 120px);
+    }
+
+    .lms-track-sidebar {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        max-height: calc(100vh - 140px);
+        overflow-y: auto;
+        position: sticky;
+        top: 20px;
+    }
+
+    .main-course-header-btn {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 16px;
+        margin-top: 14px;
+        font-size: 13.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 800;
+        text-decoration: none !important;
+        border-radius: 10px;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        border: 1px solid #e2e8f0;
+    }
+
+    .main-course-header-btn.status-completed {
+        border-left: 6px solid var(--emerald-500) !important;
+        background: #f0fff4;
+        color: #166534 !important;
+    }
+
+    .main-course-header-btn.status-inprogress {
+        border-left: 6px solid var(--amber-500) !important;
+        background: #fffdf0;
+        color: #854d0e !important;
+    }
+
+    .main-course-header-btn.status-start {
+        border-left: 6px solid var(--brand-blue) !important;
+        background: #f0f9ff;
+        color: #0369a1 !important;
+    }
+
+    .main-course-header-btn:hover {
+        transform: scale(1.01);
+    }
+
+    .main-course-header-btn:first-child {
+        margin-top: 0;
+    }
+
+    .weeks-collapse-container {
+        padding-top: 8px;
+        padding-left: 8px;
+    }
+
+    .week-nav-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .week-nav-card:hover {
+        border-color: #cbd5e1;
+        background: var(--slate-100);
+        transform: translateX(4px);
+    }
+
+    .week-nav-card.active-track {
+        border-color: var(--brand-blue);
+        background: #f0f9ff;
+        box-shadow: 0 4px 12px var(--brand-blue-glow);
+    }
+
+    .week-nav-card.active-track span {
+        color: var(--brand-blue);
+        font-weight: 700;
+    }
+
+    .week-nav-card.locked-track {
+        opacity: 0.55;
+        background: #f8fafc;
+        cursor: not-allowed;
+    }
+
+    .indicator-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .dot-completed {
+        background-color: var(--emerald-500);
+    }
+
+    .dot-inprogress {
+        background-color: var(--amber-500);
+    }
+
+    .dot-start {
+        background-color: var(--brand-blue);
+    }
+
+    .score-badge {
+        font-size: 11px;
+        padding: 3px 8px;
+        font-weight: bold;
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.08);
+        color: var(--slate-800);
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .score-badge-white {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    .hero-learning-banner {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border-radius: 16px;
+        padding: 35px 40px;
+        color: #ffffff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px -5px rgba(15,23,42,0.15);
+    }
+
+    .certificate-unlocked-ribbon {
+        background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        border-radius: 14px;
+        padding: 20px 24px;
+        color: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+    }
+
+    .workspace-tabs-ribbon {
+        display: flex;
+        gap: 8px;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 2px;
+        margin-top: 15px;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+    }
+
+    .workspace-tabs-ribbon::-webkit-scrollbar {
+        display: none;
+    }
+
+    .workspace-tab-link {
+        padding: 10px 20px;
+        font-weight: 700;
+        font-size: 14px;
+        color: #64748b;
+        text-decoration: none !important;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .workspace-tab-link:hover {
+        color: var(--slate-900);
+    }
+
+    .workspace-tab-link.tab-active {
+        color: var(--brand-blue);
+        border-bottom-color: var(--brand-blue);
+    }
+
+    .section-path-divider {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        margin: 15px 0 5px 0;
+        font-size: 13.5px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--slate-800);
+    }
+
+    .section-path-divider::after {
+        content: '';
+        flex-grow: 1;
+        margin-left: 15px;
+        height: 2px;
+        background: #e2e8f0;
+    }
+
+    .activity-deck-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .activity-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01);
+    }
+
+    .activity-card.clickable-card {
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .activity-card.clickable-card:hover {
+        border-color: var(--brand-blue);
+        box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.2);
+    }
+
+    .activity-card.micro-locked-card {
+        background: #f1f5f9;
+        border: 2px solid #cbd5e1;
+        filter: grayscale(80%);
+        cursor: not-allowed;
+        opacity: 0.8;
+    }
+
+    .activity-card.completed-card {
+        border: 2px solid var(--emerald-500);
+        background: #f0fff4;
+    }
+
+    .activity-card.micro-locked-card:hover {
+        transform: none;
+        border-color: #e2e8f0;
+        box-shadow: none;
+    }
+
+    .activity-card-media {
+        height: 160px;
+        background-color: #f8fafc;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .activity-card-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background-color: #fff;
+    }
+
+    .activity-card-body {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex-grow: 1;
+    }
+
+    .activity-card-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--slate-900);
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    .activity-card-footer {
+        padding: 16px 20px;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    .btn-action-pill {
+        border-radius: 30px !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        padding: 6px 16px !important;
+        border: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .btn-pill-primary {
+        background: var(--brand-blue) !important;
+        color: #fff !important;
+    }
+
+    .btn-pill-primary:hover {
+        background: #0369a1 !important;
+    }
+
+    .btn-pill-secondary {
+        background: #e2e8f0 !important;
+        color: var(--slate-700) !important;
+    }
+
+    .btn-pill-secondary:hover {
+        background: #cbd5e1 !important;
+    }
+
+    .lms-dashboard-hub {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        width: 100%;
+    }
+
+    .welcome-header-card {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        border-radius: 16px;
+        padding: 40px;
+        color: #ffffff;
+        position: relative;
+        box-shadow: 0 10px 25px -5px rgba(2,132,199,0.15);
+    }
+
+    .stats-summary-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+
+    .stat-metric-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 20px 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01);
+    }
+
+    .stat-icon-wrapper {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .motivation-quote-banner {
+        background: #ffffff;
+        border-left: 5px solid var(--brand-blue);
+        border-radius: 4px 14px 14px 4px;
+        padding: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01);
+        border: 1px solid #e2e8f0;
+    }
+
+    @@media (max-width: 1024px) {
+        .lms-workspace-container {
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+        }
+
+        .stats-summary-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .lms-workspace-container {
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+
+        .lms-track-sidebar {
+            max-height: 380px;
+            position: relative;
+            top: 0;
+            padding: 16px;
+        }
+
+        .hero-learning-banner {
+            padding: 24px 20px;
+            text-align: center;
+        }
+
+        .stats-summary-row {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .activity-deck-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .lrn-card-media {
+        position: relative;
+        height: 180px;
+        overflow: hidden;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .lrn-card-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform .35s ease;
+    }
+
+    .activity-card:hover .lrn-card-img {
+        transform: scale(1.08);
+    }
+
+    .lrn-card-media::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 65px;
+        background: linear-gradient(to top, rgba(0,0,0,.45), rgba(0,0,0,0));
+        pointer-events: none;
+    }
+
+    .lrn-type-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 20;
+        padding: .3rem .7rem;
+        border-radius: 50rem;
+        background: rgba(33,37,41,.85);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+
+    .lrn-score-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        border-radius: 50rem;
+        padding: .35rem .75rem;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .lrn-play-btn {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 66px;
+        height: 66px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.95);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transform: translate(-50%,-50%);
+        z-index: 25;
+        transition: all .25s ease;
+        cursor: pointer;
+    }
+
+    .lrn-play-btn i {
+        color: #dc3545;
+        font-size: 26px;
+        margin-left: 4px;
+    }
+
+    .activity-card:hover .lrn-play-btn {
+        transform: translate(-50%,-50%) scale(1.12);
+        background: #fff;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="lms-workspace-container">
+
+        <aside class="lms-track-sidebar" id="sidebarNav">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px;">
+                <i class="fa fa-compass text-primary" style="font-size:20px;"></i>
+                <h3 style="font-weight:800; font-size:16px; margin:0; color:var(--slate-900);">Learning Syllabus</h3>
+            </div>
+
+            @{
+                int indexCounter = 1;
+            }
+            @foreach (var mc in Model.OrderBy(x => x.OrderNo))
+            {
+                var cleanStatusStyle = mc.Status.Replace(" ", "").Replace("-", "").ToLower();
+
+                <a class="main-course-header-btn status-@cleanStatusStyle" href="javascript:void(0);" onclick="toggleCourseCollapse(@mc.MainCourseID)">
+                    <span style="max-width: 65%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@mc.MainCourseName</span>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="score-badge"><i class="fa fa-star text-warning"></i> @mc.MainCourseMarks Pts</span>
+                        <i class="fa fa-chevron-down"></i>
+                    </div>
+                </a>
+
+                <div id="collapse-mc-@mc.MainCourseID" class="weeks-collapse-container" style="display: none;">
+                    <div id="sidebar-weeks-container-@mc.MainCourseID" class="async-week-container" data-mcid="@mc.MainCourseID" data-weekindex="@indexCounter">
+                        <div class="p-sm text-center text-muted small"><i class="fa fa-spinner fa-spin"></i> Loading...</div>
+                    </div>
+                </div>
+                indexCounter++;
+            }
+        </aside>
+
+        <main class="lms-content-stage" id="workspaceStage">
+            <div id="initialHubState" class="lms-dashboard-hub animate__animated animate__fadeIn">
+                <div class="welcome-header-card">
+                    <span style="font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:1px; color:#e0f2fe; display:block; margin-bottom:4px;">STUDENT PERFORMANCE DESK</span>
+                    <h2 style="font-weight:800; font-size:32px; margin:0; line-height:1.2;">Welcome to Your Workspace</h2>
+                    <p style="margin:8px 0 0 0; font-size:15px; color:#e0f2fe; opacity:0.95;">Expand your categories on the left track tree and pick an active course milestone row to access curriculum assignments and grading elements.</p>
+                </div>
+
+                <div class="stats-summary-row">
+                    <div class="stat-metric-card">
+                        <div class="stat-icon-wrapper" style="background:#f0f9ff; color:#0284c7;"><i class="fa fa-book"></i></div>
+                        <div>
+                            <span style="display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Assigned</span>
+                            <span style="font-size:18px; font-weight:800; color:var(--slate-900);">@assignedCount Courses</span>
+                        </div>
+                    </div>
+                    <div class="stat-metric-card">
+                        <div class="stat-icon-wrapper" style="background:#f0fdf4; color:#10b981;"><i class="fa fa-check-circle"></i></div>
+                        <div>
+                            <span style="display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Completed</span>
+                            <span style="font-size:18px; font-weight:800; color:var(--slate-900);">@completedCount Modules</span>
+                        </div>
+                    </div>
+                    <div class="stat-metric-card">
+                        <div class="stat-icon-wrapper" style="background:#fef3c7; color:#d97706;"><i class="fa fa-trophy"></i></div>
+                        <div>
+                            <span style="display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Total Marks</span>
+                            <span style="font-size:18px; font-weight:800; color:var(--slate-900);">@pointScore Pts</span>
+                        </div>
+                    </div>
+                    <div class="stat-metric-card">
+                        <div class="stat-icon-wrapper" style="background:#faf5ff; color:#7c3aed;"><i class="fa fa-certificate"></i></div>
+                        <div>
+                            <span style="display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Certificates</span>
+                            <span style="font-size:18px; font-weight:800; color:var(--slate-900);">@certificatesAwarded Earned</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="motivation-quote-banner">
+                    <i class="fa fa-quote-left text-primary" style="font-size:20px; color:var(--brand-blue); opacity:0.6;"></i>
+                    <div>
+                        <h4 style="font-weight:800; margin:0 0 4px 0; font-size:15px; color:var(--slate-900);">Tip for Today:</h4>
+                        <p style="margin:0; font-size:14px; color:#475569; line-height:1.5;">Check your marked results inside sub-tabs. Completing practical labs unlocks reward coins, while mandatory week-end MCQs expand your path to certificates.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="activityModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document" style="width: 90%; max-width: 950px; margin: 30px auto;">
+        <div class="modal-content" style="border-radius: 16px; overflow: hidden; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);">
+            <div class="modal-body" style="padding: 0; background: #000; position: relative;">
+                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                    <iframe id="activityFrame" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0" style="border-radius:16px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title font-weight-bold text-purple-brand"><i class="fas fa-upload mr-2"></i>Upload Submission</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form asp-controller="Anubhuti" asp-action="IndividualCreativity1" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="PractID" id="modalPractID" />
+                    <input type="hidden" name="CourseName" id="modelindCourseName" />
+                    <div class="form-group text-center">
+                        <p id="lblTaskName" class="font-weight-bold text-secondary"></p>
+                        <input type="file" name="UploadDoc" class="form-control" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block rounded-pill">Submit Assignment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="FamilyuploadModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0" style="border-radius:16px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title font-weight-bold text-purple-brand"><i class="fas fa-upload mr-2"></i>Upload Submission</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form asp-controller="Anubhuti" asp-action="Creativity1" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="PractID" id="FamilymodalPractID" />
+                    <input type="hidden" name="CourseName" id="FamilymodelindCourseName" />
+                    <div class="form-group text-center">
+                        <p id="FamilylblTaskName" class="font-weight-bold text-secondary"></p>
+                        <input type="file" name="UploadDoc" class="form-control" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block rounded-pill">Submit Assignment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleCourseCollapse(mainCourseId) {
+            var targetContainer = $('#collapse-mc-' + mainCourseId);
+            if (targetContainer.is(':visible')) {
+                targetContainer.slideUp(200);
+            } else {
+                $('.weeks-collapse-container').slideUp(200);
+                targetContainer.slideDown(200);
+            }
+        }
+
+        var activeCourseDataCache = null;
+        var activeWeekGlobalIndex = 1;
+        var isStudent = @isStudentBool.ToString().ToLower();
+
+        $(document).ready(function() {
+            $('.async-week-container').each(function() {
+                var mcId = $(this).data('mcid');
+                var weekIndex = $(this).data('weekindex');
+                loadSidebarWeeks(mcId, weekIndex);
+            });
+
+            $('#activityModal').on('hide.bs.modal', function() {
+                $('#activityFrame').attr('src', '');
+            });
+        });
+
+        function loadSidebarWeeks(mcId, globalWeekIndex) {
+            var targetContainer = $('#sidebar-weeks-container-' + mcId);
+
+            $.ajax({
+                url: '/Learn/GetCourses',
+                type: 'GET',
+                data: { mainCourseId: mcId },
+                success: function(courses) {
+                    var html = '';
+                    if (courses && courses.length > 0) {
+                        $.each(courses, function(i, c) {
+                            var statusValue = c.status || c.Status || 'Start';
+                            var statusClass = statusValue.replace(" ", "").replace("-", "").toLowerCase();
+                            var isLocked = (c.isLocked !== undefined ? c.isLocked : c.IsLocked) ? 'locked-track' : '';
+                            var lockIcon = isLocked ? '<i class="fa fa-lock text-muted" style="font-size:12px;"></i>' : '<i class="fa fa-angle-right text-muted" style="font-size:12px;"></i>';
+                            var displayMarks = c.courseMarks || c.CourseMarks || 0;
+                            var courseIdVal = c.courseID || c.CourseID;
+                            var courseNameVal = c.courseName || c.CourseName;
+
+                            html += '<a href="javascript:void(0);" class="week-nav-card ' + isLocked + ' week-trigger-' + courseIdVal + '" ' +
+                                'onclick="activateWorkspaceStage(' + courseIdVal + ', ' + mcId + ', ' + globalWeekIndex + ', \'' + escape(JSON.stringify(c)) + '\')">' +
+                                '<div class="indicator-dot dot-' + statusClass + '"></div>' +
+                                '<div style="flex-grow:1; display:flex; justify-content:space-between; align-items:center; padding-right:8px;">' +
+                                '<span style="font-size:13px; font-weight:600; color:var(--slate-800);">' + courseNameVal + '</span>' +
+                                '<span class="score-badge" style="font-size:10px;"><i class="fa fa-star text-warning"></i> ' + displayMarks + ' Mks</span>' +
+                                '</div>' +
+                                '<div>' + lockIcon + '</div>' +
+                                '</a>';
+                        });
+                    } else {
+                        html = '<div class="p-sm text-center text-muted small">No weeks loaded.</div>';
+                    }
+                    targetContainer.html(html);
+                }
+            });
+        }
+
+        function activateWorkspaceStage(courseId, mcId, weekIndex, escapedCourseObj) {
+            var courseData = JSON.parse(unescape(escapedCourseObj));
+            var isLockedVal = courseData.isLocked !== undefined ? courseData.isLocked : courseData.IsLocked;
+            var lockMsgVal = courseData.lockReasonMessage || courseData.LockReasonMessage || "Please finish previous items before moving forward.";
+
+            if (isLockedVal) {
+                Swal.fire({
+                    title: 'Section Locked',
+                    text: lockMsgVal,
+                    icon: 'warning',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
+            activeCourseDataCache = courseData;
+            activeWeekGlobalIndex = weekIndex;
+
+            $('.week-nav-card').removeClass('active-track');
+            $('.week-trigger-' + courseId).addClass('active-track');
+
+            var showCertificateBannerHtml = '';
+            var postSurveyCompleted = false;
+            var quizid = 0;
+            var rawRows = courseData.sqlRawRows || courseData.SqlRawRows;
+
+            if (rawRows && rawRows.length > 0) {
+                $.each(rawRows, function(idx, r) {
+                    var subName = r.subTopicName || r.SubTopicName || '';
+                    var isAtt = r.isAttempted !== undefined ? r.isAttempted : r.IsAttempted;
+                    if (subName.toLowerCase().includes('post value survey') && isAtt) {
+                        postSurveyCompleted = true;
+                        quizid = r.quizID || r.QuizID;
+                    }
+                });
+            }
+
+            if (postSurveyCompleted) {
+                showCertificateBannerHtml = '<div class="certificate-unlocked-ribbon animate__animated animate__pulse">' +
+                    '<div>' +
+                    '<h4 style="font-weight:800; margin:0 0 2px 0; font-size:16px;"><i class="fa fa-certificate"></i> Congratulations! Course Completed Unlocked</h4>' +
+                    '<p style="margin:0; font-size:13px; opacity:0.9;">You have cleared all virtue assignments, labs, and evaluations mapped to this tract stream.</p>' +
+                    '</div>' +
+                    '<a href="/Learn/DownloadCertificate?CourseID=' + courseId + '&Quizid=' + quizid + '" class="btn btn-light btn-action-pill" style="color:#047857 !important; font-weight:bold; background:#fff !important;"><i class="fa fa-download"></i> Get Certificate</a>' +
+                    '</div>';
+            }
+
+            var courseNameVal = courseData.courseName || courseData.CourseName;
+            var courseMarksVal = courseData.courseMarks || courseData.CourseMarks || 0;
+
+            var html = '<div class="animate__animated animate__fadeIn lms-content-stage">' +
+                showCertificateBannerHtml +
+                '<div class="hero-learning-banner" style="padding-bottom:15px !important;">' +
+                '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
+                '<div>' +
+                '<span style="text-transform:uppercase; font-size:11px; font-weight:700; letter-spacing:1px; color:#38bdf8;">MODULE CONTROL HUB</span>' +
+                '<h2 style="font-weight:800; font-size:26px; margin:6px 0 4px 0; color:#fff;">' + courseNameVal + '</h2>' +
+                '</div>' +
+                '<span class="score-badge score-badge-white" style="font-size:13px; padding:6px 14px;"><i class="fa fa-star text-warning"></i> Total Week Score: ' + courseMarksVal + ' Pts</span>' +
+                '</div>' +
+
+                '<div class="workspace-tabs-ribbon">' +
+                '<a class="workspace-tab-link tab-active" onclick="switchWorkspaceSubTab(this, \'learning\')"><i class="fa fa-graduation-cap"></i> Learning Path</a>' +
+                '<a class="workspace-tab-link" onclick="switchWorkspaceSubTab(this, \'practical\')"><i class="fa fa-flask"></i> Practical Labs</a>' +
+                '<a class="workspace-tab-link" onclick="switchWorkspaceSubTab(this, \'video\')"><i class="fa fa-video-camera"></i> Videos & Documents</a>' +
+                '<a class="workspace-tab-link" onclick="switchWorkspaceSubTab(this, \'quiz\')"><i class="fa fa-check-square-o"></i> Assessments</a>' +
+                '</div>' +
+                '</div>' +
+
+                '<div class="activity-deck-grid" id="tabbedDeckGrid"></div>' +
+                '</div>';
+
+            $('#workspaceStage').html(html);
+            renderFilteredDeckCards('learning');
+        }
+
+        function switchWorkspaceSubTab(btnElement, targetFilterKeyword) {
+            $('.workspace-tab-link').removeClass('tab-active');
+            $(btnElement).addClass('tab-active');
+            renderFilteredDeckCards(targetFilterKeyword);
+        }
+
+        function renderFilteredDeckCards(filterKeyword) {
+            var gridContainer = $('#tabbedDeckGrid');
+            if (!activeCourseDataCache) return;
+            var rawRows = activeCourseDataCache.sqlRawRows || activeCourseDataCache.SqlRawRows;
+            if (!rawRows) return;
+
+            var html = '';
+            var matchCount = 0;
+            var renderedTopics = {};
+            var currentFilter = filterKeyword.toLowerCase().trim();
+            var currentParentCourseId = activeCourseDataCache.courseID || activeCourseDataCache.CourseID || 0;
+            var lastSurveyOrMcqPassed = true;
+
+            $.each(rawRows, function(idx, row) {
+                if (!row) return;
+
+                var activityType = determineActivityType(row, activeWeekGlobalIndex);
+                var pracCode = row.practicalCode || row.PracticalCode || '';
+                var codeVal = pracCode.toString().trim().toUpperCase();
+                var subNameVal = row.subTopicName || row.SubTopicName || '';
+                var subName = subNameVal.toString().toLowerCase();
+
+                var isTruePracticalGame = (codeVal !== '' && codeVal !== '0' && codeVal !== 'NULL') ? true : false;
+                var isPureStudyPdf = subName.includes('pdf');
+                if (isPureStudyPdf) {
+                    isTruePracticalGame = false;
+                    activityType = 'pdf';
+                }
+
+                var topicIdVal = row.topicID || row.TopicID || 0;
+                var parentTopicIdVal = row.parentTopicID || row.ParentTopicID || 0;
+                var trainerExVal = row.trainerExercise || row.TrainerExercise;
+                var trainerVidVal = row.trainerVideo || row.TrainerVideo;
+                var noOfQVal = row.noOfQuestion !== undefined ? row.noOfQuestion : (row.NoOfQuestion || 0);
+
+                var isParentCategoryRowOnly = (topicIdVal && (!parentTopicIdVal || parentTopicIdVal === 0 || parentTopicIdVal === '0' || parentTopicIdVal === 999999) && !isTruePracticalGame && !isPureStudyPdf && !trainerExVal && !trainerVidVal && noOfQVal === 0) ? true : false;
+                if (isParentCategoryRowOnly) return;
+
+                var isMatch = false;
+                if (currentFilter === 'learning') {
+                    if (!isTruePracticalGame) isMatch = true;
+                } else if (currentFilter === 'practical') {
+                    if (isTruePracticalGame) isMatch = true;
+                } else if (currentFilter === 'video') {
+                    if (!isTruePracticalGame && (activityType === 'video' || activityType === 'pdf')) isMatch = true;
+                } else if (currentFilter === 'quiz') {
+                    if (!isTruePracticalGame && (activityType === 'mcq' || activityType === 'presurvey' || activityType === 'postsurvey')) isMatch = true;
+                }
+
+                if (!isMatch) return;
+                matchCount++;
+
+                var isAssessmentItem = (activityType === 'mcq' || activityType === 'presurvey' || activityType === 'postsurvey');
+                var ismcq = (activityType === 'mcq');
+                var isItemLockedByProgression = false;
+                var lockMessage = "Please complete the previous task first.";
+                var statusIcon = '';
+                var isAttemptedVal = row.isAttempted !== undefined ? row.isAttempted : row.IsAttempted;
+
+                if (isAssessmentItem) {
+                    if (!lastSurveyOrMcqPassed) {
+                        isItemLockedByProgression = true;
+                    }
+                    lastSurveyOrMcqPassed = (isAttemptedVal === true);
+                }
+
+                if (isAttemptedVal === true) {
+                    isItemLockedByProgression = true;
+                    lockMessage = "This task has already been completed.";
+                    statusIcon = '<i class="fa fa-check-circle" style="font-size: 40px; color: #10b981;"></i>';
+                } else if (isItemLockedByProgression && isAssessmentItem) {
+                    statusIcon = '<i class="fa fa-lock" style="font-size: 40px; color: #64748b;"></i>';
+                }
+
+                var topicNameVal = row.topicName || row.TopicName || 'Core Learning Path Content';
+                var categoryGroupKey = isTruePracticalGame ? 'PRACTICAL_LABS_GAMES_GROUP' : topicNameVal;
+                if (!renderedTopics[categoryGroupKey]) {
+                    var headerLabelText = isTruePracticalGame ? 'Interactive Game & Practical Labs' : categoryGroupKey;
+                    html += '<div class="section-path-divider"><i class="fa fa-tags text-muted"></i>&nbsp;&nbsp;' + headerLabelText + '</div>';
+                    renderedTopics[categoryGroupKey] = true;
+                }
+
+                var courseNameVal = activeCourseDataCache.courseName || activeCourseDataCache.CourseName;
+                var launchUrl = getLaunchUrl(row, activityType, courseNameVal, currentParentCourseId);
+                var imgUrl = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600';
+
+                if (activityType === 'video' && trainerVidVal && trainerVidVal !== 'NULL') {
+                    imgUrl = getYouTubeThumbnail(trainerVidVal);
+                } else if (trainerExVal && trainerExVal.trim() !== '' && trainerExVal !== 'NULL') {
+                    imgUrl = trainerExVal.replace(/^~\//, 'https://www.hemvirtues.in/');
+                }
+
+                var typeBadge = isTruePracticalGame ? 'Practical Lab' : activityType;
+                var currentScoreObtained = row.itemScore !== undefined ? row.itemScore : (row.ItemScore || 0);
+
+                var cardActionHandlerString = '';
+                var cardClassModifiers = 'clickable-card';
+                if (isTruePracticalGame) {
+                    cardClassModifiers = '';
+                } else if (isItemLockedByProgression) {
+                    cardClassModifiers = (isAttemptedVal === true) ? 'completed-card' : 'micro-locked-card';
+                }
+
+                var isUploadGame = (pracCode === 'G_E_011');
+                var isfamilyUploadGame = (pracCode === 'G_E_010');
+                var safeName = (subNameVal || 'Upload Task').replace(/'/g, "\\'");
+                var practicalIdVal = row.practicalID || row.PracticalID || 0;
+
+                if (isUploadGame) {
+                    if (isStudent) {
+                        cardActionHandlerString = isItemLockedByProgression
+                            ? 'onclick="Swal.fire({title: \'' + (isAttemptedVal === true ? "Completed" : "Locked") + '\', text: \'' + lockMessage + '\', icon: \'' + (isAttemptedVal === true ? "success" : "info") + '\', confirmButtonColor: \'#0284c7\'});"'
+                            : 'onclick="openUploadModal(\'' + practicalIdVal + '\', \'' + safeName + '\', \'' + (courseNameVal || '').replace(/'/g, "\\'") + '\')"';
+                    } else {
+                        cardActionHandlerString = 'onclick="Swal.fire(\'Message\',\'Read-only access\',\'info\')"';
+                    }
+                } else if (isfamilyUploadGame) {
+                    if (isStudent) {
+                        cardActionHandlerString = isItemLockedByProgression
+                            ? 'onclick="Swal.fire({title: \'' + (isAttemptedVal === true ? "Completed" : "Locked") + '\', text: \'' + lockMessage + '\', icon: \'' + (isAttemptedVal === true ? "success" : "info") + '\', confirmButtonColor: \'#0284c7\'});"'
+                            : 'onclick="openFamilyUploadModal(\'' + practicalIdVal + '\', \'' + safeName + '\', \'' + (courseNameVal || '').replace(/'/g, "\\'") + '\')"';
+                    } else {
+                        cardActionHandlerString = 'onclick="Swal.fire(\'Message\',\'Read-only access\',\'info\')"';
+                    }
+                } else if (isItemLockedByProgression) {
+                    cardActionHandlerString = `onclick="Swal.fire({title: '${isAttemptedVal === true ? "Completed" : "Locked"}', text: '${lockMessage}', icon: '${isAttemptedVal === true ? "success" : "info"}', confirmButtonColor: '#0284c7'});"`;
+                } else {
+                    cardActionHandlerString = `onclick="evaluateAndExecuteLaunch('${activityType}', '${launchUrl}', '${safeName}')"`;
+                }
+
+                var statusOverlay = statusIcon !== ''
+                    ? `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.4); z-index: 10;">${statusIcon}</div>`
+                    : '';
+
+                var scoreBadgeHtml = '';
+                if (activityType === 'video' || activityType === 'presurvey' || activityType === 'postsurvey' || activityType === 'pdf') {
+                    scoreBadgeHtml = ``;
+                } else if (isTruePracticalGame) {
+                    scoreBadgeHtml = `<span class="lrn-score-badge bg-warning text-dark border border-warning"><i class="fa fa-database mr-1"></i>Score : ${currentScoreObtained} Pts</span>`;
+                } else {
+                    scoreBadgeHtml = `<span class="lrn-score-badge bg-info text-white border border-info"><i class="fa fa-star mr-1"></i>${currentScoreObtained} Pts</span>`;
+                }
+
+                html += `<div class="activity-card animate__animated animate__fadeInUp ${cardClassModifiers}" ${cardActionHandlerString} style="animation-duration:0.3s;">
+                           <div class="lrn-card-media">
+                               ${statusOverlay}
+                               <span class="lrn-type-badge">${typeBadge}</span>
+                               ${scoreBadgeHtml}
+                               ${activityType == "video" ? `<div class="lrn-play-btn shadow-lg"><i class="fa fa-play"></i></div>` : ""}
+                               <img class="img-fluid lrn-card-img" src="${imgUrl}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600';">
+                           </div>
+                           <div class="activity-card-body">
+                               <h4 class="activity-card-title">${subNameVal || 'Module Assignment Task'}</h4>
+                           </div>`;
+
+                var resVal = row.resources || row.Resources;
+                if (isTruePracticalGame) {
+                    html += '<div class="activity-card-footer">';
+                    if (resVal && resVal.trim() !== '' && resVal !== 'NULL') {
+                        var cleanRes = resVal.replace(/^~\//, 'https://www.hemvirtues.in/');
+                        html += '<a href="' + cleanRes + '" download class="btn btn-action-pill btn-pill-secondary" onclick="event.stopPropagation()"><i class="fa fa-download"></i> Resources</a>';
+                    }
+                    if (trainerVidVal && trainerVidVal.trim() !== '' && trainerVidVal !== 'NULL') {
+                        var tutorialCleanUrl = trainerVidVal.replace(/^~\//, 'https://www.hemvirtues.in/');
+                        html += '<button type="button" class="btn btn-action-pill btn-pill-secondary" onclick="event.stopPropagation();openMediaModal(\'' + tutorialCleanUrl + '\', \'Tutorial\')"><i class="fa fa-video-camera"></i> Tutorial</button>';
+                    }
+                    if (isAttemptedVal === true) {
+                        html += '<a class="btn btn-action-pill btn-pill-primary">Completed</a>';
+                    } else if (pracCode === 'G_E_011') {
+                        if (isStudent) {
+                            html += `<button type="button" onclick="openUploadModal(${practicalIdVal}, '${safeName}','${courseNameVal}')" class="btn btn-action-pill btn-pill-primary" style="background:var(--amber-500) !important;"><i class="fa fa-upload"></i> Upload Task</button>`;
+                        } else {
+                            html += `<span class="text-muted small"><em>Read-only access</em></span>`;
+                        }
+                    } else if (pracCode === 'G_E_010') {
+                        if (isStudent) {
+                            html += `<button type="button" onclick="openFamilyUploadModal(${practicalIdVal}, '${safeName}','${courseNameVal}')" class="btn btn-action-pill btn-pill-primary" style="background:var(--amber-500) !important;"><i class="fa fa-upload"></i> Upload Task</button>`;
+                        } else {
+                            html += `<span class="text-muted small"><em>Read-only access</em></span>`;
+                        }
+                    } else {
+                        if (isStudent) {
+                            html += '<a href="' + launchUrl + '" class="btn btn-action-pill btn-pill-primary">Start Game</a>';
+                        } else {
+                            html += `<span class="text-muted small"><em>Read-only access</em></span>`;
+                        }
+                    }
+                    html += '</div>';
+                }
+
+                if (ismcq) {
+                    html += '<div class="activity-card-footer">';
+                    if (isAttemptedVal === true) {
+                        var quizIdVal = row.quizID || row.QuizID || 0;
+                        var langIdVal = row.languageID || row.LanguageID || 1;
+                        var examIdVal = row.examinationID || row.ExaminationID || 0;
+                        html += `<a href="/Exam/Index?QuizId=${quizIdVal}&TopicID=${topicIdVal}&LevelID=1&LanguageID=${langIdVal}&IsInstituteQuiz=false&IsAttempt=true&ExamID=${examIdVal}" class="btn btn-action-pill btn-pill-info" onclick="event.stopPropagation()"><i class="fa fa-eye"></i> Preview MCQ</a>`;
+                    } else {
+                        html += `<button type="button" class="btn btn-action-pill btn-pill-primary" onclick="evaluateAndExecuteLaunch('${activityType}', '${launchUrl}', '${safeName}')"><i class="fa fa-play"></i> Start Assessment</button>`;
+                    }
+                    html += '</div>';
+                }
+                html += '</div>';
+            });
+
+            if (matchCount === 0) {
+                html = '<div class="text-center text-muted" style="padding:60px 20px; width:100%; grid-column: 1 / -1;"><i class="fa fa-folder-open-o" style="font-size:44px; color:#cbd5e1; margin-bottom:10px; display:block;"></i>No distinct active card items populated under this section.</div>';
+            }
+
+            gridContainer.html(html);
+        }
+
+        function getYouTubeThumbnail(url) {
+            var fallback = "";
+            if (!url) return fallback;
+            var match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:.*[?&]v=|embed\/|v\/))([^"&?\/\s]{11})/);
+            if (!match) return fallback;
+            return "https://i.ytimg.com/vi/" + match[1] + "/hqdefault.jpg";
+        }
+
+        function evaluateAndExecuteLaunch(type, url, title) {
+            if (type === 'postsurvey') {
+                var gamesIncomplete = false;
+                var lowMcqScores = false;
+                var rawRows = activeCourseDataCache.sqlRawRows || activeCourseDataCache.SqlRawRows;
+
+                if (rawRows) {
+                    $.each(rawRows, function(i, r) {
+                        var subName = r.subTopicName || r.SubTopicName || '';
+                        var name = subName.toLowerCase();
+                        var pracCode = r.practicalCode || r.PracticalCode || '';
+                        var codeVal = pracCode.toString().trim().toUpperCase();
+                        var isGame = (codeVal !== '' && codeVal !== '0' && codeVal !== 'NULL');
+                        var itemScr = r.itemScore !== undefined ? r.itemScore : (r.ItemScore || 0);
+
+                        if (isGame && itemScr === 0) {
+                            gamesIncomplete = true;
+                        }
+                        if (!isGame && name.includes('mcq') && !name.includes('survey') && itemScr < 3) {
+                            lowMcqScores = true;
+                        }
+                    });
+                }
+
+                if (lowMcqScores || gamesIncomplete) {
+                    Swal.fire({
+                        title: 'Survey Locked!',
+                        html: '<div style="text-align:left; font-size:14px; line-height:1.6;"><p>To proceed with the Post Value Survey, you must first clear all previous week requirements:</p><ul><li>All Practical Labs & Interactive Games must be completed.</li><li>You must achieve a minimum score of 3 Marks or more on every weekly MCQ task.</li></ul></div>',
+                        icon: 'warning',
+                        confirmButtonColor: '#0284c7'
+                    });
+                    return;
+                }
+            }
+
+            if (!isStudent && type !== 'mcq') {
+                Swal.fire({
+                    title: 'Access Restricted',
+                    text: 'You are viewing in read-only mode. Only MCQ assessments are viewable.',
+                    icon: 'info'
+                });
+                return;
+            }
+
+            if (type === 'video' || type === 'pdf') {
+                openMediaModal(url, title);
+            } else {
+                window.location.href = url;
+            }
+        }
+
+        function determineActivityType(row, weekIndex) {
+            var pracCode = row.practicalCode || row.PracticalCode || '';
+            var codeVal = pracCode.toString().trim().toUpperCase();
+            var subNameVal = row.subTopicName || row.SubTopicName || '';
+            var subName = subNameVal.toString().toLowerCase();
+
+            if (codeVal !== '' && codeVal !== '0' && codeVal !== 'NULL' && !subName.includes('pdf')) return 'practical';
+
+            if (subName.includes('pre value survey') || subName.includes('pre - value') || subName.includes('pre-survey') || subName.includes('belief') || subName.includes('behav')) return 'presurvey';
+            if (subName.includes('post value survey') || subName.includes('post-survey') || subName.includes('post - value')) return 'postsurvey';
+            
+            var noOfQ = row.noOfQuestion !== undefined ? row.noOfQuestion : (row.NoOfQuestion || 0);
+            if (noOfQ > 0 || subName.includes('mcq')) return 'mcq';
+            
+            var trainerVid = row.trainerVideo || row.TrainerVideo;
+            if (trainerVid && trainerVid.trim() !== '') return 'video';
+            
+            if (subName.includes('pdf')) return 'pdf';
+            return 'general';
+        }
+
+        function getLaunchUrl(row, type, courseName, fallbackCourseId) {
+            var quizId = row.quizID || row.QuizID || 0;
+            var topicId = row.topicID || row.TopicID || 0;
+            var langId = row.languageID || row.LanguageID || 1;
+            var practicalId = row.practicalID || row.PracticalID || 0;
+            var courseId = row.courseID || row.CourseID || fallbackCourseId || 0;
+            var encodedCourseName = encodeURIComponent(courseName || '');
+            var pracCode = row.practicalCode || row.PracticalCode || '';
+            var codeVal = pracCode.toString().trim().toUpperCase();
+
+            if (codeVal !== '' && codeVal !== '0' && codeVal !== 'NULL') {
+                switch (codeVal) {
+                    case 'G_E_01': return '/Anubhuti/AnubhutiIndex?CourseID=' + courseId + '&PractID=' + practicalId;
+                    case 'G_E_02': return '/Anubhuti/SecondIndex?CourseID=' + courseId + '&PractID=' + practicalId;
+                    case 'G_E_06': return '/Anubhuti/ThirdIndex?CourseID=' + courseId + '&PractID=' + practicalId;
+                    case 'S_E_03': return '/Scramble?CourseID=' + courseId + '&PractID=' + practicalId;
+                    case 'G_E_04': return '/Game24?CourseID=' + courseId + '&PractID=' + practicalId + '&Coursename=' + encodedCourseName;
+                    case 'F_E_08': return '/Futoshiki?CourseID=' + courseId + '&PractID=' + practicalId + '&Coursename=' + encodedCourseName;
+                    case 'W_E_07': return '/WordGame?CourseID=' + courseId + '&PractID=' + practicalId;
+                    case 'K_E_10': return '/KenKen/KenKenIndex?CourseID=' + courseId + '&PractID=' + practicalId + '&Coursename=' + encodedCourseName;
+                    case 'P_E_09': return '/Puzzle/PuzzleIndex?CourseID=' + courseId + '&PractID=' + practicalId;
+                    case 'G_E_010': return 'MODAL_FAMILYUPLOAD';
+                    case 'G_E_011': return 'MODAL_UPLOAD';
+                    case 'G_E_10': return '/HEProject/Creativity?CourseID=' + courseId + '&PractID=' + practicalId;
+                    default: return '/Anubhuti/Upload?CourseID=' + courseId + '&PractID=' + practicalId;
+                }
+            }
+
+            var trainerVid = row.trainerVideo || row.TrainerVideo;
+            var trainerRes = row.trainerResource || row.TrainerResource;
+            var trainerEx = row.trainerExercise || row.TrainerExercise;
+
+            if (type === 'video' && trainerVid) return trainerVid.replace(/^~\//, 'https://www.hemvirtues.in/');
+            if (type === 'pdf' && trainerRes) return trainerRes.replace(/^~\//, 'https://www.hemvirtues.in/');
+            if (type === 'practical' && trainerEx) return trainerEx.replace(/^~\//, 'https://www.hemvirtues.in/');
+
+            if (type === 'presurvey' || type === 'postsurvey') return '/Exam/Survey?CourseID=' + courseId + '&TopicID=' + topicId + '&LanguageID=' + langId;
+            if (type === 'mcq') return '/Exam/Index?QuizId=' + quizId + '&TopicID=' + topicId + '&LevelID=1&LanguageID=' + langId + '&IsInstituteQuiz=false&IsAttempt=false&ExamID=0';
+            return '/' + topicId;
+        }
+
+        function openMediaModal(url, title) {
+            var cleanUrl = formatEmbedUrl(url);
+            var $frame = $('#activityFrame');
+
+            if (cleanUrl.toLowerCase().includes('.pdf')) {
+                cleanUrl = 'https://docs.google.com/gview?url=' + encodeURIComponent(cleanUrl) + '&embedded=true';
+                $frame.removeAttr('allow referrerpolicy');
+            } else {
+                $frame.attr({
+                    'allow': 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
+                    'referrerpolicy': 'strict-origin-when-cross-origin',
+                    'allowfullscreen': 'true'
+                });
+            }
+
+            $frame.attr('src', cleanUrl);
+            $('#activityModal').modal('show');
+        }
+
+        function formatEmbedUrl(url) {
+            if (!url) return '';
+            if (url.includes('youtu.be/')) {
+                var videoId = url.split('youtu.be/')[1].split('?')[0];
+                return 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+            }
+            if (url.includes('watch?v=')) {
+                var videoId = url.split('v=')[1].split('&')[0];
+                return 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+            }
+            if (url.includes('youtube.com/embed/') && !url.includes('autoplay')) {
+                return url + (url.includes('?') ? '&' : '?') + 'autoplay=1';
+            }
+            return url;
+        }
+
+        function openUploadModal(practId, taskName, courseName) {
+            $('#modalPractID').val(practId);
+            $('#modelindCourseName').val(courseName);
+            $('#lblTaskName').text(taskName);
+            $('#uploadModal').modal('show');
+        }
+
+        function openFamilyUploadModal(practId, taskName, courseName) {
+            $('#FamilymodalPractID').val(practId);
+            $('#FamilymodelindCourseName').val(courseName);
+            $('#FamilylblTaskName').text(taskName);
+            $('#FamilyuploadModal').modal('show');
+        }
+    </script>
+}

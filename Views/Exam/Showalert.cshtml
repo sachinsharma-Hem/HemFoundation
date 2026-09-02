@@ -1,0 +1,91 @@
+﻿
+@{
+    ViewBag.Title = "Showalert";
+   //// Layout = "~/Views/Shared/_Layout_New.cshtml";///commented by rajan as replaced with bekow code
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="~/Content/js/sweetalert2@10.js"></script>
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+<body>
+    @if (TempData["UseSweetAlert2SP"] != null && (bool)TempData["UseSweetAlert2SP"])
+    {
+        <script>
+var courseName = '@ViewBag.CourseName'; // Get Course Name from Razor
+var encodedCourseName = encodeURIComponent(courseName); // Encode it for URL safety
+       var lowerCourseName = courseName.toLowerCase();
+Swal.fire({
+    title: '@TempData["SweetAlertTitle"]',
+    text: '@TempData["SweetAlertMessage"]',
+    icon: '@TempData["SweetAlertType"]',
+    confirmButtonText: 'OK'
+}).then(function () {
+    ///window.location.href = '@Url.Action("Learn", "Course")' + '?courseName=' + encodedCourseName + '&LanguageID=1';
+    if (lowerCourseName.includes("survey")) {
+           window.location.href = '@Url.Action("Index", "Learn")';
+    } else {
+            window.location.href = '@Url.Action("Index", "Learn")';
+           //window.location.href = '@Url.Action("Index", "Learn")' + '?courseName=' + encodedCourseName + '&LanguageID='+@ViewBag.LanguageID;
+       }
+});
+        </script>
+    }
+
+    @if (TempData["UseSweetAlert1"] != null && (bool)TempData["UseSweetAlert1"])
+    {
+        <script>
+            debugger
+        var courseName = '@ViewBag.CourseName'; // Get Course Name from Razor
+        var encodedCourseName = encodeURIComponent(courseName); // Encode it for URL safety
+            var lowerCourseName = courseName.toLowerCase();
+        Swal.fire({
+            title: '@TempData["SweetAlertTitle"]',
+            text: '@TempData["SweetAlertMessage"]',
+            icon: '@TempData["SweetAlertType"]',
+            confirmButtonText: 'OK'
+        }).then(function () {
+            if (lowerCourseName.includes("survey")) {
+                window.location.href = '@Url.Action("Index", "Learn")';
+            } else {
+                window.location.href = '@Url.Action("Index", "Learn")' + '?courseName=' + encodedCourseName + '&LanguageID='+@ViewBag.LanguageID;
+            }
+           /// window.location.href = '@Url.Action("Index", "Learn")' + '?courseName=' + encodedCourseName + '&LanguageID=1';
+        });
+        </script>
+    }
+
+
+    @if (TempData["UseSweetAlert2"] != null && (bool)TempData["UseSweetAlert2"])
+    {
+        <script>
+     var courseName = '@ViewBag.CourseName'; // Get Course Name from Razor
+     var encodedCourseName = encodeURIComponent(courseName); // Encode it for URL safety
+            var lowerCourseName = courseName.toLowerCase();
+     Swal.fire({
+         title: '@TempData["SweetAlertTitle"]',
+         text: '@TempData["SweetAlertMessage"]',
+         icon: '@TempData["SweetAlertType"]',
+         confirmButtonText: 'OK'
+     }).then(function () {
+         ///window.location.href = '@Url.Action("Learn", "Course")' + '?courseName=' + encodedCourseName + '&LanguageID=1';
+         if (lowerCourseName.includes("survey")) {
+                window.location.href = '@Url.Action("Profile", "Student")';
+            } else {
+                window.location.href = '@Url.Action("Learn", "Course")' + '?courseName=' + encodedCourseName + '&LanguageID='+@ViewBag.LanguageID;
+            }
+     });
+        </script>
+    }
+    
+
+</body>
+</html>

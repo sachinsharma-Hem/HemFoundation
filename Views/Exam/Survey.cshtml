@@ -1,0 +1,120 @@
+﻿@model HemFoundation.Models.QuizModel
+@{
+    ViewData["Title"] = "Course Survey";
+  Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <style>
+        .quiz-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+
+        .statement {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .likert {
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 20px;
+        }
+
+        .likert li {
+            text-align: center;
+        }
+
+        .likert li input {
+            display: block;
+            margin: 0 auto 8px auto;
+            transform: scale(1.2);
+        }
+
+        .btn-submit {
+            padding: 12px 50px;
+            font-weight: 700;
+            border-radius: 30px;
+        }
+    </style>
+}
+
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="quiz-card animate__animated animate__fadeIn">
+                <div class="text-center mb-5">
+                    <h2 class="font-weight-bold">Survey of @Model.CourseName1</h2>
+                    <p class="text-muted">Please provide your feedback to help us improve.</p>
+                </div>
+
+                <form id="surveyForm" asp-controller="Exam" asp-action="SaveSurvey" method="post">
+                    @{
+                        int questionNumber = 1;
+                        var surveyData = ViewData["SurveyData"] as IEnumerable<System.Data.DataRow>;
+                    }
+
+                    @if (surveyData != null)
+                    {
+                        @foreach (var row in surveyData)
+                        {
+                            <input type="hidden" name="responses[@(questionNumber - 1)].QuestionNumber" value="@questionNumber" />
+                            <input type="hidden" name="responses[@(questionNumber - 1)].QuestionText" value="@row["question"]" />
+
+                            <div class="statement">@questionNumber. @row["question"]</div>
+
+                            <ul class="likert">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    string optionKey = "option" + i;
+                                    <li>
+                                        <input type="radio" name="responses[@(questionNumber - 1)].SelectedOption" value="@row[optionKey]" required>
+                                        <label class="small text-muted">@row[optionKey]</label>
+                                    </li>
+                                }
+                            </ul>
+                            questionNumber++;
+                        }
+                    }
+
+                    <div class="text-center mt-5">
+                        <button type="submit" class="btn btn-primary btn-submit shadow-sm">
+                            <i class="fas fa-check mr-2"></i> Submit Survey
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('surveyForm');
+            if (form) {
+                form.addEventListener('submit', (event) => {
+                    const allAnswered = Array.from(form.querySelectorAll('ul.likert')).every(ul =>
+                        Array.from(ul.querySelectorAll('input[type="radio"]')).some(radio => radio.checked)
+                    );
+
+                    if (!allAnswered) {
+                        event.preventDefault();
+                        Swal.fire("Incomplete", "Please answer all questions before submitting.", "warning");
+                    }
+                });
+            }
+        });
+    </script>
+}

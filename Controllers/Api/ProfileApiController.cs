@@ -43,83 +43,101 @@ namespace HemFoundation.Controllers.Api
 
             object profileData = null;
 
-            if (primaryRole.Equals("Affiliate", StringComparison.OrdinalIgnoreCase))
+            if (primaryRole.Equals("WJ_Affiliate", StringComparison.OrdinalIgnoreCase))
             {
-                var aff = await _context.Affiliates.FirstOrDefaultAsync(a => a.AspNetUserID == userId || a.EmailID == user.Email);
+                //var aff = await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId || a.EmailID == user.Email);
+                var users = await _context.Users.FirstOrDefaultAsync(i => i.AspNetUserID == userId);
+                var aff = await _context.WJ_Institutes.FirstOrDefaultAsync(i => i.InstituteID == users.UserID);
                 profileData = new
                 {
-                    aff?.FirstName,
-                    aff?.LastName,
-                    organisationName = aff?.OrganisationName,
-                    address = aff?.AddressLine1,
-                    aff?.City,
-                    aff?.State,
-                    pincode = aff?.Pincode,
-                    mobileNo = aff?.MobileNo,
-                    photoUrl = aff?.PhotoUrl
+                    users?.FirstName,
+                    users?.LastName,
+                    organisationName = aff?.SocialOrgName,
+                    address = users?.AddressLine1,
+                    users?.CityName,
+                    //users?.State,
+                    pincode = users?.Pincode,
+                    mobileNo = users?.MobileNo,
+                    photoUrl = users?.PhotoUrl
                 };
             }
-            else if (primaryRole.Equals("School", StringComparison.OrdinalIgnoreCase))
+            else if (primaryRole.Equals("WJ_School", StringComparison.OrdinalIgnoreCase))
             {
-                var sch = await _context.Institutes.FirstOrDefaultAsync(i => i.AspNetUserID == userId || i.EmailID == user.Email);
+                var users = await _context.Users.FirstOrDefaultAsync(i => i.AspNetUserID == userId);
+                var sch = await _context.WJ_Institutes.FirstOrDefaultAsync(i => i.InstituteID == users.UserID);
                 profileData = new
                 {
-                    sch?.FirstName,
-                    sch?.LastName,
+                    users?.FirstName,
+                    users?.LastName,
                     organisationName = sch?.Name,
-                    address = sch?.Address,
-                    sch?.City,
-                    sch?.State,
-                    pincode = sch?.Pincode,
-                    mobileNo = sch?.MobileNo,
-                    photoUrl = sch?.ProfileUrl
+                    address = users?.AddressLine1,
+                    users?.CityName,
+                    //users?.State,
+                    pincode = users?.Pincode,
+                    mobileNo = users?.MobileNo,
+                    photoUrl = users?.PhotoUrl
                 };
             }
-            else if (primaryRole.Equals("Teacher", StringComparison.OrdinalIgnoreCase))
+            else if (primaryRole.Equals("WJ_Teacher", StringComparison.OrdinalIgnoreCase))
             {
-                var tch = await _context.Teachers.FirstOrDefaultAsync(t => t.AspNetUserID == userId || t.EmailID == user.Email);
+                var tch = await _context.Users.FirstOrDefaultAsync(t => t.AspNetUserID == userId);
                 profileData = new
                 {
                     tch?.FirstName,
                     tch?.LastName,
                     organisationName = "",
-                    address = tch?.Address,
-                    tch?.City,
-                    tch?.State,
+                    address = tch?.AddressLine1,
+                    tch?.CityName,
+                    //tch?.State,
                     pincode = tch?.Pincode,
                     mobileNo = tch?.MobileNo,
                     photoUrl = tch?.PhotoUrl
                 };
             }
-            else if (primaryRole.Equals("Parent", StringComparison.OrdinalIgnoreCase))
+            else if (primaryRole.Equals("HF_PARENT", StringComparison.OrdinalIgnoreCase))
             {
-                var par = await _context.Parents.FirstOrDefaultAsync(p => p.AspNetUserID == userId || p.EmailID == user.Email);
+                var par = await _context.Users.FirstOrDefaultAsync(p => p.AspNetUserID == userId);
                 profileData = new
                 {
                     par?.FirstName,
                     par?.LastName,
                     organisationName = "",
-                    address = par?.Address,
-                    par?.City,
-                    par?.State,
+                    address = par?.AddressLine1,
+                    par?.CityName,
+                   
+                    pincode = par?.Pincode,
+                    photoUrl = par?.PhotoUrl
+                };
+            }
+            else if (primaryRole.Equals("WJ_Students", StringComparison.OrdinalIgnoreCase))
+            {
+                var par = await _context.Users.FirstOrDefaultAsync(p => p.AspNetUserID == userId);
+                profileData = new
+                {
+                    par?.FirstName,
+                    par?.LastName,
+                    organisationName = "",
+                    address = par?.AddressLine1,
+                    par?.CityName,
+                    //par?.State,
                     pincode = par?.Pincode,
                     photoUrl = par?.PhotoUrl
                 };
             }
             else
             {
-                var adm = await _context.Admins.FirstOrDefaultAsync(a => a.IdentityUserId == userId || a.Email == user.Email);
+                var adm = await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
                 profileData = new
                 {
                     adm?.FirstName,
                     adm?.LastName,
                     organisationName = "",
-                    address = adm?.Address,
-                    adm?.City,
-                    adm?.State,
-                    pincode = adm?.PinCode,
+                    address = adm?.AddressLine1,
+                    adm?.CityName,
+                    //adm?.State,
+                    pincode = adm?.Pincode,
                     mobileNo = adm?.MobileNo,
-                    photoUrl = adm?.ProfileImage
+                    photoUrl = adm?.PhotoUrl
                 };
             }
 
@@ -176,69 +194,83 @@ namespace HemFoundation.Controllers.Api
             var roles = await _userManager.GetRolesAsync(user);
             string primaryRole = roles.FirstOrDefault() ?? "User";
 
-            if (primaryRole.Equals("Affiliate", StringComparison.OrdinalIgnoreCase))
+            if (primaryRole.Equals("WJ_Affiliate", StringComparison.OrdinalIgnoreCase))
             {
-                var affiliate = await _context.Affiliates.FirstOrDefaultAsync(a => a.AspNetUserID == userId || a.EmailID == user.Email);
+                var affiliate = await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId || a.EmailID == user.Email);
                 if (affiliate != null)
                 {
                     affiliate.FirstName = model.FirstName ?? affiliate.FirstName;
                     affiliate.LastName = model.LastName ?? affiliate.LastName;
-                    affiliate.OrganisationName = model.OrganisationName ?? affiliate.OrganisationName;
+                    //affiliate.OrganisationName = model.OrganisationName ?? affiliate.OrganisationName;
                     affiliate.MobileNo = model.PhoneNumber ?? affiliate.MobileNo;
                     affiliate.AddressLine1 = model.Address ?? affiliate.AddressLine1;
-                    affiliate.City = model.City ?? affiliate.City;
-                    affiliate.State = model.State ?? affiliate.State;
+                    affiliate.CityName = model.City ?? affiliate.CityName;
+                    //affiliate.State = model.State ?? affiliate.State;
                     affiliate.Pincode = model.Pincode ?? affiliate.Pincode;
                     if (!string.IsNullOrEmpty(photoUrl)) affiliate.PhotoUrl = photoUrl;
-                    _context.Affiliates.Update(affiliate);
+                    _context.Users.Update(affiliate);
                 }
             }
-            else if (primaryRole.Equals("School", StringComparison.OrdinalIgnoreCase))
+            else if (primaryRole.Equals("WJ_School", StringComparison.OrdinalIgnoreCase))
             {
-                var institute = await _context.Institutes.FirstOrDefaultAsync(i => i.AspNetUserID == userId || i.EmailID == user.Email);
+                var institute = await _context.Users.FirstOrDefaultAsync(i => i.AspNetUserID == userId || i.EmailID == user.Email);
                 if (institute != null)
                 {
                     institute.FirstName = model.FirstName ?? institute.FirstName;
                     institute.LastName = model.LastName ?? institute.LastName;
-                    institute.Name = model.OrganisationName ?? institute.Name;
+                    //institute.Name = model.OrganisationName ?? institute.Name;
                     institute.MobileNo = model.PhoneNumber ?? institute.MobileNo;
-                    institute.Address = model.Address ?? institute.Address;
-                    institute.City = model.City ?? institute.City;
-                    institute.State = model.State ?? institute.State;
+                    institute.AddressLine1 = model.Address ?? institute.AddressLine1;
+                    institute.CityName = model.City ?? institute.CityName;
+                    //institute.State = model.State ?? institute.State;
                     institute.Pincode = model.Pincode ?? institute.Pincode;
-                    if (!string.IsNullOrEmpty(photoUrl)) institute.ProfileUrl = photoUrl;
-                    _context.Institutes.Update(institute);
+                    if (!string.IsNullOrEmpty(photoUrl)) institute.PhotoUrl = photoUrl;
+                    _context.Users.Update(institute);
                 }
             }
-            else if (primaryRole.Equals("Teacher", StringComparison.OrdinalIgnoreCase))
+            else if (primaryRole.Equals("WJ_Teacher", StringComparison.OrdinalIgnoreCase))
             {
-                var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.AspNetUserID == userId || t.EmailID == user.Email);
+                var teacher = await _context.Users.FirstOrDefaultAsync(t => t.AspNetUserID == userId || t.EmailID == user.Email);
                 if (teacher != null)
                 {
                     teacher.FirstName = model.FirstName ?? teacher.FirstName;
                     teacher.LastName = model.LastName ?? teacher.LastName;
                     teacher.MobileNo = model.PhoneNumber ?? teacher.MobileNo;
-                    teacher.Address = model.Address ?? teacher.Address;
-                    teacher.City = model.City ?? teacher.City;
-                    teacher.State = model.State ?? teacher.State;
+                    teacher.AddressLine1 = model.Address ?? teacher.AddressLine1;
+                    teacher.CityName = model.City ?? teacher.CityName;
                     teacher.Pincode = model.Pincode ?? teacher.Pincode;
                     if (!string.IsNullOrEmpty(photoUrl)) teacher.PhotoUrl = photoUrl;
-                    _context.Teachers.Update(teacher);
+                    _context.Users.Update(teacher);
                 }
             }
-            else if (primaryRole.Equals("Parent", StringComparison.OrdinalIgnoreCase))
+            else if (primaryRole.Equals("HF_PARENT", StringComparison.OrdinalIgnoreCase))
             {
-                var parent = await _context.Parents.FirstOrDefaultAsync(p => p.AspNetUserID == userId || p.EmailID == user.Email);
+                var parent = await _context.Users.FirstOrDefaultAsync(p => p.AspNetUserID == userId || p.EmailID == user.Email);
                 if (parent != null)
                 {
                     parent.FirstName = model.FirstName ?? parent.FirstName;
                     parent.LastName = model.LastName ?? parent.LastName;
-                    parent.Address = model.Address ?? parent.Address;
-                    parent.City = model.City ?? parent.City;
-                    parent.State = model.State ?? parent.State;
+                    parent.AddressLine1 = model.Address ?? parent.AddressLine1;
+                    parent.CityName = model.City ?? parent.CityName;
+                    //parent.State = model.State ?? parent.State;
                     parent.Pincode = model.Pincode ?? parent.Pincode;
                     if (!string.IsNullOrEmpty(photoUrl)) parent.PhotoUrl = photoUrl;
-                    _context.Parents.Update(parent);
+                    _context.Users.Update(parent);
+                }
+            }
+            else if (primaryRole.Equals("WJ_Students", StringComparison.OrdinalIgnoreCase))
+            {
+                var parent = await _context.Users.FirstOrDefaultAsync(p => p.AspNetUserID == userId || p.EmailID == user.Email);
+                if (parent != null)
+                {
+                    parent.FirstName = model.FirstName ?? parent.FirstName;
+                    parent.LastName = model.LastName ?? parent.LastName;
+                    parent.AddressLine1 = model.Address ?? parent.AddressLine1;
+                    parent.CityName = model.City ?? parent.CityName;
+                    //parent.State = model.State ?? parent.State;
+                    parent.Pincode = model.Pincode ?? parent.Pincode;
+                    if (!string.IsNullOrEmpty(photoUrl)) parent.PhotoUrl = photoUrl;
+                    _context.Users.Update(parent);
                 }
             }
             else

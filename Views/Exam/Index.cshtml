@@ -1,0 +1,534 @@
+﻿@model HemFoundation.Models.ExamModel
+@{
+    ViewData["Title"] = "Exam Quiz";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+<style>
+    .hidden {
+        display: none !important;
+    }
+
+    .quiz-container {
+        max-width: 1000px;
+        margin: 20px auto;
+    }
+
+    .exam-panel {
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        padding: 25px;
+    }
+
+    .questionslab {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #4a7f9f;
+        border-radius: 50%;
+        margin: 5px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .questionslab.active-question {
+            background: #4a7f9f;
+            color: #fff;
+        }
+
+    .bg-dd {
+        background-color: #4a7f9f !important;
+        color: #fff !important;
+    }
+
+    .answer_option {
+        padding: 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .answer_option:hover, .answer_option.selected {
+            background-color: #f0f7fb;
+            border-color: #4a7f9f;
+        }
+
+    #headnav, #mainNav, #footer {
+        display: none !important;
+    }
+
+    .border-green {
+        border: 2px solid #28a745 !important;
+        background-color: #d4edda !important;
+    }
+
+    .bg-grebox-review {
+        background: #f8fafc;
+        padding: 30px;
+        border-radius: 12px;
+    }
+
+    .review-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .option-box {
+        padding: 12px 15px;
+        border: 1px solid #edf2f7;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        background: #f9fafb;
+    }
+
+    .option-correct {
+        border-color: #28a745 !important;
+        background-color: #83f28f !important;
+    }
+
+    .option-wrong {
+        border-color: #dc3545 !important;
+        background-color: #FA8072 !important;
+    }
+
+    .badge-status {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+</style>
+
+<div class="container quiz-container">
+    <div class="exam-panel">
+        <div class="mb-4">
+            <button class="btn btn-warning" onclick="@(ViewBag.GoBackURL == 10 ? "GoBackClick()" : "location.href=document.referrer")">
+                <i class="fa fa-arrow-left"></i> GO BACK
+            </button>
+        </div>
+
+        <div id="Dv_mcq" class="hidden">
+            <div id="div_quiz_loader" class="text-center py-5">
+                <p class="font-weight-bold mt-3" id="load-status">Loading...</p>
+            </div>
+
+            <div id="dv_mcq_box" class="hidden">
+                <div class="text-center text-muted mb-4">
+                    Total: <span class="text-danger" id="lbl_quiz_count"></span> |
+                    Attempted: <span class="text-success" id="lbl_quiz_attempted"></span>
+                </div>
+
+                <div class="text-center mb-4" id="QuestionNumber"></div>
+
+                <div class="text-right mb-3">
+                    <span class="text-primary font-weight-bold"><i class="fa fa-clock-o"></i> <span id="time"></span></span>
+                </div>
+
+                <h4 class="font-weight-bold mb-3" id="lbQuestion"></h4>
+                <div id="divOptions" class="row"></div>
+                <input type="hidden" id="questionID" />
+
+               <div class="row mt-4" style="margin-top: 30px;">
+    <div class="col-xs-6 col-6 text-left">
+        <button type="button" onclick="goPrevious()" class="btn btn-info">Previous</button>
+    </div>
+    <div class="col-xs-6 col-6 text-right" style="text-align: right;">
+        <button type="button" onclick="goNext()" id="next" class="btn btn-primary">Next</button>
+        <button type="button" onclick="FinishExam()" id="finish" class="btn btn-success hidden">Submit</button>
+    </div>
+</div>     </div>
+        </div>
+
+        <div id="dv_quiz_result" class="hidden">
+            <div class="row">
+                <div class="col-md-12">
+                    <h3 class="mt-md mb-lg text-center"><strong id="result_quiz_topic">Quiz Result</strong></h3>
+                </div>
+                <h3 class="mb-sm dark-text text-center">
+                    <strong><i class="fa fa-thumbs-up" id="lbl_expression"></i> <span id="result_quiz_label">Congrats</span></strong>
+                </h3>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 col-sm-12"><canvas id="topicquizreport"></canvas></div>
+                <div class="col-md-6 col-sm-12">
+                    <h4 class="mt-sm mb-xs"><i class="fa fa-clock-o"></i> <span id="result_quiz_time">02 min 15 sec</span></h4>
+                    <h4 class="mb-xs text-capitalize"><i class="fa fa-check text-success"></i> <span id="result_correct_count">0</span> Correct</h4>
+                    <h4 class="mb-xs text-capitalize"><i class="fa fa-times text-danger"></i> <span id="result_incorrect_count">0</span> Incorrect</h4>
+                    <h4 class="mb-xs text-capitalize"><i class="fa fa-unlink"></i> <span id="result_unattempted_count">0</span> Unattempted</h4>
+                </div>
+            </div>
+
+            <div class="row text-center mt-4">
+                <div class="col-md-12">
+                    <a onclick="ReviewAlert()" class="btn btn-primary mt-sm text-md mb-sm"><i class="fa fa-eye"></i> Review Answers</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-12 hidden" id="Dv_Review_Box">
+    <div class="bg-grebox-review mb-md">
+        <h4 class="text-blue text-uppercase font-weight-bold text-center mb-sm mt-sm">Review Your Answers</h4>
+        <div id="divReviewAnswer"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
+    <script src="~/lib/chart.js/Chart.bundle.js"></script>
+
+    <script type="text/javascript">
+        var QuizID = 0, ExamID = 0, finalsubmit = false, Questions = null,
+            questionIndex = 0, questionNumber = 0, clocktimer,
+            AttemptCount = 0, reviewLoaded = false;
+        var ExamTopicID = '@(Model.TopicID)';
+        var IsInstituteQuiz = '@(Model.IsInstituteQuiz)';
+        var Iscertificate = '@Model.Iscertificate';
+        var QuizTime = @Model.QuizTime;
+
+        var optionTemplate = "<div class='col-md-6 col-sm-12 col-xs-12 mb-3'><div class='answer_option' onclick='CheckColor({Optionid})' id='{Optionid}'><span class='text-blue font-weight-bold pr-2'>{Count}</span> {Option}</div></div>";var NumberTemplate = "<a id='{QuestionID}' class='questionslab qno{QuestionID} question_color' onclick='gotoQuestion({index})'>{Number}</a>";
+
+        var reQuestionTemplate = `<div class="review-card"><div class="d-flex justify-content-between align-items-center mb-3"><h5 class="font-weight-bold text-primary mb-0">Question {QuestNo}</h5><span id="span{QuestionID}" class="badge-status"></span></div><p class="font-weight-bold" style="font-size: 16px;">{QuestionName}</p><div class="row" id="optionsContainer{QuestionID}"></div></div>`;
+        var reoptionTemplate = `<div class='col-md-6' optionid='{Optionid}'><div class='option-box' optionid='{Optionid}' data-isanswer='{isAnswer}'>{Count} {Options}</div></div>`;
+        var rehintTemplate = "<div class='col-md-12 mt-2'><p class='mb-none'><strong class='text-blue text-weight-bold'>Answer Explanation:</strong></p><p>{AnswerDescription}</p></div>";
+
+        $(document).ready(function() {
+            $("#languageId").val(@Model.LanguageID);
+            if ('@Model.IsAttempts' === 'True') {
+                ExamID = '@Model.GetExamID';
+                FinishFinalExam();
+                $("#dv_mcq_box").hide();
+            } else {
+                GetMCQExam(ExamTopicID);
+            }
+        });
+
+        function GetMCQExam(ID) {
+            $("#Dv_mcq").removeClass("hidden");
+            var param = { QuizId: @Model.QuizId, TopicID: ID, LevelID: @Model.LevelID, IsInstituteQuiz: IsInstituteQuiz, Iscertificate: Iscertificate };
+
+            $.ajax({
+                type: "GET",
+                url: '/Exam/StartExamQuiz',
+                data: param,
+                dataType: 'json',
+                success: function(response) {
+                    var res = typeof response === 'string' ? JSON.parse(response) : response;
+                    var successFlag = res.success !== undefined ? res.success : res.Success;
+                    var dataObj = res.data !== undefined ? res.data : res.Data;
+
+                    if (successFlag) {
+                        QuizTime = dataObj.quizTime || dataObj.QuizTime;
+                        LoadQuestions();
+                    } else {
+                        alert(res.message || res.Message);
+                    }
+                }
+            });
+        }
+
+        function LoadQuestions() {
+            $("#dv_mcq_box").addClass("hidden");
+            $("#div_quiz_loader").removeClass("hidden");
+
+            $.ajax({
+                type: "GET",
+                url: '/Exam/GetQuestions/',
+                data: { id: @Model.QuizId, LevelID: @Model.LevelID, TopicID: '@Model.TopicID', Iscertificate: Iscertificate, LangId: $("#languageId").val() },
+                success: function(response) {
+                    var res = typeof response === 'string' ? JSON.parse(response) : response;
+                    var successFlag = res.success !== undefined ? res.success : res.Success;
+
+                    if (successFlag) {
+                        ExamID = res.message || res.Message;
+                        Questions = res.data !== undefined ? res.data : res.Data;
+                        questionNumber = Questions.length;
+                        $('#lbl_quiz_count').html(questionNumber);
+
+                        AddQuestionNumber(Questions);
+                        gotoQuestion(0);
+                        SetTimer();
+
+                        $("#div_quiz_loader").addClass("hidden");
+                        $("#dv_mcq_box").removeClass("hidden");
+                    } else {
+                        alert(res.message || res.Message);
+                    }
+                }
+            });
+        }
+
+        function AddQuestionNumber(questions) {
+            $("#QuestionNumber").html("");
+            for (var i = 0; i < questions.length; i++) {
+                var qId = questions[i].questionID !== undefined ? questions[i].questionID : questions[i].QuestionID;
+                var numberStr = NumberTemplate
+                    .replace(/{Number}/g, i + 1)
+                    .replace(/{QuestionID}/g, qId)
+                    .replace(/{index}/g, i);
+                $("#QuestionNumber").append(numberStr);
+            }
+        }
+
+       function gotoQuestion(index) {
+        questionIndex = index;
+        var q = Questions[index];
+        var qId = q.questionID !== undefined ? q.questionID : q.QuestionID;
+        var qName = q.questionName !== undefined ? q.questionName : q.QuestionName;
+        var qOptions = q.questionOption !== undefined ? q.questionOption : q.QuestionOption;
+
+        $("#questionID").val(qId);
+        $("#lbQuestion").html((index + 1) + ". " + qName);
+
+        $(".question_color").removeClass("active-question");
+        $("#" + qId).addClass("active-question");
+
+        if (index === (Questions.length - 1)) {
+            $('#next').addClass('hidden');
+            $('#finish').removeClass('hidden');
+        } else {
+            $('#next').removeClass('hidden');
+            $('#finish').addClass('hidden');
+        }
+
+        $("#divOptions").html("");
+        var alpha = ['A.', 'B.', 'C.', 'D.', 'E.', 'F.'];
+        qOptions.forEach(function(opt, i) {
+            var optText = opt.options !== undefined ? opt.options : opt.Options;
+            var optId = opt.optionID !== undefined ? opt.optionID : opt.OptionID;
+            var isAns = opt.isAnswer !== undefined ? opt.isAnswer : opt.IsAnswer;
+
+            if (optText) {
+                var str = optionTemplate
+                    .replace(/{Optionid}/g, optId)
+                    .replace("{Count}", alpha[i])
+                    .replace("{Option}", optText);
+                $("#divOptions").append(str);
+                if (isAns) $("#" + optId).addClass("selected");
+            }
+        });
+    }
+
+        function SubmitAnswer(questionID, selectedOption, currentQuestionIndex) {
+            $(".answer_option").removeClass("selected");
+            $("#" + selectedOption).addClass("selected");
+
+            var payload = { questionID: parseInt(questionID), selectedOption: parseInt(selectedOption), ExamID: parseInt(ExamID) };
+
+            $.ajax({
+                type: "POST",
+                url: '/Exam/SubmitAnswer_new',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(payload),
+                success: function(response) {
+                    var res = typeof response === 'string' ? JSON.parse(response) : response;
+                    var successFlag = res.success !== undefined ? res.success : res.Success;
+
+                    if (successFlag) {
+                        var qOptions = Questions[currentQuestionIndex].questionOption !== undefined ? Questions[currentQuestionIndex].questionOption : Questions[currentQuestionIndex].QuestionOption;
+                        qOptions.forEach(opt => {
+                            var optId = opt.optionID !== undefined ? opt.optionID : opt.OptionID;
+                            opt.isAnswer = (optId == selectedOption);
+                            opt.IsAnswer = (optId == selectedOption);
+                        });
+
+                        if (!$("#" + questionID).hasClass('bg-dd')) {
+                            AttemptCount++;
+                            $("#lbl_quiz_attempted").html(AttemptCount);
+                        }
+                        $(".qno" + questionID).addClass("bg-dd");
+                    } else {
+                        alert(res.message || res.Message);
+                    }
+                }
+            });
+        }
+
+        function CheckColor(id) {
+            SubmitAnswer($("#questionID").val(), id, questionIndex);
+        }
+
+        function goNext() { if (questionIndex < Questions.length - 1) gotoQuestion(++questionIndex); }
+        function goPrevious() { if (questionIndex > 0) gotoQuestion(--questionIndex); }
+
+        function FinishExam() {
+            clearTimeout(clocktimer);
+            if (!finalsubmit) {
+                finalsubmit = true;
+                $("#dv_mcq_box").addClass("hidden");
+                $("#load-status").html("Analyzing Result Please Wait...");
+                $("#div_quiz_loader").removeClass("hidden");
+                setTimeout(FinishFinalExam, 2000);
+            }
+        }
+
+        function startTimer(duration, display) {
+            var timer = duration, minutes, seconds;
+            clocktimer = setInterval(function() {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+                display.text((minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds));
+                if (--timer < 0) { clearInterval(clocktimer); FinishExam(); }
+            }, 1000);
+        }
+
+        function SetTimer() {
+            clearTimeout(clocktimer);
+            startTimer(60 * QuizTime, $('#time'));
+        }
+
+        function FinishFinalExam() {
+            $.ajax({
+                type: "GET",
+                url: '/Exam/GetExamQuizResult_new',
+                data: { ExamID: ExamID, IsIQuiz: IsInstituteQuiz, Iscertificate: Iscertificate, IsAttempt: '@Model.IsAttempts' },
+                success: function(response) {
+                    var res = typeof response === 'string' ? JSON.parse(response) : response;
+                    var successFlag = res.success !== undefined ? res.success : res.Success;
+
+                    if (successFlag) {
+                        var result = res.data !== undefined ? res.data : res.Data;
+                        $("#result_quiz_topic").html(result.topicName || result.TopicName || "Quiz Evaluation");
+                        $("#result_quiz_time").html(result.examTime || result.ExamTime || "02 min 15 sec");
+                        $("#result_correct_count").html(result.correctQuestion || result.CorrectQuestion || 0);
+                        $("#result_incorrect_count").html(result.inCorrectQuestion || result.InCorrectQuestion || 0);
+                        $("#result_unattempted_count").html(result.unattemptedQuestion || result.UnattemptedQuestion || 0);
+
+                        $("#div_quiz_loader").addClass("hidden");
+                        $("#dv_quiz_result").removeClass("hidden");
+
+                        var correctCount = result.correctQuestion !== undefined ? result.correctQuestion : (result.CorrectQuestion || 0);
+                        var incorrectCount = result.inCorrectQuestion !== undefined ? result.inCorrectQuestion : (result.InCorrectQuestion || 0);
+                        var unattemptedCount = result.unattemptedQuestion !== undefined ? result.unattemptedQuestion : (result.UnattemptedQuestion || 0);
+
+                        var ctx = document.getElementById('topicquizreport').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'pie',
+                            data: {
+                                datasets: [{
+                                    data: [incorrectCount, correctCount, unattemptedCount],
+                                    backgroundColor: ['#dc3545', '#28a745', '#ffc107']
+                                }],
+                                labels: ['Incorrect', 'Correct', 'Unattempted']
+                            },
+                            options: { responsive: true }
+                        });
+                    } else {
+                        alert(res.message || res.Message);
+                    }
+                }
+            });
+        }
+
+        function ReviewAlert() {
+            if (ExamID > 0 && !reviewLoaded) {
+                $.ajax({
+                    type: "GET",
+                    url: '/Exam/ReviewQuiz/',
+                    data: { id: ExamID },
+                    success: function(response) {
+                        var res = typeof response === 'string' ? JSON.parse(response) : response;
+                        var successFlag = res.success !== undefined ? res.success : res.Success;
+
+                        if (successFlag) {
+                            reviewLoaded = true;
+                            window.reviewResult = res.data !== undefined ? res.data : res.Data;
+                            RenderReviewUI();
+                        } else {
+                            alert(res.message || res.Message);
+                        }
+                    }
+                });
+            } else {
+                RenderReviewUI();
+            }
+        }
+
+        function RenderReviewUI() {
+            $("#divReviewAnswer").empty();
+            var reviewData = window.reviewResult;
+
+            var questionsList = reviewData.questions || reviewData.Questions;
+            var recordsList = reviewData.examinationRecords || reviewData.ExaminationRecords;
+
+            questionsList.forEach((question, i) => {
+                var qId = question.questionID !== undefined ? question.questionID : question.QuestionID;
+                var qName = question.questionName !== undefined ? question.questionName : question.QuestionName;
+                var qDesc = question.answerDescription !== undefined ? question.answerDescription : question.AnswerDescription;
+                var qOptions = question.questionOption !== undefined ? question.questionOption : question.QuestionOption;
+
+                let qHtml = reQuestionTemplate
+                    .replace(/{QuestNo}/g, i + 1)
+                    .replace(/{QuestionName}/g, qName)
+                    .replace(/{QuestionID}/g, qId);
+
+                $("#divReviewAnswer").append(qHtml);
+
+                let optionsHtml = "";
+                qOptions.forEach((opt, j) => {
+                    var optText = opt.options !== undefined ? opt.options : opt.Options;
+                    var optId = opt.optionID !== undefined ? opt.optionID : opt.OptionID;
+                    var isAns = opt.isAnswer !== undefined ? opt.isAnswer : opt.IsAnswer;
+
+                    if (optText) {
+                        optionsHtml += reoptionTemplate
+                            .replace(/{Optionid}/g, optId)
+                            .replace(/{Count}/g, String.fromCharCode(65 + j) + ".")
+                            .replace(/{Options}/g, optText)
+                            .replace(/{isAnswer}/g, isAns);
+                    }
+                });
+
+                $("#optionsContainer" + qId).append(optionsHtml);
+                $("#divReviewAnswer").append(rehintTemplate.replace("{AnswerDescription}", qDesc || "No explanation provided."));
+            });
+
+            recordsList.forEach(examRecord => {
+                var questionID = examRecord.questionID !== undefined ? examRecord.questionID : examRecord.QuestionID;
+                var userSelectedID = examRecord.answer !== undefined ? examRecord.answer : examRecord.Answer;
+                var isCorrectVal = examRecord.isCorrect !== undefined ? examRecord.isCorrect : (examRecord.IsCorrect !== undefined ? examRecord.IsCorrect : false);
+                var resultspan = "#span" + questionID;
+
+                var questionData = questionsList.find(q => (q.questionID || q.QuestionID) == questionID);
+                if (questionData) {
+                    var qOpts = questionData.questionOption !== undefined ? questionData.questionOption : questionData.QuestionOption;
+
+                    qOpts.forEach(opt => {
+                        var optId = opt.optionID !== undefined ? opt.optionID : opt.OptionID;
+                        var isAns = opt.isAnswer !== undefined ? opt.isAnswer : opt.IsAnswer;
+
+                        var $box = $("div[optionid='" + optId + "'] .option-box");
+                        if (isAns === true) {
+                            $box.addClass("option-correct");
+                        } else if (optId == userSelectedID && isAns === false) {
+                            $box.addClass("option-wrong");
+                        }
+                    });
+                }
+
+                // Render the status badge matching the second image
+                if (!userSelectedID) {
+                    $(resultspan).html("<span class='badge badge-warning' style='background-color:#f0ad4e; color:#fff; padding:5px 10px; border-radius:4px;'>Un-Attempted</span>");
+                } else if (isCorrectVal === true) {
+                    $(resultspan).html("<span class='badge badge-success' style='background-color:#5cb85c; color:#fff; padding:5px 10px; border-radius:4px;'>Right</span>");
+                } else {
+                    $(resultspan).html("<span class='badge badge-danger' style='background-color:#d9534f; color:#fff; padding:5px 10px; border-radius:4px;'>Wrong</span>");
+                }
+            });
+
+            $("#Dv_Review_Box").removeClass("hidden");
+        }
+    </script>
+}

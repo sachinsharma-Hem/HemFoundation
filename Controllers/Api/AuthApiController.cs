@@ -38,36 +38,42 @@ namespace HemFoundation.Controllers.Api
             if (!ModelState.IsValid)
                 return BadRequest(new { success = false, message = "Invalid payload or missing fields" });
 
-            // 1. Strictly Login via Username and Password (Email check removed)
-            string username = model.Email?.Trim() ?? ""; // Using model.Email property from DTO as the username/mobile input field
+            // 1. Strictly Login via Username and Password (Email/Mobile check)
+            string username = model.Email?.Trim() ?? "";
 
             if (string.IsNullOrEmpty(username))
                 return BadRequest(new { success = false, message = "Username or Mobile Number is required." });
 
-            ApplicationUser? user = await _userManager.FindByNameAsync(username);
-
-            // Fallback: If exact username not found, search by phone number
-            if (user == null)
-            {
-                user = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == username);
-            }
+            // Find user directly by UserName or PhoneNumber using standard EF Core (bypassing NormalizedUserName)
+            var user = await _context.Set<ApplicationUser>()
+      .FirstOrDefaultAsync(u => u.UserName == username);
 
             if (user == null)
                 return Unauthorized(new { success = false, message = "Invalid credentials or account inactive." });
+            var businessUser = await _context.Users
+        .FirstOrDefaultAsync(b => b.AspNetUserID == user.Id);
 
-            // 2. Verify Password using SignInManager
-            var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: true);
-            if (!result.Succeeded)
+            // 2. Verify Password manually using PasswordHasher (bypassing SignInManager/Normalized checks)
+            var passwordHasher = new PasswordHasher<ApplicationUser>();
+            var verificationResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash ?? "", model.Password);
+
+            if (verificationResult == PasswordVerificationResult.Failed)
                 return Unauthorized(new { success = false, message = "Invalid username or password." });
 
-            var roles = await _userManager.GetRolesAsync(user);
+            // 3. Get Roles safely via direct database query (bypassing UserManager.GetRolesAsync if it triggers normalized lookups)
+            var roles = await (from ur in _context.UserRoles
+                               join r in _context.Roles on ur.RoleId equals r.Id
+                               where ur.UserId == user.Id
+                               select r.Name!).ToListAsync();
+            string fullName = businessUser != null ? $"{businessUser.FirstName}".Trim() : (user.UserName ?? "");
             var authClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim(ClaimTypes.Email, user.Email ?? ""),
-        new Claim(ClaimTypes.Name, user.FullName ?? user.UserName ?? "")
-    };
-
+            {
+               new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
+                new Claim(ClaimTypes.Name, fullName),
+                 new Claim("UserID", businessUser?.UserID.ToString() ?? "")
+            };
+          
             foreach (var role in roles)
             {
                 authClaims.Add(new Claim(ClaimTypes.Role, role));
@@ -108,25 +114,23 @@ namespace HemFoundation.Controllers.Api
 
             if (dashboardMapping != null && !string.IsNullOrEmpty(dashboardMapping.RedirectUrl))
             {
-                // Agar database me mapping milti hai
                 redirectUrl = dashboardMapping.RedirectUrl;
             }
             else
             {
                 // 2. Check if user exists in Admins table
-                bool isAdminUser = await _context.Admins
-                    .AnyAsync(a => a.IdentityUserId == user.Id || a.Email == user.Email);
+                //bool isAdminUser = await _context.Admins
+                //    .AnyAsync(a => a.IdentityUserId == user.Id || a.Email == user.Email);
 
-                if (isAdminUser)
-                {
-                    // Agar wo Admins table me hai aur mapping nahi mili, toh seedha Admin Dashboard par bhejo
-                    redirectUrl = "/Admin/Dashboard";
-                }
-                else
-                {
-                    // Baaki sabhi ke liye default fallback
-                    redirectUrl = "/Home/Index";
-                }
+                //if (isAdminUser)
+                //{
+                //    redirectUrl = "/Admin/Dashboard";
+                //}
+                //else
+                //{
+                //    redirectUrl = "/Home/Index";
+                //}
+                redirectUrl = "/Home/Index";
             }
 
             // Extract Controller name from redirectUrl for dynamic menus
@@ -158,8 +162,10 @@ namespace HemFoundation.Controllers.Api
 
             HttpContext.Session.SetString("IsAdminLoggedIn", "true");
             HttpContext.Session.SetString("UserEmail", user.Email ?? "");
-            HttpContext.Session.SetString("UserFullName", user.FullName ?? user.UserName ?? "");
+            HttpContext.Session.SetString("UserFullName", user.UserName ?? "");
             HttpContext.Session.SetString("UserRole", primaryRole);
+            HttpContext.Session.SetInt32("UserID", businessUser?.UserID ?? 0);
+            HttpContext.Session.SetString("AspNetUserID", user.Id);
 
             return Ok(new
             {
@@ -170,7 +176,7 @@ namespace HemFoundation.Controllers.Api
                 user = new
                 {
                     user.Id,
-                    user.FullName,
+                    FullName = user.UserName,
                     user.Email,
                     Roles = roles
                 },

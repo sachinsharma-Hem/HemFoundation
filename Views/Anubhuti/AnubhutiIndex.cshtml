@@ -1,0 +1,171 @@
+﻿
+
+@{
+    ViewBag.Title = "Anubhuti Task";
+     Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    var isInWJTeacherRole = User.IsInRole("WJ_Teacher");
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <style>
+        .quiz-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+
+        .switch {
+            width: 38px;
+            height: 20px;
+            border-radius: 11px;
+            background-color: #ef4444;
+            appearance: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+            .switch:checked {
+                background-color: #10b981;
+            }
+
+        .table thead th {
+            background-color: #f8fafc;
+            color: #334155;
+        }
+
+        .btn-submit {
+            padding: 10px 40px;
+            font-weight: 700;
+            border-radius: 30px;
+            transition: all 0.2s;
+        }
+    </style>
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="quiz-card animate__animated animate__fadeIn">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="fas fa-edit text-primary mr-3" style="font-size: 24px;"></i>
+                    <h2 class="font-weight-bold mb-0">Anubhuti Task-1</h2>
+                </div>
+
+                <div id="alertContainer">
+                    <div id="divSuccess" class="alert alert-success @(string.IsNullOrEmpty(Convert.ToString(TempData["Success"])) ? "d-none" : "")">
+                        @Html.Raw(Convert.ToString(TempData["Success"]))
+                    </div>
+                    <div id="divError" class="alert alert-danger @(string.IsNullOrEmpty(Convert.ToString(TempData["Error"])) ? "d-none" : "")">
+                        @Html.Raw(Convert.ToString(TempData["Error"]))
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered" id="order_table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th>Question Name</th>
+                                <th class="text-center" width="150px">Yes</th>
+                                <th class="text-center" width="150px">No</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.Anubhutilist != null)
+                            {
+                                int i = 0;
+                                foreach (var item in (IEnumerable<dynamic>)ViewBag.Anubhutilist)
+                                {
+                                    <tr>
+                                        <td class="d-none">@item.AnbID</td>
+                                        <td class="align-middle">@item.AnbQuestion</td>
+                                        <td class="text-center align-middle">
+                                            <input class="switch" type="radio" name="z_@i" value="Yes" />
+                                            <img src="@item.Smile_Image" style="width:30px; margin-left:10px;" alt="Smile">
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <input class="switch" type="radio" name="z_@i" value="No" />
+                                            <img src="@item.Sad_Image" style="width:30px; margin-left:10px;" alt="Sad">
+                                        </td>
+                                    </tr>
+                                    i++;
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4">
+                    @if (isInWJTeacherRole)
+                    {
+                        <button class="btn btn-primary btn-submit" disabled>Submit (Teacher Mode)</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-primary btn-submit shadow-sm" id="btnSubmit">
+                            <i class="fas fa-paper-plane mr-2"></i> Submit Answers
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#btnSubmit").click(function() {
+                var Cls_Anubhuti = [];
+                var isValid = true;
+
+                $('#order_table tbody tr').each(function(i, row) {
+                    var $row = $(row);
+                    var isYes = $row.find('input[value="Yes"]').is(':checked');
+                    var isNo = $row.find('input[value="No"]').is(':checked');
+
+                    if (!isYes && !isNo) {
+                        isValid = false;
+                        return false;
+                    }
+
+                    Cls_Anubhuti.push({
+                        AnbID: $row.find('td:first').text().trim(),
+                        Action1: isYes ? "True" : "False",
+                        Action2: isNo ? "True" : "False"
+                    });
+                });
+
+                if (!isValid) {
+                    Swal.fire("Incomplete", "Please select an option for every question.", "warning");
+                    return;
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("SaveAnubhtiData", "Anubhuti")',
+                    data: JSON.stringify({
+                        AnuType: "AN1",
+                        PracID: @ViewBag.PracticleID,
+                        CourseID: @ViewBag.CourseID,
+                        cls_Anubhuti: Cls_Anubhuti
+                    }),
+                    contentType: 'application/json; charset=utf-8',
+                    success: function(res) {
+                        if (res[0] == "0" || res.success === true) {
+                            Swal.fire("Success!", "Task completed successfully.", "success").then(() => {
+                                window.location.href = '/learn/index';
+                            });
+                        } else {
+                            Swal.fire("Error", "Record not saved.", "error");
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

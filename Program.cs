@@ -1,5 +1,6 @@
 using HemFoundation.Data;
 using HemFoundation.Data.Seed;
+using HemFoundation.Models;
 using HemFoundation.Models.Identity;
 using HemFoundation.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -35,7 +36,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
-
+// In Program.cs
+builder.Services.AddScoped<ExamBAL>();
 // 3. JWT Authentication Configuration for API Endpoints
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 

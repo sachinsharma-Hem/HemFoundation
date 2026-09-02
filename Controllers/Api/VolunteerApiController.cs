@@ -574,18 +574,19 @@ namespace HemFoundation.Controllers.Api
 
 
             var users = await _context.Users
-                .Where(u => assignedByIds.Contains(u.Id))
+                .Where(u => assignedByIds.Contains(u.UserID.ToString()))
                 .Select(u => new
                 {
-                    u.Id,
-                    u.FullName,
-                    u.UserName
+                    Id = u.AspNetUserID,
+                    u.UserID,
+                    u.FirstName,
+                    u.MobileNo
                 })
                 .ToDictionaryAsync(
                     x => x.Id,
-                    x => string.IsNullOrWhiteSpace(x.FullName)
-                        ? x.UserName
-                        : x.FullName
+                    x => string.IsNullOrWhiteSpace(x.UserID.ToString())
+                        ? x.FirstName
+                        : x.MobileNo
                 );
 
 

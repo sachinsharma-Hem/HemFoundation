@@ -1,0 +1,173 @@
+﻿@model IEnumerable<HemFoundation.Models.Entities.AnubhutiMaster>
+
+@{
+    ViewBag.Title = "Anubhuti Task - Second Index";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    var isInWJTeacherRole = User.IsInRole("WJ_Teacher");
+}
+
+@section Styles {
+    <style>
+        .quiz-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+
+        .table thead th {
+            background-color: #f8fafc;
+            color: #334155;
+        }
+
+        .btn-submit {
+            padding: 10px 40px;
+            font-weight: 700;
+            border-radius: 30px;
+            transition: all 0.2s;
+        }
+
+        .textarea-comment {
+            resize: none;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+    </style>
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="quiz-card animate__animated animate__fadeIn">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="fas fa-tasks text-primary mr-3" style="font-size: 24px;"></i>
+                    <h2 class="font-weight-bold mb-0">Anubhuti Task-2</h2>
+                </div>
+
+                <div id="alertContainer">
+                    <div id="divSuccess" class="alert alert-success d-none"></div>
+                    <div id="divError" class="alert alert-danger d-none"></div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered" id="order_table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th>Question Name</th>
+                                <th>Comments 1</th>
+                                <th>Comments 2</th>
+                                <th>Comments 3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null)
+                            {
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="d-none">@item.AnbID</td>
+                                        <td class="align-middle font-weight-bold">@item.AnbQuestion</td>
+                                        <td>
+                                            <textarea class="form-control textarea-comment" rows="2" maxlength="500" oninput="updateCount(this)"></textarea>
+                                            <small class="text-muted counter">0/500</small>
+                                        </td>
+                                        <td>
+                                            <textarea class="form-control textarea-comment" rows="2" maxlength="500" oninput="updateCount(this)"></textarea>
+                                            <small class="text-muted counter">0/500</small>
+                                        </td>
+                                        <td>
+                                            <textarea class="form-control textarea-comment" rows="2" maxlength="500" oninput="updateCount(this)"></textarea>
+                                            <small class="text-muted counter">0/500</small>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4 pt-3 border-top">
+                    @if (isInWJTeacherRole)
+                    {
+                        <button class="btn btn-primary btn-submit" disabled>Submit (Teacher Mode)</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-primary btn-submit shadow-sm" id="btnSubmit">
+                            <i class="fas fa-paper-plane mr-2"></i> Submit Answers
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            // Submit Logic
+            $("#btnSubmit").click(function() {
+                var Cls_Anubhuti = [];
+                var isValid = true;
+
+                $('#order_table tbody tr').each(function() {
+                    var $row = $(this);
+                    var c1 = $row.find('td:eq(2) textarea').val().trim();
+                    var c2 = $row.find('td:eq(3) textarea').val().trim();
+                    var c3 = $row.find('td:eq(4) textarea').val().trim();
+
+                    if (!c1 || !c2 || !c3) { isValid = false; return false; }
+
+                    Cls_Anubhuti.push({
+                        AnbID: $row.find('td:first').text(),
+                        Comments1: c1,
+                        Comments2: c2,
+                        Comments3: c3
+                    });
+                });
+
+                if (!isValid) {
+                    Swal.fire("Incomplete", "Please fill all comment boxes.", "warning");
+                    return;
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("SaveAnubhtiData", "Anubhuti")',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        AnuType: "AN3",
+                        PracID: @ViewBag.PracticleID,
+                        CourseID: @ViewBag.CourseID,
+                        cls_Anubhuti: Cls_Anubhuti
+                    }),
+                    success: function(res) {
+                        if (res[0] == "0" || res.success === true) {
+                            Swal.fire("Success!", "Task completed successfully.", "success").then(() => {
+                                window.location.href = '/learn/index';
+                            });
+                        } else {
+                            Swal.fire("Error", "Record not saved."+res.message, "error");
+                        }
+                    }
+                });
+            });
+        });
+
+        function updateCount(el) {
+            var charCount = el.value.length;
+            var $counter = $(el).next('.counter');
+            $counter.text(charCount + '/500');
+
+            if (charCount >= 450) {
+                $counter.css('color', 'red');
+            } else {
+                $counter.css('color', '#6c757d');
+            }
+        }
+    </script>
+}

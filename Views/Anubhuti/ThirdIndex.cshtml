@@ -1,0 +1,176 @@
+﻿@{
+    ViewData["Title"] = "Anubhuti Task";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    var isInWJTeacherRole = User.IsInRole("WJ_Teacher");
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <style>
+        .quiz-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+
+        .table thead th {
+            background-color: #f8fafc;
+            color: #334155;
+        }
+
+        .btn-submit {
+            padding: 10px 40px;
+            font-weight: 700;
+            border-radius: 30px;
+            transition: all 0.2s;
+        }
+
+        textarea.form-control {
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+    </style>
+}
+
+<div class="container exam-container">
+    <div class="exam-panel animate__animated animate__fadeIn">
+        <h3 class="text-center font-weight-bold text-primary mb-4">Anubhuti Task - 3</h3>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered" id="order_table">
+                <thead class="thead-light">
+                    <tr>
+                        <th class="d-none">ID</th>
+                        <th>Question</th>
+                        <th>Comments</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mt-4">
+            @if (isInWJTeacherRole)
+            {
+                <button class="btn btn-primary btn-submit" disabled>Submit (Teacher Mode)</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-primary btn-submit" id="btnSubmit">Submit Task</button>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script type="text/javascript">
+        var AnubhutiListArray = [];
+
+        $(document).ready(function () {
+            LoadData();
+            renderQuestions();
+        });
+
+        function LoadData() {
+            @if (Model != null)
+            {
+                foreach (var item in Model)
+                {
+                    @:AnubhutiListArray.push({ WGAnbID: '@item.AnbID', WG_AnbQuestion: '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(item.AnbQuestion))' });
+                }
+            }
+        }
+
+        function renderQuestions() {
+            var html = "";
+            for (var i = 0; i < AnubhutiListArray.length; i++) {
+                var item = AnubhutiListArray[i];
+
+                html += '<tr>' +
+                    '<td class="d-none">' + item.WGAnbID + '</td>' +
+                    '<td class="align-middle font-weight-bold">' + item.WG_AnbQuestion + '</td>' +
+                    '<td class="align-middle">' +
+                    '<textarea class="form-control" rows="2" maxlength="500" onkeyup="updateCharCount(this)"></textarea>' +
+                    '<small class="text-muted char-counter">0 / 500</small>' +
+                    '</td>' +
+                    '</tr>';
+            }
+            $('#order_table tbody').html(html);
+        }
+
+        function updateCharCount(element) {
+            var len = $(element).val().length;
+            $(element).next('.char-counter').text(len + " / 500");
+
+            if (len >= 500) {
+                $(element).css("border-color", "orange");
+            } else {
+                $(element).css("border-color", "#cbd5e1");
+            }
+        }
+
+        $(document).ready(function () {
+            $("#btnSubmit").click(function () {
+                var Cls_Anubhuti = [];
+                var isValid = true;
+                var isTooLong = false;
+
+                $('#order_table tbody tr').each(function () {
+                    var $row = $(this);
+                    var $textarea = $row.find('textarea');
+                    var val = $textarea.val().trim();
+                    var id = $row.find('td:first').text().trim();
+
+                    if (val === "") {
+                        isValid = false;
+                        $textarea.css("border-color", "red");
+                    } else if (val.length > 500) {
+                        isTooLong = true;
+                        $textarea.css("border-color", "red");
+                    } else {
+                        $textarea.css("border-color", "#cbd5e1");
+                        Cls_Anubhuti.push({ AnbID: parseInt(id), Comments1: val });
+                    }
+                });
+
+                if (!isValid) {
+                    Swal.fire("Incomplete", "Please fill in all comment boxes.", "warning");
+                    return;
+                }
+                if (isTooLong) {
+                    Swal.fire("Limit Exceeded", "One or more comments exceed the 500-character limit.", "error");
+                    return;
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: '/Anubhuti/SaveAnubhtiData',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({
+                        AnuType: "AN2",
+                        PracID: '@ViewBag.PracticleID',
+                        CourseID: '@ViewBag.CourseID',
+                        cls_Anubhuti: Cls_Anubhuti
+                    }),
+                    success: function (res) {
+                        if (res[0] == "0" || res.success === true) {
+                            Swal.fire("Success!", "Task completed successfully.", "success").then(() => {
+                                window.location.href = '/learn/index';
+                            });
+                        } else {
+                            Swal.fire("Error", "Record not saved.", "error");
+                        }
+                    },
+                    error: function () {
+                        Swal.fire("Error", "An error occurred while saving data.", "error");
+                    }
+                });
+            });
+        });
+    </script>
+}

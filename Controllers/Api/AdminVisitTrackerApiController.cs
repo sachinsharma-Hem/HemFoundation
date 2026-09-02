@@ -81,7 +81,7 @@ namespace HemFoundation.Controllers.Api
                     on p.AffiliateId equals a.UserID into affGroup
                 from aff in affGroup.DefaultIfEmpty()
 
-                join i in _context.Institutes
+                join i in _context.WJ_Institutes
                     on p.InstituteID equals i.InstituteID into instGroup
                 from inst in instGroup.DefaultIfEmpty()
 
@@ -108,7 +108,7 @@ namespace HemFoundation.Controllers.Api
                         : "Unknown School",
 
                     City = inst != null
-                        ? inst.City
+                        ? null
                         : "-",
 
                     p.ScheduleDate,

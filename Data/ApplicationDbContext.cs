@@ -1,29 +1,35 @@
 ﻿using HemFoundation.Models.Entities;
 using HemFoundation.Models.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections;
+using System.Reflection.Emit;
 
 namespace HemFoundation.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser> 
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
 
+        public DbSet<Institute> Institutes { get; set; }
+        public DbSet<Teacher> Teachers { get; set; }
+        public virtual DbSet<AspNetRoles> AspNetRoles { get; set; }
         public DbSet<Admin> Admins { get; set; }
         public DbSet<PortalMaster> PortalMasters { get; set; }
-        public DbSet<GenderMaster> GenderMasters { get; set; } // Added Gender Master Table
+        public DbSet<GenderMaster> GenderMasters { get; set; }
         public DbSet<Menu> Menus { get; set; }
         public DbSet<RoleMenuRight> RoleMenuRights { get; set; }
         public DbSet<RoleDashboardMapping> RoleDashboardMappings { get; set; }
         public DbSet<Affiliate> Affiliates { get; set; }
-        public DbSet<Institute> Institutes { get; set; }
+        public DbSet<WJ_Institutes> WJ_Institutes { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<StandardMaster> StandardMasters { get; set; }
-
-        public DbSet<Teacher> Teachers { get; set; }
+        public DbSet<WJ_Teacher> WJ_Teachers { get; set; }
         public DbSet<Parent> Parents { get; set; }
         public DbSet<MainCourse> MainCourses { get; set; }
         public DbSet<CourseCategory> CourseCategories { get; set; }
@@ -64,60 +70,283 @@ namespace HemFoundation.Data
         public DbSet<AffiliateOtherActivity> AffiliateOtherActivities { get; set; }
         public DbSet<AffiliateExpense> AffiliateExpenses { get; set; }
         public DbSet<VolunteerInstituteMapping> VolunteerInstituteMappings { get; set; }
+
+        public DbSet<Quiz> Quiz { get; set; }
+        public DbSet<Examination> Examination { get; set; }
+        public DbSet<ExaminationRecords> ExaminationRecords { get; set; }
+        public DbSet<Questions> Questions { get; set; }
+        public DbSet<Topics> Topics { get; set; }
+        public DbSet<Courses> Courses { get; set; }
+        public DbSet<QuizCourseLevels> QuizCourseLevels { get; set; }
+        public virtual DbSet<WJ_Tech_Teacher_Questions> WJ_Tech_Teacher_Questions { get; set; }
+        public virtual DbSet<Levels> Levels { get; set; }
+        public virtual DbSet<View_ExamResult> View_ExamResult { get; set; }
+        public virtual DbSet<AnubhutiMaster> AnubhutiMaster { get; set; }
+        public virtual DbSet<AnubhutiTransaction> AnubhutiTransaction { get; set; }
+        public virtual DbSet<WJ_Coins> WJ_Coins { get; set; }
+        public virtual DbSet<WJ_Practicals> WJ_Practicals { get; set; }
+        public virtual DbSet<WJ_PracticalSubmission> WJ_PracticalSubmission { get; set; }
+        public virtual DbSet<V_HF_Anubhuti_ImageQuestionBind> V_HF_Anubhuti_ImageQuestionBind { get; set; }
+        public virtual DbSet<WJ_ScrambleQuestion> WJ_ScrambleQuestion { get; set; }
+        public virtual DbSet<WJ_ScrambleAnswer> WJ_ScrambleAnswer { get; set; }
+        public virtual DbSet<SP_ScrambleWord_Result> SP_ScrambleWord_Results { get; set; }
+        public virtual DbSet<Users> Users { get; set; }
+        public virtual DbSet<AspNetUsers> AspNetUsers { get; set; }
+        public DbSet<QuestionOption> QuestionOption { get; set; }
+
+        public DbSet<View_WJ_Course_Topics> View_WJ_Course_Topics { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
             builder.Entity<RoleMenuRight>().HasIndex(x => new { x.RoleId, x.MenuId }).IsUnique();
 
-            var seedDate = DateTime.SpecifyKind(
-    new DateTime(2026, 1, 1),
-    DateTimeKind.Utc);
+            var seedDate = DateTime.SpecifyKind(new DateTime(2026, 1, 1), DateTimeKind.Utc);
 
-            builder.Entity<PortalMaster>().HasData(
-                new PortalMaster { Id = 1, PortalName = "Admin", Description = "System Administrator Portal", IsActive = true, CreatedOn = seedDate },
-                new PortalMaster { Id = 2, PortalName = "Teacher", Description = "Teacher / Educator Portal", IsActive = true, CreatedOn = seedDate },
-                new PortalMaster { Id = 3, PortalName = "Student", Description = "Student Learning Portal", IsActive = true, CreatedOn = seedDate },
-                new PortalMaster { Id = 4, PortalName = "School", Description = "School Management Portal", IsActive = true, CreatedOn = seedDate },
-                new PortalMaster { Id = 5, PortalName = "Parent", Description = "Parent Monitoring Portal", IsActive = true, CreatedOn = seedDate },
-                new PortalMaster { Id = 6, PortalName = "Affiliate", Description = "Affiliate Partner Portal", IsActive = true, CreatedOn = seedDate },
-                new PortalMaster { Id = 7, PortalName = "Volunteer", Description = "Volunteer Activity Portal", IsActive = true, CreatedOn = seedDate },
-                new PortalMaster { Id = 8, PortalName = "TesterEmployee", Description = "Internal Testing & Employee Portal", IsActive = true, CreatedOn = seedDate }
-            );
+            builder.Entity<QuizCourseLevels>().HasNoKey();
 
-            builder.Entity<RoleDashboardMapping>().HasData(
-                new RoleDashboardMapping { Id = 1, RoleName = "Admin", RedirectUrl = "/Admin/Dashboard", IsActive = true },
-                new RoleDashboardMapping { Id = 2, RoleName = "Teacher", RedirectUrl = "/Teacher/Dashboard", IsActive = true },
-                new RoleDashboardMapping { Id = 3, RoleName = "Student", RedirectUrl = "/Student/Dashboard", IsActive = true },
-                new RoleDashboardMapping { Id = 4, RoleName = "TesterEmployee", RedirectUrl = "/TesterEmployee/Dashboard", IsActive = true },
-                new RoleDashboardMapping { Id = 5, RoleName = "School", RedirectUrl = "/School/Dashboard", IsActive = true },
-                new RoleDashboardMapping { Id = 6, RoleName = "Parent", RedirectUrl = "/Parent/Dashboard", IsActive = true },
-                new RoleDashboardMapping { Id = 7, RoleName = "Affiliate", RedirectUrl = "/Affiliate/Dashboard", IsActive = true },
-                new RoleDashboardMapping { Id = 8, RoleName = "Volunteer", RedirectUrl = "/Volunteer/Dashboard", IsActive = true }
-            );
+            // Identity Configurations
+            builder.Entity<IdentityRole>(entity =>
+            {
+                entity.ToTable("aspnetroles", "public");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Name).HasColumnName("Name");
+                entity.Ignore(e => e.NormalizedName);
+                entity.Ignore(e => e.ConcurrencyStamp);
+            });
 
-            // Seed Data for Standards (3rd to 15th)
-            builder.Entity<StandardMaster>().HasData(
-                new StandardMaster { Id = 1, StandardName = "3rd Standard", DisplayOrder = 1 },
-                new StandardMaster { Id = 2, StandardName = "4th Standard", DisplayOrder = 2 },
-                new StandardMaster { Id = 3, StandardName = "5th Standard", DisplayOrder = 3 },
-                new StandardMaster { Id = 4, StandardName = "6th Standard", DisplayOrder = 4 },
-                new StandardMaster { Id = 5, StandardName = "7th Standard", DisplayOrder = 5 },
-                new StandardMaster { Id = 6, StandardName = "8th Standard", DisplayOrder = 6 },
-                new StandardMaster { Id = 7, StandardName = "9th Standard", DisplayOrder = 7 },
-                new StandardMaster { Id = 8, StandardName = "10th Standard", DisplayOrder = 8 },
-                new StandardMaster { Id = 9, StandardName = "11th Standard", DisplayOrder = 9 },
-                new StandardMaster { Id = 10, StandardName = "12th Standard", DisplayOrder = 10 },
-                new StandardMaster { Id = 11, StandardName = "13th Level", DisplayOrder = 11 },
-                new StandardMaster { Id = 12, StandardName = "14th Level", DisplayOrder = 12 },
-                new StandardMaster { Id = 13, StandardName = "15th Level", DisplayOrder = 13 }
-            );
-            // 2. SEED DATA FOR GENDERS
-            builder.Entity<GenderMaster>().HasData(
-                new GenderMaster { Id = 1, GenderName = "Male", IsActive = true },
-                new GenderMaster { Id = 2, GenderName = "Female", IsActive = true },
-                new GenderMaster { Id = 3, GenderName = "Other", IsActive = true }
-            );
+            builder.Entity<ApplicationUser>(entity =>
+            {
+                entity.ToTable("aspnetusers", "public");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.UserName).HasColumnName("username");
+                entity.Property(e => e.Email).HasColumnName("email");
+                entity.Property(e => e.PasswordHash).HasColumnName("passwordhash");
+                entity.Property(e => e.SecurityStamp).HasColumnName("securitystamp");
+                entity.Property(e => e.PhoneNumber).HasColumnName("phonenumber");
+                entity.Property(e => e.LockoutEnd).HasColumnName("lockoutenddateutc");
+                entity.Property(e => e.AccessFailedCount).HasColumnName("accessfailedcount");
+                entity.Property(e => e.EmailConfirmed).HasColumnName("emailconfirmed");
+                entity.Property(e => e.PhoneNumberConfirmed).HasColumnName("phonenumberconfirmed").HasDefaultValue(false);
+                entity.Ignore(e => e.TwoFactorEnabled);
+                entity.Ignore(e => e.LockoutEnabled);
+                entity.Ignore(e => e.NormalizedUserName);
+                entity.Ignore(e => e.NormalizedEmail);
+                entity.Ignore(e => e.ConcurrencyStamp);
+                entity.Ignore(e => e.CreatedDate);
+                entity.Ignore(e => e.FullName);
+                entity.Ignore(e => e.PortalName);
+                entity.Ignore(e => e.UserCode);
+            });
+
+            builder.Entity<IdentityUserRole<string>>(entity =>
+            {
+                entity.ToTable("aspnetuserroles", "public");
+                entity.HasKey(r => new { r.UserId, r.RoleId });
+                entity.Property(e => e.UserId).HasColumnName("userid");
+                entity.Property(e => e.RoleId).HasColumnName("roleid");
+            });
+
+            builder.Entity<IdentityUserClaim<string>>(entity =>
+            {
+                entity.ToTable("aspnetuserclaims", "public");
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.UserId).HasColumnName("userid");
+                entity.Property(e => e.ClaimType).HasColumnName("claimtype");
+                entity.Property(e => e.ClaimValue).HasColumnName("claimvalue");
+            });
+
+            builder.Entity<IdentityUserLogin<string>>(entity =>
+            {
+                entity.ToTable("aspnetuserlogins", "public");
+                entity.HasKey(l => new { l.LoginProvider, l.ProviderKey, l.UserId });
+                entity.Property(e => e.LoginProvider).HasColumnName("loginprovider");
+                entity.Property(e => e.ProviderKey).HasColumnName("providerkey");
+                entity.Property(e => e.UserId).HasColumnName("userid");
+            });
+
+            builder.Entity<IdentityUserToken<string>>().ToTable("aspnetusertokens", "public");
+            builder.Entity<IdentityRoleClaim<string>>().ToTable("aspnetroleclaims", "public");
+
+            builder.Entity<Users>(entity =>
+            {
+                entity.ToTable("users", "public");
+                entity.HasKey(e => e.UserID);
+                entity.Property(e => e.AspNetUserID).HasColumnName("aspnetuserid");
+                entity.HasOne(e => e.AspNetUsers)
+                      .WithMany(u => u.Users)
+                      .HasForeignKey(e => e.AspNetUserID);
+            });
+
+            builder.Entity<Quiz>(entity =>
+            {
+                entity.ToTable("quiz");
+                entity.Property(e => e.QuizID).HasColumnName("quizid");
+            });
+
+            builder.Entity<QuizCourseLevels>(entity =>
+            {
+                entity.ToTable("quizcourselevels");
+                entity.Property(e => e.QuizID).HasColumnName("quizid");
+                entity.Property(e => e.CourseID).HasColumnName("courseid");
+            });
+
+            builder.Entity<Examination>(entity =>
+            {
+                entity.ToTable("examination");
+                entity.Ignore("Levels");
+                entity.Property(e => e.ExaminationID).HasColumnName("examinationid").UseSerialColumn();
+                entity.Property(e => e.IsPassed)
+                      .HasColumnName("ispassed")
+                      .HasConversion(
+                          v => new System.Collections.BitArray(new[] { v }),
+                          v => v != null && v[0]
+                      );
+            });
+
+            builder.Entity<Questions>(entity =>
+            {
+                entity.ToTable("questions");
+
+                entity.Property(e => e.QuestionID).HasColumnName("questionid");
+                entity.Property(e => e.QuestionName).HasColumnName("questionname");
+                entity.Property(e => e.Marks).HasColumnName("marks");
+                entity.Property(e => e.Type).HasColumnName("questiontype");
+                entity.Property(e => e.ComplexityLevel).HasColumnName("complexitylevel");
+                entity.Property(e => e.AnswerDescription).HasColumnName("answerdescription");
+                entity.Property(e => e.CourseID).HasColumnName("courseid");
+                entity.Property(e => e.TopicID).HasColumnName("topicid");
+                entity.Property(e => e.SubTopicID).HasColumnName("subtopicid");
+                entity.Property(e => e.QuestionLevel).HasColumnName("questionlevel");
+                entity.Property(e => e.languageID).HasColumnName("languageid");
+
+                entity.Property(e => e.Status)
+                      .HasColumnName("status")
+                      .HasConversion(
+                          v => new System.Collections.BitArray(new[] { v }),
+                          v => v != null && v[0]
+                      );
+
+                entity.Property(e => e.isAdminStatus)
+                      .HasColumnName("isadminstatus")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                          v => v != null ? (bool?)v[0] : null
+                      );
+
+                entity.Property(e => e.isDeleted)
+                      .HasColumnName("isdeleted")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                          v => v != null ? (bool?)v[0] : null
+                      );
+
+                entity.Ignore(q => q.Courses1);
+
+                entity.HasOne(q => q.Courses)
+                      .WithMany()
+                      .HasForeignKey(q => q.CourseID);
+
+                entity.HasOne(q => q.Topics)
+                      .WithMany(t => t.Questions)
+                      .HasForeignKey(q => q.TopicID)
+                      .IsRequired(false);
+
+                entity.HasMany(q => q.QuestionOption)
+                      .WithOne(o => o.Questions)
+                      .HasForeignKey(o => o.QuestionID);
+            });
+
+            builder.Entity<ExaminationRecords>(entity =>
+            {
+                entity.ToTable("examinationrecords");
+
+                entity.Property(e => e.RecordID).HasColumnName("recordid").UseSerialColumn();
+                entity.Property(e => e.ExaminationID).HasColumnName("examinationid");
+                entity.Property(e => e.QuestionID).HasColumnName("questionid");
+                entity.Property(e => e.RecordStatus).HasColumnName("recordstatus");
+                entity.Property(e => e.Answer).HasColumnName("answer");
+                entity.Property(e => e.SubmitTiming).HasColumnName("submittiming");
+                entity.Property(e => e.CreatedBy).HasColumnName("createdby");
+                entity.Property(e => e.CreatedDate).HasColumnName("createddate");
+                entity.Property(e => e.ModifiedBy).HasColumnName("modifiedby");
+                entity.Property(e => e.ModifiedDate).HasColumnName("modifieddate");
+                entity.Property(e => e.OrderNo).HasColumnName("orderno");
+
+                entity.Property(e => e.isCorrect)
+                      .HasColumnName("iscorrect")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                          v => v != null ? (bool?)v[0] : null
+                      );
+
+                entity.HasOne(e => e.Examination)
+                      .WithMany(ex => ex.ExaminationRecords)
+                      .HasForeignKey(e => e.ExaminationID);
+
+                entity.HasOne(e => e.Questions)
+                      .WithMany(q => q.ExaminationRecords)
+                      .HasForeignKey(e => e.QuestionID);
+            });
+
+            builder.Entity<Courses>(entity =>
+            {
+                entity.ToTable("courses");
+                entity.Ignore("Quiz");
+            });
+
+            builder.Entity<Levels>().ToTable("levels");
+
+            builder.Entity<QuestionOption>(entity =>
+            {
+                entity.ToTable("questionoption");
+                entity.HasKey(e => e.OptionID);
+                entity.Property(e => e.OptionID).HasColumnName("optionid");
+                entity.Property(e => e.QuestionID).HasColumnName("questionid");
+                entity.Property(e => e.Options).HasColumnName("Options");
+
+
+                entity.Ignore(e => e.ExaminationOptions);
+                entity.Ignore(e => e.ExaminationOptions1);
+                entity.Ignore("ExaminationRecords");
+
+                entity.Property(e => e.IsAnswer)
+                      .HasColumnName("isanswer")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                          v => v != null ? (bool?)v[0] : null
+                      );
+            });
+
+            builder.Entity<Topics>(entity =>
+            {
+                entity.ToTable("topics");
+                entity.Property(e => e.IsActive)
+                      .HasColumnName("isactive")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                          v => v != null ? (bool?)v[0] : null
+                      );
+            });
+            builder.Entity<View_WJ_Course_Topics>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("view_wj_course_topics"); // Match your exact lowercase view name in PostgreSQL
+            });
+
+            builder.Entity<WJ_PracticalSubmission>(entity =>
+            {
+                entity.Property(e => e.IsDelete)
+                      .HasColumnName("isdelete")
+                      .HasColumnType("bit(1)") // Matches the database column type
+                      .HasConversion(
+                          v => v.HasValue ? new BitArray(new bool[] { v.Value }) : null, // bool? -> BitArray
+                          v => v != null && v.Count > 0 ? v.Get(0) : (bool?)null          // BitArray -> bool?
+                      );
+            });
 
         }
 
