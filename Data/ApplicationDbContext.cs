@@ -64,6 +64,17 @@ namespace HemFoundation.Data
         public DbSet<AffiliateOtherActivity> AffiliateOtherActivities { get; set; }
         public DbSet<AffiliateExpense> AffiliateExpenses { get; set; }
         public DbSet<VolunteerInstituteMapping> VolunteerInstituteMappings { get; set; }
+        public DbSet<VolunteerVisitPlan> VolunteerVisitPlans { get; set; }
+        public DbSet<BulkUploadLog> BulkUploadLogs { get; set; }
+        public DbSet<ValueGradeMaster> ValueGradeMasters { get; set; }
+        public DbSet<ValueItemMaster> ValueItemMasters { get; set; }
+        public DbSet<ActivityGroup> ActivityGroups { get; set; }
+        public DbSet<ActivityGroupStudent> ActivityGroupStudents { get; set; }
+        public DbSet<ActivitySubmission> ActivitySubmissions { get; set; }
+        public DbSet<TrainingGuideMaster> TrainingGuideMasters { get; set; }
+        public DbSet<StudentCourseMaster> StudentCourseMasters { get; set; }
+        public DbSet<StudentCourseModule> StudentCourseModules { get; set; }
+        public DbSet<StudentModuleContent> StudentModuleContents { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

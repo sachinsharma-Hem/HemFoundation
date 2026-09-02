@@ -1,0 +1,190 @@
+﻿@{
+    ViewData["Title"] = "Annual Calendar Master";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml"; // Admin Layout
+}
+
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+        <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+            <h4 class="fw-bold text-dark m-0"><i class="bi bi-calendar-event text-danger me-2"></i> Grade Wise Annual Calendar Master</h4>
+        </div>
+
+        <ul class="nav nav-pills nav-fill gap-2 p-1 bg-light rounded-pill mb-4" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#tabGrade" type="button">Step 1: Create Grades & Groups</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#tabValues" type="button">Step 2: Add Capacity Cards</button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- TAB 1: CREATE GRADES -->
+            <div class="tab-pane fade show active" id="tabGrade">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card border border-primary-subtle bg-light rounded-4 p-4 h-100">
+                            <h6 class="fw-bold text-primary mb-3">Add Row (Grade)</h6>
+                            <form id="frmGrade">
+                                <div class="mb-3">
+                                    <label class="small fw-bold">Select Standard</label>
+                                    <select class="form-select shadow-none" id="ddlStandard" name="StandardId" required></select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="small fw-bold">Grade Display Name</label>
+                                    <input type="text" class="form-control shadow-none" name="GradeName" placeholder="e.g. GRADE - 3" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="small fw-bold">Section / Group</label>
+                                    <select class="form-select shadow-none" name="GroupName" required>
+                                        <option value="PREPARATORY">PREPARATORY</option>
+                                        <option value="MIDDLE">MIDDLE</option>
+                                        <option value="SECONDARY">SECONDARY</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill shadow-sm">Save Grade Row</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <table class="table table-hover align-middle border rounded-3 overflow-hidden" id="tblGrades">
+                            <thead class="table-light"><tr><th>Grade Name</th><th>Group</th><th>Created On</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: CREATE CAPACITY CARDS -->
+            <div class="tab-pane fade" id="tabValues">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card border border-danger-subtle bg-light rounded-4 p-4 h-100">
+                            <h6 class="fw-bold text-danger mb-3">Add Calendar Card</h6>
+                            <form id="frmValue">
+                                <div class="mb-3">
+                                    <label class="small fw-bold">1. Select Grade Row</label>
+                                    <select class="form-select shadow-none" id="ddlGrade" name="GradeId" required></select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="small fw-bold">2. Select Capacity Column</label>
+                                    <select class="form-select shadow-none" name="CapacityName" required>
+                                        <option value="Cognitive Capacity">Cognitive Capacity</option>
+                                        <option value="Social Capacity">Social Capacity</option>
+                                        <option value="Ethical Capacity">Ethical Capacity</option>
+                                        <option value="Emotional Capacity">Emotional Capacity</option>
+                                        <option value="Life Skills">Life Skills</option>
+                                    </select>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="small fw-bold">Value Title (Eng)</label>
+                                        <input type="text" class="form-control shadow-none" name="ValueTitleEng" placeholder="e.g. Curiosity" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small fw-bold">Topic Name (Hin)</label>
+                                        <input type="text" class="form-control shadow-none" name="ValueTitleHin" placeholder="e.g. Jigyassa" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="small fw-bold">Thumbnail Image</label>
+                                    <input type="file" class="form-control shadow-none" name="ValueImage" accept="image/*" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="small fw-bold">Activity PDF</label>
+                                    <input type="file" class="form-control shadow-none" name="ActivityPdf" accept=".pdf" required>
+                                </div>
+                                <button type="submit" class="btn btn-danger w-100 fw-bold rounded-pill shadow-sm">Save Card</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <table class="table table-hover align-middle border rounded-3 overflow-hidden" id="tblValues">
+                            <thead class="table-light"><tr><th>Card Image</th><th>Details</th><th>Mapping</th><th>PDF</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            loadStandards();
+            loadGrades();
+            loadValues();
+
+            function loadStandards() {
+                $.get('/api/value/standards', function(res) {
+                    let opts = '<option value="">-- Select Standard --</option>';
+                    if(res.success) res.data.forEach(s => opts += `<option value="${s.id}">${s.standardName}</option>`);
+                    $('#ddlStandard').html(opts);
+                });
+            }
+
+            function loadGrades() {
+                $.get('/api/value/grades-list', function(res) {
+                    let rows = '', opts = '<option value="">-- Select Grade --</option>';
+                    if(res.success) {
+                        res.data.forEach(g => {
+                            let badgeColor = g.groupName === 'PREPARATORY' ? 'primary' : g.groupName === 'MIDDLE' ? 'danger' : 'success';
+                            rows += `<tr><td class="fw-bold">${g.gradeName}</td><td><span class="badge bg-${badgeColor}">${g.groupName}</span></td><td>${new Date(g.createdDate).toLocaleDateString()}</td></tr>`;
+                            opts += `<option value="${g.id}">${g.gradeName} (${g.groupName})</option>`;
+                        });
+                        $('#tblGrades tbody').html(rows || '<tr><td colspan="3" class="text-center">No grades added yet</td></tr>');
+                        $('#ddlGrade').html(opts);
+                    }
+                });
+            }
+
+            function loadValues() {
+                $.get('/api/value/values-list', function(res) {
+                    let rows = '';
+                    if(res.success) {
+                        res.data.forEach(v => {
+                            let img = v.valueImageUrl ? `<img src="${v.valueImageUrl}" class="rounded shadow-sm" style="width: 80px; height: 50px; object-fit: cover;">` : '';
+                            rows += `<tr>
+                                <td>${img}</td>
+                                <td>
+                                    <div class="fw-bold text-dark">${v.valueTitleEng}</div>
+                                    <div class="small text-muted">${v.valueTitleHin}</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary mb-1">${v.gradeName}</span><br>
+                                    <span class="badge bg-light text-dark border">${v.capacityName}</span>
+                                </td>
+                                <td><a href="${v.activityPdfUrl}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="bi bi-file-pdf"></i> View</a></td>
+                            </tr>`;
+                        });
+                        $('#tblValues tbody').html(rows || '<tr><td colspan="4" class="text-center">No cards added yet</td></tr>');
+                    }
+                });
+            }
+
+            $('#frmGrade').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: '/api/value/add-grade', type: 'POST', data: new FormData(this),
+                    processData: false, contentType: false,
+                    success: function(res) {
+                        alert(res.message); $('#frmGrade')[0].reset(); loadGrades();
+                    }
+                });
+            });
+
+            $('#frmValue').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: '/api/value/add-value', type: 'POST', data: new FormData(this),
+                    processData: false, contentType: false,
+                    success: function(res) {
+                        alert(res.message); $('#frmValue')[0].reset(); loadValues();
+                    }
+                });
+            });
+        });
+    </script>
+}

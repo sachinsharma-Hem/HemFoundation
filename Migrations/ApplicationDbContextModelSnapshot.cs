@@ -22,6 +22,97 @@ namespace HemFoundation.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("HemFoundation.Models.Entities.ActivityGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("GroupName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("InstituteId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ValueItemId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ActivityGroups");
+                });
+
+            modelBuilder.Entity("HemFoundation.Models.Entities.ActivityGroupStudent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("GroupId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ActivityGroupStudents");
+                });
+
+            modelBuilder.Entity("HemFoundation.Models.Entities.ActivitySubmission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("GroupId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<int>("InstituteId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ValueItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ActivitySubmissions");
+                });
+
             modelBuilder.Entity("HemFoundation.Models.Entities.ActivityTypeMaster", b =>
                 {
                     b.Property<int>("Id")
@@ -698,6 +789,44 @@ namespace HemFoundation.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("BillPaymentDetails");
+                });
+
+            modelBuilder.Entity("HemFoundation.Models.Entities.BulkUploadLog", b =>
+                {
+                    b.Property<int>("LogID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LogID"));
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("InstituteID")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TotalRecords")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UploadType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UploadedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("LogID");
+
+                    b.ToTable("BulkUploadLogs");
                 });
 
             modelBuilder.Entity("HemFoundation.Models.Entities.CourseAllotedTo", b =>
@@ -1589,6 +1718,9 @@ namespace HemFoundation.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
+                    b.Property<string>("PartnershipLetterPath")
+                        .HasColumnType("text");
+
                     b.Property<string>("Pincode")
                         .HasColumnType("text");
 
@@ -2422,6 +2554,127 @@ namespace HemFoundation.Migrations
                     b.ToTable("Students");
                 });
 
+            modelBuilder.Entity("HemFoundation.Models.Entities.StudentCourseMaster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CourseName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("StandardId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ThemeColor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TotalPoints")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StudentCourseMasters");
+                });
+
+            modelBuilder.Entity("HemFoundation.Models.Entities.StudentCourseModule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ModuleName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UnlockDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StudentCourseModules");
+                });
+
+            modelBuilder.Entity("HemFoundation.Models.Entities.StudentModuleContent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CardTag")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ResourceFileUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SectionHeading")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TabCategory")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StudentModuleContents");
+                });
+
             modelBuilder.Entity("HemFoundation.Models.Entities.Teacher", b =>
                 {
                     b.Property<int>("TeacherID")
@@ -2447,6 +2700,9 @@ namespace HemFoundation.Migrations
 
                     b.Property<string>("FirstName")
                         .HasColumnType("text");
+
+                    b.Property<int?>("InstituteID")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -2520,6 +2776,119 @@ namespace HemFoundation.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TeacherQuizAttempts");
+                });
+
+            modelBuilder.Entity("HemFoundation.Models.Entities.TrainingGuideMaster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MainCategory")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SubCategory")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TrainingGuideMasters");
+                });
+
+            modelBuilder.Entity("HemFoundation.Models.Entities.ValueGradeMaster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ButtonName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("GradeName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("GroupName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("StandardId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ValueGradeMasters");
+                });
+
+            modelBuilder.Entity("HemFoundation.Models.Entities.ValueItemMaster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActivityPdfUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CapacityName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("GradeId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ValueImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ValueTitleEng")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ValueTitleHin")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ValueItemMasters");
                 });
 
             modelBuilder.Entity("HemFoundation.Models.Entities.Volunteer", b =>
@@ -2615,6 +2984,100 @@ namespace HemFoundation.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("VolunteerInstituteMappings");
+                });
+
+            modelBuilder.Entity("HemFoundation.Models.Entities.VolunteerVisitPlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("ImagePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int?>("InstituteId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsOtherActivity")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Pincode")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("PlanLatitude")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PlanLongitude")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("ReportLatitude")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ReportLongitude")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("ReportedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("ScheduleDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("SchoolName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("VolunteerId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("VolunteerVisitPlans");
                 });
 
             modelBuilder.Entity("HemFoundation.Models.Entities.WebinarMcqCategory", b =>

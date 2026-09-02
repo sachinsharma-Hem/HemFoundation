@@ -1,0 +1,226 @@
+﻿@{
+    ViewData["Title"] = "Training & PBL Guides Master";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml"; // Admin Layout
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bolder text-dark m-0">
+            <i class="bi bi-collection-play-fill text-primary me-2"></i> Manage Demo & PBL Guides
+        </h4>
+    </div>
+
+    <div class="row g-4">
+        <!-- UPLOAD FORM -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+                <h6 class="fw-bold text-primary mb-4 border-bottom pb-2">Upload New Material</h6>
+                <form id="frmUploadGuide">
+                    <div class="mb-3">
+                        <label class="small fw-bold text-dark mb-1">Main Category</label>
+                        <select class="form-select shadow-none" id="ddlMainCategory" name="MainCategory" required>
+                            <option value="">-- Select Category --</option>
+                            <option value="Demo">Demo</option>
+                            <option value="PBL">PBL</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-dark mb-1">Sub Category</label>
+                        <select class="form-select shadow-none" id="ddlSubCategory" name="SubCategory" required disabled>
+                            <option value="">-- Select Main Category First --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-dark mb-1">Title (User Friendly)</label>
+                        <input type="text" class="form-control shadow-none" name="Title" placeholder="e.g. Cognitive Skills Overview" required>
+                    </div>
+
+                    <!-- TOGGLE BETWEEN FILE OR URL LINK -->
+                    <div class="mb-4 p-3 bg-light rounded-3 border">
+                        <label class="small fw-bold text-dark mb-2 d-block">Resource Type</label>
+                        <div class="d-flex gap-4">
+                            <div class="form-check">
+                                <input class="form-check-input shadow-none" type="radio" name="ResourceType" id="typeFile" value="File" checked onchange="toggleResourceInput()">
+                                <label class="form-check-label small fw-semibold" for="typeFile">Upload File</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input shadow-none" type="radio" name="ResourceType" id="typeLink" value="Link" onchange="toggleResourceInput()">
+                                <label class="form-check-label small fw-semibold" for="typeLink">Provide URL</label>
+                            </div>
+                        </div>
+
+                        <!-- File Input -->
+                        <div class="mt-3" id="divFileUpload">
+                            <input type="file" class="form-control shadow-none" name="uploadFile" id="uploadFile" accept=".mp4,.mov,.pdf,.ppt,.pptx">
+                            <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Allowed: MP4, MOV, PDF, PPTX</small>
+                        </div>
+
+                        <!-- URL Input -->
+                        <div class="mt-3 d-none" id="divVideoLink">
+                            <input type="url" class="form-control shadow-none" name="VideoLink" id="txtVideoLink" placeholder="e.g. https://youtube.com/...">
+                            <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Enter YouTube, Drive, or external video URL</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
+                        <i class="bi bi-cloud-arrow-up-fill me-1"></i> Save Guide
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- UPLOADED LIST -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+                <h6 class="fw-bold text-dark mb-4 border-bottom pb-2">Uploaded Materials</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle border rounded-3 overflow-hidden" id="tblGuides">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Category Structure</th>
+                                <th>Title</th>
+                                <th>Format</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const subCategories = {
+            "Demo": ["School Demo Video", "Student Demo Video", "Teacher Demo Video", "School PPT", "Student PPT", "Teacher PPT"],
+            "PBL": ["Cognitive PBL", "Social PBL", "Ethical PBL", "Emotional PBL", "Life Skills PBL"]
+        };
+
+        $(document).ready(function () {
+            loadGuides();
+
+            $('#ddlMainCategory').on('change', function () {
+                let mainCat = $(this).val();
+                let $subCat = $('#ddlSubCategory');
+                
+                if (mainCat && subCategories[mainCat]) {
+                    $subCat.prop('disabled', false).empty().append('<option value="">-- Select Sub Category --</option>');
+                    subCategories[mainCat].forEach(sub => {
+                        $subCat.append(`<option value="${sub}">${sub}</option>`);
+                    });
+                } else {
+                    $subCat.prop('disabled', true).empty().append('<option value="">-- Select Main Category First --</option>');
+                }
+            });
+
+            $('#frmUploadGuide').on('submit', function (e) {
+                e.preventDefault();
+                let $btn = $(this).find('button[type="submit"]');
+                let originalText = $btn.html();
+                
+                // Validation
+                let isFile = $('#typeFile').is(':checked');
+                if (isFile && !$('#uploadFile').val()) { alert("Please select a file."); return; }
+                if (!isFile && !$('#txtVideoLink').val()) { alert("Please enter a URL link."); return; }
+
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Uploading...');
+
+                $.ajax({
+                    url: '/api/guide/upload',
+                    type: 'POST',
+                    data: new FormData(this),
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        if (res.success) {
+                            alert(res.message);
+                            $('#frmUploadGuide')[0].reset();
+                            $('#ddlSubCategory').prop('disabled', true).empty().append('<option value="">-- Select Main Category First --</option>');
+                            toggleResourceInput(); // Reset UI toggle
+                            loadGuides();
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        let errMsg = "Upload failed.";
+                        if(xhr.responseJSON && xhr.responseJSON.message) errMsg = xhr.responseJSON.message;
+                        alert(errMsg);
+                    },
+                    complete: function () {
+                        $btn.prop('disabled', false).html(originalText);
+                    }
+                });
+            });
+        });
+
+        // Function to toggle between File Upload and URL Link
+        function toggleResourceInput() {
+            let type = $('input[name="ResourceType"]:checked').val();
+            if (type === 'File') {
+                $('#divFileUpload').removeClass('d-none');
+                $('#divVideoLink').addClass('d-none');
+                $('#txtVideoLink').val('');
+            } else {
+                $('#divFileUpload').addClass('d-none');
+                $('#divVideoLink').removeClass('d-none');
+                $('#uploadFile').val('');
+            }
+        }
+
+        function loadGuides() {
+            $.get('/api/guide/list', function (res) {
+                let html = '';
+                if (res.success && res.data.length > 0) {
+                    res.data.forEach(item => {
+                        let isVideoOrLink = item.fileType === 'Video' || item.fileType === 'VideoLink';
+                        let icon = isVideoOrLink ? '<i class="bi bi-play-circle-fill text-danger fs-4"></i>' : '<i class="bi bi-file-earmark-pdf-fill text-danger fs-4"></i>';
+                        let badgeColor = item.mainCategory === 'Demo' ? 'bg-primary' : 'bg-success';
+                        
+                        html += `
+                        <tr>
+                            <td>
+                                <span class="badge ${badgeColor} shadow-sm mb-1">${item.mainCategory}</span><br>
+                                <span class="small fw-semibold text-muted">${item.subCategory}</span>
+                            </td>
+                            <td class="fw-bold text-dark">${item.title}</td>
+                            <td>${icon} <span class="small fw-bold ms-1">${item.fileType}</span></td>
+                            <td>
+                                <div class="btn-group shadow-sm">
+                                    <a href="${item.fileUrl}" target="_blank" class="btn btn-sm btn-light border" title="View Resource">
+                                        <i class="bi bi-box-arrow-up-right text-primary"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-light border text-danger" onclick="deleteGuide(${item.id})" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    });
+                } else {
+                    html = '<tr><td colspan="4" class="text-center text-muted py-4">No materials uploaded yet.</td></tr>';
+                }
+                $('#tblGuides tbody').html(html);
+            });
+        }
+
+        function deleteGuide(id) {
+            if (confirm("Are you sure you want to delete this guide?")) {
+                $.ajax({
+                    url: '/api/guide/delete/' + id,
+                    type: 'DELETE',
+                    success: function (res) {
+                        alert(res.message);
+                        loadGuides();
+                    }
+                });
+            }
+        }
+    </script>
+}

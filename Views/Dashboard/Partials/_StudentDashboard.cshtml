@@ -1,4 +1,156 @@
-﻿@page
-@model HemFoundation.Views.Dashboard.Partials._StudentDashboardModel
+﻿@model HemFoundation.Views.Dashboard.Partials._StudentDashboardModel
 @{
+    int standardId = ViewBag.StandardId ?? 0;
 }
+
+<!-- Hidden field to pass Standard ID to Main Script -->
+<input type="hidden" id="hdnStudentStandardId" value="@standardId" />
+
+<div class="row g-0 h-100" style="min-height: 85vh; background-color: #f4f7f6;">
+    
+    <!-- LEFT SIDEBAR: LEARNING SYLLABUS -->
+    <div class="col-xl-3 col-md-4 bg-white border-end shadow-sm" style="overflow-y: auto; max-height: 85vh;">
+        <div class="p-3 sticky-top bg-white border-bottom z-1">
+            <h6 class="fw-bold text-dark m-0"><i class="bi bi-compass text-primary me-2"></i> Learning Syllabus</h6>
+            <small class="text-muted d-block mt-1">Standard: <span class="fw-bold text-dark">@ViewBag.StandardName</span></small>
+        </div>
+        
+        <div class="p-3" id="syllabusContainer">
+            <div class="text-center py-5 text-muted">
+                <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+                <p class="small fw-bold">Loading your syllabus...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: WORKSPACE -->
+    <div class="col-xl-9 col-md-8 p-4 bg-light">
+        
+        <!-- DEFAULT WORKSPACE (Visible Initially) -->
+        <div id="workspaceDefault">
+            <div class="p-4 rounded-3 shadow-sm mb-4 text-white" style="background-color: #0078b7;">
+                <span class="text-uppercase small fw-bold tracking-wider" style="opacity: 0.8;">Student Performance Desk</span>
+                <h2 class="fw-bolder mt-1 mb-2">Welcome to Your Workspace, @(ViewBag.StudentName ?? "Student")!</h2>
+                <p class="mb-0" style="opacity: 0.9; font-size: 0.95rem;">Expand your categories on the left track tree and pick an active course milestone row to access curriculum assignments and grading elements.</p>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-lg-3 col-sm-6"><div class="card border-0 shadow-sm p-3 rounded-3 h-100"><div class="text-muted small fw-bold text-uppercase"><i class="bi bi-journal-text text-primary fs-5 me-1 align-middle"></i> Assigned</div><h4 class="fw-bolder mt-2 m-0 text-dark">@ViewBag.AssignedCourses Courses</h4></div></div>
+                <div class="col-lg-3 col-sm-6"><div class="card border-0 shadow-sm p-3 rounded-3 h-100"><div class="text-muted small fw-bold text-uppercase"><i class="bi bi-check-circle-fill text-success fs-5 me-1 align-middle"></i> Completed</div><h4 class="fw-bolder mt-2 m-0 text-dark">@ViewBag.CompletedModules Modules</h4></div></div>
+                <div class="col-lg-3 col-sm-6"><div class="card border-0 shadow-sm p-3 rounded-3 h-100"><div class="text-muted small fw-bold text-uppercase"><i class="bi bi-trophy-fill text-warning fs-5 me-1 align-middle"></i> Total Marks</div><h4 class="fw-bolder mt-2 m-0 text-dark">@ViewBag.TotalMarks Pts</h4></div></div>
+                <div class="col-lg-3 col-sm-6"><div class="card border-0 shadow-sm p-3 rounded-3 h-100"><div class="text-muted small fw-bold text-uppercase"><i class="bi bi-patch-check-fill text-purple fs-5 me-1 align-middle" style="color: #8b5cf6;"></i> Certificates</div><h4 class="fw-bolder mt-2 m-0 text-dark">@ViewBag.CertificatesEarned Earned</h4></div></div>
+            </div>
+
+            <div class="alert bg-white border shadow-sm rounded-3 p-4 d-flex align-items-start" style="border-left: 5px solid #0d6efd !important;">
+                <i class="bi bi-quote fs-1 text-primary me-3 opacity-50" style="line-height: 0;"></i>
+                <div>
+                    <h6 class="fw-bold text-dark">Tip for Today:</h6>
+                    <p class="mb-0 text-muted small">Check your marked results inside sub-tabs. Completing practical labs unlocks reward coins, while mandatory week-end MCQs expand your path to certificates.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULE CONTENT TABS (Visible when clicked) -->
+        <div id="modulePanel" class="d-none">
+            
+            <!-- PREMIUM GLASS HEADER -->
+            <div class="glass-header rounded-top-4 p-4 pb-0 position-relative">
+                <span class="text-uppercase small fw-bold tracking-wider text-muted">Module Control Hub</span>
+                <h2 class="fw-bolder mt-1 mb-4 text-dark" id="lblSelectedModuleTitle">Loading...</h2>
+                       
+                <!-- TABS (Cleaned up inline classes to let CSS handle it perfectly) -->
+                <ul class="nav custom-glass-tabs" id="moduleContentTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#tabPath"><i class="bi bi-mortarboard me-2 text-primary"></i>Learning Path</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#tabLabs"><i class="bi bi-flask me-2 text-info"></i>Practical Labs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#tabVideos"><i class="bi bi-camera-video me-2 text-danger"></i>Videos & Documents</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#tabAssessments"><i class="bi bi-card-checklist me-2 text-warning"></i>Assessments</a>
+                    </li>
+                </ul>
+            </div>
+                   
+            <!-- TAB CONTENT AREA -->
+            <div class="tab-content bg-white p-4 rounded-bottom-4 shadow-sm min-vh-50" style="border: 1px solid rgba(0,0,0,0.08); border-top: none;">
+                <div class="tab-pane fade show active" id="tabLabs">
+                    <h5 class="text-muted"><i class="bi bi-tools text-warning me-2"></i> Practical Labs will load here...</h5>
+                </div>
+                <div class="tab-pane fade" id="tabPath">Learning Path details...</div>
+                <div class="tab-pane fade" id="tabVideos">Videos list...</div>
+                <div class="tab-pane fade" id="tabAssessments">MCQ logic...</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* =========================================
+       Left Sidebar Navigation Styles
+       ========================================= */
+    .course-header { border-left: 4px solid #dee2e6; cursor: pointer; transition: all 0.3s; background: #fff; }
+    .course-header:hover { background: #f8f9fa; }
+    .course-header.active { border-left-color: #10b981; background-color: #ecfdf5; }
+    .module-item { border: 1px solid #e9ecef; transition: 0.2s; background: #fff; }
+    .module-item:hover { border-color: #0d6efd !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+    /* =========================================
+       Light Theme Glassmorphism (Frosted Glass)
+       ========================================= */
+    .glass-header {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.75)) !important; 
+        backdrop-filter: blur(16px); 
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 1); 
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08); 
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    }
+
+    /* =========================================
+       Premium Clean Tabs UI
+       ========================================= */
+    .custom-glass-tabs {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: -1px; /* Align perfectly with bottom border */
+        list-style: none;
+        padding-left: 0;
+    }
+    
+    .custom-glass-tabs .nav-link {
+        background-color: transparent !important;
+        border: none !important;
+        border-bottom: 3px solid transparent !important;
+        color: #64748b !important; /* Slate 500 */
+        padding: 0.75rem 0.25rem 0.85rem 0.25rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .custom-glass-tabs .nav-link:hover {
+        color: #0f172a !important; /* Dark Slate on hover */
+        border-bottom-color: rgba(13, 110, 253, 0.3) !important;
+    }
+    
+    .custom-glass-tabs .nav-link.active {
+        color: #0d6efd !important; /* Solid Bootstrap Primary Blue */
+        border-bottom-color: #0d6efd !important;
+    }
+
+    /* Make icons slightly muted unless active */
+    .custom-glass-tabs .nav-link i {
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+    }
+    .custom-glass-tabs .nav-link.active i,
+    .custom-glass-tabs .nav-link:hover i {
+        opacity: 1;
+    }
+</style>

@@ -30,6 +30,8 @@ namespace HemFoundation.Models.Entities
         public string? State { get; set; }
         public string? Pincode { get; set; }
         public string? ReferredByAffiliateId { get; set; } // Affiliate ID dropdown selection
+                                                           // Partnership Letter Path store karne ke liye
+        public string? PartnershipLetterPath { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     }
 }

@@ -1,0 +1,328 @@
+﻿@{
+    ViewData["Title"] = "Activity Submission";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    int valueItemId = ViewBag.ValueItemId;
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="custom-page-header mb-4 p-4 rounded-4 shadow-sm text-white d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="fw-bolder mb-1" id="lblActivityTitle">Loading Activity...</h3>
+            <span class="badge bg-light text-primary px-3 py-2 rounded-pill shadow-sm" id="lblGrade">Grade</span>
+        </div>
+        <a href="/ValueOfYear/Index" class="btn btn-light rounded-pill fw-bold text-primary px-4 shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Calendar
+        </a>
+    </div>
+
+    <!-- STEP 1: TEAM/GROUP MANAGEMENT -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4 glass-card-bg">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-people-fill text-primary me-2"></i> Step 1: Manage Student Teams</h5>
+        
+        <div class="alert bg-warning-subtle text-warning border-warning-subtle fw-semibold d-none rounded-3" id="alertUnassigned">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> All students must be assigned to a team to unlock the Activity Submission section.
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Panel: Create Teams -->
+            <div class="col-md-4 border-end pe-md-4">
+                <h6 class="fw-bold text-muted mb-3">1. Create New Team</h6>
+                <div class="input-group mb-4 shadow-sm">
+                    <input type="text" id="txtNewGroupName" class="form-control shadow-none bg-light border-0" placeholder="e.g. Group A">
+                    <button class="btn btn-primary fw-bold px-3" onclick="addGroup()"><i class="bi bi-plus-lg"></i> Add</button>
+                </div>
+                <div id="groupBadgesContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
+
+                <hr class="text-muted">
+
+                <h6 class="fw-bold text-muted mb-3">2. Bulk Assign Students</h6>
+                <div class="bg-light p-3 rounded-3 border mb-3">
+                    <label class="small fw-bold text-dark mb-1">Auto-Check Unassigned Students</label>
+                    <div class="input-group input-group-sm mb-3 shadow-sm">
+                        <input type="number" id="txtAutoCheck" class="form-control shadow-none border-0" placeholder="Qty (e.g. 50)" min="1">
+                        <button class="btn btn-dark fw-bold px-3" onclick="autoCheckStudents()"><i class="bi bi-check2-all"></i> Check</button>
+                    </div>
+
+                    <label class="small fw-bold text-dark mb-1">Assign Checked To Team</label>
+                    <div class="input-group input-group-sm shadow-sm">
+                        <select id="ddlBulkTeam" class="form-select shadow-none border-0">
+                            <option value="">-- Select Team --</option>
+                        </select>
+                        <button class="btn btn-success fw-bold px-3" onclick="assignSelected()"><i class="bi bi-person-check-fill"></i> Assign</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel: Student List -->
+            <div class="col-md-8 ps-md-4">
+                <h6 class="fw-bold text-muted mb-3">Student Roster</h6>
+                <div class="table-responsive border rounded-3 shadow-sm" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0" id="tblStudents">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th width="5%"><input type="checkbox" id="checkAll" class="form-check-input shadow-none" onclick="toggleAllChecks()"></th>
+                                <th>Student Name</th>
+                                <th>Current Team</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <button class="btn btn-primary w-100 rounded-pill fw-bold mt-4 py-2 shadow-sm fs-5" onclick="saveGroups()">
+                    <i class="bi bi-save me-1"></i> Save Teams & Unlock Submission
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 2: ACTIVITY SUBMISSION (Capacity Wise) -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 glass-card-bg d-none" id="submissionSection">
+        <h5 class="fw-bold text-dark mb-4 border-bottom pb-3"><i class="bi bi-cloud-arrow-up-fill text-success me-2"></i> Step 2: Capacity Activity Submission</h5>
+
+        <div id="uploadFormContainer">
+            <div class="card bg-light border-0 rounded-4 p-4">
+                <form id="frmSubmitActivity">
+                    <input type="hidden" name="ValueItemId" value="@valueItemId" />
+                    
+                    <div class="mb-3 bg-white p-3 rounded-3 border">
+                        <label class="small fw-bold text-dark mb-2">Upload Image Activity (*.jpeg, *.jpg, *.png)</label>
+                        <input type="file" class="form-control shadow-none" name="ImageFile" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3 bg-white p-3 rounded-3 border">
+                        <label class="small fw-bold text-dark mb-2">Upload Video Activity (*.mp4, *.mov)</label>
+                        <input type="file" class="form-control shadow-none" name="VideoFile" accept="video/mp4,video/quicktime">
+                    </div>
+
+                    <div class="mb-4 bg-white p-3 rounded-3 border">
+                        <label class="small fw-bold text-dark mb-2">Enter Comment / Observation</label>
+                        <textarea class="form-control shadow-none" name="Comment" rows="3" placeholder="Write your overall observation for this capacity here..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold py-2 shadow-sm fs-5">
+                        <i class="bi bi-check-circle-fill me-1"></i> Submit Capacity Activity
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-page-header { background: linear-gradient(135deg, #6236d6 0%, #8b5cf6 100%); }
+    .glass-card-bg { background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.05); }
+    .student-cb { cursor: pointer; }
+</style>
+
+@section Scripts {
+    <script>
+        let VID = @valueItemId;
+        let students = []; // Array of { id, name, team: '' }
+        let groups = [];   // Array of string names
+        let existingSubmission = null;
+
+        $(document).ready(function () {
+            loadPageData();
+        });
+
+        function loadPageData() {
+            $.get('/api/value/activity-page-data/' + VID, function (res) {
+                if (res.success) {
+                    $('#lblActivityTitle').text(res.activity.valueTitleEng + ' (' + res.activity.capacityName + ')');
+                    $('#lblGrade').text(res.activity.gradeName);
+                    
+                    groups = res.groups.map(g => g.groupName);
+                    if(groups.length === 0) { groups = ['Group 1']; }
+                    
+                    students = res.students.map(s => {
+                        let assignedTeam = '';
+                        res.groups.forEach(g => {
+                            if(g.studentIds.includes(s.id)) assignedTeam = g.groupName;
+                        });
+                        return { id: s.id, name: s.name, team: assignedTeam };
+                    });
+
+                    existingSubmission = res.submissions.length > 0 ? res.submissions[0] : null;
+                    
+                    renderGroupManagement();
+                }
+            });
+        }
+
+        // ================= TEAM CREATION & RENDERING =================
+        function addGroup() {
+            let name = $('#txtNewGroupName').val().trim();
+            if(!name || groups.includes(name)) return;
+            groups.push(name);
+            $('#txtNewGroupName').val('');
+            renderGroupManagement();
+        }
+
+        function removeGroup(name) { 
+            groups = groups.filter(g => g !== name);
+            // Unassign students from this group
+            students.forEach(s => { if(s.team === name) s.team = ''; });
+            renderGroupManagement(); 
+        }
+
+        function renderGroupManagement() {
+            // Render Badges
+            let badgeHtml = '';
+            groups.forEach(g => {
+                badgeHtml += `<span class="badge bg-purple text-white px-3 py-2 fs-6 shadow-sm" style="background-color: #6236d6;">${g} <i class="bi bi-x-circle ms-2" style="cursor:pointer;" onclick="removeGroup('${g}')"></i></span>`;
+            });
+            $('#groupBadgesContainer').html(badgeHtml);
+
+            // Populate Bulk Dropdown
+            let ddlHtml = '<option value="">-- Select Team --</option>';
+            groups.forEach(g => ddlHtml += `<option value="${g}">${g}</option>`);
+            $('#ddlBulkTeam').html(ddlHtml);
+
+            // Render Student Table
+            let tableHtml = '';
+            let unassignedCount = 0;
+
+            students.forEach(s => {
+                if(!s.team) unassignedCount++;
+                let teamBadge = s.team 
+                    ? `<span class="badge bg-success-subtle text-success border border-success-subtle">${s.team}</span>` 
+                    : `<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Unassigned</span>`;
+
+                tableHtml += `<tr>
+                    <td><input type="checkbox" class="form-check-input shadow-none student-cb" value="${s.id}" data-team="${s.team}"></td>
+                    <td class="fw-semibold text-dark">${s.name}</td>
+                    <td>${teamBadge}</td>
+                </tr>`;
+            });
+            $('#tblStudents tbody').html(tableHtml);
+
+            // Reset select all
+            $('#checkAll').prop('checked', false);
+
+            // Toggle Submission Section
+            if(unassignedCount > 0 || students.length === 0) {
+                $('#alertUnassigned').removeClass('d-none');
+                $('#submissionSection').addClass('d-none');
+            } else {
+                $('#alertUnassigned').addClass('d-none');
+                $('#submissionSection').removeClass('d-none');
+                renderSubmissionSection();
+            }
+        }
+
+        // ================= BULK ASSIGNMENT LOGIC =================
+        function toggleAllChecks() {
+            let isChecked = $('#checkAll').is(':checked');
+            $('.student-cb').prop('checked', isChecked);
+        }
+
+        function autoCheckStudents() {
+            let count = parseInt($('#txtAutoCheck').val());
+            if(isNaN(count) || count <= 0) return;
+
+            $('.student-cb').prop('checked', false); // Reset all
+            let checkedCount = 0;
+
+            $('.student-cb').each(function() {
+                let isUnassigned = !$(this).data('team');
+                if (isUnassigned && checkedCount < count) {
+                    $(this).prop('checked', true);
+                    checkedCount++;
+                }
+            });
+        }
+
+        function assignSelected() {
+            let selectedTeam = $('#ddlBulkTeam').val();
+            if(!selectedTeam) { alert("Please select a team from the dropdown to assign."); return; }
+
+            let assignedAny = false;
+            $('.student-cb:checked').each(function() {
+                let sid = parseInt($(this).val());
+                let student = students.find(s => s.id === sid);
+                if(student) {
+                    student.team = selectedTeam;
+                    assignedAny = true;
+                }
+            });
+
+            if(!assignedAny) { alert("Please check at least one student to assign."); return; }
+
+            $('#txtAutoCheck').val(''); // Clear input
+            renderGroupManagement(); // Re-render updates the UI
+        }
+
+        function saveGroups() {
+            let hasUnassigned = students.some(s => !s.team);
+            if(hasUnassigned) {
+                alert("Please assign all students to a team before saving."); return;
+            }
+
+            let payload = groups.map(gName => ({ 
+                groupName: gName, 
+                studentIds: students.filter(s => s.team === gName).map(s => s.id) 
+            }));
+
+            let $btn = $(event.currentTarget);
+            let originalText = $btn.html();
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Saving...');
+
+            $.ajax({
+                url: '/api/value/save-groups/' + VID,
+                type: 'POST', 
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    if(res.success){
+                        alert(res.message);
+                        loadPageData(); 
+                    } else { alert(res.message); }
+                },
+                error: function(xhr) {
+                    alert("Error saving groups.");
+                },
+                complete: function() { $btn.prop('disabled', false).html(originalText); }
+            });
+        }
+
+        // ================= SUBMISSION MANAGEMENT (CAPACITY WISE) =================
+        function renderSubmissionSection() {
+            if(existingSubmission) {
+                $('#uploadFormContainer').html(`
+                    <div class="alert alert-success fw-bold p-4 rounded-4 shadow-sm border-0 d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill fs-2 me-3"></i> 
+                        <div>
+                            <h5 class="mb-1 fw-bolder">Capacity Activity Completed!</h5>
+                            <p class="mb-0 text-dark fw-normal">You have successfully submitted the activity for this capacity.</p>
+                        </div>
+                    </div>
+                    <div class="card bg-light border-0 rounded-4 p-4 mt-3">
+                        <p class="mb-3"><b>Your Observation:</b> <br> ${existingSubmission.comment || 'N/A'}</p>
+                        <div class="d-flex gap-2">
+                            ${existingSubmission.imageUrl ? `<a href="${existingSubmission.imageUrl}" target="_blank" class="btn btn-outline-dark fw-bold rounded-pill"><i class="bi bi-image"></i> View Image</a>` : ''}
+                            ${existingSubmission.videoUrl ? `<a href="${existingSubmission.videoUrl}" target="_blank" class="btn btn-outline-dark fw-bold rounded-pill"><i class="bi bi-camera-video"></i> View Video</a>` : ''}
+                        </div>
+                    </div>
+                `);
+            }
+        }
+
+        $('#frmSubmitActivity').on('submit', function(e) {
+            e.preventDefault();
+            let $btn = $(this).find('button[type="submit"]');
+            let originalText = $btn.html();
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Submitting...');
+
+            $.ajax({
+                url: '/api/value/submit-activity', type: 'POST', data: new FormData(this),
+                processData: false, contentType: false,
+                success: function(res) {
+                    alert(res.message);
+                    loadPageData(); // Reloads to show success message
+                },
+                complete: function() { $btn.prop('disabled', false).html(originalText); }
+            });
+        });
+    </script>
+}

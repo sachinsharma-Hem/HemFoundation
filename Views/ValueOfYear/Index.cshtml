@@ -1,0 +1,258 @@
+﻿@{
+    ViewData["Title"] = "Values Of The Year - Annual Calendar";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml"; // School portal layout
+}
+
+<div class="container-fluid py-4">
+
+    <!-- ================= PREMIUM HEADER ================= -->
+    <div class="custom-page-header mb-4 p-4 rounded-4 shadow-sm text-white position-relative overflow-hidden">
+        <!-- Background decoration elements -->
+        <div class="header-decoration position-absolute opacity-25">
+            <i class="bi bi-heart-fill" style="font-size: 15rem; top: -50px; right: -20px; position: absolute;"></i>
+        </div>
+        
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center position-relative z-1">
+            <div class="mb-3 mb-md-0">
+                <h2 class="fw-bolder mb-1 d-flex align-items-center">
+                    <i class="bi bi-award-fill me-2 fs-2"></i> Values of the Year
+                </h2>
+                <p class="mb-0 opacity-75 small fs-6">Select your grade level to explore courses, track progress, and complete learning modules.</p>
+            </div>
+            
+            <!-- Dashboard Button (Visible in View 1) -->
+            <a href="/School/Dashboard" id="btnDashboard" class="btn btn-light rounded-pill fw-bold text-primary px-4 py-2 shadow-sm transition-hover">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+            
+            <!-- Back to Grades Button (Visible in View 2) -->
+            <button id="btnBackToGrades" class="btn btn-light rounded-pill fw-bold text-primary px-4 py-2 shadow-sm transition-hover d-none" onclick="showGradesView()">
+                <i class="bi bi-arrow-left me-1"></i> Back to Grades
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= VIEW 1: GRADES LIST ================= -->
+    <div id="gradesView">
+        <div class="row g-4" id="gradesContainer">
+            <!-- Loader -->
+            <div class="col-12 text-center text-muted py-5" id="gradesLoader">
+                <div class="spinner-border text-purple mb-2" role="status"></div>
+                <p class="fw-semibold text-purple">Loading your active grades...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= VIEW 2: CAPACITIES LIST ================= -->
+    <div id="capacitiesView" class="d-none">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4 glass-card-bg">
+            <div class="text-center mb-4">
+                <h4 class="fw-bolder text-dark mb-0 d-inline-block border-bottom border-primary border-3 pb-2" id="selectedGradeTitle">
+                    <span class="text-primary">Grade - 3</span> - Annual Activity Calendar
+                </h4>
+            </div>
+            
+            <div class="row row-cols-1 row-cols-md-3 row-cols-xl-5 g-4" id="capacitiesContainer">
+                <!-- Capacities cards will load here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 1. Header Styling */
+    .custom-page-header {
+        background: linear-gradient(135deg, #6236d6 0%, #8b5cf6 100%);
+    }
+    .text-purple { color: #6236d6 !important; }
+
+    /* NAYA: Purple Button Style */
+    .btn-purple {
+        background-color: #6236d6;
+        color: #fff;
+        border: none;
+    }
+    .btn-purple:hover {
+        background-color: #4c1d95;
+        color: #fff;
+    }
+
+    /* 2. Grade Cards */
+    .grade-card {
+        border-radius: 1rem;
+        border: 1px solid rgba(0,0,0,0.05);
+        background: #fff;
+        transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        overflow: hidden;
+    }
+    .grade-card:hover {
+        transform: translateY(-7px);
+        box-shadow: 0 15px 30px rgba(98, 54, 214, 0.15) !important;
+    }
+    .grade-card-top {
+        background-color: #f3e8ff; /* Soft light purple */
+        padding: 2rem 1rem;
+        border-bottom: 2px solid #e9d5ff;
+    }
+    .grade-title { color: #4c1d95; font-weight: 800; font-size: 1.5rem; }
+    .grade-subtitle { color: #6d28d9; font-weight: 700; letter-spacing: 1px; font-size: 0.75rem; }
+    .btn-warning-custom {
+        background-color: #48b703e8; 
+        color: #000;
+        border: none;
+    }
+    .btn-warning-custom:hover { background-color: #f39c12; }
+
+    /* 3. Capacity Cards (Glassmorphism & Soft UI) */
+    .glass-card-bg {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    .capacity-card {
+        border-radius: 1rem;
+        border: 1px solid #e9ecef;
+        background: #fff;
+        transition: all 0.4s ease;
+        overflow: hidden;
+    }
+    .capacity-card:hover {
+        border-color: #0d6efd;
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(13, 110, 253, 0.15);
+    }
+    .capacity-img {
+        height: 140px; 
+        object-fit: cover; 
+        width: 100%; 
+        border-bottom: 3px solid #f1c40f; /* Yellow thin border under image */
+    }
+    .capacity-badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+        padding: 3px 15px;
+        border-radius: 20px;
+        background: #f8f9fa;
+        display: inline-block;
+    }
+    .transition-hover { transition: all 0.2s; }
+    .transition-hover:hover { transform: scale(1.05); }
+</style>
+
+@section Scripts {
+    <script>
+        let calendarData = [];
+
+        $(document).ready(function () {
+            loadSchoolCalendar();
+        });
+
+        function loadSchoolCalendar() {
+            $.get('/api/value/school-calendar', function (res) {
+                $('#gradesLoader').hide();
+                if (res.success && res.data.length > 0) {
+                    calendarData = res.data;
+                    renderGrades();
+                } else {
+                    $('#gradesContainer').html(`
+                        <div class="col-12 text-center py-5">
+                            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="bi bi-folder-x text-muted fs-1"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark">No Active Grades Found</h5>
+                            <p class="text-muted small">Register students in different standards to unlock their value calendars.</p>
+                        </div>
+                    `);
+                }
+            });
+        }
+
+        function renderGrades() {
+            let html = '';
+            calendarData.forEach(grade => {
+                html += `
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="card grade-card shadow-sm h-100 text-center">
+                        <div class="grade-card-top">
+                            <div class="grade-title mb-1">${grade.gradeName}</div>
+                            <div class="grade-subtitle text-uppercase">${grade.groupName}</div>
+                        </div>
+                        <div class="p-3 bg-white">
+                            <button class="btn btn-warning-custom w-100 rounded-pill fw-bold shadow-sm" onclick="showCapacities(${grade.id})">
+                                <i class="bi bi-play-circle-fill me-1"></i> Start
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            $('#gradesContainer').html(html);
+        }
+
+        function showCapacities(gradeId) {
+            let grade = calendarData.find(g => g.id === gradeId);
+            if (!grade) return;
+
+            // Set Title dynamically
+            $('#selectedGradeTitle').html(`<span class="text-primary">${grade.gradeName}</span> - Annual Activity`);
+            
+            let html = '';
+            if (grade.capacities && grade.capacities.length > 0) {
+                grade.capacities.forEach(cap => {
+                    let imgUrl = cap.valueImageUrl || '/images/default-value.jpg';
+                    
+                    // NAYA: Dynamic Action Button (Checks isCompleted flag)
+                    let actionBtn = cap.isCompleted 
+                        ? `<a href="/ValueOfYear/ActivitySubmission/${cap.id}" class="btn btn-success w-100 rounded-pill fw-bold btn-sm shadow-sm"><i class="bi bi-check-circle-fill me-1"></i> Completed</a>`
+                        : `<a href="/ValueOfYear/ActivitySubmission/${cap.id}" class="btn btn-purple w-100 rounded-pill fw-bold btn-sm shadow-sm"><i class="bi bi-play-fill me-1"></i> Start</a>`;
+                    
+                    html += `
+                    <div class="col">
+                        <div class="card capacity-card h-100 d-flex flex-column">
+                            <img src="${imgUrl}" class="capacity-img" alt="${cap.valueTitleEng}">
+                            <div class="card-body text-center p-3 d-flex flex-column">
+                                <div class="mb-2">
+                                    <span class="capacity-badge shadow-sm">${cap.capacityName}</span>
+                                </div>
+                                <h6 class="fw-bolder text-dark mb-0">${cap.valueTitleEng}</h6>
+                                <p class="small text-muted mb-3 fw-semibold">${cap.valueTitleHin}</p>
+                                
+                                <div class="mt-auto d-flex gap-2">
+                                    ${cap.activityPdfUrl ? 
+                                        `<a href="${cap.activityPdfUrl}" target="_blank" class="btn btn-primary w-100 rounded-pill fw-bold btn-sm shadow-sm">
+                                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> View Activity
+                                        </a>` : 
+                                        `<button class="btn btn-secondary w-100 rounded-pill fw-bold btn-sm" disabled>No PDF</button>`
+                                    }
+                                    <!-- Dynamic Start/Completed Button -->
+                                    ${actionBtn}
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            } else {
+                html = `<div class="col-12 text-center text-muted py-4 fw-bold">No capacities added for this grade yet.</div>`;
+            }
+
+            $('#capacitiesContainer').html(html);
+
+            // Toggle Views
+            $('#gradesView').addClass('d-none');
+            $('#btnDashboard').addClass('d-none'); // Hide dashboard button
+            
+            $('#capacitiesView').removeClass('d-none').hide().fadeIn(400); // Smooth fade in
+            $('#btnBackToGrades').removeClass('d-none'); // Show back button
+        }
+
+        function showGradesView() {
+            $('#capacitiesView').addClass('d-none');
+            $('#btnBackToGrades').addClass('d-none');
+            
+            $('#btnDashboard').removeClass('d-none');
+            $('#gradesView').removeClass('d-none').hide().fadeIn(300);
+        }
+    </script>
+}

@@ -1,0 +1,338 @@
+﻿@{
+    ViewData["Title"] = "School Registration & Management Hub";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+<style>
+    /* Container Background */
+    .glass-nav-pills {
+        background-color: rgba(240, 242, 245, 0.6); /* Very soft gray */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    /* Inactive Tab Styles */
+    .glass-nav-pills .nav-link {
+        color: #6c757d;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        border: 1px solid transparent;
+        padding: 0.6rem 1rem;
+    }
+
+    /* Hover Effect for Inactive Tabs */
+    .glass-nav-pills .nav-link:hover {
+        color: #495057;
+        background-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* =========================================
+       ACTIVE TAB: THE GLASSMORPHISM EFFECT
+       ========================================= */
+    .glass-nav-pills .nav-link.active {
+        /* Soft semi-transparent theme color (Purple/Blue mix) */
+        background: linear-gradient(135deg, rgba(111, 66, 193, 0.1), rgba(13, 110, 253, 0.05)) !important;
+        
+        /* Blur Effect */
+        backdrop-filter: blur(10px) saturate(150%);
+        -webkit-backdrop-filter: blur(10px) saturate(150%);
+        
+        /* Text Color & Soft Border */
+        color: #6f42c1 !important; /* Elegant Purple Text */
+        border: 1px solid rgba(111, 66, 193, 0.25);
+        
+        /* Floating Shadow */
+        box-shadow: 0 4px 15px rgba(111, 66, 193, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+        transform: translateY(-1px);
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+        <h4 class="fw-bold text-dark mb-4"><i class="bi bi-ui-checks-grid text-primary me-2"></i> School Management & Registration Hub</h4>
+
+       <!-- 4 Tabs Navigation with Glassmorphism -->
+<ul class="nav nav-pills nav-fill gap-2 p-2 rounded-pill mb-4 glass-nav-pills shadow-sm" id="regHubTabs" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active rounded-pill fw-bold" id="student-tab" data-bs-toggle="tab" data-bs-target="#studentContent" type="button">
+            <i class="bi bi-mortarboard-fill me-2"></i> Students Directory
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link rounded-pill fw-bold" id="teacher-tab" data-bs-toggle="tab" data-bs-target="#teacherContent" type="button">
+            <i class="bi bi-people-fill me-2"></i> Teachers Directory
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link rounded-pill fw-bold" id="volunteer-tab" data-bs-toggle="tab" data-bs-target="#volunteerContent" type="button">
+            <i class="bi bi-shield-check me-2"></i> Volunteers Directory
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link rounded-pill fw-bold" id="bulk-tab" data-bs-toggle="tab" data-bs-target="#bulkContent" type="button">
+            <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i> Bulk Upload & Reports
+        </button>
+    </li>
+</ul>
+
+        <div class="tab-content" id="regHubTabsContent">
+            
+            <!-- TAB 1: STUDENTS LIST -->
+            <div class="tab-pane fade show active" id="studentContent">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark m-0">Enrolled Students</h5>
+                    <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalAddStudent">
+                        <i class="bi bi-person-plus-fill me-1"></i> Add New Student
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small border" id="studentsTable">
+                        <thead class="table-light">
+                            <tr><th>Name</th><th>Standard</th><th>Division</th><th>Guardian Name</th><th>Mobile</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 2: TEACHERS LIST -->
+            <div class="tab-pane fade" id="teacherContent">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark m-0">Active Teachers</h5>
+                    <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalAddTeacher">
+                        <i class="bi bi-person-plus-fill me-1"></i> Add New Teacher
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small border" id="teachersTable">
+                        <thead class="table-light">
+                            <tr><th>Name</th><th>Qualification</th><th>Email</th><th>Mobile</th><th>City</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: VOLUNTEERS LIST (NAYA) -->
+            <div class="tab-pane fade" id="volunteerContent">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark m-0">Assigned Volunteers</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small border" id="volunteersTable">
+                        <thead class="table-light">
+                            <tr><th>Name</th><th>Mobile</th><th>Email</th><th>Status</th><th>Added On</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 4: BULK UPLOAD -->
+            <div class="tab-pane fade" id="bulkContent">
+                <div class="card border border-primary-subtle rounded-4 p-4 bg-light mb-4">
+                    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-file-earmark-arrow-up-fill me-2"></i> Bulk Registration</h5>
+                    <form id="bulkUploadForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Select Upload Type</label>
+                            <select id="bulkUploadType" class="form-select rounded-3 shadow-none" required>
+                                <option value="Student">Students Bulk Upload</option>
+                                <option value="Teacher">Teachers Bulk Upload</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Upload Excel Workbook</label>
+                            <input type="file" id="bulkExcelFile" class="form-control rounded-3 shadow-none" accept=".xlsx, .xls" required>
+                        </div>
+                        <div class="border border-warning rounded-4 p-3 bg-white mb-3">
+                            <div class="text-warning fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Format Compliance</div>
+                            <p class="text-muted small mb-2">Ensure to use Sheet1 structure columns only. Before you upload your data, please ensure every row matches your school's required template.</p>
+                            <button type="button" id="downloadTemplateBtn" class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold">
+                                <i class="bi bi-download me-1"></i> Download Template Blueprint
+                            </button>
+                        </div>
+                        <button type="submit" class="btn btn-purple btn-sm rounded-pill px-4 fw-bold text-white shadow-sm" style="background-color: #6f42c1;">
+                            <i class="bi bi-upload me-1"></i> UPLOAD REGISTRATION EXCEL
+                        </button>
+                    </form>
+                </div>
+                <h5 class="fw-bold text-dark mb-3">Upload History</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small border" id="logsTable">
+                        <thead class="table-light">
+                            <tr><th>Type</th><th>File Name</th><th>Status</th><th>Date</th><th>Action</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODALS FOR INTERNAL REGISTRATION ================= -->
+
+<!-- ADD STUDENT MODAL -->
+<div class="modal fade" id="modalAddStudent" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="fw-bold text-primary"><i class="bi bi-mortarboard-fill me-2"></i> Register New Student</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="frmAddStudent">
+                    <input type="hidden" name="portalId" value="3" />
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="small fw-bold">First Name</label><input type="text" name="firstName" class="form-control" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Last Name</label><input type="text" name="lastName" class="form-control" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Guardian Mobile (Username)</label><input type="text" name="mobileNo" class="form-control" maxlength="10" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Guardian Email</label><input type="email" name="emailID" class="form-control" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Standard</label><select name="standard" id="ddlInternalStandard" class="form-select" required></select></div>
+                        <div class="col-md-6"><label class="small fw-bold">Division</label><input type="text" name="division" class="form-control" required></div>
+                        <div class="col-md-12"><label class="small fw-bold">Guardian Full Name</label><input type="text" name="guardianName" class="form-control" required></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill mt-4 fw-bold">Submit Student</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADD TEACHER MODAL -->
+<div class="modal fade" id="modalAddTeacher" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="fw-bold text-success"><i class="bi bi-people-fill me-2"></i> Register New Teacher</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="frmAddTeacher">
+                    <input type="hidden" name="portalId" value="2" />
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="small fw-bold">First Name</label><input type="text" name="firstName" class="form-control" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Last Name</label><input type="text" name="lastName" class="form-control" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Mobile No (Username)</label><input type="text" name="mobileNo" class="form-control" maxlength="10" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Email ID</label><input type="email" name="emailID" class="form-control" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Qualification</label><input type="text" name="qualification" class="form-control" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">City</label><input type="text" name="city" class="form-control" required></div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 rounded-pill mt-4 fw-bold">Submit Teacher</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Check URL parameter to auto-open specific tab
+            const urlParams = new URLSearchParams(window.location.search);
+            const activeTab = urlParams.get('tab');
+            if (activeTab === 'student') $('#student-tab').tab('show');
+            else if (activeTab === 'teacher') $('#teacher-tab').tab('show');
+            else if (activeTab === 'volunteer') $('#volunteer-tab').tab('show');
+            else if (activeTab === 'bulk') $('#bulk-tab').tab('show');
+
+            loadSchoolHubData();
+
+            // Load Standards into Student Modal
+            $.get('/api/universal/standards-list', function(data) {
+                let $ddl = $('#ddlInternalStandard');
+                $ddl.append('<option value="">-- Select --</option>');
+                if (data) data.forEach(i => $ddl.append(`<option value="${i.id}">${i.name}</option>`));
+            });
+
+            function loadSchoolHubData() {
+                $.get('/api/universal/school-lists', function (res) {
+                    if (res.success) {
+                        let studentRows = '';
+                        res.students.forEach(s => { studentRows += `<tr><td>${s.firstName} ${s.lastName}</td><td>${s.standard || '-'}</td><td>${s.division || '-'}</td><td>${s.gardianName || '-'}</td><td>${s.guardianMobileNo || '-'}</td></tr>`; });
+                        $('#studentsTable tbody').html(studentRows || '<tr><td colspan="5" class="text-center text-muted">No students found.</td></tr>');
+
+                        let teacherRows = '';
+                        res.teachers.forEach(t => { teacherRows += `<tr><td>${t.firstName} ${t.lastName}</td><td>${t.qualification || '-'}</td><td>${t.emailID || '-'}</td><td>${t.mobileNo || '-'}</td><td>${t.city || '-'}</td></tr>`; });
+                        $('#teachersTable tbody').html(teacherRows || '<tr><td colspan="5" class="text-center text-muted">No teachers found.</td></tr>');
+
+                        // NAYA: Populate Volunteers
+                        let volunteerRows = '';
+                        if(res.volunteers && res.volunteers.length > 0) {
+                            res.volunteers.forEach(v => {
+                                let statusBadge = v.isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-danger-subtle text-danger">Inactive</span>';
+                                volunteerRows += `<tr><td>${v.firstName} ${v.lastName}</td><td>${v.mobileNo || '-'}</td><td>${v.email || '-'}</td><td>${statusBadge}</td><td>${new Date(v.createdDate).toLocaleDateString()}</td></tr>`; 
+                            });
+                        }
+                        $('#volunteersTable tbody').html(volunteerRows || '<tr><td colspan="5" class="text-center text-muted">No assigned volunteers found.</td></tr>');
+
+                        let logRows = '';
+                        res.logs.forEach(l => { logRows += `<tr><td><span class="badge bg-info-subtle text-info">${l.uploadType}</span></td><td>${l.fileName}</td><td><span class="badge bg-success-subtle text-success">${l.status}</span></td><td>${new Date(l.uploadedDate).toLocaleString()}</td><td><a href="${l.filePath}" target="_blank" class="btn btn-sm btn-light border"><i class="bi bi-download"></i></a></td></tr>`; });
+                        $('#logsTable tbody').html(logRows || '<tr><td colspan="5" class="text-center text-muted">No bulk uploads recorded.</td></tr>');
+                    }
+                });
+            }
+
+            // AJAX Handlers for Modals using Universal API
+            $('#frmAddStudent, #frmAddTeacher').on('submit', function (e) {
+                e.preventDefault();
+                let $form = $(this);
+                let formData = new FormData(this);
+                let isStudent = $form.attr('id') === 'frmAddStudent';
+
+                $.ajax({
+                    url: '/api/universal/register',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        if (res.success) {
+                            alert(res.message);
+                            $form[0].reset();
+                            if(isStudent) $('#modalAddStudent').modal('hide');
+                            else $('#modalAddTeacher').modal('hide');
+                            loadSchoolHubData(); 
+                        }
+                    },
+                    error: function (xhr) {
+                        alert(xhr.responseJSON?.message || "Registration failed.");
+                    }
+                });
+            });
+
+            $('#downloadTemplateBtn').on('click', function () {
+                let type = $('#bulkUploadType').val();
+                window.location.href = `/api/universal/download-sample/${type}`;
+            });
+
+            $('#bulkUploadForm').on('submit', function (e) {
+                e.preventDefault();
+                let file = $('#bulkExcelFile')[0].files[0];
+                let type = $('#bulkUploadType').val();
+                if (!file) { alert("Select Excel file."); return; }
+
+                let formData = new FormData();
+                formData.append('excelFile', file);
+                formData.append('uploadType', type);
+
+                $.ajax({
+                    url: '/api/universal/bulk-upload',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (res) {
+                        if (res.success) {
+                            alert(res.message);
+                            $('#bulkUploadForm')[0].reset();
+                            loadSchoolHubData();
+                        }
+                    },
+                    error: function (xhr) {
+                        alert(xhr.responseJSON?.message || "Upload failed.");
+                    }
+                });
+            });
+        });
+    </script>
+}
