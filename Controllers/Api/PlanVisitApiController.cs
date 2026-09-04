@@ -22,7 +22,7 @@ namespace HemFoundation.Controllers.Api
         private async Task<long> GetCurrentAffiliateId()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var affiliate = await _context.Affiliates.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
+            var affiliate = await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
             return affiliate?.UserID ?? 0;
         }
 
@@ -31,12 +31,24 @@ namespace HemFoundation.Controllers.Api
         public async Task<IActionResult> GetMySchools()
         {
             long affId = await GetCurrentAffiliateId();
-            string affIdStr = affId.ToString();
 
-            var schools = await _context.Institutes
-                .Where(i => i.IsActive && i.ReferredByAffiliateId == affIdStr)
-                .Select(i => new { i.InstituteID, i.Name, i.City })
-                .OrderBy(i => i.Name)
+            var referralCode = await _context.WJ_ReferralCodes
+                .Where(x => x.UserID == affId)
+                .Select(x => x.ReferralCode)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrEmpty(referralCode))
+                return Ok(new { success = true, data = new List<object>() });
+
+            var schools = await _context.SchoolProfileDetails
+                .Where(x => x.referralcode == referralCode)
+                .Select(x => new
+                {
+                    instituteID = x.instituteid,
+                    name = x.institute_name,
+                    city = x.cityname
+                })
+                .OrderBy(x => x.name)
                 .ToListAsync();
 
             return Ok(new { success = true, data = schools });
@@ -64,26 +76,32 @@ namespace HemFoundation.Controllers.Api
         public async Task<IActionResult> GetMyVisits()
         {
             long affId = await GetCurrentAffiliateId();
+
             var visits = await _context.AffiliateVisitPlans
                 .Where(v => v.AffiliateId == affId && !v.IsDeleted)
-                .Join(_context.Institutes,
-                      v => v.InstituteID,
-                      i => i.InstituteID,
-                      (v, i) => new
-                      {
-                          v.Id,
-                          v.InstituteID,
-                          SchoolName = i.Name,
-                          SchoolCity = i.City,
-                          v.ScheduleDate,
-                          v.Purpose,
-                          v.Status,
-                          v.Remarks
-                      })
+                .Join(
+                    _context.SchoolProfileDetails,
+                    v => v.InstituteID,
+                    s => s.instituteid,
+                    (v, s) => new
+                    {
+                        v.Id,
+                        v.InstituteID,
+                        SchoolName = s.institute_name,
+                        SchoolCity = s.cityname,
+                        v.ScheduleDate,
+                        v.Purpose,
+                        v.Status,
+                        v.Remarks
+                    })
                 .OrderByDescending(v => v.ScheduleDate)
                 .ToListAsync();
 
-            return Ok(new { success = true, data = visits });
+            return Ok(new
+            {
+                success = true,
+                data = visits
+            });
         }
 
         // 4. Update Status (Pending -> Active -> Complete/Cancel)
@@ -106,15 +124,33 @@ namespace HemFoundation.Controllers.Api
         public async Task<IActionResult> GetSchoolHistory(int instituteId)
         {
             long affId = await GetCurrentAffiliateId();
+
             var history = await _context.AffiliateVisitPlans
-                .Where(v => v.AffiliateId == affId && v.InstituteID == instituteId && !v.IsDeleted)
+                .Where(v =>
+                    v.AffiliateId == affId &&
+                    v.InstituteID == instituteId &&
+                    !v.IsDeleted)
                 .OrderByDescending(v => v.ScheduleDate)
-                .Select(v => new { v.ScheduleDate, v.Purpose, v.Status, v.Remarks })
+                .Select(v => new
+                {
+                    v.ScheduleDate,
+                    v.Purpose,
+                    v.Status,
+                    v.Remarks
+                })
                 .ToListAsync();
 
-            var school = await _context.Institutes.FirstOrDefaultAsync(i => i.InstituteID == instituteId);
+            var schoolName = await _context.SchoolProfileDetails
+                .Where(s => s.instituteid == instituteId)
+                .Select(s => s.institute_name)
+                .FirstOrDefaultAsync();
 
-            return Ok(new { success = true, schoolName = school?.Name, data = history });
+            return Ok(new
+            {
+                success = true,
+                schoolName,
+                data = history
+            });
         }
     }
 

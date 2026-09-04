@@ -34,7 +34,7 @@ namespace HemFoundation.Controllers.Api
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId)) return 0;
 
-            var affiliate = await _context.Affiliates.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
+            var affiliate = await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
             return affiliate?.UserID ?? 0;
         }
 

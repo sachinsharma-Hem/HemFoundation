@@ -22,10 +22,10 @@ using System.ComponentModel.DataAnnotations.Schema;
             public string? Title { get; set; }
 
             [Column("firstname")]
-            public string FirstName { get; set; }
+            public string? FirstName { get; set; }
 
             [Column("lastname")]
-            public string LastName { get; set; }
+            public string? LastName { get; set; }
 
             [Column("gender")]
             public string? Gender { get; set; }
@@ -46,7 +46,7 @@ using System.ComponentModel.DataAnnotations.Schema;
             public string? EmailID { get; set; }
 
             [Column("addressline1")]
-            public string AddressLine1 { get; set; }
+            public string? AddressLine1 { get; set; }
 
             [Column("addressline2")]
             public string? AddressLine2 { get; set; }
@@ -91,7 +91,7 @@ using System.ComponentModel.DataAnnotations.Schema;
             public string? CityName { get; set; }
 
             [Column("password_")]
-            public string Password_ { get; set; }
+            public string? Password_ { get; set; }
 
             [Column("ismobileverified")]
             public bool? IsMobileVerified { get; set; }
@@ -100,7 +100,7 @@ using System.ComponentModel.DataAnnotations.Schema;
             public bool? IsEmailVerified { get; set; }
 
             [Column("languagepreference")]
-            public string LanguagePreference { get; set; }
+            public string? LanguagePreference { get; set; }
 
             [Column("isuserdeactivated")]
             public bool? isUserDeactivated { get; set; }

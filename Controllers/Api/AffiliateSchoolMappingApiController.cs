@@ -175,26 +175,7 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, message = $"School mappings updated successfully for {newAffName}." });
         }
 
-        // 4. Get Mapping Lifecycle History Tree for a Specific School
-        [HttpGet("school-history/{instituteId}")]
-        public async Task<IActionResult> GetSchoolHistory(int instituteId)
-        {
-            var school = await _context.Institutes.FirstOrDefaultAsync(i => i.InstituteID == instituteId);
-            if (school == null) return NotFound(new { success = false, message = "School not found." });
-
-            var logs = await _context.AffiliateSchoolMappingHistories
-                .Where(h => h.InstituteID == instituteId && !h.IsDeleted)
-                .OrderByDescending(h => h.AssignedDate)
-                .ToListAsync();
-
-            return Ok(new
-            {
-                success = true,
-                schoolName = school.Name,
-                schoolCity = school.City,
-                historyTree = logs
-            });
-        }
+       
     }
 
     public class AssignSchoolsModel

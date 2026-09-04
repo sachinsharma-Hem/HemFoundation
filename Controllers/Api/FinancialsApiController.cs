@@ -26,8 +26,11 @@ namespace HemFoundation.Controllers.Api
         private async Task<long> GetAffiliateId()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var aff = await _context.Affiliates.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
-            return aff?.UserID ?? 0;
+
+            return await _context.Users
+                .Where(x => x.AspNetUserID == userId)
+                .Select(x => x.UserID)
+                .FirstOrDefaultAsync();
         }
 
         // =========================================================================

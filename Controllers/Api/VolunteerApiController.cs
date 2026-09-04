@@ -33,10 +33,10 @@ namespace HemFoundation.Controllers.Api
             _env = env;
         }
 
-        private async Task<Affiliate?> GetCurrentAffiliate()
+        private async Task<Users?> GetCurrentAffiliate()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return await _context.Affiliates.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
+            return await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
         }
 
         // 1. GET ASSIGNED SCHOOLS (For Dropdown)
@@ -44,16 +44,32 @@ namespace HemFoundation.Controllers.Api
         public async Task<IActionResult> GetAssignedSchools()
         {
             var aff = await GetCurrentAffiliate();
-            if (aff == null) return Unauthorized();
+            if (aff == null)
+                return Unauthorized();
 
-            string affiliateIdStr = aff.UserID.ToString();
+            var referralCode = await _context.WJ_ReferralCodes
+                .Where(x => x.UserID == aff.UserID)
+                .Select(x => x.ReferralCode)
+                .FirstOrDefaultAsync();
 
-            var schools = await _context.Institutes
-                .Where(i => i.ReferredByAffiliateId == affiliateIdStr && i.IsActive)
-                .Select(i => new { i.InstituteID, Name = i.Name })
+            if (string.IsNullOrEmpty(referralCode))
+                return Ok(new { success = true, data = new List<object>() });
+
+            var schools = await _context.SchoolProfileDetails
+                .Where(x => x.referralcode == referralCode)
+                .Select(x => new
+                {
+                    instituteID = x.instituteid,
+                    Name = x.institute_name
+                })
+                .OrderBy(x => x.Name)
                 .ToListAsync();
 
-            return Ok(new { success = true, data = schools });
+            return Ok(new
+            {
+                success = true,
+                data = schools
+            });
         }
 
         // 2. GET VOLUNTEERS LIST
@@ -61,24 +77,36 @@ namespace HemFoundation.Controllers.Api
         public async Task<IActionResult> GetList()
         {
             var aff = await GetCurrentAffiliate();
-            if (aff == null) return Unauthorized();
+            if (aff == null)
+                return Unauthorized();
 
-            var list = await (from v in _context.Volunteers.Where(v => v.AffiliateId == aff.UserID && !v.IsDeleted)
-                              join i in _context.Institutes on v.InstituteId equals i.InstituteID
-                              orderby v.CreatedDate descending
-                              select new
-                              {
-                                  v.Id,
-                                  Name = v.FirstName + " " + v.LastName,
-                                  v.MobileNo,
-                                  v.Email,
-                                  SchoolName = i.Name,
-                                  v.IsActive,
-                                  v.CreatedDate,
-                                  v.InstituteId
-                              }).ToListAsync();
+            var list = await (
+                from v in _context.Volunteers
+                where v.AffiliateId == aff.UserID && !v.IsDeleted
 
-            return Ok(new { success = true, data = list });
+                join s in _context.SchoolProfileDetails
+                    on v.InstituteId equals s.instituteid
+
+                orderby v.CreatedDate descending
+
+                select new
+                {
+                    v.Id,
+                    Name = v.FirstName + " " + v.LastName,
+                    v.MobileNo,
+                    v.Email,
+                    SchoolName = s.institute_name,
+                    v.IsActive,
+                    v.CreatedDate,
+                    v.InstituteId
+                }
+            ).ToListAsync();
+
+            return Ok(new
+            {
+                success = true,
+                data = list
+            });
         }
 
         // 8. GET VOLUNTEER STATS FOR CARDS
@@ -86,23 +114,30 @@ namespace HemFoundation.Controllers.Api
         public async Task<IActionResult> GetVolunteerStats()
         {
             var aff = await GetCurrentAffiliate();
-            if (aff == null) return Unauthorized();
+            if (aff == null)
+                return Unauthorized();
 
-            string affiliateIdStr = aff.UserID.ToString();
+            var referralCode = await _context.WJ_ReferralCodes
+                .Where(x => x.UserID == aff.UserID)
+                .Select(x => x.ReferralCode)
+                .FirstOrDefaultAsync();
 
-            // 1. Active Volunteers Count
             int activeVolunteers = await _context.Volunteers
-                .CountAsync(v => v.AffiliateId == aff.UserID && v.IsActive && !v.IsDeleted);
+                .CountAsync(v =>
+                    v.AffiliateId == aff.UserID &&
+                    v.IsActive &&
+                    !v.IsDeleted);
 
-            // 2. Schools Mapped Count (Assigned schools)
-            int schoolMapped = await _context.Institutes
-                .CountAsync(i => i.ReferredByAffiliateId == affiliateIdStr && i.IsActive);
+            int schoolMapped = 0;
 
-            // 3. Assigned Tasks Count (Aapke task table ya logic ke anusaar, filhal 0 ya query rakh sakte hain)
-            int assignedTasks = 0; // Agar task table ho toh yahan count query likhein
+            if (!string.IsNullOrEmpty(referralCode))
+            {
+                schoolMapped = await _context.SchoolProfileDetails
+                    .CountAsync(x => x.referralcode == referralCode);
+            }
 
-            // 4. Total Reports Count (Aapke reports table ya logic ke anusaar)
-            int reportsCount = 0; // Agar reports table ho toh yahan count query likhein
+            int assignedTasks = 0;
+            int reportsCount = 0;
 
             return Ok(new
             {
@@ -115,78 +150,99 @@ namespace HemFoundation.Controllers.Api
         }
 
         // 3. SINGLE REGISTRATION & UPDATE
-        [HttpPost("register")]
-        public async Task<IActionResult> RegisterVolunteer([FromBody] VolunteerDto model)
-        {
-            var aff = await GetCurrentAffiliate();
-            if (aff == null) return Unauthorized();
+        //[HttpPost("register")]
+        //public async Task<IActionResult> RegisterVolunteer([FromBody] VolunteerDto model)
+        //{
+        //    var aff = await GetCurrentAffiliate();
+        //    if (aff == null) return Unauthorized();
 
-            if (model.Id > 0)
-            {
-                var vol = await _context.Volunteers.FirstOrDefaultAsync(v => v.Id == model.Id && v.AffiliateId == aff.UserID);
-                if (vol == null) return NotFound(new { success = false, message = "Volunteer not found." });
+        //    if (model.Id > 0)
+        //    {
+        //        // Update Logic (Agar pehle se hai)
+        //        var vol = await _context.Volunteers.FirstOrDefaultAsync(v => v.Id == model.Id && v.AffiliateId == aff.UserID);
+        //        if (vol == null) return NotFound(new { success = false, message = "Volunteer not found." });
 
-                vol.FirstName = model.FirstName;
-                vol.LastName = model.LastName;
-                vol.MobileNo = model.MobileNo;
-                vol.Email = model.Email;
-                vol.InstituteId = model.InstituteId;
-                vol.ModifiedDate = DateTime.UtcNow;
+        //        vol.FirstName = model.FirstName;
+        //        vol.LastName = model.LastName;
+        //        vol.MobileNo = model.MobileNo;
+        //        vol.Email = model.Email;
+        //        vol.InstituteId = model.InstituteId;
+        //        vol.ModifiedDate = DateTime.UtcNow;
 
-                await _context.SaveChangesAsync();
-                return Ok(new { success = true, message = "Volunteer updated successfully." });
-            }
-            else
-            {
-                string roleName = "Volunteer";
-                if (!await _roleManager.RoleExistsAsync(roleName))
-                    await _roleManager.CreateAsync(new IdentityRole(roleName));
+        //        await _context.SaveChangesAsync();
+        //        return Ok(new { success = true, message = "Volunteer updated successfully." });
+        //    }
+        //    else
+        //    {
+        //        // 1. Role Ensure karna (HF_Volunteers)
+        //        string roleName = "HF_Volunteers";
+        //        if (!await _roleManager.RoleExistsAsync(roleName))
+        //        {
+        //            await _roleManager.CreateAsync(new IdentityRole(roleName));
+        //        }
 
-                string baseMobile = model.MobileNo.Trim();
-                string uniqueUsername = baseMobile;
+        //        string baseMobile = model.MobileNo.Trim();
+        //        string uniqueUsername = baseMobile;
+        //        int counter = 1;
+        //        while (await _userManager.FindByNameAsync(uniqueUsername) != null)
+        //        {
+        //            uniqueUsername = $"{baseMobile}_{counter}";
+        //            counter++;
+        //        }
 
-                int counter = 1;
-                while (await _userManager.FindByNameAsync(uniqueUsername) != null)
-                {
-                    uniqueUsername = $"{baseMobile}_{counter}";
-                    counter++;
-                }
+        //        // 2. AspNetUsers Table Entry (Identity Login ke liye)
+        //        var appUser = new ApplicationUser
+        //        {
+        //            UserName = uniqueUsername,
+        //            Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim(),
+        //            FullName = $"{model.FirstName} {model.LastName}",
+        //            PhoneNumber = baseMobile,
+        //            EmailConfirmed = true
+        //        };
 
-                var appUser = new ApplicationUser
-                {
-                    UserName = uniqueUsername,
-                    Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim(),
-                    FullName = $"{model.FirstName} {model.LastName}",
-                    PhoneNumber = baseMobile,
-                    EmailConfirmed = true
-                };
+        //        var result = await _userManager.CreateAsync(appUser, uniqueUsername);
+        //        if (!result.Succeeded)
+        //            return BadRequest(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
 
-                var result = await _userManager.CreateAsync(appUser, uniqueUsername);
-                if (!result.Succeeded)
-                    return BadRequest(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+        //        await _userManager.AddToRoleAsync(appUser, roleName);
 
-                await _userManager.AddToRoleAsync(appUser, roleName);
+        //        // 3. Volunteers Table Entry
+        //        var volunteer = new Volunteer
+        //        {
+        //            FirstName = model.FirstName,
+        //            LastName = model.LastName,
+        //            MobileNo = baseMobile,
+        //            Email = model.Email,
+        //            InstituteId = model.InstituteId,
+        //            AffiliateId = aff.UserID,
+        //            AspNetUserId = appUser.Id,
+        //            Password_ = uniqueUsername,
+        //            IsActive = true,
+        //            CreatedDate = DateTime.UtcNow
+        //        };
+        //        _context.Volunteers.Add(volunteer);
 
-                var volunteer = new Volunteer
-                {
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    MobileNo = baseMobile,
-                    Email = model.Email,
-                    InstituteId = model.InstituteId,
-                    AffiliateId = aff.UserID,
-                    AspNetUserId = appUser.Id,
-                    Password_ = uniqueUsername,
-                    IsActive = true,
-                    CreatedDate = DateTime.UtcNow
-                };
+        //        // 4. Users Table Entry (Custom App Users table mapping)
+        //        var customUser = new Users
+        //        {
+        //            FirstName = model.FirstName,
+        //            LastName = model.LastName,
+        //            MobileNo = baseMobile,
+        //            EmailID = model.Email,
+        //            AspNetUserID = appUser.Id,
+        //            Password_ = uniqueUsername,
+        //            IsActive = true,
+        //            RegisterFrom = "Volunteer",
+        //            CreatedDate = DateTime.UtcNow
+        //        };
+        //        _context.Users.Add(customUser);
 
-                _context.Volunteers.Add(volunteer);
-                await _context.SaveChangesAsync();
+        //        // Sabhi changes ek sath database mein save karna
+        //        await _context.SaveChangesAsync();
 
-                return Ok(new { success = true, message = "Volunteer registered successfully." });
-            }
-        }
+        //        return Ok(new { success = true, message = "Volunteer registered successfully in all tables." });
+        //    }
+        //}
 
         // 4. DOWNLOAD SAMPLE EXCEL
         [HttpGet("download-sample")]

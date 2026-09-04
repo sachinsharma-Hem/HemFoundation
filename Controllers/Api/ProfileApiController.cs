@@ -47,15 +47,17 @@ namespace HemFoundation.Controllers.Api
             {
                 //var aff = await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId || a.EmailID == user.Email);
                 var users = await _context.Users.FirstOrDefaultAsync(i => i.AspNetUserID == userId);
-                var aff = await _context.WJ_Institutes.FirstOrDefaultAsync(i => i.InstituteID == users.UserID);
+                var aff = await _context.WJ_Institutes
+    .Where(i => i.InstituteID == users.UserID)
+    .Select(i => i.SocialOrgName)
+    .FirstOrDefaultAsync();
                 profileData = new
                 {
                     users?.FirstName,
                     users?.LastName,
-                    organisationName = aff?.SocialOrgName,
+                    organisationName = aff,
                     address = users?.AddressLine1,
                     users?.CityName,
-                    //users?.State,
                     pincode = users?.Pincode,
                     mobileNo = users?.MobileNo,
                     photoUrl = users?.PhotoUrl
