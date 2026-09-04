@@ -1,6 +1,8 @@
-﻿using System;
+﻿using HemFoundation.Models.Entities;
+using System;
 using System.Collections.Generic;
-using HemFoundation.Models.Entities;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 
 namespace HemFoundation.Models
@@ -37,17 +39,39 @@ namespace HemFoundation.Models
         public List<GameComp> ListGameComp { get; set; }
 
     }
+    [Table("wj_game24")]
     public class Game24
     {
+        [Key]
+        [Column("game24id")]
         public int Game24ID { get; set; }
+
+        [Column("gametopicid")]
         public int GameTopicID { get; set; }
-        public String Level { get; set; }
+
+        [Column("courseid")]
+        public int CourseID { get; set; }
+
+        [Column("game24level")]
+        public string Level { get; set; }
+
+        [Column("gamenumber1")]
         public int Number1 { get; set; }
+
+        [Column("gamenumber2")]
         public int Number2 { get; set; }
+
+        [Column("gamenumber3")]
         public int Number3 { get; set; }
+
+        [Column("gamenumber4")]
         public int Number4 { get; set; }
+
+        [Column("gameanswer")]
         public int Answer { get; set; }
-        public bool IsActive { get; set; }
+
+        [Column("gameisactive")]
+        public bool GameIsActive { get; set; }
     }
     public class GameComp
     {

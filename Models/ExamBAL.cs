@@ -279,13 +279,16 @@ namespace HemFoundation.Models
                             {
                                 foreach (var option in item.QuestionOption)
                                 {
-                                    QuestionOptionViewModel qpvm = new QuestionOptionViewModel
+                                    if (option.Options != null)
                                     {
-                                        OptionID = option.OptionID,
-                                        Options = option.Options,
-                                        IsAnswer = Convert.ToBoolean(option.IsAnswer)
-                                    };
-                                    qvm.QuestionOption.Add(qpvm);
+                                        QuestionOptionViewModel qpvm = new QuestionOptionViewModel
+                                        {
+                                            OptionID = option.OptionID,
+                                            Options = option.Options,
+                                            IsAnswer = Convert.ToBoolean(option.IsAnswer)
+                                        };
+                                        qvm.QuestionOption.Add(qpvm);
+                                    }
                                 }
                             }
                             examReviewVM.Questions.Add(qvm);

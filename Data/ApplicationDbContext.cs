@@ -1,4 +1,5 @@
-﻿using HemFoundation.Models.Entities;
+﻿using HemFoundation.Models;
+using HemFoundation.Models.Entities;
 using HemFoundation.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -108,6 +109,8 @@ namespace HemFoundation.Data
         public DbSet<StudentCourseMaster> StudentCourseMasters { get; set; }
         public DbSet<StudentCourseModule> StudentCourseModules { get; set; }
         public DbSet<StudentModuleContent> StudentModuleContents { get; set; }
+        public DbSet<Game24> WJ_Game24 { get; set; }
+        public DbSet<Game24Solution> Game24Solution { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -360,6 +363,7 @@ namespace HemFoundation.Data
                           v => v != null && v.Count > 0 ? v.Get(0) : (bool?)null          // BitArray -> bool?
                       );
             });
+            //builder.Entity<Game24Solution>().ToTable("\"Game24Solution\"", "public");
 
         }
 

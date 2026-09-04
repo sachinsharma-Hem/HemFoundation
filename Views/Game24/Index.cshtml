@@ -1,0 +1,371 @@
+﻿@{
+    ViewBag.Title = "Game 24";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    var isInWJTeacherRole = User.IsInRole("WJ_Teacher");
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-sweetalert/dist/sweetalert.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-sweetalert/dist/sweetalert.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    :root {
+        --slate-900: #0f172a;
+        --slate-800: #1e293b;
+        --slate-700: #334155;
+        --slate-100: #f1f5f9;
+        --brand-blue: #0284c7;
+        --emerald-500: #10b981;
+        --amber-500: #f59e0b;
+    }
+
+    body {
+        background-color: #f8fafc;
+        color: var(--slate-900);
+    }
+
+    footer {
+        display: none !important;
+    }
+
+    .lms-content-stage {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        padding: 20px 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    .game-workspace-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .game-num-btn, .game-func-btn {
+        font-weight: 700;
+        border-radius: 12px !important;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        font-size: 16px;
+    }
+
+        .game-num-btn:hover, .game-func-btn:hover {
+            transform: translateY(-2px);
+        }
+
+    .btn-action-pill {
+        border-radius: 30px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        padding: 8px 24px !important;
+        border: none !important;
+        transition: all 0.2s ease;
+    }
+
+    #txt_User_Input {
+        background-color: #f8fafc;
+        border: 2px solid #cbd5e1;
+        border-radius: 12px;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: var(--slate-900);
+        text-align: center;
+        height: 50px;
+    }
+
+        #txt_User_Input:focus {
+            border-color: var(--brand-blue);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+        }
+</style>
+
+<script type="text/javascript">
+    var Game24Array = []; var i = 0; var IsValid = false; var count = 0;
+    var btn1Click = 1, btn2Click = 1, btn3Click = 1, btn4Click = 1;
+
+    $(document).ready(function() {
+        loadfill();
+        const found = Game24Array.find(element => element);
+        if (found) FillsButtons(found);
+    });
+
+    function resetGame() {
+        btn1Click = 1; btn2Click = 1; btn3Click = 1; btn4Click = 1;
+        document.getElementById('txt_User_Input').value = '';
+    }
+
+    function display(val) {
+        if (val == "btn_No5" && btn1Click == 1) {
+            document.getElementById('txt_User_Input').value += document.getElementById(val).innerHTML;
+            btn1Click++;
+        }
+        else if (val == "btn_No6" && btn2Click == 1) {
+            document.getElementById('txt_User_Input').value += document.getElementById(val).innerHTML;
+            btn2Click++;
+        }
+        else if (val == "btn_No7" && btn3Click == 1) {
+            document.getElementById('txt_User_Input').value += document.getElementById(val).innerHTML;
+            btn3Click++;
+        }
+        else if (val == "btn_No8" && btn4Click == 1) {
+            document.getElementById('txt_User_Input').value += document.getElementById(val).innerHTML;
+            btn4Click++;
+        }
+        else if (val == "btn_Add" || val == "btn_Sub" || val == "btn_Div" || val == "btn_Mul" || val == "btn_Brac1" || val == "btn_Brac2") {
+            document.getElementById('txt_User_Input').value += document.getElementById(val).innerHTML;
+        }
+        else {
+            $('#ModalUsedNo').modal('show');
+        }
+        return val;
+    }
+
+    function loadfill() {
+        @if (ViewData.Model != null)
+            {
+                    foreach (var item in (IEnumerable<dynamic>)ViewData.Model)
+                {
+                    @:Game24Array.push({ Game24ID: @item.Game24ID, GameTopicID: @item.GameTopicID, N01: @item.Number1, N02: @item.Number2, N03: @item.Number3, N04: @item.Number4, G24: true, G24RoundTrip: true });
+            }
+            }
+        }
+
+    function FillsButtons(arr24) {
+        if (!arr24) return;
+        document.getElementById("Game24ID").value = arr24.Game24ID;
+        document.getElementById("GameTopicID").value = arr24.GameTopicID;
+        document.getElementById("btn_No1").innerHTML = arr24.N01;
+        document.getElementById("btn_No2").innerHTML = arr24.N02;
+        document.getElementById("btn_No3").innerHTML = arr24.N03;
+        document.getElementById("btn_No4").innerHTML = arr24.N04;
+        document.getElementById("btn_No5").innerHTML = arr24.N01;
+        document.getElementById("btn_No6").innerHTML = arr24.N02;
+        document.getElementById("btn_No7").innerHTML = arr24.N03;
+        document.getElementById("btn_No8").innerHTML = arr24.N04;
+    }
+
+    function btn_Prev() {
+        btn1Click = 1; btn2Click = 1; btn3Click = 1; btn4Click = 1;
+        FillsButtons(prevItem());
+    }
+
+    function btn_Next() {
+        btn1Click = 1; btn2Click = 1; btn3Click = 1; btn4Click = 1;
+        FillsButtons(nextItem());
+    }
+
+    function Refresh(id) {
+        location.reload();
+    }
+
+    function prevItem() {
+        document.getElementById("txt_User_Input").value = "";
+        if (i === 0) {
+            i = Game24Array.length;
+        }
+        i = i - 1;
+        return Game24Array[i];
+    }
+
+    function nextItem() {
+        document.getElementById("txt_User_Input").value = "";
+        i = i + 1;
+        i = i % Game24Array.length;
+        return Game24Array[i];
+    }
+
+    function OopsClose() {
+        location.reload();
+        $('#ModalUsedNo').modal('hide');
+    }
+
+    function solve() {
+        let userInput = document.getElementById('txt_User_Input').value.trim();
+        let output = 24;
+        let $checkBtn = $('#btn_CheckSubmit');
+
+        if (userInput !== "") {
+            let result;
+            try {
+                result = eval(userInput);
+            } catch (error) {
+                Swal.fire("Oops...", "Invalid expression, Please enter a valid expression.", "error");
+                document.getElementById('txt_User_Input').value = "";
+                return;
+            }
+
+            if (result === output) {
+                $checkBtn.addClass('disabled').css('pointer-events', 'none');
+                SaveGame24Data(userInput);
+            } else {
+                Swal.fire("Oops...", "Incorrect, Please try again.", "error");
+            }
+        } else {
+            Swal.fire("Oops...", "Please Enter an Expression", "error");
+            document.getElementById("txt_User_Input").focus();
+        }
+    }
+
+    function SaveGame24Data(Solutions) {
+        var GID = document.getElementById("Game24ID").value;
+        var ST = document.getElementById('GameTopicID').value;
+        var CourseID = $("#CourseID").val();
+        var $checkBtn = $('#btn_CheckSubmit');
+
+        $.ajax({
+            type: 'POST',
+            dataType: 'JSON',
+            url: '@Url.Action("Save24", "Game24")',
+            data: { game24ID: GID, gameTopicID: ST, cID: CourseID, solutionAnswers: Solutions, pracID: @ViewBag.PracticleID },
+            success: function(response) {
+                if (response[0] == "1" || response[0] == "0") {
+                    Swal.fire("Congrats!", response[1], "success");
+                    resetGame();
+                    setTimeout(function() {
+                        window.location = '@Url.Action("Index", "Learn")';
+                    }, 1000);
+                } else {
+                    Swal.fire("Congrats!", response[1], "success");
+                    resetGame();
+                    setTimeout(function() {
+                        btn_Next();
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    }, 1000);
+                }
+            },
+            error: function() {
+                $checkBtn.removeClass('disabled').css('pointer-events', 'auto');
+            }
+        });
+    }
+
+    function SaveGame24DataForSkip() {
+        var R = document.getElementById("Game24ID").value;
+        var k = document.getElementById("GameTopicID").value;
+        var CourseID = $("#CourseID").val();
+
+        $.ajax({
+            type: 'POST',
+            dataType: 'JSON',
+            url: '@Url.Action("Save24ForSkip", "Game24")',
+            data: { game24ID: R, gameTopicID: k, cID: CourseID, solutionAnswers: 'NA', pracID: @ViewBag.PracticleID },
+            success: function(response) {
+                resetGame();
+                setTimeout(function() {
+                    btn_Next();
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                }, 2000);
+            },
+            error: function(response) {
+                alert("Error: " + JSON.stringify(response));
+            }
+        });
+    }
+
+    function back() {
+        var value = document.getElementById("txt_User_Input").value;
+        document.getElementById("txt_User_Input").value = value.substr(0, value.length - 1);
+    }
+</script>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="ModalUsedNo">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0">
+                <h3 class="modal-title w-100 text-center text-danger font-weight-bold">OOPS !!!</h3>
+            </div>
+            <div class="modal-body text-center">
+              @*   <img src="~/Content/img/thumbs-down.png" height="80" width="80" class="mb-3" /> *@
+                <i class="fa-solid fa-thumbs-down fa-spin-snap-8 fa-2xl" style="color: rgb(210, 10, 45);"></i>
+                <h4 class="text-danger font-weight-bold">Number already used ....</h4>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="OopsClose()">Okay</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="lms-content-stage animate__animated animate__fadeIn">
+        <div class="game-workspace-card">
+            <input type="hidden" id="CourseID" value="@ViewBag.CourseID" />
+
+            <div class="d-flex justify-content-between mb-4">
+                @if (isInWJTeacherRole)
+                {
+                    <a class="btn btn-primary disabled" id="btn_Prev"><i class="fa fa-step-forward me-1"></i> Skip</a>
+                    <h2 style="font-weight:800; font-size:24px; margin:4px 0 2px 0;">Game 24</h2>
+                    <a class="btn btn-primary disabled" id="btn_Next">Next <i class="fa fa-chevron-right ms-1"></i></a>
+                }
+                else
+                {
+                    <a class="btn btn-primary" id="btn_Prev" onclick="SaveGame24DataForSkip()"><i class="fa fa-step-forward me-1"></i> Skip</a>
+                    <h2 style="font-weight:800; font-size:24px; margin:4px 0 2px 0;">Game 24</h2>
+                    <a class="btn btn-primary" id="btn_Next" onclick="btn_Next()">Next <i class="fa fa-chevron-right ms-1"></i></a>
+                }
+            </div>
+
+            <div class="row g-2 mb-4 justify-content-center">
+                <div class="col-3 col-sm-3 col-md-2"><div class="card text-center bg-dark text-white shadow-sm py-3 font-weight-bold" id="btn_No1" style="border-radius:12px; font-size:18px;">1</div></div>
+                <div class="col-3 col-sm-3 col-md-2"><div class="card text-center bg-dark text-white shadow-sm py-3 font-weight-bold" id="btn_No2" style="border-radius:12px; font-size:18px;">2</div></div>
+                <div class="col-3 col-sm-3 col-md-2"><div class="card text-center bg-dark text-white shadow-sm py-3 font-weight-bold" id="btn_No3" style="border-radius:12px; font-size:18px;">3</div></div>
+                <div class="col-3 col-sm-3 col-md-2"><div class="card text-center bg-dark text-white shadow-sm py-3 font-weight-bold" id="btn_No4" style="border-radius:12px; font-size:18px;">5</div></div>
+            </div>
+
+            <div class="row justify-content-center mb-4">
+                <div class="col-12 col-md-8 text-center">
+                    <input type="text" class="form-control mb-3 shadow-sm" id="txt_User_Input" readonly="readonly" placeholder="Expression Result" />
+                    @if (isInWJTeacherRole)
+                    {
+                        <a class="btn btn-success btn-action-pill px-5 disabled" id="btn_CheckSubmit"><i class="fa fa-check-circle me-1"></i> Check</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-success btn-action-pill px-5" id="btn_CheckSubmit" onclick="solve()"><i class="fa fa-check-circle me-1"></i> Check</a>
+                    }
+                </div>
+            </div>
+
+            <div class="d-none">
+                <input type="hidden" id="Game24ID">
+                <input type="hidden" id="GameTopicID">
+            </div>
+
+            <div class="row g-2 mb-2 justify-content-center">
+                <div class="col-3 col-md-2"><button class="btn btn-primary btn-lg w-100 game-num-btn py-2" id="btn_No5" onclick="display(this.id)">1</button></div>
+                <div class="col-3 col-md-2"><button class="btn btn-primary btn-lg w-100 game-num-btn py-2" id="btn_No6" onclick="display(this.id)">2</button></div>
+                <div class="col-3 col-md-2"><button class="btn btn-primary btn-lg w-100 game-num-btn py-2" id="btn_No7" onclick="display(this.id)">3</button></div>
+                <div class="col-3 col-md-2"><button class="btn btn-primary btn-lg w-100 game-num-btn py-2" id="btn_No8" onclick="display(this.id)">5</button></div>
+            </div>
+
+            <div class="row g-2 mb-2 justify-content-center">
+                <div class="col-3 col-md-2"><button class="btn btn-info text-white btn-lg w-100 game-func-btn py-2" id="btn_Add" onclick="display(this.id)">+</button></div>
+                <div class="col-3 col-md-2"><button class="btn btn-info text-white btn-lg w-100 game-func-btn py-2" id="btn_Sub" onclick="display(this.id)">-</button></div>
+                <div class="col-3 col-md-2"><button class="btn btn-info text-white btn-lg w-100 game-func-btn py-2" id="btn_Div" onclick="display(this.id)">/</button></div>
+                <div class="col-3 col-md-2"><button class="btn btn-info text-white btn-lg w-100 game-func-btn py-2" id="btn_Mul" onclick="display(this.id)">*</button></div>
+            </div>
+
+            <div class="row g-2 justify-content-center">
+                <div class="col-3 col-md-2"><button class="btn btn-secondary btn-lg w-100 game-func-btn py-2" id="btn_Brac1" onclick="display(this.id)">(</button></div>
+                <div class="col-3 col-md-2"><button class="btn btn-secondary btn-lg w-100 game-func-btn py-2" id="btn_Brac2" onclick="display(this.id)">)</button></div>
+                <div class="col-3 col-md-2"><button class="btn btn-warning text-dark btn-lg w-100 game-func-btn py-2" id="btn_Reset" onclick="Refresh(this.id)" title="Reset"><i class="fa fa-sync"></i></button></div>
+                <div class="col-3 col-md-2"><button class="btn btn-danger btn-lg w-100 game-func-btn py-2" id="btn_Clear" onclick="back()" title="Backspace"><i class="fa fa-eraser"></i></button></div>
+            </div>
+        </div>
+    </div>
+</div>

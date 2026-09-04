@@ -1,0 +1,741 @@
+﻿@{
+    ViewBag.Title = "KenKenIndex";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    var isInWJTeacherRole = User.IsInRole("WJ_Teacher");
+}
+
+@* <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+ *@<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+@* <link href="https://cdn.jsdelivr.net/npm/bootstrap-sweetalert/dist/sweetalert.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-sweetalert/dist/sweetalert.min.js"></script> *@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    :root {
+        --slate-900: #0f172a;
+        --slate-800: #1e293b;
+        --slate-700: #334155;
+        --slate-100: #f1f5f9;
+        --brand-blue: #0284c7;
+        --emerald-500: #10b981;
+        --amber-500: #f59e0b;
+    }
+
+    body {
+        background-color: #f8fafc;
+        color: var(--slate-900);
+    }
+
+    footer {
+        display: none !important;
+    }
+
+    .lms-content-stage {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        padding: 20px 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    .hero-learning-banner {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border-radius: 16px;
+        padding: 25px 30px;
+        color: #ffffff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px -5px rgba(15,23,42,0.15);
+        margin-bottom: 20px;
+    }
+
+    .game-workspace-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .btn-action-pill {
+        border-radius: 30px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        padding: 8px 24px !important;
+        border: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .btn-pill-primary {
+        background: var(--brand-blue) !important;
+        color: #fff !important;
+    }
+
+        .btn-pill-primary:hover {
+            background: #0369a1 !important;
+        }
+
+    input:focus {
+        outline: none;
+        border-color: var(--brand-blue) !important;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25) !important;
+    }
+
+    .textbox, .Mobtextbox, .textboxfour, .Mobtextboxfour, .Mobtextboxfive {
+        height: 75px !important;
+        width: 75px !important;
+        font-size: 32px !important;
+        text-align: center;
+        color: var(--slate-900);
+        border-radius: 10px;
+        border: 2px solid #cbd5e1 !important;
+        font-weight: 700;
+        margin: 3px;
+        box-sizing: border-box;
+    }
+
+    .kenken-cell-wrapper {
+        position: relative;
+        display: inline-block;
+        margin: 3px;
+    }
+
+    .labelText, .MoblabelText {
+        position: absolute;
+        top: 4px;
+        left: 6px;
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--slate-800);
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .nobtn, .nobtnmob {
+        font-size: 16px;
+        font-weight: 700;
+        height: 48px;
+        width: 48px;
+        border-radius: 10px !important;
+        margin: 0 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    @@media (max-width: 576px) {
+        .textbox, .Mobtextbox, .textboxfour, .Mobtextboxfour, .Mobtextboxfive {
+            height: 60px !important;
+            width: 60px !important;
+            font-size: 24px !important;
+            margin: 2px;
+        }
+
+        .kenken-cell-wrapper {
+            margin: 2px;
+        }
+
+        .labelText, .MoblabelText {
+            font-size: 11px;
+            top: 3px;
+            left: 5px;
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="lms-content-stage animate__animated animate__fadeIn">
+        <div class="game-workspace-card">
+            <input type="hidden" id="CourseID" value="@ViewBag.CourseID" />
+            <input type="hidden" id="Size" value="" />
+
+            <div class="d-flex justify-content-between mb-4">
+                @if (isInWJTeacherRole)
+                {
+                    <a class="btn btn-primary" id="btn_Prev" disabled>
+                        <i class="fa fa-step-forward me-1"></i> Skip
+                    </a>
+                    <h2 style="font-weight:800; font-size:24px; margin:4px 0 2px 0;">Ken Ken</h2>
+                    <a class="btn btn-primary" id="btn_Next" disabled>
+                        Next <i class="fa fa-chevron-right ms-1"></i>
+                    </a>
+                }
+                else
+                {
+                    <a class="btn btn-primary" id="btn_Prev" onclick="SkipData()">
+                        <i class="fa fa-step-forward me-1"></i> Skip
+                    </a>
+                    <h2 style="font-weight:800; font-size:24px; margin:4px 0 2px 0;">Ken Ken</h2>
+                    <a class="btn btn-primary" id="btn_Next" onclick="btn_Next()">
+                        Next <i class="fa fa-chevron-right ms-1"></i>
+                    </a>
+                }
+            </div>
+
+            <div class="d-flex justify-content-center align-items-center flex-column my-3">
+                <!-- Size 3 Matrix -->
+                <div id="three" class="hidden text-center">
+                    <div class="d-flex justify-content-center mb-1">
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl31"></label><input type="text" class="textbox m-0" id="txt31" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl32"></label><input type="text" class="textbox m-0" id="txt32" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl33"></label><input type="text" class="textbox m-0" id="txt33" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                    <div class="d-flex justify-content-center mb-1">
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl34"></label><input type="text" class="textbox m-0" id="txt34" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl35"></label><input type="text" class="textbox m-0" id="txt35" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl36"></label><input type="text" class="textbox m-0" id="txt36" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl37"></label><input type="text" class="textbox m-0" id="txt37" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl38"></label><input type="text" class="textbox m-0" id="txt38" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl39"></label><input type="text" class="textbox m-0" id="txt39" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                </div>
+
+                <!-- Size 4 Matrix -->
+                <div id="four" class="d-none text-center">
+                    <div class="d-flex justify-content-center mb-1">
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl41"></label><input type="text" id="txt41" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl42"></label><input type="text" id="txt42" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl43"></label><input type="text" id="txt43" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl44"></label><input type="text" id="txt44" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                    <div class="d-flex justify-content-center mb-1">
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl45"></label><input type="text" id="txt45" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl46"></label><input type="text" id="txt46" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl47"></label><input type="text" id="txt47" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl48"></label><input type="text" id="txt48" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                    <div class="d-flex justify-content-center mb-1">
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl49"></label><input type="text" id="txt49" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl410"></label><input type="text" id="txt410" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl411"></label><input type="text" id="txt411" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl412"></label><input type="text" id="txt412" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl413"></label><input type="text" id="txt413" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl414"></label><input type="text" id="txt414" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl415"></label><input type="text" id="txt415" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="labelText" id="lbl416"></label><input type="text" id="txt416" class="Mobtextboxfour m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                </div>
+
+                <!-- Size 5 Matrix -->
+                <div id="five" class="d-none text-center">
+                    <div class="d-flex justify-content-center mb-1">
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl51"></label><input type="text" id="txt51" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl52"></label><input type="text" id="txt52" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl53"></label><input type="text" id="txt53" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl54"></label><input type="text" id="txt54" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl55"></label><input type="text" id="txt55" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                    <div class="d-flex justify-content-center mb-1">
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl56"></label><input type="text" id="txt56" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl57"></label><input type="text" id="txt57" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl58"></label><input type="text" id="txt58" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl59"></label><input type="text" id="txt59" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl510"></label><input type="text" id="txt510" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                    <div class="d-flex justify-content-center mb-1">
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl511"></label><input type="text" id="txt511" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl512"></label><input type="text" id="txt512" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl513"></label><input type="text" id="txt513" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl514"></label><input type="text" id="txt514" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl515"></label><input type="text" id="txt515" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                    <div class="d-flex justify-content-center mb-1">
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl516"></label><input type="text" id="txt516" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl517"></label><input type="text" id="txt517" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl518"></label><input type="text" id="txt518" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl519"></label><input type="text" id="txt519" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl520"></label><input type="text" id="txt520" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl521"></label><input type="text" id="txt521" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl522"></label><input type="text" id="txt522" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl523"></label><input type="text" id="txt523" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl524"></label><input type="text" id="txt524" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                        <div class="kenken-cell-wrapper"><label class="MoblabelText" id="lbl525"></label><input type="text" id="txt525" class="Mobtextboxfive m-0" onclick="txt_click(this.id)" maxlength="1" /></div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center g-2 mb-3" id="keypadContainer"></div>
+
+                <div class="d-flex justify-content-center g-2">
+                    <button class="btn btn-warning text-dark nobtn" id="btn_Reset" type="button" onclick="reset()" title="Reset">
+                        <i class="fa fa-sync" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-danger text-white nobtn" id="btn_Erase" type="button" onclick="erase()" title="Erase">
+                        <i class="fa fa-eraser" aria-hidden="true"></i>
+                    </button>
+                    @if (isInWJTeacherRole)
+                    {
+                        <button class="btn btn-success nobtn" id="btn_Check" type="button" disabled title="Check">
+                            <i class="fa fa-check" aria-hidden="true"></i>
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-success nobtn" id="btn_Check" type="button" onclick="SaveDataRecord()" title="Check">
+                            <i class="fa fa-check" aria-hidden="true"></i>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var txtArray = [];
+    var size = '';
+    var lineArray = [];
+    var GetPractID = @ViewBag.PracticleID;
+    var DataMaster = [];
+    var DataTarget = [];
+    var DataCage = [];
+    var DataSolution = [];
+
+    var SetDataMaster = [];
+    var SetDataTarget = [];
+    var SetDataCage = [];
+    var SetDataSolution = [];
+    var NP = 0;
+    var GlobalKMID;
+    var CourseID;
+
+    $(document).ready(function() {
+        var GetCID = $("#CourseID").val();
+        document.onkeydown = function(e) {
+            return false;
+        }
+
+        $.ajax({
+            url: '/KenKen/GetKenKenDetails',
+            type: "POST",
+            data: { CID: GetCID },
+            success: function(response) {
+                if (response && response.length >= 5) {
+                    if (response[4] == "OK") {
+                        DataMaster.push(response[0]);
+                        DataTarget.push(JSON.parse(response[2]));
+                        DataCage.push(response[3]);
+                        DataSolution.push(response[1]);
+
+                        var arr = JSON.parse(DataMaster[0]);
+                        arr.forEach(function(elementObject) {
+                            var keys = Object.keys(elementObject);
+                            keys.forEach(function(key) {
+                                if (key == "KMID" || key == "kmid") {
+                                    var xp = elementObject[key];
+                                    CheckSetTKenKen(xp);
+                                }
+                            })
+                        });
+                        const KenMFirst = SetDataMaster.find(element => element);
+                        const KemTargetFirst = SetDataTarget.find(element => element);
+                        const KemCagetFirst = SetDataCage.find(element => element);
+
+                        generateElement(KenMFirst, KemTargetFirst, KemCagetFirst);
+                    }
+                }
+                else {
+                    if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                        Swal.fire({ title: "Congrats!", text: "You have Completed all levels.......", icon: "success" });
+                    } else {
+                        alert("Congrats! You have Completed all levels.......");
+                    }
+                    setTimeout(function() {
+                        window.location = '/learn/index';
+                    }, 5000);
+                }
+            },
+            error: function() {
+                alert('Something went wrong');
+            }
+        });
+    });
+
+    function buildKeypad(gridSize) {
+        var container = document.getElementById('keypadContainer');
+        container.innerHTML = '';
+        var limit = parseInt(gridSize) || 3;
+        for (var k = 1; k <= limit; k++) {
+            var btn = document.createElement('button');
+            btn.className = 'btn btn-primary nobtn mx-1';
+            btn.id = 'btn_No' + k;
+            btn.type = 'button';
+            btn.innerHTML = k;
+            btn.onclick = (function(num) {
+                return function() {
+                    display('btn_No' + num);
+                };
+            })(k);
+            container.appendChild(btn);
+        }
+    }
+
+    function prevItem() {
+        if (NP === 0) {
+            NP = SetDataMaster.length;
+        }
+        NP = NP - 1;
+        if (NP == 0) {
+            $('#btn_Prev').attr('disabled', 'disabled');
+            $('#btn_Next').removeAttr('disabled');
+        } else {
+            $('#btn_Prev').removeAttr('disabled');
+        }
+        return [SetDataMaster[NP], SetDataTarget[NP], SetDataCage[NP]];
+    }
+
+    function nextItem() {
+        NP = NP + 1;
+        NP = NP % SetDataMaster.length;
+        if (NP == 0) {
+            $('#btn_Next').attr('disabled', 'disabled');
+            $('#btn_Prev').removeAttr('disabled');
+        } else {
+            $('#btn_Next').removeAttr('disabled');
+        }
+        return [SetDataMaster[NP], SetDataTarget[NP], SetDataCage[NP]];
+    }
+
+    function btn_Prev() {
+        for (var k = 1; k <= 25; k++) {
+            let el = document.getElementById('txt3' + k);
+            if (el) el.value = "";
+            let el4 = document.getElementById('txt4' + k);
+            if (el4) el4.value = "";
+            let el5 = document.getElementById('txt5' + k);
+            if (el5) el5.value = "";
+        }
+        let [a1, b2, c3] = prevItem();
+        generateElement(a1, b2, c3);
+    }
+
+    function btn_Next() {
+        for (var k = 1; k <= 25; k++) {
+            let el = document.getElementById('txt3' + k);
+            if (el) el.value = "";
+            let el4 = document.getElementById('txt4' + k);
+            if (el4) el4.value = "";
+            let el5 = document.getElementById('txt5' + k);
+            if (el5) el5.value = "";
+        }
+        let [a, b, c] = nextItem();
+        generateElement(a, b, c);
+    }
+
+    function CheckSetTKenKen(KMID) {
+        var Retrive1 = JSON.parse(DataMaster[0]).filter((x) => (x.KMID == KMID || x.kmid == KMID));
+        SetDataMaster.push(Retrive1);
+
+        var Retrive2 = DataTarget[0].filter((x) => (x.KMID == KMID || x.kmid == KMID));
+        SetDataTarget.push(Retrive2);
+
+        var Retrive3 = JSON.parse(DataCage[0]).filter((x) => (x.KMID == KMID || x.kmid == KMID));
+        SetDataCage.push(Retrive3);
+    }
+
+    function createTextBox(sz) {
+        txtArray = [];
+        for (var i = 1; i <= sz; i++) {
+            for (var j = 1; j <= sz; j++) {
+                var txtIds = {
+                    targetid: 'T_R' + i + '_C' + j,
+                }
+                txtArray.push(txtIds);
+            }
+        }
+    }
+
+    function fillLineArray() {
+        lineArray = [];
+        if (size == 3) {
+            var tlineType = 'target';
+            lineArray.push({ LineType: tlineType, Column1: $("#txt31").val(), Column2: $("#txt32").val(), Column3: $("#txt33").val() });
+            lineArray.push({ LineType: tlineType, Column1: $("#txt34").val(), Column2: $("#txt35").val(), Column3: $("#txt36").val() });
+            lineArray.push({ LineType: tlineType, Column1: $("#txt37").val(), Column2: $("#txt38").val(), Column3: $("#txt39").val() });
+        }
+        else if (size == 4) {
+            var tlineType = 'target';
+            lineArray.push({ LineType: tlineType, Column1: $("#txt41").val(), Column2: $("#txt42").val(), Column3: $("#txt43").val(), Column4: $("#txt44").val() });
+            lineArray.push({ LineType: tlineType, Column1: $("#txt45").val(), Column2: $("#txt46").val(), Column3: $("#txt47").val(), Column4: $("#txt48").val() });
+            lineArray.push({ LineType: tlineType, Column1: $("#txt49").val(), Column2: $("#txt410").val(), Column3: $("#txt411").val(), Column4: $("#txt412").val() });
+            lineArray.push({ LineType: tlineType, Column1: $("#txt413").val(), Column2: $("#txt414").val(), Column3: $("#txt415").val(), Column4: $("#txt416").val() });
+        }
+        else if (size == 5) {
+            var tlineType = 'target';
+            lineArray.push({ LineType: tlineType, Column1: $("#txt51").val(), Column2: $("#txt52").val(), Column3: $("#txt53").val(), Column4: $("#txt54").val(), Column5: $("#txt55").val() });
+            lineArray.push({ LineType: tlineType, Column1: $("#txt56").val(), Column2: $("#txt57").val(), Column3: $("#txt58").val(), Column4: $("#txt59").val(), Column5: $("#txt510").val() });
+            lineArray.push({ LineType: tlineType, Column1: $("#txt511").val(), Column2: $("#txt512").val(), Column3: $("#txt513").val(), Column4: $("#txt514").val(), Column5: $("#txt515").val() });
+            lineArray.push({ LineType: tlineType, Column1: $("#txt516").val(), Column2: $("#txt517").val(), Column3: $("#txt518").val(), Column4: $("#txt519").val(), Column5: $("#txt520").val() });
+            lineArray.push({ LineType: tlineType, Column1: $("#txt521").val(), Column2: $("#txt522").val(), Column3: $("#txt523").val(), Column4: $("#txt524").val(), Column5: $("#txt525").val() });
+        }
+    }
+
+    function generateElement(KenMaster, TargetData, CageData) {
+        $('#btn_Check').removeClass('disabled').css('pointer-events', 'auto');
+
+        if (KenMaster != null && TargetData != null && CageData != null) {
+            SetDataSolution.length = 0;
+            var masterObj = KenMaster[0];
+            var kmidVal = masterObj["KMID"] !== undefined ? masterObj["KMID"] : masterObj["kmid"];
+            var boxsize = masterObj["Size"] !== undefined ? masterObj["Size"] : masterObj["size"];
+
+            var Retrive4 = JSON.parse(DataSolution[0]).filter((x) => (x.KMID == kmidVal || x.kmid == kmidVal));
+            SetDataSolution.push(Retrive4);
+
+            GlobalKMID = kmidVal;
+            CourseID = masterObj["CourseID"] !== undefined ? masterObj["CourseID"] : masterObj["courseid"];
+
+            size = boxsize || document.getElementById("Size").value;
+            buildKeypad(size);
+
+            if (boxsize == '3') {
+                $('#three').removeClass("d-none");
+                $('#four').addClass("d-none");
+                $('#five').addClass("d-none");
+            } else if (boxsize == '4') {
+                $('#three').addClass("d-none");
+                $('#four').removeClass("d-none");
+                $('#five').addClass("d-none");
+            } else if (boxsize == '5') {
+                $('#three').addClass("d-none");
+                $('#four').addClass("d-none");
+                $('#five').removeClass("d-none");
+            }
+
+            createTextBox(size);
+
+            var processedTargets = [];
+            for (var i = 0; i < TargetData.length; i++) {
+                var arrTarget = TargetData[i];
+                for (let key in arrTarget) {
+                    if (key.toLowerCase() != "ktid" && key.toLowerCase() != "kmid") {
+                        var E1 = arrTarget[key];
+                        if (E1 != 0) {
+                            processedTargets.push(E1);
+                        }
+                    }
+                }
+            }
+            var count = 1;
+            for (var i = 0; i < processedTargets.length; i++) {
+                let lbl = document.getElementById("lbl" + boxsize + count);
+                if (lbl) lbl.innerHTML = processedTargets[i];
+                count++;
+            }
+
+            var processedCages = [];
+            for (var i = 0; i < CageData.length; i++) {
+                var arrCage = CageData[i];
+                for (let key in arrCage) {
+                    if (key.toLowerCase() != "kcid" && key.toLowerCase() != "ktid" && key.toLowerCase() != "kmid") {
+                        var E1 = arrCage[key];
+                        if (E1 != 0) {
+                            processedCages.push(E1);
+                        }
+                    }
+                }
+            }
+
+            txtArray.forEach(function(item, i) {
+                var CT = 1;
+                for (var idx = 0; idx < processedCages.length; idx++) {
+                    var v = document.getElementById("txt" + boxsize + CT);
+                    if (!v) continue;
+
+                    var bgColors = {
+                        'A': '#daeef3', 'B': '#d6e3bc', 'C': '#fde9d9', 'D': '#f2dbdb',
+                        'E': '#FFFFE0', 'F': '#ffe0b3', 'G': '#ffcce6', 'H': '#ccccff',
+                        'I': '#efb8b8', 'J': '#ffa64d', 'K': '#ff9999', 'L': '#ecffb3', 'M': '#FFDAB9'
+                    };
+
+                    if (bgColors[processedCages[idx]]) {
+                        v.style.backgroundColor = bgColors[processedCages[idx]];
+                        CT++;
+                    }
+                }
+            });
+        }
+    }
+
+    function SaveDataRecord() {
+        fillLineArray();
+        var IsChecked = true;
+
+        for (var i = 0; i < lineArray.length; i++) {
+            if (size == 3) {
+                var C1 = lineArray[i]['Column1'];
+                var C2 = lineArray[i]['Column2'];
+                var C3 = lineArray[i]['Column3'];
+
+                var Sol1 = SetDataSolution[0][i]['S1'] !== undefined ? SetDataSolution[0][i]['S1'] : SetDataSolution[0][i]['s1'];
+                var Sol2 = SetDataSolution[0][i]['S2'] !== undefined ? SetDataSolution[0][i]['S2'] : SetDataSolution[0][i]['s2'];
+                var Sol3 = SetDataSolution[0][i]['S3'] !== undefined ? SetDataSolution[0][i]['S3'] : SetDataSolution[0][i]['s3'];
+
+                if (parseInt(C1) != parseInt(Sol1) || parseInt(C2) != parseInt(Sol2) || parseInt(C3) != parseInt(Sol3)) {
+                    IsChecked = false;
+                    break;
+                }
+            }
+            if (size == 4) {
+                var C1 = lineArray[i]['Column1'];
+                var C2 = lineArray[i]['Column2'];
+                var C3 = lineArray[i]['Column3'];
+                var C4 = lineArray[i]['Column4'];
+
+                var Sol1 = SetDataSolution[0][i]['S1'] !== undefined ? SetDataSolution[0][i]['S1'] : SetDataSolution[0][i]['s1'];
+                var Sol2 = SetDataSolution[0][i]['S2'] !== undefined ? SetDataSolution[0][i]['S2'] : SetDataSolution[0][i]['s2'];
+                var Sol3 = SetDataSolution[0][i]['S3'] !== undefined ? SetDataSolution[0][i]['S3'] : SetDataSolution[0][i]['s3'];
+                var Sol4 = SetDataSolution[0][i]['S4'] !== undefined ? SetDataSolution[0][i]['S4'] : SetDataSolution[0][i]['s4'];
+
+                if (parseInt(C1) != parseInt(Sol1) || parseInt(C2) != parseInt(Sol2) || parseInt(C3) != parseInt(Sol3) || parseInt(C4) != parseInt(Sol4)) {
+                    IsChecked = false;
+                    break;
+                }
+            }
+            if (size == 5) {
+                var C1 = lineArray[i]['Column1'];
+                var C2 = lineArray[i]['Column2'];
+                var C3 = lineArray[i]['Column3'];
+                var C4 = lineArray[i]['Column4'];
+                var C5 = lineArray[i]['Column5'];
+
+                var Sol1 = SetDataSolution[0][i]['S1'] !== undefined ? SetDataSolution[0][i]['S1'] : SetDataSolution[0][i]['s1'];
+                var Sol2 = SetDataSolution[0][i]['S2'] !== undefined ? SetDataSolution[0][i]['S2'] : SetDataSolution[0][i]['s2'];
+                var Sol3 = SetDataSolution[0][i]['S3'] !== undefined ? SetDataSolution[0][i]['S3'] : SetDataSolution[0][i]['s3'];
+                var Sol4 = SetDataSolution[0][i]['S4'] !== undefined ? SetDataSolution[0][i]['S4'] : SetDataSolution[0][i]['s4'];
+                var Sol5 = SetDataSolution[0][i]['S5'] !== undefined ? SetDataSolution[0][i]['S5'] : SetDataSolution[0][i]['s5'];
+
+                if (parseInt(C1) != parseInt(Sol1) || parseInt(C2) != parseInt(Sol2) || parseInt(C3) != parseInt(Sol3) || parseInt(C4) != parseInt(Sol4) || parseInt(C5) != parseInt(Sol5)) {
+                    IsChecked = false;
+                    break;
+                }
+            }
+        }
+
+        let $checkBtn = $('#btn_Check');
+        if (IsChecked) {
+            $checkBtn.addClass('disabled').css('pointer-events', 'none');
+
+            if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                Swal.fire({
+                    title: "Congrats!",
+                    text: "Valid Solution!!! Saving record...",
+                    icon: "success",
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            } else {
+                alert("Congrats! Valid Solution!!! Saving record...");
+            }
+
+            setTimeout(function() {
+                SaveData();
+            }, 3000);
+        } else {
+            if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                Swal.fire({
+                    title: "Oops!",
+                    text: "Invalid Solution..",
+                    icon: "error"
+                });
+            } else {
+                alert("Oops! Invalid Solution..");
+            }
+
+            setTimeout(function() {
+                reset();
+            }, 3000);
+        }
+    }
+
+    function reset() {
+        location.reload();
+    }
+
+    function SaveData() {
+        let $checkBtn = $('#btn_Check');
+        $.ajax({
+            url: '/KenKen/SaveKenKenData',
+            type: "POST",
+            data: { KMID: GlobalKMID, CourseID: CourseID, PractID: GetPractID },
+            success: function(data) {
+                if (data[0] == "OK") {
+                    if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                        Swal.fire({ title: "Congrats!", text: "Record saved successfully..", icon: "success" });
+                    } else {
+                        alert("Congrats! Record saved successfully..");
+                    }
+                    setTimeout(function() {
+                        btn_Next();
+                    }, 3000);
+                } else if (data[0] == "RNOTOk") {
+                    if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                        Swal.fire({ title: "Congrats!", text: "You have completed all games....", icon: "success" });
+                    } else {
+                        alert("Congrats! You have completed all games....");
+                    }
+                    setTimeout(function() {
+                        window.location = '/learn/index';
+                    }, 5000);
+                }
+            },
+            error: function() {
+                $checkBtn.removeClass('disabled').css('pointer-events', 'auto');
+            }
+        });
+    }
+
+    function SkipData() {
+        $.ajax({
+            url: '/KenKen/SaveKenKenDataForSkip',
+            type: "POST",
+            data: { KMID: GlobalKMID, CourseID: CourseID, PractID: GetPractID },
+            success: function(data) {
+                if (data[0] == "OK") {
+                    btn_Next();
+                } else if (data[0] == "RNOTOk") {
+                    setTimeout(function() {
+                        window.location = '/learn/index';
+                    }, 5000);
+                }
+            }
+        });
+    }
+
+    var textbox = '';
+    function txt_click(clicked_id) {
+        $('#' + clicked_id).attr('readonly', 'readonly');
+        textbox = clicked_id;
+    }
+
+    function display(val) {
+        let GetValues = document.getElementById(val).innerHTML;
+        if (textbox != null && textbox != '') {
+            var C = document.getElementById(textbox).value;
+            var CL = document.getElementById(textbox).value.length;
+            if (C == "" && CL == 0) {
+                document.getElementById(textbox).value = GetValues;
+                document.getElementById(textbox).blur();
+                textbox = '';
+            }
+        } else {
+            if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                Swal.fire({ title: "Oops!", text: "Please select a grid box first.", icon: "warning" });
+            } else {
+                alert("Oops! Please select a grid box first.");
+            }
+        }
+    }
+
+    function erase() {
+        if (textbox != null && textbox != '') {
+            document.getElementById(textbox).value = '';
+        }
+    }
+</script>

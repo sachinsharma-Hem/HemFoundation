@@ -2,6 +2,8 @@
 
 namespace HemFoundation.Models.Entities
 {
+
+    [Table("View_WJ_Course_Topics", Schema = "public")]
     public partial class View_WJ_Course_Topics
     {
         public int TopicID { get; set; }
