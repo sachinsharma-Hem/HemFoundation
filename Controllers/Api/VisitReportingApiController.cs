@@ -24,48 +24,68 @@ namespace HemFoundation.Controllers.Api
         private async Task<long> GetCurrentAffiliateId()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var affiliate = await _context.Affiliates.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
-            return affiliate?.UserID ?? 0;
+
+            var affiliate = await _context.Users
+                .Where(x => x.AspNetUserID == userId)
+                .Select(x => x.UserID)
+                .FirstOrDefaultAsync();
+
+            return affiliate;
         }
 
         [HttpGet("activity-types")]
         public async Task<IActionResult> GetActivityTypes()
         {
-            var types = await _context.ActivityTypeMasters.Where(a => a.IsActive && !a.IsDeleted).ToListAsync();
-            return Ok(new { success = true, data = types });
-        }
+            var types = await _context.ActivityTypeMasters
+                .FromSqlRaw(@"
+            SELECT *
+            FROM ""ActivityTypeMasters""
+            WHERE ""IsActive"" = TRUE
+              AND ""IsDeleted"" = FALSE")
+                .ToListAsync();
 
+            return Ok(new
+            {
+                success = true,
+                data = types
+            });
+        }
         [HttpGet("list/{statusType}")]
         public async Task<IActionResult> GetVisits(string statusType)
         {
             long affId = await GetCurrentAffiliateId();
 
-            // statusType can be "Pending", "Completed", or "Cancelled"
-            // We treat "Active" and "Pending" together under the "Pending" tab for reporting
-            var query = _context.AffiliateVisitPlans.Where(v => v.AffiliateId == affId && !v.IsDeleted);
+            var query = _context.AffiliateVisitPlans
+                .Where(v => v.AffiliateId == affId && !v.IsDeleted);
 
-            if (statusType.ToLower() == "pending")
+            if (statusType.Equals("pending", StringComparison.OrdinalIgnoreCase))
                 query = query.Where(v => v.Status == "Pending" || v.Status == "Active");
             else
-                query = query.Where(v => v.Status.ToLower() == statusType.ToLower());
+                query = query.Where(v => v.Status == statusType);
 
             var visits = await query
-                .Join(_context.Institutes,
-                      v => v.InstituteID,
-                      i => i.InstituteID,
-                      (v, i) => new
-                      {
-                          v.Id,
-                          SchoolName = i.Name,
-                          SchoolCity = i.City,
-                          v.ScheduleDate,
-                          v.Purpose,
-                          v.Status
-                      })
+                .Join(
+                    _context.SchoolProfileDetails,
+                    v => v.InstituteID,
+                    s => s.instituteid,
+                    (v, s) => new
+                    {
+                        v.Id,
+                        v.InstituteID,
+                        SchoolName = s.institute_name,
+                        SchoolCity = s.cityname,
+                        v.ScheduleDate,
+                        v.Purpose,
+                        v.Status
+                    })
                 .OrderByDescending(v => v.ScheduleDate)
                 .ToListAsync();
 
-            return Ok(new { success = true, data = visits });
+            return Ok(new
+            {
+                success = true,
+                data = visits
+            });
         }
 
         [HttpPost("submit-report")]

@@ -1,4 +1,7 @@
 ﻿using HemFoundation.Models;
+
+using HemFoundation.Models.DTOs;
+
 using HemFoundation.Models.Entities;
 using HemFoundation.Models.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -109,8 +112,13 @@ namespace HemFoundation.Data
         public DbSet<StudentCourseMaster> StudentCourseMasters { get; set; }
         public DbSet<StudentCourseModule> StudentCourseModules { get; set; }
         public DbSet<StudentModuleContent> StudentModuleContents { get; set; }
+
         public DbSet<Game24> WJ_Game24 { get; set; }
         public DbSet<Game24Solution> Game24Solution { get; set; }
+
+
+        public DbSet<WJ_ReferralCodes> WJ_ReferralCodes { get; set; }
+        public DbSet<SchoolProfileDetailsDto> SchoolProfileDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -122,6 +130,98 @@ namespace HemFoundation.Data
 
             builder.Entity<QuizCourseLevels>().HasNoKey();
 
+            builder.Entity<SchoolProfileDetailsDto>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToView("vw_school_profile_details", "public");
+
+                entity.Property(e => e.instituteid)
+                    .HasColumnName("instituteid");
+
+                entity.Property(e => e.institutetype)
+                    .HasColumnName("institutetype");
+
+                entity.Property(e => e.institute_name)
+                    .HasColumnName("institute_name");
+
+                entity.Property(e => e.profileurl)
+                    .HasColumnName("profileurl");
+
+                entity.Property(e => e.institute_isactive)
+                    .HasColumnName("institute_isactive");
+
+                entity.Property(e => e.referralcode)
+                    .HasColumnName("referralcode");
+
+                entity.Property(e => e.isverify)
+                    .HasColumnName("isverify");
+
+                entity.Property(e => e.firstname)
+                    .HasColumnName("firstname");
+
+                entity.Property(e => e.lastname)
+                    .HasColumnName("lastname");
+
+                entity.Property(e => e.mobileno)
+                    .HasColumnName("mobileno");
+
+                entity.Property(e => e.emailid)
+                    .HasColumnName("emailid");
+
+                entity.Property(e => e.addressline1)
+                    .HasColumnName("addressline1");
+
+                entity.Property(e => e.addressline2)
+                    .HasColumnName("addressline2");
+
+                entity.Property(e => e.addressline3)
+                    .HasColumnName("addressline3");
+
+                entity.Property(e => e.cityname)
+                    .HasColumnName("cityname");
+
+                entity.Property(e => e.pincode)
+                    .HasColumnName("pincode");
+
+                entity.Property(e => e.photourl)
+                    .HasColumnName("photourl");
+
+                entity.Property(e => e.user_isactive)
+                    .HasColumnName("user_isactive");
+
+                entity.Property(e => e.createdby)
+                    .HasColumnName("createdby");
+
+                entity.Property(e => e.createddate)
+                    .HasColumnName("createddate");
+
+                entity.Property(e => e.modifiedby)
+                    .HasColumnName("modifiedby");
+
+                entity.Property(e => e.modifieddate)
+                    .HasColumnName("modifieddate");
+
+                entity.Property(e => e.aspnetuserid)
+                    .HasColumnName("aspnetuserid");
+
+                entity.Property(e => e.password_)
+                    .HasColumnName("password_");
+
+                entity.Property(e => e.associatedstudents)
+                    .HasColumnName("associatedstudents");
+
+                entity.Property(e => e.activestudents)
+                    .HasColumnName("activestudents");
+
+                entity.Property(e => e.totalteachers)
+                    .HasColumnName("totalteachers");
+
+                entity.Property(e => e.activeteachers)
+                    .HasColumnName("activeteachers");
+            });
+
+            // Identity Configurations
             // Identity Configurations
             builder.Entity<IdentityRole>(entity =>
             {
@@ -129,8 +229,13 @@ namespace HemFoundation.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("id");
                 entity.Property(e => e.Name).HasColumnName("Name");
-                entity.Ignore(e => e.NormalizedName);
-                entity.Ignore(e => e.ConcurrencyStamp);
+
+                // YE LINE HATA DEIN (Yahi error ki wajah hai):
+                // entity.Ignore(e => e.NormalizedName); 
+
+                // Agar database mein normalizedname column hai toh map karein, nahi toh chhod dein:
+                entity.Property(e => e.NormalizedName).HasColumnName("normalizedname");
+                entity.Property(e => e.ConcurrencyStamp).HasColumnName("concurrencystamp");
             });
 
             builder.Entity<ApplicationUser>(entity =>
@@ -364,6 +469,31 @@ namespace HemFoundation.Data
                       );
             });
             //builder.Entity<Game24Solution>().ToTable("\"Game24Solution\"", "public");
+
+            builder.Entity<ActivityTypeMaster>(entity =>
+            {
+                entity.ToTable("ActivityTypeMasters", "public");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("Id");
+
+                entity.Property(e => e.ActivityName)
+                    .HasColumnName("ActivityName");
+
+                entity.Property(e => e.IsActive)
+                    .HasColumnName("IsActive");
+
+                entity.Property(e => e.CreatedDate)
+                    .HasColumnName("CreatedDate");
+
+                entity.Property(e => e.ModifiedDate)
+                    .HasColumnName("ModifiedDate");
+
+                entity.Property(e => e.IsDeleted)
+                    .HasColumnName("IsDeleted");
+            });
 
         }
 

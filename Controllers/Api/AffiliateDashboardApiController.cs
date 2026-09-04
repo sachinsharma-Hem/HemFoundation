@@ -1,6 +1,8 @@
 ﻿using HemFoundation.Data;
+using HemFoundation.Models.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -13,50 +15,57 @@ namespace HemFoundation.Controllers.Api
     public class AffiliateDashboardApiController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         // Constructor for Dependency Injection
-        public AffiliateDashboardApiController(ApplicationDbContext context)
+        public AffiliateDashboardApiController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         [HttpGet("stats")]
         public async Task<IActionResult> GetAffiliateDashboardStats()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { success = false, message = "User not found." });
 
-            var affiliate = await _context.Affiliates.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
+            var affiliate = await _context.Users
+                .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
+
             if (affiliate == null)
-                return Unauthorized(new { success = false, message = "Affiliate profile not found." });
+                return Unauthorized(new { success = false, message = "Affiliate not found." });
 
-            var affIdStr = affiliate.UserID.ToString();
+            var referralCode = await _context.WJ_ReferralCodes
+                .Where(x => x.UserID == affiliate.UserID)
+                .Select(x => x.ReferralCode)
+                .FirstOrDefaultAsync();
 
-            // Calculate Counts
-            int associatedSchoolsCount = await _context.Institutes
-                .Where(i => i.IsActive && i.ReferredByAffiliateId == affIdStr)
-                .CountAsync();
+            if (string.IsNullOrEmpty(referralCode))
+                return Ok(new { success = true, data = new { } });
 
-            // Calculate other counts here as needed in the future
-            // Example: int associatedStudentsCount = await _context.Students.Where(s => s.AffiliateId == affiliate.UserID).CountAsync();
+            var data = await _context.SchoolProfileDetails
+                .Where(x => x.referralcode == referralCode)
+                .GroupBy(x => 1)
+                .Select(g => new
+                {
+                    associatedSchools = g.Count(),
+                    associatedStudents = g.Sum(x => x.associatedstudents ?? 0),
+                    activeStudents = g.Sum(x => x.activestudents ?? 0),
+                    associatedTeachers = g.Sum(x => x.totalteachers ?? 0),
+                    activeTeachers = g.Sum(x => x.activeteachers ?? 0)
+                })
+                .FirstOrDefaultAsync();
 
-            // Return stats
             return Ok(new
             {
                 success = true,
-                data = new
+                data = data ?? new
                 {
-                    associatedSchools = associatedSchoolsCount,
-                    associatedStudents = 70, // Placeholder
-                    activeStudents = 40,     // Placeholder
-                    associatedTeachers = 33, // Placeholder
-                    activeTeachers = 1,      // Placeholder
-                    selSubmissions = 1,      // Placeholder
-                    groupProjects = 1,       // Placeholder
-                    familyProjects = 13,     // Placeholder
-                    individualProjects = 36, // Placeholder
-                    newSchools = 6           // Placeholder
+                    associatedSchools = 0,
+                    associatedStudents = 0,
+                    activeStudents = 0,
+                    associatedTeachers = 0,
+                    activeTeachers = 0
                 }
             });
         }
@@ -65,29 +74,38 @@ namespace HemFoundation.Controllers.Api
         public async Task<IActionResult> GetAssociatedSchoolsDetails()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { success = false, message = "User not found." });
 
-            var affiliate = await _context.Affiliates.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
+            var affiliate = await _context.Users
+                .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
+
             if (affiliate == null)
-                return Unauthorized(new { success = false, message = "Affiliate profile not found." });
+                return Unauthorized(new { success = false, message = "Affiliate not found." });
 
-            var affIdStr = affiliate.UserID.ToString();
+            var referralCode = await _context.WJ_ReferralCodes
+                .Where(x => x.UserID == affiliate.UserID)
+                .Select(x => x.ReferralCode)
+                .FirstOrDefaultAsync();
 
-            var assignedSchools = await _context.Institutes
-                .Where(i => i.IsActive && i.ReferredByAffiliateId == affIdStr)
-                .Select(i => new
+            if (string.IsNullOrEmpty(referralCode))
+                return Ok(new { success = true, data = new List<object>() });
+
+            var assignedSchools = await _context.SchoolProfileDetails
+                .Where(x => x.referralcode == referralCode)
+                .OrderBy(x => x.institute_name)
+                .Select(x => new
                 {
-                    i.InstituteID,
-                    i.Name,
-                    i.City,
-                    i.State,
-                    i.MobileNo
+                    instituteID = x.instituteid,
+                    name = x.institute_name,
+                    city = x.cityname,
+                    mobileNo = x.mobileno
                 })
-                .OrderBy(i => i.Name)
                 .ToListAsync();
 
-            return Ok(new { success = true, data = assignedSchools });
+            return Ok(new
+            {
+                success = true,
+                data = assignedSchools
+            });
         }
 
         // Yeh endpoint AffiliateDashboardApiController ke andar add karein

@@ -59,24 +59,24 @@ namespace HemFoundation.Controllers.Api
             }
 
             // 2. Teachers
-            var teachers = await _context.Teachers.ToListAsync();
+            var teachers = await _context.Users.ToListAsync();
             foreach (var t in teachers)
             {
                 var user = await _userManager.FindByIdAsync(t.AspNetUserID ?? "");
                 masterUsersList.Add(new
                 {
-                    id = t.TeacherID,
-                    identityId = t.AspNetUserID ?? t.TeacherID.ToString(),
-                    userCode = user?.UserCode ?? ("TCH-" + t.TeacherID),
+                    id = t.UserID,
+                    identityId = t.AspNetUserID ?? t.UserID.ToString(),
+                    userCode = user?.UserCode ?? ("TCH-" + t.UserID),
                     username = user?.UserName ?? "-",
                     fullName = $"{t.FirstName} {t.LastName}",
                     email = t.EmailID ?? "-",
                     phoneNumber = t.MobileNo ?? "-",
                     password = user?.PasswordHash ?? t.MobileNo ?? "-",
                     portalName = "Teacher",
-                    city = t.City ?? "-",
-                    state = t.State ?? "-",
-                    address = t.Address ?? "-",
+                    city = t.CityName ?? "-",
+                    //state = t.State ?? "-",
+                    //address = t.AddressLine1 ?? "-",
                     pincode = t.Pincode ?? "-",
                     createdDate = t.CreatedDate.ToString("dd MMM yyyy, hh:mm tt"),
                     isActive = t.IsActive

@@ -22,10 +22,15 @@ namespace HemFoundation.Controllers.Api
         private async Task<long> GetAffiliateId()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var aff = await _context.Affiliates.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
-            return aff?.UserID ?? 0;
-        }
 
+            if (string.IsNullOrEmpty(userId))
+                return 0;
+
+            return await _context.Users
+                .Where(x => x.AspNetUserID == userId)
+                .Select(x => x.UserID)
+                .FirstOrDefaultAsync();
+        }
         // ================= AFFILIATE API =================
 
         // Affiliate ke dropdown ke liye (Sirf Active items aayenge)
@@ -51,59 +56,88 @@ namespace HemFoundation.Controllers.Api
         public async Task<IActionResult> GetMyRequests()
         {
             long affId = await GetAffiliateId();
+
             var requests = await _context.MaterialRequests
                 .Where(r => r.AffiliateId == affId && !r.IsDeleted)
-                .Join(_context.RequisitionItems, r => r.RequisitionItemId, i => i.Id, (r, i) => new
-                {
-                    r.Id,
-                    ItemName = i.ItemName,
-                    r.RequestedQuantity,
-                    r.ApprovedQuantity,
-                    r.NeedDate,
-                    r.Priority,
-                    r.Status,
-                    r.ExpectedDate,
-                    r.AdminRemarks,
-                    r.CreatedDate
-                })
+                .Join(
+                    _context.RequisitionItems,
+                    r => r.RequisitionItemId,
+                    i => i.Id,
+                    (r, i) => new
+                    {
+                        r.Id,
+                        ItemName = i.ItemName,
+                        r.RequestedQuantity,
+                        r.ApprovedQuantity,
+                        r.NeedDate,
+                        r.Priority,
+                        r.Status,
+                        r.ExpectedDate,
+                        r.AdminRemarks,
+                        r.CreatedDate
+                    })
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
 
-            return Ok(new { success = true, data = requests });
+            return Ok(new
+            {
+                success = true,
+                data = requests
+            });
         }
 
         // ================= ADMIN API =================
 
         [HttpGet("admin/all-requests")]
-        public async Task<IActionResult> GetAllRequests([FromQuery] string? status, [FromQuery] long? affiliateId)
+        public async Task<IActionResult> GetAllRequests(
+    [FromQuery] string? status,
+    [FromQuery] long? affiliateId)
         {
-            var query = _context.MaterialRequests.Where(r => !r.IsDeleted);
+            var query = _context.MaterialRequests
+                .Where(r => !r.IsDeleted);
 
-            if (!string.IsNullOrEmpty(status)) query = query.Where(r => r.Status == status);
-            if (affiliateId.HasValue && affiliateId > 0) query = query.Where(r => r.AffiliateId == affiliateId);
+            if (!string.IsNullOrEmpty(status))
+                query = query.Where(r => r.Status == status);
+
+            if (affiliateId.HasValue && affiliateId > 0)
+                query = query.Where(r => r.AffiliateId == affiliateId);
 
             var requests = await query
-                .Join(_context.Affiliates, r => r.AffiliateId, a => a.UserID, (r, a) => new { r, a })
-                .Join(_context.RequisitionItems, x => x.r.RequisitionItemId, i => i.Id, (x, i) => new
-                {
-                    x.r.Id,
-                    AffiliateName = x.a.FirstName + " " + x.a.LastName,
-                    ItemName = i.ItemName,
-                    x.r.RequestedQuantity,
-                    x.r.ApprovedQuantity,
-                    x.r.ShippingAddress,
-                    x.r.NeedDate,
-                    x.r.Priority,
-                    x.r.UserRemarks,
-                    x.r.Status,
-                    x.r.ExpectedDate,
-                    x.r.AdminRemarks,
-                    x.r.CreatedDate
-                })
+                .Join(
+                    _context.Users,
+                    r => r.AffiliateId,
+                    u => u.UserID,
+                    (r, u) => new { r, u }
+                )
+                .Join(
+                    _context.RequisitionItems,
+                    x => x.r.RequisitionItemId,
+                    i => i.Id,
+                    (x, i) => new
+                    {
+                        x.r.Id,
+                        AffiliateName = x.u.FirstName + " " + x.u.LastName,
+                        ItemName = i.ItemName,
+                        x.r.RequestedQuantity,
+                        x.r.ApprovedQuantity,
+                        x.r.ShippingAddress,
+                        x.r.NeedDate,
+                        x.r.Priority,
+                        x.r.UserRemarks,
+                        x.r.Status,
+                        x.r.ExpectedDate,
+                        x.r.AdminRemarks,
+                        x.r.CreatedDate
+                    }
+                )
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
 
-            return Ok(new { success = true, data = requests });
+            return Ok(new
+            {
+                success = true,
+                data = requests
+            });
         }
 
         [HttpPost("admin/process")]

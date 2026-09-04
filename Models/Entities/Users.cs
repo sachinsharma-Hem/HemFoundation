@@ -91,7 +91,7 @@ using System.ComponentModel.DataAnnotations.Schema;
             public string? CityName { get; set; }
 
             [Column("password_")]
-            public string Password_ { get; set; }
+            public string? Password_ { get; set; }
 
             [Column("ismobileverified")]
             public bool? IsMobileVerified { get; set; }

@@ -40,7 +40,6 @@ namespace HemFoundation.Controllers.Api
 
             // 1. Strictly Login via Username and Password (Email/Mobile check)
             string username = model.Email?.Trim() ?? "";
-
             if (string.IsNullOrEmpty(username))
                 return BadRequest(new { success = false, message = "Username or Mobile Number is required." });
 
