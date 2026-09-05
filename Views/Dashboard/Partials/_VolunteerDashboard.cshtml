@@ -189,123 +189,294 @@
 
 
     <!-- =========================================================
-         2. ACTIVITY DASHBOARD
-    ========================================================== -->
+     2. ACTIVITY DASHBOARD
+========================================================== -->
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
+
         <h4 class="fw-bolder text-dark m-0 mb-3 mb-md-0">
             <i class="bi bi-activity text-danger me-2"></i>
             Activity Dashboard
         </h4>
-        
+
         <!-- Date Filters -->
         <div class="d-flex align-items-center gap-2 bg-white p-2 rounded-3 shadow-sm border">
+
+            <!-- FROM DATE -->
             <div class="d-flex align-items-center">
-                <span class="small fw-bold text-muted me-2">From:</span>
-                <input type="date" class="form-control form-control-sm shadow-none" />
+                <span class="small fw-bold text-muted me-2">
+                    From:
+                </span>
+
+                <input type="date"
+                       id="activityFromDate"
+                       class="form-control form-control-sm shadow-none" />
             </div>
+
+            <!-- TO DATE -->
             <div class="d-flex align-items-center">
-                <span class="small fw-bold text-muted me-2">To:</span>
-                <input type="date" class="form-control form-control-sm shadow-none" />
+                <span class="small fw-bold text-muted me-2">
+                    To:
+                </span>
+
+                <input type="date"
+                       id="activityToDate"
+                       class="form-control form-control-sm shadow-none" />
             </div>
-            <button class="btn btn-sm btn-primary fw-bold"><i class="bi bi-search"></i></button>
+
+            <!-- SEARCH -->
+            <button type="button"
+                    id="btnActivityDateSearch"
+                    class="btn btn-sm btn-primary fw-bold"
+                    title="Filter Activity">
+
+                <i class="bi bi-search"></i>
+
+            </button>
+
         </div>
+
     </div>
 
+
+    <!-- =========================================================
+     ACTIVITY CARDS
+========================================================== -->
     <div class="row g-4 mb-5">
-        <!-- 1. Visit Plan -->
+
+        <!-- =====================================================
+         1. VISIT PLAN
+    ====================================================== -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
+
             <div class="premium-card bg-blue">
+
                 <div class="d-flex align-items-center">
+
                     <div class="icon-circle shadow-sm me-3">
                         <i class="bi bi-calendar-event-fill"></i>
                     </div>
+
                     <div>
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">Visit Plan</div>
+
+                        <div class="stat-number"
+                             id="lblVisitPlanCount">
+                            0
+                        </div>
+
+                        <div class="stat-label">
+                            Visit Plan
+                        </div>
+
                     </div>
+
                 </div>
+
                 <div class="divider"></div>
+
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+
+                    <button type="button"
+                            class="btn-more shadow-sm border-0">
+
+                        More Info
+                        <i class="bi bi-arrow-right ms-1"></i>
+
+                    </button>
+
                 </div>
+
             </div>
+
         </div>
 
-        <!-- 2. Visited -->
+
+        <!-- =====================================================
+         2. VISITED
+    ====================================================== -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
+
             <div class="premium-card bg-green">
+
                 <div class="d-flex align-items-center">
+
                     <div class="icon-circle shadow-sm me-3">
                         <i class="bi bi-geo-alt-fill"></i>
                     </div>
+
                     <div>
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">Visited</div>
+
+                        <div class="stat-number"
+                             id="lblVisitedCount">
+                            0
+                        </div>
+
+                        <div class="stat-label">
+                            Visited
+                        </div>
+
                     </div>
+
                 </div>
+
                 <div class="divider"></div>
+
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+
+                    <button type="button"
+                            class="btn-more shadow-sm border-0">
+
+                        More Info
+                        <i class="bi bi-arrow-right ms-1"></i>
+
+                    </button>
+
                 </div>
+
             </div>
+
         </div>
 
-        <!-- 3. Visit Pending -->
+
+        <!-- =====================================================
+         3. VISIT PENDING
+    ====================================================== -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
+
             <div class="premium-card bg-orange">
+
                 <div class="d-flex align-items-center">
+
                     <div class="icon-circle shadow-sm me-3">
                         <i class="bi bi-clock-fill"></i>
                     </div>
+
                     <div>
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">Visit Pending</div>
+
+                        <div class="stat-number"
+                             id="lblVisitPendingCount">
+                            0
+                        </div>
+
+                        <div class="stat-label">
+                            Visit Pending
+                        </div>
+
                     </div>
+
                 </div>
+
                 <div class="divider"></div>
+
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+
+                    <button type="button"
+                            class="btn-more shadow-sm border-0">
+
+                        More Info
+                        <i class="bi bi-arrow-right ms-1"></i>
+
+                    </button>
+
                 </div>
+
             </div>
+
         </div>
 
-        <!-- 4. Activity Updated -->
+
+        <!-- =====================================================
+         4. ACTIVITY UPDATED
+    ====================================================== -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
+
             <div class="premium-card bg-teal">
+
                 <div class="d-flex align-items-center">
+
                     <div class="icon-circle shadow-sm me-3">
                         <i class="bi bi-clipboard-check-fill"></i>
                     </div>
+
                     <div>
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">Activity Updated</div>
+
+                        <div class="stat-number"
+                             id="lblActivityUpdatedCount">
+                            0
+                        </div>
+
+                        <div class="stat-label">
+                            Activity Updated
+                        </div>
+
                     </div>
+
                 </div>
+
                 <div class="divider"></div>
+
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+
+                    <button type="button"
+                            class="btn-more shadow-sm border-0">
+
+                        More Info
+                        <i class="bi bi-arrow-right ms-1"></i>
+
+                    </button>
+
                 </div>
+
             </div>
+
         </div>
 
-        <!-- 5. Activity Pending -->
+
+        <!-- =====================================================
+         5. ACTIVITY PENDING
+    ====================================================== -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
+
             <div class="premium-card bg-red">
+
                 <div class="d-flex align-items-center">
+
                     <div class="icon-circle shadow-sm me-3">
                         <i class="bi bi-clipboard-x-fill"></i>
                     </div>
+
                     <div>
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">Activity Pending</div>
+
+                        <div class="stat-number"
+                             id="lblActivityPendingCount">
+                            0
+                        </div>
+
+                        <div class="stat-label">
+                            Activity Pending
+                        </div>
+
                     </div>
+
                 </div>
+
                 <div class="divider"></div>
+
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+
+                    <button type="button"
+                            class="btn-more shadow-sm border-0">
+
+                        More Info
+                        <i class="bi bi-arrow-right ms-1"></i>
+
+                    </button>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
 
     <!-- =========================================================
@@ -492,365 +663,781 @@
      JAVASCRIPT (Untouched)
 ============================================================= -->
 <script>
-(function () {
-    "use strict";
+    (function() {
+        "use strict";
 
-    // =========================================================
-    // GET JWT TOKEN
-    // =========================================================
-    function getAuthToken() {
-        return localStorage.getItem("jwt_token")
-            || sessionStorage.getItem("jwt_token")
-            || "";
-    }
-
-    // =========================================================
-    // HTML ENCODE
-    // =========================================================
-    function escapeHtml(value) {
-        if (value === null || value === undefined) {
-            return "";
-        }
-        var div = document.createElement("div");
-        div.textContent = String(value);
-        return div.innerHTML;
-    }
-
-    // =========================================================
-    // SET COUNT
-    // =========================================================
-    function setSchoolCount(count) {
-        var finalCount = Number.isFinite(Number(count))
-            ? Number(count)
-            : 0;
-
-        // Assigned Schools quick action card (Hidden)
-        var assignedCountElement =
-            document.getElementById("lblAssignedSchoolCount");
-
-        if (assignedCountElement) {
-            assignedCountElement.textContent = finalCount;
+        // =========================================================
+        // GET JWT TOKEN
+        // =========================================================
+        function getAuthToken() {
+            return localStorage.getItem("jwt_token")
+                || sessionStorage.getItem("jwt_token")
+                || "";
         }
 
-        // Active School top dashboard card (Visible)
-        var activeSchoolCountElement =
-            document.getElementById("lblActiveSchoolCount");
+        // =========================================================
+        // HTML ENCODE
+        // =========================================================
+        function escapeHtml(value) {
+            if (value === null || value === undefined) {
+                return "";
+            }
 
-        if (activeSchoolCountElement) {
-            activeSchoolCountElement.textContent = finalCount;
+            var div = document.createElement("div");
+            div.textContent = String(value);
+            return div.innerHTML;
         }
 
-        // Modal footer count
-        var modalCount =
-            document.getElementById("modalAssignedSchoolCount");
+        // =========================================================
+        // SET SCHOOL COUNT
+        // =========================================================
+        function setSchoolCount(count) {
 
-        if (modalCount) {
-            modalCount.textContent = finalCount;
-        }
-    }
+            var finalCount = Number.isFinite(Number(count))
+                ? Number(count)
+                : 0;
 
-    // =========================================================
-    // COUNT LOADING
-    // =========================================================
-    function showCountLoading() {
-        var countElement =
-            document.getElementById("lblAssignedSchoolCount");
+            var assignedCountElement =
+                document.getElementById("lblAssignedSchoolCount");
 
-        if (countElement) {
-            countElement.innerHTML = `
-                <span class="spinner-border spinner-border-sm text-white"
-                      role="status"
-                      aria-hidden="true">
-                </span>
-            `;
-        }
-    }
+            if (assignedCountElement) {
+                assignedCountElement.textContent = finalCount;
+            }
 
-    // =========================================================
-    // FETCH ASSIGNED SCHOOLS
-    // =========================================================
-    async function fetchAssignedSchools() {
-        var token = getAuthToken();
-        var headers = {
-            "Accept": "application/json"
-        };
+            var activeSchoolCountElement =
+                document.getElementById("lblActiveSchoolCount");
 
-        if (token) {
-            headers["Authorization"] =
-                "Bearer " + token;
+            if (activeSchoolCountElement) {
+                activeSchoolCountElement.textContent = finalCount;
+            }
+
+            var modalCount =
+                document.getElementById("modalAssignedSchoolCount");
+
+            if (modalCount) {
+                modalCount.textContent = finalCount;
+            }
         }
 
-        try {
-            var response = await fetch(
-                "/api/volunteer/my-assigned-schools",
+        // =========================================================
+        // SCHOOL COUNT LOADING
+        // =========================================================
+        function showCountLoading() {
+
+            var countElement =
+                document.getElementById("lblAssignedSchoolCount");
+
+            if (countElement) {
+                countElement.innerHTML = `
+                    <span class="spinner-border spinner-border-sm text-white"
+                          role="status"
+                          aria-hidden="true">
+                    </span>
+                `;
+            }
+        }
+
+        // =========================================================
+        // FETCH ASSIGNED SCHOOLS
+        // =========================================================
+        async function fetchAssignedSchools() {
+
+            var token = getAuthToken();
+
+            var headers = {
+                "Accept": "application/json"
+            };
+
+            if (token) {
+                headers["Authorization"] =
+                    "Bearer " + token;
+            }
+
+            try {
+
+                var response = await fetch(
+                    "/api/volunteer/my-assigned-schools",
+                    {
+                        method: "GET",
+                        headers: headers,
+                        credentials: "same-origin",
+                        cache: "no-store"
+                    }
+                );
+
+                if (!response.ok) {
+
+                    console.error(
+                        "Assigned schools API failed:",
+                        response.status,
+                        response.statusText
+                    );
+
+                    throw new Error(
+                        "API returned " + response.status
+                    );
+                }
+
+                var result =
+                    await response.json();
+
+                if (
+                    result &&
+                    result.success &&
+                    Array.isArray(result.data)
+                ) {
+                    return result.data;
+                }
+
+                return [];
+            }
+            catch (error) {
+
+                console.error(
+                    "Unable to load assigned schools:",
+                    error
+                );
+
+                return null;
+            }
+        }
+
+        // =========================================================
+        // LOAD SCHOOL COUNT
+        // =========================================================
+        async function loadVolunteerAssignedSchoolCount() {
+
+            showCountLoading();
+
+            var schools =
+                await fetchAssignedSchools();
+
+            if (schools === null) {
+                setSchoolCount(0);
+                return;
+            }
+
+            setSchoolCount(schools.length);
+        }
+
+        // =========================================================
+        // FORMAT DATE
+        // =========================================================
+        function formatAssignedDate(dateValue) {
+
+            if (!dateValue) {
+                return "-";
+            }
+
+            var date =
+                new Date(dateValue);
+
+            if (isNaN(date.getTime())) {
+                return "-";
+            }
+
+            return date.toLocaleDateString(
+                "en-IN",
                 {
-                    method: "GET",
-                    headers: headers,
-                    credentials: "same-origin",
-                    cache: "no-store"
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
                 }
             );
+        }
 
-            if (!response.ok) {
-                console.error(
-                    "Assigned schools API failed:",
-                    response.status,
-                    response.statusText
+        // =========================================================
+        // RENDER ASSIGNED SCHOOL TABLE
+        // =========================================================
+        function renderAssignedSchools(schools) {
+
+            var tableBody =
+                document.getElementById(
+                    "tblAssignedSchoolsList"
                 );
 
-                throw new Error(
-                    "API returned " + response.status
-                );
+            if (!tableBody) {
+                return;
             }
-
-            var result =
-                await response.json();
 
             if (
-                result &&
-                result.success &&
-                Array.isArray(result.data)
+                !schools ||
+                schools.length === 0
             ) {
-                return result.data;
-            }
 
-            return [];
-        }
-        catch (error) {
-            console.error(
-                "Unable to load assigned schools:",
-                error
-            );
-            return null;
-        }
-    }
-
-    // =========================================================
-    // LOAD COUNT ON DASHBOARD
-    // =========================================================
-    async function loadVolunteerAssignedSchoolCount() {
-        showCountLoading();
-
-        var schools =
-            await fetchAssignedSchools();
-
-        if (schools === null) {
-            setSchoolCount(0);
-            return;
-        }
-
-        setSchoolCount(schools.length);
-    }
-
-    // =========================================================
-    // FORMAT DATE
-    // =========================================================
-    function formatAssignedDate(dateValue) {
-        if (!dateValue) {
-            return "-";
-        }
-
-        var date =
-            new Date(dateValue);
-
-        if (isNaN(date.getTime())) {
-            return "-";
-        }
-
-        return date.toLocaleDateString(
-            "en-IN",
-            {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            }
-        );
-    }
-
-    // =========================================================
-    // RENDER SCHOOL TABLE
-    // =========================================================
-    function renderAssignedSchools(schools) {
-        var tableBody =
-            document.getElementById(
-                "tblAssignedSchoolsList"
-            );
-
-        if (!tableBody) {
-            return;
-        }
-
-        if (
-            !schools ||
-            schools.length === 0
-        ) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="4"
-                        class="text-center py-5 text-muted">
-                        <i class="bi bi-building fs-1 d-block mb-3"></i>
-                        <div class="fw-semibold">
-                            No schools assigned
-                        </div>
-                        <small>
-                            No school is currently assigned to you.
-                        </small>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        var rows = "";
-
-        schools.forEach(function (school, index) {
-            var schoolName =
-                school.name || "-";
-
-            var instituteId =
-                school.instituteID
-                ?? school.InstituteID
-                ?? "-";
-
-            var assignedDate =
-                formatAssignedDate(
-                    school.assignedDate
-                    ?? school.AssignedDate
-                );
-
-            var assignedBy =
-                school.assignedBy
-                ?? school.AssignedBy
-                ?? "-";
-
-            rows += `
-                <tr>
-                    <td class="fw-bold text-muted">
-                        ${index + 1}
-                    </td>
-
-                    <td>
-                        <div class="school-name">
-                            ${escapeHtml(schoolName)}
-                        </div>
-                        <div class="school-id">
-                            School ID:
-                            ${escapeHtml(instituteId)}
-                        </div>
-                    </td>
-
-                    <td>
-                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
-                            ${escapeHtml(assignedDate)}
-                        </span>
-                    </td>
-
-                    <td>
-                        <span class="fw-medium text-dark">
-                            ${escapeHtml(assignedBy)}
-                        </span>
-                    </td>
-                </tr>
-            `;
-        });
-
-        tableBody.innerHTML = rows;
-    }
-
-    // =========================================================
-    // OPEN ASSIGNED SCHOOLS MODAL
-    // =========================================================
-    async function openAssignedSchoolsModal() {
-        var modalElement =
-            document.getElementById(
-                "volunteerSchoolsModal"
-            );
-
-        if (!modalElement) {
-            console.error(
-                "volunteerSchoolsModal not found."
-            );
-            return;
-        }
-
-        var tableBody =
-            document.getElementById(
-                "tblAssignedSchoolsList"
-            );
-
-        if (tableBody) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="4"
-                        class="text-center py-5 text-muted">
-                        <span class="spinner-border spinner-border-sm me-2">
-                        </span>
-                        Loading assigned schools...
-                    </td>
-                </tr>
-            `;
-        }
-
-        // Bootstrap 5 modal
-        var modal =
-            bootstrap.Modal.getOrCreateInstance(
-                modalElement
-            );
-
-        modal.show();
-
-        // API call
-        var schools =
-            await fetchAssignedSchools();
-
-        if (schools === null) {
-            if (tableBody) {
                 tableBody.innerHTML = `
                     <tr>
                         <td colspan="4"
-                            class="text-center py-5 text-danger">
-                            <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
-                            Failed to load assigned schools.
+                            class="text-center py-5 text-muted">
+
+                            <i class="bi bi-building fs-1 d-block mb-3"></i>
+
+                            <div class="fw-semibold">
+                                No schools assigned
+                            </div>
+
+                            <small>
+                                No school is currently assigned to you.
+                            </small>
+
+                        </td>
+                    </tr>
+                `;
+
+                return;
+            }
+
+            var rows = "";
+
+            schools.forEach(function(school, index) {
+
+                var schoolName =
+                    school.name || "-";
+
+                var instituteId =
+                    school.instituteID
+                    ?? school.InstituteID
+                    ?? "-";
+
+                var assignedDate =
+                    formatAssignedDate(
+                        school.assignedDate
+                        ?? school.AssignedDate
+                    );
+
+                var assignedBy =
+                    school.assignedBy
+                    ?? school.AssignedBy
+                    ?? "-";
+
+                rows += `
+                    <tr>
+
+                        <td class="fw-bold text-muted">
+                            ${index + 1}
+                        </td>
+
+                        <td>
+                            <div class="school-name">
+                                ${escapeHtml(schoolName)}
+                            </div>
+
+                            <div class="school-id">
+                                School ID:
+                                ${escapeHtml(instituteId)}
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
+                                ${escapeHtml(assignedDate)}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="fw-medium text-dark">
+                                ${escapeHtml(assignedBy)}
+                            </span>
+                        </td>
+
+                    </tr>
+                `;
+            });
+
+            tableBody.innerHTML = rows;
+        }
+
+        // =========================================================
+        // OPEN ASSIGNED SCHOOL MODAL
+        // =========================================================
+        async function openAssignedSchoolsModal() {
+
+            var modalElement =
+                document.getElementById(
+                    "volunteerSchoolsModal"
+                );
+
+            if (!modalElement) {
+
+                console.error(
+                    "volunteerSchoolsModal not found."
+                );
+
+                return;
+            }
+
+            var tableBody =
+                document.getElementById(
+                    "tblAssignedSchoolsList"
+                );
+
+            if (tableBody) {
+
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4"
+                            class="text-center py-5 text-muted">
+
+                            <span class="spinner-border spinner-border-sm me-2">
+                            </span>
+
+                            Loading assigned schools...
+
                         </td>
                     </tr>
                 `;
             }
-            return;
+
+            var modal =
+                bootstrap.Modal.getOrCreateInstance(
+                    modalElement
+                );
+
+            modal.show();
+
+            var schools =
+                await fetchAssignedSchools();
+
+            if (schools === null) {
+
+                if (tableBody) {
+
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4"
+                                class="text-center py-5 text-danger">
+
+                                <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
+
+                                Failed to load assigned schools.
+
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                return;
+            }
+
+            setSchoolCount(schools.length);
+
+            renderAssignedSchools(schools);
         }
 
-        // Count update
-        setSchoolCount(schools.length);
+        // =========================================================
+        // =========================================================
+        // ACTIVITY DASHBOARD
+        // =========================================================
+        // =========================================================
 
-        // Table render
-        renderAssignedSchools(schools);
-    }
+
+        // =========================================================
+        // SET ACTIVITY COUNTS
+        // =========================================================
+        function setActivityCounts(data) {
+
+            if (!data) {
+                data = {};
+            }
+
+            var visitPlanElement =
+                document.getElementById("lblVisitPlanCount");
+
+            var visitedElement =
+                document.getElementById("lblVisitedCount");
+
+            var visitPendingElement =
+                document.getElementById("lblVisitPendingCount");
+
+            var activityUpdatedElement =
+                document.getElementById("lblActivityUpdatedCount");
+
+            var activityPendingElement =
+                document.getElementById("lblActivityPendingCount");
 
 
-    function initializeAssignedSchools() {
-        var button =
-            document.getElementById(
-                "btnOpenAssignedSchools"
-            );
+            if (visitPlanElement) {
+                visitPlanElement.textContent =
+                    data.visitPlan ?? 0;
+            }
 
-        if (button) {
-            button.addEventListener(
-                "click",
-                openAssignedSchoolsModal
+            if (visitedElement) {
+                visitedElement.textContent =
+                    data.visited ?? 0;
+            }
+
+            if (visitPendingElement) {
+                visitPendingElement.textContent =
+                    data.visitPending ?? 0;
+            }
+
+            if (activityUpdatedElement) {
+                activityUpdatedElement.textContent =
+                    data.activityUpdated ?? 0;
+            }
+
+            if (activityPendingElement) {
+                activityPendingElement.textContent =
+                    data.activityPending ?? 0;
+            }
+        }
+
+
+        // =========================================================
+        // SHOW ACTIVITY LOADING
+        // =========================================================
+        function showActivityLoading() {
+
+            var ids = [
+                "lblVisitPlanCount",
+                "lblVisitedCount",
+                "lblVisitPendingCount",
+                "lblActivityUpdatedCount",
+                "lblActivityPendingCount"
+            ];
+
+            ids.forEach(function(id) {
+
+                var element =
+                    document.getElementById(id);
+
+                if (element) {
+
+                    element.innerHTML = `
+                        <span class="spinner-border spinner-border-sm"
+                              role="status"
+                              aria-hidden="true">
+                        </span>
+                    `;
+                }
+            });
+        }
+
+
+        // =========================================================
+        // LOAD ACTIVITY COUNTS
+        // =========================================================
+        async function loadVolunteerActivityCounts() {
+
+            showActivityLoading();
+
+            var token =
+                getAuthToken();
+
+            var headers = {
+                "Accept": "application/json"
+            };
+
+            if (token) {
+
+                headers["Authorization"] =
+                    "Bearer " + token;
+            }
+
+            try {
+
+                // -----------------------------------------------
+                // DATE VALUES
+                // -----------------------------------------------
+                var fromDateElement =
+                    document.getElementById(
+                        "activityFromDate"
+                    );
+
+                var toDateElement =
+                    document.getElementById(
+                        "activityToDate"
+                    );
+
+
+                var fromDate =
+                    fromDateElement
+                        ? fromDateElement.value
+                        : "";
+
+                var toDate =
+                    toDateElement
+                        ? toDateElement.value
+                        : "";
+
+
+                // -----------------------------------------------
+                // BUILD API URL
+                // -----------------------------------------------
+                var url =
+                    "/api/volunteer-plan/dashboard-counts";
+
+
+                var params =
+                    new URLSearchParams();
+
+
+                if (fromDate) {
+
+                    params.append(
+                        "fromDate",
+                        fromDate
+                    );
+                }
+
+
+                if (toDate) {
+
+                    params.append(
+                        "toDate",
+                        toDate
+                    );
+                }
+
+
+                var queryString =
+                    params.toString();
+
+
+                if (queryString) {
+
+                    url +=
+                        "?" + queryString;
+                }
+
+
+                console.log(
+                    "Dashboard Count API:",
+                    url
+                );
+
+
+                // -----------------------------------------------
+                // API CALL
+                // -----------------------------------------------
+                var response =
+                    await fetch(
+                        url,
+                        {
+                            method: "GET",
+                            headers: headers,
+                            credentials: "same-origin",
+                            cache: "no-store"
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    var errorText = "";
+
+                    try {
+                        errorText =
+                            await response.text();
+                    }
+                    catch (e) {
+                        errorText = "";
+                    }
+
+
+                    console.error(
+                        "Activity dashboard API failed:",
+                        response.status,
+                        errorText
+                    );
+
+
+                    throw new Error(
+                        "Dashboard API returned " +
+                        response.status
+                    );
+                }
+
+
+                // -----------------------------------------------
+                // RESPONSE
+                // -----------------------------------------------
+                var result =
+                    await response.json();
+
+
+                console.log(
+                    "Activity Dashboard Response:",
+                    result
+                );
+
+
+                if (
+                    !result ||
+                    !result.success ||
+                    !result.data
+                ) {
+
+                    console.warn(
+                        "Invalid dashboard response:",
+                        result
+                    );
+
+                    setActivityCounts({});
+
+                    return;
+                }
+
+
+                // -----------------------------------------------
+                // SET COUNTS
+                // -----------------------------------------------
+                setActivityCounts(
+                    result.data
+                );
+
+            }
+            catch (error) {
+
+                console.error(
+                    "Unable to load volunteer activity counts:",
+                    error
+                );
+
+                setActivityCounts({});
+            }
+        }
+
+
+        // =========================================================
+        // ACTIVITY DATE FILTER
+        // =========================================================
+        function initializeActivityDateFilter() {
+
+            var fromDate =
+                document.getElementById(
+                    "activityFromDate"
+                );
+
+            var toDate =
+                document.getElementById(
+                    "activityToDate"
+                );
+
+            var searchButton =
+                document.getElementById(
+                    "btnActivityDateSearch"
+                );
+
+
+            // -----------------------------------------------------
+            // SEARCH BUTTON
+            // -----------------------------------------------------
+            if (searchButton) {
+
+                searchButton.addEventListener(
+                    "click",
+                    function() {
+
+                        // Validate date range
+                        if (
+                            fromDate &&
+                            toDate &&
+                            fromDate.value &&
+                            toDate.value
+                        ) {
+
+                            if (
+                                fromDate.value >
+                                toDate.value
+                            ) {
+
+                                alert(
+                                    "From date cannot be greater than To date."
+                                );
+
+                                return;
+                            }
+                        }
+
+
+                        loadVolunteerActivityCounts();
+                    }
+                );
+            }
+
+
+            // -----------------------------------------------------
+            // ENTER KEY
+            // -----------------------------------------------------
+            [fromDate, toDate].forEach(
+                function(element) {
+
+                    if (!element) {
+                        return;
+                    }
+
+                    element.addEventListener(
+                        "keydown",
+                        function(event) {
+
+                            if (
+                                event.key === "Enter"
+                            ) {
+
+                                if (
+                                    searchButton
+                                ) {
+                                    searchButton.click();
+                                }
+                            }
+                        }
+                    );
+                }
             );
         }
 
-        loadVolunteerAssignedSchoolCount();
-    }
 
-    if (document.readyState === "loading") {
-        document.addEventListener(
-            "DOMContentLoaded",
-            initializeAssignedSchools
-        );
-    }
-    else {
-        initializeAssignedSchools();
-    }
+        // =========================================================
+        // INITIALIZE EVERYTHING
+        // =========================================================
+        function initializeDashboard() {
 
-})();
+            // Assigned schools
+            var schoolButton =
+                document.getElementById(
+                    "btnOpenAssignedSchools"
+                );
+
+            if (schoolButton) {
+
+                schoolButton.addEventListener(
+                    "click",
+                    openAssignedSchoolsModal
+                );
+            }
+
+
+            // Load school count
+            loadVolunteerAssignedSchoolCount();
+
+
+            // Activity date filter
+            initializeActivityDateFilter();
+
+
+            // Load activity dashboard counts
+            loadVolunteerActivityCounts();
+        }
+
+
+        // =========================================================
+        // PAGE LOAD
+        // =========================================================
+        if (
+            document.readyState === "loading"
+        ) {
+
+            document.addEventListener(
+                "DOMContentLoaded",
+                initializeDashboard
+            );
+
+        }
+        else {
+
+            initializeDashboard();
+        }
+
+    })();
 </script>

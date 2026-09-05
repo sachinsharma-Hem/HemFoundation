@@ -61,16 +61,34 @@ namespace HemFoundation.Controllers
         public async Task<IActionResult> GetPlans()
         {
             var volunteer = await GetCurrentVolunteerAsync();
-            if (volunteer == null) return Unauthorized(new { success = false, message = "Unauthorized" });
+
+            if (volunteer == null)
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "Unauthorized"
+                });
+            }
 
             var plans = await _context.VolunteerVisitPlans
-                .Where(p => p.VolunteerId == volunteer.Id && !p.IsDeleted)
+                .AsNoTracking()
+                .Where(p =>
+                    p.VolunteerId == volunteer.Id &&
+                    !p.IsDeleted)
                 .OrderByDescending(p => p.ScheduleDate)
                 .Select(p => new
                 {
                     p.Id,
                     p.IsOtherActivity,
-                    SchoolName = p.IsOtherActivity ? p.SchoolName : _context.Institutes.Where(i => i.InstituteID == p.InstituteId).Select(i => i.Name).FirstOrDefault(),
+
+                    SchoolName = p.IsOtherActivity
+                        ? p.SchoolName
+                        : _context.SchoolProfileDetails
+                            .Where(s => s.instituteid == p.InstituteId)
+                            .Select(s => s.institute_name)
+                            .FirstOrDefault(),
+
                     p.ScheduleDate,
                     p.Purpose,
                     p.Status,
@@ -83,23 +101,80 @@ namespace HemFoundation.Controllers
                 })
                 .ToListAsync();
 
-            return Ok(new { success = true, data = plans });
+            return Ok(new
+            {
+                success = true,
+                data = plans
+            });
         }
 
         // 2. Get Assigned Schools for Dropdown
         [HttpGet("api/volunteer-plan/assigned-schools")]
         public async Task<IActionResult> GetAssignedSchools()
         {
-            var volunteer = await GetCurrentVolunteerAsync();
-            if (volunteer == null) return Unauthorized(new { success = false, message = "Unauthorized" });
+            try
+            {
+                var volunteer = await GetCurrentVolunteerAsync();
 
-            var schools = await (from m in _context.VolunteerInstituteMappings
-                                 join i in _context.Institutes on m.InstituteId equals i.InstituteID
-                                 where m.VolunteerId == volunteer.Id && !m.IsDeleted && i.IsActive
-                                 select new { i.InstituteID, i.Name })
-                                 .ToListAsync();
+                if (volunteer == null)
+                {
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        message = "Unauthorized"
+                    });
+                }
 
-            return Ok(new { success = true, data = schools });
+                // ============================================
+                // 1. Volunteer ke active assigned Institute IDs
+                // ============================================
+                var instituteIds = await _context.VolunteerInstituteMappings
+                    .Where(m =>
+                        m.VolunteerId == volunteer.Id &&
+                        m.IsActive &&
+                        !m.IsDeleted)
+                    .Select(m => m.InstituteId)
+                    .Distinct()
+                    .ToListAsync();
+
+                if (!instituteIds.Any())
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new List<object>()
+                    });
+                }
+
+                // ============================================
+                // 2. SchoolProfileDetails se schools
+                // ============================================
+                var schools = await _context.SchoolProfileDetails
+                    .AsNoTracking()
+                    .Where(s => instituteIds.Contains(s.instituteid))
+                    .Select(s => new
+                    {
+                        InstituteID = s.instituteid,
+                        Name = s.institute_name
+                    })
+                    .OrderBy(s => s.Name)
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = schools
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Error while loading assigned schools.",
+                    error = ex.InnerException?.Message ?? ex.Message
+                });
+            }
         }
 
         // 3. Save / Create Visit Plan
@@ -156,6 +231,87 @@ namespace HemFoundation.Controllers
 
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Visit status updated successfully." });
+        }
+
+        // =========================================================
+        // VOLUNTEER ACTIVITY DASHBOARD COUNTS
+        // =========================================================
+        [HttpGet("api/volunteer-plan/dashboard-counts")]
+        public async Task<IActionResult> GetDashboardCounts(
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null)
+        {
+            var volunteer = await GetCurrentVolunteerAsync();
+
+            if (volunteer == null)
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "Unauthorized"
+                });
+            }
+
+            var query = _context.VolunteerVisitPlans
+                .AsNoTracking()
+                .Where(p =>
+                    p.VolunteerId == volunteer.Id &&
+                    !p.IsDeleted &&
+                    p.IsActive);
+
+            // =====================================================
+            // DATE FILTER
+            // =====================================================
+            if (fromDate.HasValue)
+            {
+                var from = fromDate.Value.Date;
+
+                query = query.Where(p =>
+                    p.ScheduleDate >= from);
+            }
+
+            if (toDate.HasValue)
+            {
+                var to = toDate.Value.Date.AddDays(1);
+
+                query = query.Where(p =>
+                    p.ScheduleDate < to);
+            }
+
+            // =====================================================
+            // COUNTS
+            // =====================================================
+
+            var visitPlanCount = await query.CountAsync();
+
+            var visitedCount = await query.CountAsync(p =>
+                p.Status != null &&
+                p.Status.ToLower() == "completed");
+
+            var pendingCount = await query.CountAsync(p =>
+                p.Status == null ||
+                p.Status.ToLower() != "completed");
+
+            var activityUpdatedCount = await query.CountAsync(p =>
+                p.ReportedDate.HasValue ||
+                !string.IsNullOrWhiteSpace(p.Remarks));
+
+            var activityPendingCount = await query.CountAsync(p =>
+                !p.ReportedDate.HasValue &&
+                string.IsNullOrWhiteSpace(p.Remarks));
+
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    visitPlan = visitPlanCount,
+                    visited = visitedCount,
+                    visitPending = pendingCount,
+                    activityUpdated = activityUpdatedCount,
+                    activityPending = activityPendingCount
+                }
+            });
         }
     }
 }

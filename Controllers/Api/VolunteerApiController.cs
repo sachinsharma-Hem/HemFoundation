@@ -1159,91 +1159,173 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("my-assigned-schools")]
         public async Task<IActionResult> GetMyAssignedSchools()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            var volunteer = await _context.Volunteers
-                .FirstOrDefaultAsync(v =>
-                    v.AspNetUserId == userId &&
-                    !v.IsDeleted);
-
-            if (volunteer == null)
+            try
             {
+                // =====================================================
+                // 1. Current logged-in user
+                // =====================================================
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        message = "User not authenticated."
+                    });
+
+
+                // =====================================================
+                // 2. Current Volunteer find karo
+                // =====================================================
+                var volunteer = await _context.Volunteers
+                    .FirstOrDefaultAsync(v =>
+                        v.AspNetUserId == userId &&
+                        v.IsActive &&
+                        !v.IsDeleted);
+
+                if (volunteer == null)
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new List<object>()
+                    });
+                }
+
+
+                // =====================================================
+                // 3. Volunteer ke active mappings
+                // =====================================================
+                var mappings = await _context.VolunteerInstituteMappings
+                    .Where(m =>
+                        m.VolunteerId == volunteer.Id &&
+                        m.IsActive &&
+                        !m.IsDeleted)
+                    .Select(m => new
+                    {
+                        m.InstituteId,
+                        m.CreatedDate,
+                        m.LastUpdatedBy
+                    })
+                    .ToListAsync();
+
+                if (!mappings.Any())
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new List<object>()
+                    });
+                }
+
+
+                // =====================================================
+                // 4. Affiliate ka ReferralCode
+                // =====================================================
+                var affiliate = await _context.Users
+                    .FirstOrDefaultAsync(u =>
+                        u.AspNetUserID == volunteer.AspNetUserId);
+
+                if (affiliate == null)
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new List<object>()
+                    });
+                }
+
+                var referralCode = await _context.WJ_ReferralCodes
+                    .Where(x => x.UserID == volunteer.AffiliateId)
+                    .Select(x => x.ReferralCode)
+                    .FirstOrDefaultAsync();
+
+
+                // =====================================================
+                // 5. SchoolProfileDetails se schools lao
+                // =====================================================
+                var instituteIds = mappings
+                    .Select(x => x.InstituteId)
+                    .Distinct()
+                    .ToList();
+
+                var schools = await _context.SchoolProfileDetails
+                    .Where(x =>
+                        instituteIds.Contains(x.instituteid) &&
+                        x.referralcode == referralCode)
+                    .Select(x => new
+                    {
+                        InstituteID = x.instituteid,
+                        Name = x.institute_name
+                    })
+                    .ToListAsync();
+
+
+                // =====================================================
+                // 6. Assigned By users
+                // =====================================================
+                var assignedByIds = mappings
+                    .Where(x => !string.IsNullOrWhiteSpace(x.LastUpdatedBy))
+                    .Select(x => x.LastUpdatedBy!)
+                    .Distinct()
+                    .ToList();
+
+                var users = await _context.Users
+                    .Where(u => assignedByIds.Contains(u.AspNetUserID))
+                    .Select(u => new
+                    {
+                        u.AspNetUserID,
+                        u.UserID,
+                        u.FirstName,
+                        u.MobileNo
+                    })
+                    .ToDictionaryAsync(
+                        x => x.AspNetUserID,
+                        x => !string.IsNullOrWhiteSpace(x.FirstName)
+                            ? x.FirstName
+                            : x.MobileNo
+                    );
+
+
+                // =====================================================
+                // 7. Final result
+                // =====================================================
+                var result = mappings
+                    .Join(
+                        schools,
+                        m => m.InstituteId,
+                        s => s.InstituteID,
+                        (m, s) => new
+                        {
+                            s.InstituteID,
+                            s.Name,
+                            AssignedDate = m.CreatedDate,
+
+                            AssignedBy =
+                                !string.IsNullOrWhiteSpace(m.LastUpdatedBy) &&
+                                users.ContainsKey(m.LastUpdatedBy!)
+                                    ? users[m.LastUpdatedBy!]
+                                    : m.LastUpdatedBy
+                        })
+                    .OrderBy(x => x.Name)
+                    .ToList();
+
+
                 return Ok(new
                 {
                     success = true,
-                    data = new List<object>()
+                    data = result
                 });
             }
-
-            var schoolList = await (
-                from m in _context.VolunteerInstituteMappings
-
-                join i in _context.Institutes
-                    on m.InstituteId equals i.InstituteID
-
-                where
-                    m.VolunteerId == volunteer.Id &&
-                    !m.IsDeleted &&
-                    i.IsActive
-
-                select new
-                {
-                    i.InstituteID,
-                    i.Name,
-
-                    AssignedDate = m.CreatedDate,
-
-                    AssignedByUserId = m.LastUpdatedBy
-                }
-            ).ToListAsync();
-
-
-            var assignedByIds = schoolList
-                .Where(x => !string.IsNullOrEmpty(x.AssignedByUserId))
-                .Select(x => x.AssignedByUserId)
-                .Distinct()
-                .ToList();
-
-
-            var users = await _context.Users
-                .Where(u => assignedByIds.Contains(u.UserID.ToString()))
-                .Select(u => new
-                {
-                    Id = u.AspNetUserID,
-                    u.UserID,
-                    u.FirstName,
-                    u.MobileNo
-                })
-                .ToDictionaryAsync(
-                    x => x.Id,
-                    x => string.IsNullOrWhiteSpace(x.UserID.ToString())
-                        ? x.FirstName
-                        : x.MobileNo
-                );
-
-
-            var result = schoolList.Select(x => new
+            catch (Exception ex)
             {
-                x.InstituteID,
-                x.Name,
-                x.AssignedDate,
-
-                AssignedBy =
-                    !string.IsNullOrEmpty(x.AssignedByUserId) &&
-                    users.ContainsKey(x.AssignedByUserId)
-                        ? users[x.AssignedByUserId]
-                        : x.AssignedByUserId
-            }).ToList();
-
-
-            return Ok(new
-            {
-                success = true,
-                data = result
-            });
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Error while loading assigned schools.",
+                    error = ex.InnerException?.Message ?? ex.Message
+                });
+            }
         }
     }
 
