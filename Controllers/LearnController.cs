@@ -165,6 +165,7 @@ namespace HemFoundation.Controllers
         public IActionResult DownloadCertificate(int CourseID, int Quizid)
         {
             ViewBag.CourseID = CourseID;
+            ViewBag.StudentID = HttpContext.Session.GetInt32("UserID") ?? 1;
             ViewBag.Quizid = Quizid;
             return View();
         }
@@ -173,7 +174,7 @@ namespace HemFoundation.Controllers
         public async Task<IActionResult> GetCertificateStatus(int courseId, int Quizid)
         {
             int studentId = HttpContext.Session.GetInt32("UserID") ?? 1;
-
+            ViewBag.StudentID = HttpContext.Session.GetInt32("UserID") ?? 1;
             StudentCertificateModel model = new StudentCertificateModel();
             try
             {
@@ -372,6 +373,157 @@ namespace HemFoundation.Controllers
                 }
             }
             return dt;
+        }
+        [HttpPost]
+        public async Task<IActionResult> UpdateStudentCertification(bool isStudentCertification, int studentId, int courseId, int quizId)
+        {
+            if (isStudentCertification)
+            {
+                bool result = await InsertStudentCertificateAsync(isStudentCertification, studentId, courseId, quizId);
+                if (result)
+                {
+                    return Json(true);
+                }
+            }
+            return Json(false);
+        }
+
+        public async Task<bool> InsertStudentCertificateAsync(bool isStudentCertification, int studentId, int courseId, int quizId)
+        {
+            try
+            {
+                string firstName = "";
+                string lastName = "";
+                string standard = "";
+                string division = "";
+                string emailId = "";
+                string levelPath = "";
+                int points = 0;
+                long rank = 0;
+                int? instituteId = null;
+                string instituteName = "";
+                string courseName = "";
+
+                using (var conn = new NpgsqlConnection(_connectionString))
+                {
+                    await conn.OpenAsync();
+
+                    // Use a transaction to ensure atomicity for reads/write
+                    using (var transaction = await conn.BeginTransactionAsync())
+                    {
+                        try
+                        {
+                            // 1. Get Student Details from View
+                            using (var cmd = new NpgsqlCommand("SELECT firstname, lastname, standard, division, emailid, levelpath, coins, rank FROM view_wj_students_details_info WHERE studentid = @StudentID LIMIT 1", conn, transaction))
+                            {
+                                cmd.CommandTimeout = 30; // Prevent hanging queries
+                                cmd.Parameters.AddWithValue("@StudentID", studentId);
+                                using (var reader = await cmd.ExecuteReaderAsync())
+                                {
+                                    if (await reader.ReadAsync())
+                                    {
+                                        firstName = reader["firstname"]?.ToString() ?? "";
+                                        lastName = reader["lastname"]?.ToString() ?? "";
+                                        standard = reader["standard"]?.ToString() ?? "";
+                                        division = reader["division"]?.ToString() ?? "";
+                                        emailId = reader["emailid"]?.ToString() ?? "";
+                                        levelPath = reader["levelpath"]?.ToString() ?? "";
+                                        points = reader["coins"] != DBNull.Value ? Convert.ToInt32(reader["coins"]) : 0;
+                                        rank = reader["rank"] != DBNull.Value ? Convert.ToInt64(reader["rank"]) : 0;
+                                    }
+                                }
+                            }
+
+                            // 2. Get School Institute Association
+                            using (var cmd = new NpgsqlCommand(@"
+                        SELECT i.instituteid, i.""Name"" 
+                        FROM wj_studentassociates a 
+                        JOIN wj_institutes i ON a.instituteid = i.instituteid 
+                        WHERE a.studentid = @StudentID AND i.institutetype = 'School' 
+                        ORDER BY a.studentid DESC LIMIT 1", conn, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@StudentID", studentId);
+                                using (var reader = await cmd.ExecuteReaderAsync())
+                                {
+                                    if (await reader.ReadAsync())
+                                    {
+                                        instituteId = reader["instituteid"] != DBNull.Value ? Convert.ToInt32(reader["instituteid"]) : (int?)null;
+                                        instituteName = reader["name"]?.ToString() ?? "";
+                                    }
+                                }
+                            }
+
+                            // 3. Get Course Details
+                            using (var cmd = new NpgsqlCommand("SELECT coursename FROM \"View_WJ_Courses\" WHERE courseid = @CourseID LIMIT 1", conn, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@CourseID", courseId);
+                                var res = await cmd.ExecuteScalarAsync();
+                                courseName = res?.ToString() ?? "";
+                            }
+
+                            // 4. Check if certification already exists
+                            bool isExists = false;
+                            using (var cmd = new NpgsqlCommand("SELECT 1 FROM wj_value_certification WHERE userid = @UserID AND isadminstatus::integer = 0 AND courseid = @CourseID LIMIT 1", conn, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@UserID", studentId);
+                                cmd.Parameters.AddWithValue("@CourseID", courseId);
+                                var res = await cmd.ExecuteScalarAsync();
+                                isExists = (res != null);
+                            }
+
+                            // 5. Insert if it doesn't already exist
+                            // 5. Insert if it doesn't already exist (removed 'rank' if it's missing from the table schema)
+                            // 5. Insert if it doesn't already exist
+                            if (!isExists)
+                            {
+                                using (var cmd = new NpgsqlCommand(@"
+        INSERT INTO wj_value_certification (
+            userid, firstname, lastname, standard, division, emailid, 
+            instituteid, institutename, lavel, points, quizid, courseid, 
+            coursename, status, iscompleted, isactive, isadminstatus, createdon, createdby
+        ) VALUES (
+            @UserID, @FirstName, @LastName, @Standard, @Division, @EmailId, 
+            @InstituteId, @InstituteName, @Lavel, @Points, @QuizId, @CourseId, 
+            @CourseName, '0'::bit, '0'::bit, @IsActive::integer::bit, '1'::bit, CURRENT_TIMESTAMP, @CreatedBy
+        )", conn, transaction))
+                                {
+                                    cmd.Parameters.AddWithValue("@UserID", studentId);
+                                    cmd.Parameters.AddWithValue("@FirstName", firstName);
+                                    cmd.Parameters.AddWithValue("@LastName", lastName);
+                                    cmd.Parameters.AddWithValue("@Standard", standard);
+                                    cmd.Parameters.AddWithValue("@Division", division);
+                                    cmd.Parameters.AddWithValue("@EmailId", emailId);
+                                    cmd.Parameters.AddWithValue("@InstituteId", (object)instituteId ?? DBNull.Value);
+                                    cmd.Parameters.AddWithValue("@InstituteName", instituteName);
+                                    cmd.Parameters.AddWithValue("@Lavel", levelPath);
+                                    cmd.Parameters.AddWithValue("@Points", points);
+                                    cmd.Parameters.AddWithValue("@QuizId", quizId);
+                                    cmd.Parameters.AddWithValue("@CourseId", courseId);
+                                    cmd.Parameters.AddWithValue("@CourseName", courseName);
+                                    cmd.Parameters.AddWithValue("@IsActive", isStudentCertification);
+                                    cmd.Parameters.AddWithValue("@CreatedBy", studentId);
+
+                                    await cmd.ExecuteNonQueryAsync();
+                                }
+                            }
+
+                            await transaction.CommitAsync();
+                        }
+                        catch
+                        {
+                            await transaction.RollbackAsync();
+                            throw;
+                        }
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Helpful debugging hook: check console or log ex.Message if a timeout occurs
+                Console.WriteLine($"Error inserting student certificate: {ex.Message}");
+                return false;
+            }
         }
 
     }

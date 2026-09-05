@@ -37,7 +37,7 @@ namespace HemFoundation.Controllers
                 Institute? institute = null;
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    institute = await _context.Institutes.AsNoTracking().FirstOrDefaultAsync(i => i.AspNetUserID == userId && i.IsActive);
+                    institute = await _context.vw_school_profile_details.AsNoTracking().FirstOrDefaultAsync(i => i.AspNetUserID == userId && i.IsActive);
                 }
 
                 if (institute != null)

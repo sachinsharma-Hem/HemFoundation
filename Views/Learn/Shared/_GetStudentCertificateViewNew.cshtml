@@ -1,1 +1,184 @@
-﻿
+
+@model HemFoundation.Models.StudentCertificateModel
+
+<style>
+    @@font-face {
+        font-family: 'SourceSansPro-Light';
+        src: url('/Content/fonts/SourceSansPro-Light.woff') format('woff');
+    }
+
+    @@font-face {
+        font-family: 'diavlo-light';
+        src: url('/Content/fonts/diavlo-light.woff') format('woff');
+    }
+
+    @@font-face {
+        font-family: 'SourceSansPro-Regular';
+        src: url('/Content/fonts/SourceSansPro-Regular.woff') format('woff');
+    }
+    /*css by sagar*/
+    .cerificate-block {
+        position: relative;
+    }
+
+    .cerificate-content {
+        position: absolute;
+        top: 378px;
+        left: 348px;
+    }
+
+        .cerificate-content .static-content {
+            font-size: 14px;
+            color: black;
+        }
+
+        .cerificate-content .dynamic-content {
+            font-size: 14px;
+            font-weight: bold;
+            color: black;
+            border-bottom: 1px solid black;
+            display: inline-table;
+        }
+
+
+    .certify-links {
+        text-align: center;
+        margin-top: 15px;
+    }
+
+    .certify-btn {
+        padding: 5px 10px;
+        background-color: #17b4db;
+        color: #fff;
+        border-radius: 5px;
+        display: inline-block;
+        margin: 0 5px;
+    }
+
+        .certify-btn:hover, .certify-btn:focus, .certify-btn:visited {
+            text-decoration: none;
+            color: #fff;
+            background-color: #10add4;
+            cursor: pointer;
+        }
+</style>
+<style>
+    /* Force the generated image to be responsive */
+    #prvimg img {
+        max-width: 100% !important;
+        height: auto !important;
+        display: block;
+        margin: 0 auto;
+    }
+
+    /* Ensure the wrapper doesn't force a large width */
+    .cerificate-block {
+        width: 100%;
+        max-width: 1080px; /* Optional cap */
+        margin: 0 auto;
+    }
+</style>
+@{
+    //string cerid = Model.CertificationNo;
+    string cerid = "h88y8ju";
+}
+@if (Model != null)
+{
+
+    <div class="mt-lg cerificate-block">
+        <input type="hidden" name="imageData" id="imageData" value="" style="display:none" />
+        <input type="hidden" name="Cerid" id="Cerid" value="@cerid" />
+        <div id="prvimg"></div>
+        <div id="dv_certificate_basic" style="background-image: url(@Model.CertificationTemplateUrl); background-position: center; background-repeat: no-repeat; width: 1080px; height: 895px">
+            @**@<div class="clearfix"></div>
+            <div class="cerificate-content">
+                <div class="clearfix"></div>
+                <div style="padding-top:150px;">
+                    <p>
+                        <span class="static-content">Ms./Master&nbsp;&nbsp;</span><span class="dynamic-content" style="width:485px;">@Model.FirstName @Model.LastName</span><br>
+                        <span class="static-content">Std: &nbsp;&nbsp;</span><span class="dynamic-content" style="width:540px;">@Model.Standard</span><br>
+
+                        <span class="static-content">of &nbsp;&nbsp;</span><span class="dynamic-content" style="width:540px;">@Model.InstituteName</span><br>
+                        <span class="static-content">has completed the value </span><span class="dynamic-content">@Model.MainCourseName&nbsp;&nbsp;</span>
+                        <span class="static-content">of Hem Virtues in the year</span><span class="dynamic-content">&nbsp;@DateTime.Now.ToString("MMM yyyy")&nbsp;&nbsp;&nbsp;</span> <br>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="certify-links">
+            @*<a class="certify-btn" onclick="ConvertToImage()"><i class="fa fa-download"></i> Download</a>*@
+            <a class="certify-btn" onclick="DownloadCertificate()"><i class="fa fa-download"></i> Download</a>
+            <a class="certify-btn hidden" style="display:none"><i class="fa fa-share-alt"></i> Share</a>
+            <a class="certify-btn hidden" onclick="ViewCertificate()" style="display:none"><i class="fa fa-eye"></i> View</a>
+        </div>
+    </div>
+}
+
+<script src="~/js/jquery-3.2.1.js"></script>
+<script src="~/js/jquery-ui.js"></script>
+<script src="~/js/html2canvas.min.js"></script>
+<script type="text/javascript">
+    var image;
+    var settimeout;
+    var ImageGenrated = false;
+    $(document).ready(function () {
+        setTimeout(function () {
+            ConvertToImage();
+        }, 1000);
+    });
+    function DownloadCertificate()
+    {
+        debugger
+
+        var imagepath = $("#imageData").val();
+        var certificateID = $("#Cerid").val();
+        var element = document.createElement('a');
+        element.setAttribute('href', imagepath);
+        element.setAttribute('download', certificateID);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }
+
+    function ViewCertificate()
+    {
+        var imagepath = $("#imageData").val();
+        window.open(imagepath, "_blank");
+    }
+    function ConvertToImage() {
+        try {
+            if (ImageGenrated == false) {
+                html2canvas($("#dv_certificate_basic")[0]).then(function (canvas) {
+                    var base64 = canvas.toDataURL('image/png');
+                    image = base64.replace('data:image/png;base64,', '');
+                    $("#imageData").val(base64);
+                    $('#prvimg').append('<img src="' + base64 + '" class="img-responsive">');
+                    ImageGenrated=true;
+                   // document.getElementById("dv_certificate_basic").style.display = "none";
+                    document.getElementById("dv_certificate_basic").style.visibility = "hidden";
+    document.getElementById("dv_certificate_basic").style.position = "absolute";
+                    //SaveImage();
+                });
+            }
+        }
+        catch (e) { alert(e); }
+        return false;
+    }
+    var currentStudentID = @ViewBag.StudentID;
+    function SaveImage() {
+        var studentID = currentStudentID;
+        var Cerid = $("#Cerid").val();
+        $.ajax({
+            type: 'Post',
+            url: "@Url.Action("CompetitionImageCerification", "Student")",
+            // data: '{ "StudentID" : ' + studentID + ',"imageData" : "' + image + '" }',
+            data: '{CertificationId: "' + Cerid + '",imageData : "' + image + '" }',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            success: function (msg) {
+                location.reload();
+            }
+        });
+    }
+</script>
