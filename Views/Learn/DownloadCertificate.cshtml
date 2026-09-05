@@ -1,0 +1,56 @@
+﻿@{
+    ViewBag.Title = "Interactive-Learning-Workspace";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<style>
+    /* 1. Reset the wrapper to be responsive */
+    #dv_Certification_Wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        overflow: hidden; /* Contain the scaling */
+        padding: 0;
+        margin: 0;
+    }
+
+    /* 2. Scale the certificate and force the container to shrink to fit */
+    .cerificate-block {
+        transform-origin: top center;
+        position: relative;
+    }
+</style>
+
+<div class="container mt-4">
+    <div id="dv_Certification_Wrapper" class="exam-panel">
+        <div id="dv_Certification_Content">
+            <div class="text-center p-lg"><i class="fa fa-spinner fa-spin fa-2x"></i> Checking eligibility...</div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        var isCheckingEligibility = false;
+
+        $(document).ready(function() {
+            loadCertificationStage();
+        });
+
+        function loadCertificationStage() {
+            // Prevent duplicate execution requests if already loading
+            if (isCheckingEligibility) return;
+            isCheckingEligibility = true;
+
+            $.get('@Url.Action("GetCertificateStatus", "Learn")', { courseId: @ViewBag.CourseID, Quizid: @ViewBag.Quizid }, function(res) {
+                $("#dv_Certification_Content").html(res);
+                isCheckingEligibility = false; // Reset lock after process finishes successfully
+            }).fail(function() {
+                // Reset lock on error so users can retry
+                isCheckingEligibility = false;
+                $("#dv_Certification_Content").html('<div class="text-center text-danger p-lg">Failed to load certification status. Please refresh.</div>');
+            });
+        }
+    </script>
+}

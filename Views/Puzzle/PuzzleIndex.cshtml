@@ -1,0 +1,199 @@
+﻿@{
+    ViewBag.Title = "PuzzleIndex";
+
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<link href="~/css/Puzzle.css" rel="stylesheet" />
+<script src="~/js/jquery-1.10.2.js"></script>
+<script src="~/js/wordfind.js"></script>
+<script src="~/js/wordfindgame1.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    :root {
+        --slate-900: #0f172a;
+        --slate-800: #1e293b;
+        --slate-700: #334155;
+        --slate-100: #f1f5f9;
+        --brand-blue: #0284c7;
+        --emerald-500: #10b981;
+    }
+
+    body {
+        background-color: #f8fafc;
+        color: var(--slate-900);
+    }
+
+    .lms-content-stage {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        padding: 20px 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    .puzzle-workspace-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #PuzzleGame {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        width: 100%;
+    }
+
+        #PuzzleGame #puzzle-container {
+            width: 100% !important;
+            max-width: 450px !important;
+            margin: 0 auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            overflow: hidden !important;
+            padding: 0 !important;
+            border: none !important;
+            float: none !important;
+            touch-action: none;
+        }
+
+            #PuzzleGame #puzzle-container div {
+                width: 100% !important;
+                margin: 0 !important;
+                display: flex !important;
+                justify-content: center !important;
+            }
+
+            #PuzzleGame #puzzle-container .puzzleSquare {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                flex: 1 !important;
+                height: auto !important;
+                aspect-ratio: 1 / 1 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: 1px solid #cbd5e1 !important;
+                background-color: #ffffff !important;
+                font-weight: 700 !important;
+                font-size: clamp(14px, 4vw, 20px) !important;
+                text-transform: uppercase;
+                color: var(--slate-800) !important;
+                cursor: pointer;
+                outline: none !important;
+            }
+
+            #PuzzleGame #puzzle-container button::-moz-focus-inner {
+                border: 0;
+            }
+
+            #PuzzleGame #puzzle-container .puzzleSquare.selected {
+                background-color: var(--brand-blue) !important;
+                color: #ffffff !important;
+            }
+
+            #PuzzleGame #puzzle-container .puzzleSquare.found {
+                background-color: var(--emerald-500) !important;
+                color: #ffffff !important;
+            }
+
+            #PuzzleGame #puzzle-container .puzzleSquare.complete {
+                background-color: var(--emerald-500) !important;
+            }
+
+    #puzzle-words {
+        width: 100%;
+        max-width: 600px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+        box-sizing: border-box;
+    }
+
+        #puzzle-words ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            justify-content: center;
+        }
+
+        #puzzle-words li {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--slate-700);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+            #puzzle-words li.wordFound {
+                background: #d1fae5 !important;
+                color: #065f46 !important;
+                border-color: #a7f3d0;
+                text-decoration: line-through;
+            }
+</style>
+
+<div class="container-fluid">
+    <div class="lms-content-stage animate__animated animate__fadeIn">
+        <div class="puzzle-workspace-card">
+            <input hidden="hidden" id="CourseID" value="@ViewBag.CourseID" />
+            <input hidden="hidden" id="Size" value="" />
+
+            <h2 style="font-weight:800; font-size:24px; margin:4px 0 2px 0;">Puzzle</h2>
+            <div id="PuzzleGame">
+                <div id="puzzle-container"></div>
+                <div id="puzzle-words"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        var words = '@ViewBag.HistWord';
+        var f = words.replace(/'/g, "\"");
+        var list = listToAray(f, ',');
+
+        if (words != null && words !== "") {
+            var gamePuzzle = wordfindgame.create(list, '#puzzle-container', '#puzzle-words', '@ViewBag.CourseID', '@ViewBag.PracticleID');
+
+            setTimeout(function() {
+                $('#puzzle-container td, #puzzle-container table').removeAttr('width height');
+                $('#puzzle-container td').css({ 'width': '', 'height': '' });
+            }, 50);
+        }
+
+        $("#btnSolved").click(function() {
+            var kk = wordfindgame.onClompleteWord("string");
+        });
+
+        function listToAray(fullString, separator) {
+            var fullArray = [];
+
+            if (fullString !== undefined && fullString !== "") {
+                if (fullString.indexOf(separator) == -1) {
+                    fullArray.push(fullString);
+                } else {
+                    fullArray = fullString.split(separator);
+                }
+            }
+
+            return fullArray;
+        }
+    });
+</script>

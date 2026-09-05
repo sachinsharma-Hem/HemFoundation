@@ -42,14 +42,21 @@
 		<Folder Include="Interfaces\" />
 		<Folder Include="Models\Masters\" />
 		<Folder Include="ViewModels\" />
+		<Folder Include="Views\Learn\Shared\" />
 		<Folder Include="wwwroot\images\banners\" />
 		<Folder Include="wwwroot\images\gallery\" />
 		<Folder Include="wwwroot\images\icons\" />
 		<Folder Include="wwwroot\images\logo\" />
 		<Folder Include="wwwroot\images\homepage\" />
 		<Folder Include="wwwroot\images\team\" />
+		<Folder Include="wwwroot\template\" />
 		<Folder Include="wwwroot\plugins\" />
 		<Folder Include="wwwroot\uploads\profiles\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\HemaVirtue\App.Web\js\wordfind.js" Link="wwwroot\js\wordfind.js" />
+	  <None Include="..\HemaVirtue\App.Web\js\wordfindgame.js" Link="wwwroot\js\wordfindgame.js" />
 	</ItemGroup>
 
 </Project>

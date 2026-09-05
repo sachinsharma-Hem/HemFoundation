@@ -693,7 +693,7 @@
         <div class="modal-content shadow border-0" style="border-radius:16px;">
             <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title font-weight-bold text-purple-brand"><i class="fas fa-upload mr-2"></i>Upload Submission</h5>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form asp-controller="Anubhuti" asp-action="IndividualCreativity1" method="post" enctype="multipart/form-data">
@@ -715,7 +715,7 @@
         <div class="modal-content shadow border-0" style="border-radius:16px;">
             <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title font-weight-bold text-purple-brand"><i class="fas fa-upload mr-2"></i>Upload Submission</h5>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form asp-controller="Anubhuti" asp-action="Creativity1" method="post" enctype="multipart/form-data">
@@ -733,6 +733,7 @@
 </div>
 
 @section Scripts {
+
     <script>
         function toggleCourseCollapse(mainCourseId) {
             var targetContainer = $('#collapse-mc-' + mainCourseId);

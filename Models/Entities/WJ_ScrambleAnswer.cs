@@ -8,7 +8,7 @@ namespace HemFoundation.Models.Entities
     public partial class WJ_ScrambleAnswer
     {
         [Key]
-        [Column("ansiod")]
+        [Column("ansid")]
         public int AnsId { get; set; }
         [Column("questionid")]
         public int? QuestionId { get; set; }

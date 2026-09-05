@@ -31,5 +31,7 @@ namespace HemFoundation.Models.Entities
         public int? ModifiedBy { get; set; }
         [Column("modifiedon")]
         public DateTime? ModifiedOn { get; set; }
+        [Column("courseid")]
+        public int CourseID { get; set; }
     }
 }

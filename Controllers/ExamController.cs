@@ -158,7 +158,7 @@ namespace HemFoundation.Controllers
 
                     // Retrieve the correct answer flag for the selected option using QuestionOption table
                     var rightAnswer = _context.QuestionOption
-                                              .Where(x => x.OptionID == model.selectedOption)
+                                              .Where(x => x.OptionID == model.selectedOption && x.Options!=null)
                                               .Select(x => x.IsAnswer)
                                               .FirstOrDefault();
 
@@ -365,7 +365,323 @@ namespace HemFoundation.Controllers
         [AllowAnonymous]
         [HttpGet("Exam/Survey")]
         [HttpGet("Exam/SurveyNew")]
-        public IActionResult Survey(int courseID, int topicID, int languageID = 1)
+        
+        public async Task<IActionResult> Survey(int courseID, int topicID, int languageID = 1)
+        {
+            // 1. Session check for .NET Core
+            int? studentId = HttpContext.Session.GetInt32("UserID");
+            if (!studentId.HasValue)
+            {
+                studentId = HttpContext.Session.GetInt32("TempStudentID");
+            }
+
+            if (!studentId.HasValue)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            int studentID = studentId.Value;
+            ViewData["SurveyData"] = null;
+
+            QuizModel obj = new QuizModel();
+            obj.LanguageID = languageID > 0 ? languageID : 1;
+            obj.StudentID = studentID;
+
+            string studentStandard = "";
+            string courseName = "";
+
+            // 2. Fetch Student Standard & Course Name from PostgreSQL
+            using (var conn = new NpgsqlConnection(_connectionString))
+            {
+                await conn.OpenAsync();
+
+                using (var cmdStd = new NpgsqlCommand("SELECT standard FROM wj_students WHERE studentid = @StudentID", conn))
+                {
+                    cmdStd.Parameters.AddWithValue("@StudentID", studentID);
+                    var resStd = await cmdStd.ExecuteScalarAsync();
+                    studentStandard = resStd?.ToString() ?? "";
+                }
+
+                using (var cmdCourse = new NpgsqlCommand("SELECT coursename FROM courses WHERE courseid = @CourseID", conn))
+                {
+                    cmdCourse.Parameters.AddWithValue("@CourseID", courseID);
+                    var resCourse = await cmdCourse.ExecuteScalarAsync();
+                    courseName = resCourse?.ToString() ?? "";
+                }
+            }
+
+            if (string.IsNullOrEmpty(courseName))
+            {
+                return RedirectToAction("Index", "Learn");
+            }
+
+            string trimmedCourseName = courseName.Trim();
+
+            // 3. Validation Rule: Post Value / Post - Value Survey (Standards 13, 14, 15)
+            if (trimmedCourseName.Contains("Post Value") || trimmedCourseName.Contains("Post - Value Survey"))
+            {
+                if (studentStandard.Contains("13") || studentStandard.Contains("14") || studentStandard.Contains("15"))
+                {
+                    int isEligible = 0;
+
+                    using (var conn = new NpgsqlConnection(_connectionString))
+                    {
+                        await conn.OpenAsync();
+
+                        using (var cmd = new NpgsqlCommand("SELECT public.sp_checkvaluesurveyeligibility(@UserID)", conn))
+                        {
+                            cmd.Parameters.AddWithValue("@UserID", studentID);
+
+                            var result = await cmd.ExecuteScalarAsync();
+                            if (result != null && int.TryParse(result.ToString(), out int val))
+                            {
+                                isEligible = val;
+                            }
+                        }
+                    }
+
+                    if (isEligible == 0)
+                    {
+                        TempData["UseSweetAlert2SP"] = true;
+                        TempData["SweetAlertTitle"] = "Incomplete Courses";
+                        TempData["SweetAlertMessage"] = "Please complete all previous required courses before attempting this survey!";
+                        TempData["SweetAlertType"] = "warning";
+                        return RedirectToAction("Showalert", "Exam", new { courseName = courseName });
+                    }
+                }
+            }
+
+            // 4. Validation Rule: Week 4 checks for standard < 13/14/15
+            if (trimmedCourseName.Contains("Week 4") || trimmedCourseName.Contains("week 4"))
+            {
+                if (!(studentStandard.Contains("13") || studentStandard.Contains("14") || studentStandard.Contains("15")))
+                {
+                    int status = 0;
+
+                    using (var conn = new NpgsqlConnection(_connectionString))
+                    {
+                        await conn.OpenAsync();
+
+                        using (var cmd = new NpgsqlCommand("CALL public.hf_sp_checkpblstatus(@p_courseid, @p_userid, @p_status)", conn))
+                        {
+                            cmd.CommandType = CommandType.Text;
+
+                            // Input parameters
+                            cmd.Parameters.AddWithValue("@p_courseid", courseID);
+                            cmd.Parameters.AddWithValue("@p_userid", studentID);
+
+                            // Output parameter
+                            var statusParam = new NpgsqlParameter("@p_status", NpgsqlTypes.NpgsqlDbType.Integer)
+                            {
+                                Direction = ParameterDirection.Output
+                            };
+                            cmd.Parameters.Add(statusParam);
+
+                            await cmd.ExecuteNonQueryAsync();
+
+                            if (statusParam.Value != null && statusParam.Value != DBNull.Value)
+                            {
+                                status = Convert.ToInt32(statusParam.Value);
+                            }
+                        }
+                    }
+
+                    if (status == 2)
+                    {
+                        TempData["UseSweetAlert2SP"] = true;
+                        TempData["SweetAlertTitle"] = "Action Required";
+                        TempData["SweetAlertMessage"] = "Please complete your individual And family PBL projects first!";
+                        TempData["SweetAlertType"] = "warning";
+                        return RedirectToAction("Showalert", "Exam", new { courseName = courseName });
+                    }
+                    else if (status == 3)
+                    {
+                        GroupProjectController groupProjectController = HttpContext.RequestServices.GetService(typeof(GroupProjectController)) as GroupProjectController;
+                        if (groupProjectController != null)
+                        {
+                            // 1. Await the asynchronous controller action
+                            var result = await groupProjectController.RaiseRequest(courseID);
+
+                            // 2. Extract the message from the JsonResult returned by RaiseRequest in ASP.NET Core
+                            if (result is JsonResult jsonResult && jsonResult.Value != null)
+                            {
+                                var data = jsonResult.Value;
+                                string message = data.GetType().GetProperty("message")?.GetValue(data, null)?.ToString() ?? "Request sent successfully.";
+
+                                // 3. Set SweetAlert for user feedback
+                                TempData["UseSweetAlert2SP"] = true;
+                                TempData["SweetAlertTitle"] = "Request Sent";
+                                TempData["SweetAlertMessage"] = message;
+                                TempData["SweetAlertType"] = "success";
+
+                                return RedirectToAction("Showalert", "Exam", new { courseName = courseName });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 5. Validation Rule: Higher Standard Completion for Post-Value
+            if (trimmedCourseName.Contains("Post-Value") || trimmedCourseName.Contains("Post Value"))
+            {
+                if (studentStandard.Contains("13") || studentStandard.Contains("14") || studentStandard.Contains("15"))
+                {
+                    int status = 3;
+
+                    using (var conn = new NpgsqlConnection(_connectionString))
+                    {
+                        await conn.OpenAsync();
+
+                        // In Npgsql, calling procedures with OUT parameters uses the CALL keyword syntax
+                        using (var cmd = new NpgsqlCommand("CALL public.hf_sp_gethigherstandardcompletion(@p_students_id, @p_status)", conn))
+                        {
+                            cmd.CommandType = CommandType.Text;
+
+                            // Input parameter
+                            cmd.Parameters.AddWithValue("@p_students_id", studentID);
+
+                            // Output parameter
+                            var statusParam = new NpgsqlParameter("@p_status", NpgsqlTypes.NpgsqlDbType.Integer)
+                            {
+                                Direction = ParameterDirection.Output
+                            };
+                            cmd.Parameters.Add(statusParam);
+
+                            await cmd.ExecuteNonQueryAsync();
+
+                            if (statusParam.Value != null && statusParam.Value != DBNull.Value)
+                            {
+                                status = Convert.ToInt32(statusParam.Value);
+                            }
+                        }
+                    }
+
+                    if (status == 3)
+                    {
+                        TempData["UseSweetAlert2SP"] = true;
+                        TempData["SweetAlertTitle"] = "Action Required";
+                        TempData["SweetAlertMessage"] = "Please complete your MCQ and Practical!";
+                        TempData["SweetAlertType"] = "warning";
+                        return RedirectToAction("Showalert", "Exam", new { courseName = courseName });
+                    }
+                }
+            }
+
+            // 6. Validation Rule: Post Beliefs / Post Beha check
+            if (trimmedCourseName.Contains("Post Beha") || trimmedCourseName.Contains("Post Belief"))
+            {
+                // Ensure you implement or map HasCompletedFivePostSurveys using Npgsql
+                if (!await HasCompletedFivePostSurveysAsync(studentID))
+                {
+                    TempData["UseSweetAlert2SP"] = true;
+                    TempData["SweetAlertTitle"] = "Message";
+                    TempData["SweetAlertMessage"] = "You have not completed Previous Courses including Survey!!Please complete previous courses!!";
+                    TempData["SweetAlertType"] = "info";
+                    return RedirectToAction("Showalert", "Exam", new { courseName = courseName });
+                }
+            }
+
+            TempData["Name"] = courseName;
+            TempData["CName"] = courseName;
+            obj.CourseName1 = courseName;
+
+            // 7. Check if Survey already submitted in PostgreSQL
+            object getSurvey = null;
+            using (var conn = new NpgsqlConnection(_connectionString))
+            {
+                await conn.OpenAsync();
+                using (var cmd = new NpgsqlCommand("SELECT 1 FROM surveyresponse WHERE userid = @UserID AND courseid = @CourseID LIMIT 1", conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserID", studentID);
+                    cmd.Parameters.AddWithValue("@CourseID", courseID);
+                    getSurvey = await cmd.ExecuteScalarAsync();
+                }
+            }
+
+            if (getSurvey == null)
+            {
+                // 8. Fetch Survey Questions & Translations
+                string query = @"
+            SELECT e.id, e.courseid, e.topicid, e.subtopicid, e.topicname,
+                   COALESCE(t.question, e.question) AS question,
+                   COALESCE(t.option1, e.option1) AS option1,
+                   COALESCE(t.option2, e.option2) AS option2,
+                   COALESCE(t.option3, e.option3) AS option3,
+                   COALESCE(t.option4, e.option4) AS option4,
+                   COALESCE(t.option5, e.option5) AS option5
+            FROM public.hf_surveydata e
+            LEFT JOIN public.hf_tbl_surveydatatranslation t 
+                ON e.id = t.parentid AND t.languageid = @LanguageID
+            WHERE e.courseid::text = @CourseID::text AND e.subtopicid::text = @TopicID::text";
+
+                DataTable dataTable = new DataTable();
+                using (var conn = new NpgsqlConnection(_connectionString))
+                {
+                    await conn.OpenAsync();
+                    using (var cmd = new NpgsqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@LanguageID", obj.LanguageID);
+                        cmd.Parameters.AddWithValue("@CourseID", courseID);
+                        cmd.Parameters.AddWithValue("@TopicID", topicID.ToString());
+
+                        using (var adapter = new NpgsqlDataAdapter(cmd))
+                        {
+                            adapter.Fill(dataTable);
+                        }
+                    }
+                }
+
+                ViewData["SurveyData"] = dataTable.Rows.Count > 0 ? dataTable.AsEnumerable() : null;
+                ViewBag.CourseID = courseID;
+                obj.CourseID = courseID;
+
+                TempData["ID"] = courseID.ToString();
+                TempData["TopicID"] = topicID.ToString();
+            }
+            else
+            {
+                TempData["UseSweetAlert2SP"] = true;
+                TempData["SweetAlertTitle"] = "Success";
+                TempData["SweetAlertMessage"] = "You have already submitted the survey.";
+                TempData["SweetAlertType"] = "success";
+                return RedirectToAction("Showalert", "Exam", new { courseName = courseName });
+            }
+
+            return View(obj);
+        }
+        public async Task<bool> HasCompletedFivePostSurveysAsync(int studentId)
+        {
+            bool isCompleted = false;
+
+            using (var conn = new NpgsqlConnection(_connectionString))
+            {
+                await conn.OpenAsync();
+
+                // In PostgreSQL, functions returning a scalar value are called via SELECT statement
+                using (var cmd = new NpgsqlCommand("SELECT public.hf_sp_checkstudentsurveystatus(@StudentID)", conn))
+                {
+                    cmd.Parameters.AddWithValue("@StudentID", studentId);
+
+                    try
+                    {
+                        var result = await cmd.ExecuteScalarAsync();
+
+                        if (result != null && result != DBNull.Value)
+                        {
+                            isCompleted = Convert.ToBoolean(result);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Replace with your project's logger service
+                        Console.WriteLine("Error checking survey status: " + ex.Message);
+                    }
+                }
+            }
+
+            return isCompleted;
+        }
+        public IActionResult Survey1(int courseID, int topicID, int languageID = 1)
         {
             // 1. Session check for .NET Core
             int? studentId = HttpContext.Session.GetInt32("UserID");

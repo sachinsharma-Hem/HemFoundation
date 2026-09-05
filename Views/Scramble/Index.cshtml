@@ -304,13 +304,13 @@
                         practID: '@ViewBag.PracticleID'
                     },
                     success: function(data) {
-                        if (data && data.Success) {
-                            alert("Congrats! " + data.Message);
+                        if (data && data.success) {
+                            alert("Congrats! " + data.message);
                             setTimeout(function() {
                                 window.location.href = '/learn/index';
                             }, 3000);
                         } else {
-                            alert('An error occurred: ' + (data ? data.Message : 'Unknown error'));
+                            alert('An error occurred: ' + (data ? data.message : 'Unknown error'));
                             $submitBtn.prop('disabled', false);
                         }
                     },

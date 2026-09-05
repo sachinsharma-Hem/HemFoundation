@@ -1,0 +1,50 @@
+﻿@{
+    ViewBag.Title = "Affirmation";
+    Layout = "~/Views/Shared/_AcademicLayout.cshtml";
+}
+
+<div class="text-center p-4">
+    <h3>Eligibility Confirmed!</h3>
+    <p>Please accept the following affirmation to generate your certificate:</p>
+    <div class="card p-3 bg-light">
+        <strong>"I affirm my commitment of living human values in my life"</strong>
+    </div>
+    <div class="mt-3">
+        <input type="checkbox" id="chkAffirm" /> <label for="chkAffirm">I Agree</label>
+    </div>
+    <!-- Added an ID to easily target the button -->
+    <button class="btn btn-success mt-3" id="btnGenerate" onclick="fnGenerateCertificate(this)">Generate Certificate</button>
+</div>
+
+@section pagescript{
+    <script>
+        function fnGenerateCertificate(btn) {
+            if(!$("#chkAffirm").is(":checked")) {
+                Swal.fire("Required", "Please check the affirmation box.", "warning");
+                return;
+            }
+
+            // Disable the button immediately on click to prevent double-clicking
+            var $btn = $(btn);
+            $btn.prop('disabled', true).text('Generating...');
+
+            $.post('@Url.Action("UpdateStudentCertification", "Student")', {
+                courseId: @ViewBag.Courseid,
+                studentId: @ViewBag.StudentsID,
+                quizId: @ViewBag.Quizid,
+                isStudentCertification: 'true'  
+            }, function(res) {
+                if(res) {
+                    Swal.fire("Success", "Certificate generated!", "success").then(() => location.reload());
+                } else {
+                    // Re-enable if response fails or returns false
+                    $btn.prop('disabled', false).text('Generate Certificate');
+                }
+            }).fail(function() {
+                // Re-enable if AJAX errors out
+                Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                $btn.prop('disabled', false).text('Generate Certificate');
+            });
+        }
+    </script>
+}
