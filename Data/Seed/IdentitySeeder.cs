@@ -30,6 +30,7 @@ public static class IdentitySeeder
             "HF_Volunteers"
         };
 
+<<<<<<< Updated upstream
         foreach (var roleName in roles)
         {
             // Directly aspnetroles se check
@@ -52,6 +53,21 @@ public static class IdentitySeeder
                 ");
             }
         }
+=======
+        //foreach (var roleName in roles)
+        //{
+        //    var roleExists = await context.Roles.AnyAsync(r => r.Name == roleName);
+        //    if (!roleExists)
+        //    {
+        //        context.Roles.Add(new IdentityRole
+        //        {
+        //            Id = Guid.NewGuid().ToString(),
+        //            Name = roleName
+        //        });
+        //    }
+        //}
+        //await context.SaveChangesAsync();
+>>>>>>> Stashed changes
 
 
         // =========================================================

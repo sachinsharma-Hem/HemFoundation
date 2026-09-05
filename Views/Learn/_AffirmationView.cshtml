@@ -1,8 +1,8 @@
-﻿@{
+﻿@* @{
     ViewBag.Title = "Affirmation";
-    Layout = "~/Views/Shared/_AcademicLayout.cshtml";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
 }
-
+ *@
 <div class="text-center p-4">
     <h3>Eligibility Confirmed!</h3>
     <p>Please accept the following affirmation to generate your certificate:</p>
@@ -16,7 +16,7 @@
     <button class="btn btn-success mt-3" id="btnGenerate" onclick="fnGenerateCertificate(this)">Generate Certificate</button>
 </div>
 
-@section pagescript{
+@* @section Scripts{ *@
     <script>
         function fnGenerateCertificate(btn) {
             if(!$("#chkAffirm").is(":checked")) {
@@ -28,7 +28,7 @@
             var $btn = $(btn);
             $btn.prop('disabled', true).text('Generating...');
 
-            $.post('@Url.Action("UpdateStudentCertification", "Student")', {
+            $.post('@Url.Action("UpdateStudentCertification", "Learn")', {
                 courseId: @ViewBag.Courseid,
                 studentId: @ViewBag.StudentsID,
                 quizId: @ViewBag.Quizid,
@@ -47,4 +47,3 @@
             });
         }
     </script>
-}

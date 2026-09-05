@@ -1,6 +1,6 @@
 ﻿
-@model App.Web.Models.StudentCertificateModel
-@using App.BAL
+@model HemFoundation.Models.StudentCertificateModel
+
 <style>
     @@font-face {
         font-family: 'SourceSansPro-Light';
@@ -79,7 +79,8 @@
     }
 </style>
 @{
-    string cerid = Model.CertificationNo;
+    //string cerid = Model.CertificationNo;
+    string cerid = "h88y8ju";
 }
 @if (Model != null)
 {
@@ -113,9 +114,9 @@
     </div>
 }
 
-<script src="~/Scripts/jquery-3.2.1.js"></script>
-<script src="~/Scripts/jquery-ui.js"></script>
-<script src="~/Content/js/html2canvas.min.js"></script>
+<script src="~/js/jquery-3.2.1.js"></script>
+<script src="~/js/jquery-ui.js"></script>
+<script src="~/js/html2canvas.min.js"></script>
 <script type="text/javascript">
     var image;
     var settimeout;
@@ -127,6 +128,7 @@
     });
     function DownloadCertificate()
     {
+        debugger
 
         var imagepath = $("#imageData").val();
         var certificateID = $("#Cerid").val();
@@ -163,9 +165,9 @@
         catch (e) { alert(e); }
         return false;
     }
-
+    var currentStudentID = @ViewBag.StudentID;
     function SaveImage() {
-        var studentID = @SessionUser.User.User.UserID;
+        var studentID = currentStudentID;
         var Cerid = $("#Cerid").val();
         $.ajax({
             type: 'Post',
