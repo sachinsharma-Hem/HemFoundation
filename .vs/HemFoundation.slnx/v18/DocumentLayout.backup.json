@@ -3,20 +3,32 @@
   "WorkspaceRootPath": "H:\\Sachin\\Project\\HemFoundation\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\data\\seed\\identityseeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:data\\seed\\identityseeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\models\\entities\\aspnetroles.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\entities\\aspnetroles.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\api\\roleapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\roleapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\api\\volunteerapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\volunteerapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\models\\entities\\aspnetusers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\entities\\aspnetusers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\affiliate\\volunteers.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\affiliate\\volunteers.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\affiliate\\partials\\_assignschoolmodal.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\affiliate\\partials\\_assignschoolmodal.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\models\\entities\\volunteer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\entities\\volunteer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\models\\entities\\users.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\entities\\users.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -35,41 +47,75 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "ApplicationDbContext.cs",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Data\\ApplicationDbContext.cs",
-              "RelativeDocumentMoniker": "Data\\ApplicationDbContext.cs",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Data\\ApplicationDbContext.cs",
-              "RelativeToolTip": "Data\\ApplicationDbContext.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAIAAAAAAAAAA==",
+              "Title": "IdentitySeeder.cs",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Data\\Seed\\IdentitySeeder.cs",
+              "RelativeDocumentMoniker": "Data\\Seed\\IdentitySeeder.cs",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Data\\Seed\\IdentitySeeder.cs",
+              "RelativeToolTip": "Data\\Seed\\IdentitySeeder.cs",
+              "ViewState": "AgIAACIAAAAAAAAAAAAgwEIAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-04T12:33:47.989Z",
+              "WhenOpened": "2026-09-05T08:44:40.846Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "AspNetRoles.cs",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Models\\Entities\\AspNetRoles.cs",
-              "RelativeDocumentMoniker": "Models\\Entities\\AspNetRoles.cs",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Models\\Entities\\AspNetRoles.cs",
-              "RelativeToolTip": "Models\\Entities\\AspNetRoles.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAWAAAAAAAAAA==",
+              "Title": "RoleApiController.cs",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\RoleApiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Api\\RoleApiController.cs",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\RoleApiController.cs",
+              "RelativeToolTip": "Controllers\\Api\\RoleApiController.cs",
+              "ViewState": "AgIAAAcBAAAAAAAAAAAowCsBAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-04T12:06:59.817Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-05T08:42:17.969Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "_AssignSchoolModal.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Partials\\_AssignSchoolModal.cshtml",
+              "RelativeDocumentMoniker": "Views\\Affiliate\\Partials\\_AssignSchoolModal.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Partials\\_AssignSchoolModal.cshtml",
+              "RelativeToolTip": "Views\\Affiliate\\Partials\\_AssignSchoolModal.cshtml",
+              "ViewState": "AgIAAL0BAAAAAAAAAAAAAOMBAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-05T08:25:35.194Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "AspNetUsers.cs",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Models\\Entities\\AspNetUsers.cs",
-              "RelativeDocumentMoniker": "Models\\Entities\\AspNetUsers.cs",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Models\\Entities\\AspNetUsers.cs",
-              "RelativeToolTip": "Models\\Entities\\AspNetUsers.cs",
-              "ViewState": "AgIAACMAAAAAAAAAAAAwwD0AAAABAAAAAAAAAA==",
+              "Title": "Volunteers.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Volunteers.cshtml",
+              "RelativeDocumentMoniker": "Views\\Affiliate\\Volunteers.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Volunteers.cshtml",
+              "RelativeToolTip": "Views\\Affiliate\\Volunteers.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-05T07:20:55.954Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Volunteer.cs",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Models\\Entities\\Volunteer.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\Volunteer.cs",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Models\\Entities\\Volunteer.cs",
+              "RelativeToolTip": "Models\\Entities\\Volunteer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAgwA0AAAA8AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-04T11:50:22.998Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-05T07:02:52.591Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Users.cs",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Models\\Entities\\Users.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\Users.cs",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Models\\Entities\\Users.cs",
+              "RelativeToolTip": "Models\\Entities\\Users.cs",
+              "ViewState": "AgIAAF0AAAAAAAAAAAA9wHAAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-05T05:45:08.684Z"
             },
             {
               "$type": "Document",
@@ -79,10 +125,9 @@
               "RelativeDocumentMoniker": "Controllers\\Api\\VolunteerApiController.cs",
               "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\VolunteerApiController.cs",
               "RelativeToolTip": "Controllers\\Api\\VolunteerApiController.cs",
-              "ViewState": "AgIAAIwAAAAAAAAAAAAswPcAAAAkAAAAAAAAAA==",
+              "ViewState": "AgIAAMwAAAAAAAAAAAAYwO4AAABEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-04T10:52:18.405Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-04T10:52:18.405Z"
             }
           ]
         }

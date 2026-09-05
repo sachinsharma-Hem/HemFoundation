@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using ClosedXML.Excel;
+using System.Collections;
 
 namespace HemFoundation.Controllers.Api
 {
@@ -150,100 +151,189 @@ namespace HemFoundation.Controllers.Api
         }
 
         // 3. SINGLE REGISTRATION & UPDATE
-        //[HttpPost("register")]
-        //public async Task<IActionResult> RegisterVolunteer([FromBody] VolunteerDto model)
-        //{
-        //    var aff = await GetCurrentAffiliate();
-        //    if (aff == null) return Unauthorized();
+        [HttpPost("register")]
+        public async Task<IActionResult> RegisterVolunteer([FromBody] VolunteerDto model)
+        {
+            var aff = await GetCurrentAffiliate();
 
-        //    if (model.Id > 0)
-        //    {
-        //        // Update Logic (Agar pehle se hai)
-        //        var vol = await _context.Volunteers.FirstOrDefaultAsync(v => v.Id == model.Id && v.AffiliateId == aff.UserID);
-        //        if (vol == null) return NotFound(new { success = false, message = "Volunteer not found." });
+            if (aff == null)
+                return Unauthorized();
 
-        //        vol.FirstName = model.FirstName;
-        //        vol.LastName = model.LastName;
-        //        vol.MobileNo = model.MobileNo;
-        //        vol.Email = model.Email;
-        //        vol.InstituteId = model.InstituteId;
-        //        vol.ModifiedDate = DateTime.UtcNow;
+            // =====================================================
+            // UPDATE VOLUNTEER
+            // =====================================================
+            if (model.Id > 0)
+            {
+                var vol = await _context.Volunteers
+                    .FirstOrDefaultAsync(v =>
+                        v.Id == model.Id &&
+                        v.AffiliateId == aff.UserID);
 
-        //        await _context.SaveChangesAsync();
-        //        return Ok(new { success = true, message = "Volunteer updated successfully." });
-        //    }
-        //    else
-        //    {
-        //        // 1. Role Ensure karna (HF_Volunteers)
-        //        string roleName = "HF_Volunteers";
-        //        if (!await _roleManager.RoleExistsAsync(roleName))
-        //        {
-        //            await _roleManager.CreateAsync(new IdentityRole(roleName));
-        //        }
+                if (vol == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Volunteer not found."
+                    });
+                }
 
-        //        string baseMobile = model.MobileNo.Trim();
-        //        string uniqueUsername = baseMobile;
-        //        int counter = 1;
-        //        while (await _userManager.FindByNameAsync(uniqueUsername) != null)
-        //        {
-        //            uniqueUsername = $"{baseMobile}_{counter}";
-        //            counter++;
-        //        }
+                vol.FirstName = model.FirstName;
+                vol.LastName = model.LastName;
+                vol.MobileNo = model.MobileNo;
+                vol.Email = model.Email;
+                vol.InstituteId = model.InstituteId;
+                vol.ModifiedDate = DateTime.UtcNow;
 
-        //        // 2. AspNetUsers Table Entry (Identity Login ke liye)
-        //        var appUser = new ApplicationUser
-        //        {
-        //            UserName = uniqueUsername,
-        //            Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim(),
-        //            FullName = $"{model.FirstName} {model.LastName}",
-        //            PhoneNumber = baseMobile,
-        //            EmailConfirmed = true
-        //        };
+                await _context.SaveChangesAsync();
 
-        //        var result = await _userManager.CreateAsync(appUser, uniqueUsername);
-        //        if (!result.Succeeded)
-        //            return BadRequest(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+                return Ok(new
+                {
+                    success = true,
+                    message = "Volunteer updated successfully."
+                });
+            }
 
-        //        await _userManager.AddToRoleAsync(appUser, roleName);
+            // =====================================================
+            // NEW REGISTRATION
+            // =====================================================
 
-        //        // 3. Volunteers Table Entry
-        //        var volunteer = new Volunteer
-        //        {
-        //            FirstName = model.FirstName,
-        //            LastName = model.LastName,
-        //            MobileNo = baseMobile,
-        //            Email = model.Email,
-        //            InstituteId = model.InstituteId,
-        //            AffiliateId = aff.UserID,
-        //            AspNetUserId = appUser.Id,
-        //            Password_ = uniqueUsername,
-        //            IsActive = true,
-        //            CreatedDate = DateTime.UtcNow
-        //        };
-        //        _context.Volunteers.Add(volunteer);
+            string baseMobile = model.MobileNo.Trim();
 
-        //        // 4. Users Table Entry (Custom App Users table mapping)
-        //        var customUser = new Users
-        //        {
-        //            FirstName = model.FirstName,
-        //            LastName = model.LastName,
-        //            MobileNo = baseMobile,
-        //            EmailID = model.Email,
-        //            AspNetUserID = appUser.Id,
-        //            Password_ = uniqueUsername,
-        //            IsActive = true,
-        //            RegisterFrom = "Volunteer",
-        //            CreatedDate = DateTime.UtcNow
-        //        };
-        //        _context.Users.Add(customUser);
+            string uniqueUsername = baseMobile;
+            int counter = 1;
 
-        //        // Sabhi changes ek sath database mein save karna
-        //        await _context.SaveChangesAsync();
+            while (await _context.Set<ApplicationUser>()
+                .AnyAsync(x => x.UserName == uniqueUsername))
+            {
+                uniqueUsername = $"{baseMobile}_{counter}";
+                counter++;
+            }
 
-        //        return Ok(new { success = true, message = "Volunteer registered successfully in all tables." });
-        //    }
-        //}
+            string password = uniqueUsername;
 
+            // =====================================================
+            // ASPNETUSERS
+            // =====================================================
+
+            var appUser = new ApplicationUser
+            {
+                Id = Guid.NewGuid().ToString(),
+                UserName = uniqueUsername,
+                Email = string.IsNullOrWhiteSpace(model.Email)
+                    ? null
+                    : model.Email.Trim(),
+                PhoneNumber = baseMobile,
+                EmailConfirmed = true,
+                PhoneNumberConfirmed = false,
+                SecurityStamp = Guid.NewGuid().ToString()
+            };
+
+            var passwordHasher = new PasswordHasher<ApplicationUser>();
+            appUser.PasswordHash = passwordHasher.HashPassword(appUser, password);
+
+            _context.Set<ApplicationUser>().Add(appUser);
+
+            // =====================================================
+            // ROLE = Volunteer
+            // =====================================================
+
+            var role = await _context.AspNetRoles
+                .FirstOrDefaultAsync(x => x.Name == "Volunteer");
+            if (role == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Role 'Volunteer' not found in aspnetroles."
+                });
+            }
+
+            // =====================================================
+            // ASPNETUSERROLES
+            // =====================================================
+
+            _context.Set<IdentityUserRole<string>>().Add(
+                new IdentityUserRole<string>
+                {
+                    UserId = appUser.Id,
+                    RoleId = role.Id
+                }
+            );
+
+            // =====================================================
+            // GENERATE SHARED ID (Users & Volunteers dono ke liye same)
+            // =====================================================
+            int nextId = 1;
+            if (await _context.Users.AnyAsync())
+            {
+                int maxId = await _context.Users.MaxAsync(u => u.UserID);
+                nextId = maxId + 1;
+            }
+
+            // =====================================================
+            // USERS TABLE
+            // =====================================================
+
+            var customUser = new Users
+            {
+                UserID = nextId, // Dono jagah yeh hi ID jayegi
+                UserCode = uniqueUsername,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                MobileNo = baseMobile,
+                EmailID = model.Email,
+                IsActive = true,
+                CreatedBy = aff.UserID,
+                CreatedDate = DateTime.UtcNow,
+                AspNetUserID = appUser.Id,
+                RegisterFrom = "Volunteer",
+                Password_ = password,
+                IsMobileVerified = false,
+                IsEmailVerified = false,
+                isUserDeactivated = false
+            };
+
+            _context.Users.Add(customUser);
+
+            // =====================================================
+            // VOLUNTEERS TABLE
+            // =====================================================
+
+            var volunteer = new Volunteer
+            {
+                Id = nextId, // Yahan bhi wahi same ID set kar di hai
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                MobileNo = baseMobile,
+                Email = model.Email,
+                InstituteId = model.InstituteId,
+                AffiliateId = aff.UserID,
+                AspNetUserId = appUser.Id,
+                Password_ = password,
+                IsActive = true,
+                IsDeleted = false,
+
+                CreatedDate = DateTime.UtcNow
+            };
+
+            _context.Volunteers.Add(volunteer);
+
+            // =====================================================
+            // SAVE ALL
+            // =====================================================
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = "Volunteer registered successfully with synchronized IDs.",
+                username = uniqueUsername,
+                password = password,
+                generatedId = nextId
+            });
+        }
         // 4. DOWNLOAD SAMPLE EXCEL
         [HttpGet("download-sample")]
         [AllowAnonymous]
@@ -342,70 +432,325 @@ namespace HemFoundation.Controllers.Api
         }
 
         // 6. SAVE BULK DATA (BULK UPLOAD STEP 2)
+        // =========================================================
+        // 6. SAVE BULK DATA
+        // Same registration process as manual RegisterVolunteer()
+        // =========================================================
         [HttpPost("save-bulk")]
         public async Task<IActionResult> SaveBulk([FromBody] BulkSaveRequestDto request)
         {
-            if (request == null || request.ValidData == null || !request.ValidData.Any())
+            try
             {
-                return BadRequest(new { success = false, message = "Invalid data received." });
-            }
-
-            var aff = await GetCurrentAffiliate();
-            if (aff == null) return Unauthorized();
-
-            string roleName = "Volunteer";
-            if (!await _roleManager.RoleExistsAsync(roleName))
-                await _roleManager.CreateAsync(new IdentityRole(roleName));
-
-            int addedCount = 0;
-
-            foreach (var item in request.ValidData)
-            {
-                string baseMobile = item.MobileNo.Trim();
-                string uniqueUsername = baseMobile;
-                int counter = 1;
-
-                while (await _userManager.FindByNameAsync(uniqueUsername) != null)
+                // ---------------------------------------------------------
+                // 1. BASIC VALIDATION
+                // ---------------------------------------------------------
+                if (request == null ||
+                    request.ValidData == null ||
+                    !request.ValidData.Any())
                 {
-                    uniqueUsername = $"{baseMobile}_{counter}";
-                    counter++;
-                }
-
-                string? cleanEmail = string.IsNullOrWhiteSpace(item.Email) || !item.Email.Contains("@") ? null : item.Email.Trim();
-
-                var appUser = new ApplicationUser
-                {
-                    UserName = uniqueUsername,
-                    Email = cleanEmail,
-                    FullName = $"{item.FirstName} {item.LastName}",
-                    PhoneNumber = baseMobile,
-                    EmailConfirmed = true
-                };
-
-                var result = await _userManager.CreateAsync(appUser, uniqueUsername);
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(appUser, roleName);
-
-                    _context.Volunteers.Add(new Volunteer
+                    return BadRequest(new
                     {
-                        FirstName = item.FirstName.Trim(),
-                        LastName = item.LastName.Trim(),
-                        MobileNo = baseMobile,
-                        Email = cleanEmail,
-                        InstituteId = request.InstituteId,
-                        AffiliateId = aff.UserID,
-                        AspNetUserId = appUser.Id,
-                        Password_ = uniqueUsername,
-                        IsActive = true,
-                        CreatedDate = DateTime.UtcNow
+                        success = false,
+                        message = "Invalid data received."
                     });
-                    addedCount++;
                 }
-            }
 
-            await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = $"{addedCount} Volunteers verified and saved successfully!" });
+                // ---------------------------------------------------------
+                // 2. CURRENT AFFILIATE
+                // ---------------------------------------------------------
+                var aff = await GetCurrentAffiliate();
+
+                if (aff == null)
+                {
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        message = "Affiliate not found."
+                    });
+                }
+
+                // ---------------------------------------------------------
+                // 3. GET Volunteer ROLE
+                // Same role used in manual registration
+                // ---------------------------------------------------------
+                var role = await _context.AspNetRoles
+                    .FirstOrDefaultAsync(x => x.Name == "Volunteer");
+
+                if (role == null)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Role 'Volunteer' not found in aspnetroles."
+                    });
+                }
+
+                // ---------------------------------------------------------
+                // 4. GET NEXT SHARED ID
+                //
+                // Users.UserID == Volunteers.Id
+                //
+                // Example:
+                // Current max = 105
+                // First Excel volunteer = 106
+                // Second Excel volunteer = 107
+                // ---------------------------------------------------------
+                int nextId = 1;
+
+                var maxUserId = await _context.Users
+                    .Select(x => (int?)x.UserID)
+                    .MaxAsync();
+
+                if (maxUserId.HasValue)
+                {
+                    nextId = maxUserId.Value + 1;
+                }
+
+                // ---------------------------------------------------------
+                // 5. COUNTERS
+                // ---------------------------------------------------------
+                int addedCount = 0;
+                int failedCount = 0;
+
+                var errors = new List<object>();
+
+                // ---------------------------------------------------------
+                // 6. PROCESS EACH EXCEL VOLUNTEER
+                // ---------------------------------------------------------
+                foreach (var item in request.ValidData)
+                {
+                    try
+                    {
+                        string firstName = item.FirstName?.Trim() ?? "";
+                        string lastName = item.LastName?.Trim() ?? "";
+                        string baseMobile = item.MobileNo?.Trim() ?? "";
+
+                        string? cleanEmail =
+                            string.IsNullOrWhiteSpace(item.Email)
+                                ? null
+                                : item.Email.Trim();
+
+                        // -------------------------------------------------
+                        // BASIC VALIDATION
+                        // -------------------------------------------------
+                        if (string.IsNullOrWhiteSpace(firstName) ||
+                            string.IsNullOrWhiteSpace(lastName) ||
+                            string.IsNullOrWhiteSpace(baseMobile))
+                        {
+                            failedCount++;
+
+                            errors.Add(new
+                            {
+                                mobile = baseMobile,
+                                message = "First Name, Last Name and Mobile Number are required."
+                            });
+
+                            continue;
+                        }
+
+                        // -------------------------------------------------
+                        // 7. UNIQUE USERNAME
+                        // Same logic as manual registration
+                        //
+                        // 9876543210
+                        // 9876543210_1
+                        // 9876543210_2
+                        // -------------------------------------------------
+                        string uniqueUsername = baseMobile;
+                        int counter = 1;
+
+                        while (await _context.Set<ApplicationUser>()
+                            .AnyAsync(x => x.UserName == uniqueUsername))
+                        {
+                            uniqueUsername = $"{baseMobile}_{counter}";
+                            counter++;
+                        }
+
+                        // Password = Username
+                        string password = uniqueUsername;
+
+                        // -------------------------------------------------
+                        // 8. ASPNETUSERS
+                        // Same as manual registration
+                        // -------------------------------------------------
+                        var appUser = new ApplicationUser
+                        {
+                            Id = Guid.NewGuid().ToString(),
+
+                            UserName = uniqueUsername,
+
+                            Email = string.IsNullOrWhiteSpace(cleanEmail)
+                                ? null
+                                : cleanEmail,
+
+                            PhoneNumber = baseMobile,
+
+                            EmailConfirmed = true,
+
+                            PhoneNumberConfirmed = false,
+
+                            SecurityStamp = Guid.NewGuid().ToString()
+                        };
+
+                        // -------------------------------------------------
+                        // 9. PASSWORD HASH
+                        // Same PasswordHasher as manual registration
+                        // -------------------------------------------------
+                        var passwordHasher =
+                            new PasswordHasher<ApplicationUser>();
+
+                        appUser.PasswordHash =
+                            passwordHasher.HashPassword(
+                                appUser,
+                                password);
+
+                        _context.Set<ApplicationUser>().Add(appUser);
+
+                        // -------------------------------------------------
+                        // 10. ASPNETUSERROLES
+                        // Direct role mapping
+                        // -------------------------------------------------
+                        _context.Set<IdentityUserRole<string>>().Add(
+                            new IdentityUserRole<string>
+                            {
+                                UserId = appUser.Id,
+                                RoleId = role.Id
+                            }
+                        );
+
+                        // -------------------------------------------------
+                        // 11. USERS TABLE
+                        //
+                        // IMPORTANT:
+                        // PostgreSQL users.isactive etc. are BIT.
+                        // So BitArray is used.
+                        // -------------------------------------------------
+                        var customUser = new Users
+                        {
+                            UserID = nextId,
+
+                            UserCode = uniqueUsername,
+
+                            FirstName = firstName,
+
+                            LastName = lastName,
+
+                            MobileNo = baseMobile,
+
+                            EmailID = cleanEmail,
+
+                            IsActive = true,
+
+
+
+                            CreatedBy = aff.UserID,
+
+                            CreatedDate = DateTime.UtcNow,
+
+                            AspNetUserID = appUser.Id,
+
+                            RegisterFrom = "Volunteer",
+
+                            Password_ = password,
+
+                            IsMobileVerified = true,
+
+                            IsEmailVerified = true,
+
+                            isUserDeactivated = true
+                        };
+
+                        _context.Users.Add(customUser);
+
+                        // -------------------------------------------------
+                        // 12. VOLUNTEERS TABLE
+                        //
+                        // IMPORTANT:
+                        // Volunteers.Id == Users.UserID
+                        // -------------------------------------------------
+                        var volunteer = new Volunteer
+                        {
+                            Id = nextId,
+
+                            FirstName = firstName,
+
+                            LastName = lastName,
+
+                            MobileNo = baseMobile,
+
+                            Email = cleanEmail,
+
+                            InstituteId = request.InstituteId,
+
+                            AffiliateId = aff.UserID,
+
+                            AspNetUserId = appUser.Id,
+
+                            Password_ = password,
+
+                            IsActive = true,
+
+                            IsDeleted = false,
+
+                            CreatedDate = DateTime.UtcNow
+                        };
+
+                        _context.Volunteers.Add(volunteer);
+
+                        // -------------------------------------------------
+                        // 13. NEXT ID
+                        // -------------------------------------------------
+                        nextId++;
+
+                        addedCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+
+                        errors.Add(new
+                        {
+                            mobile = item.MobileNo,
+                            message = ex.InnerException?.Message ?? ex.Message
+                        });
+                    }
+                }
+
+                // ---------------------------------------------------------
+                // 14. SAVE ALL
+                // ---------------------------------------------------------
+                await _context.SaveChangesAsync();
+
+                // ---------------------------------------------------------
+                // 15. RESPONSE
+                // ---------------------------------------------------------
+                return Ok(new
+                {
+                    success = true,
+
+                    message =
+                        $"{addedCount} Volunteers registered successfully.",
+
+                    addedCount,
+
+                    failedCount,
+
+                    errors
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+
+                    message = "Error while saving bulk volunteers.",
+
+                    error =
+                        ex.InnerException?.Message
+                        ?? ex.Message
+                });
+            }
         }
 
         // 7. DELETE VOLUNTEER
@@ -497,84 +842,318 @@ namespace HemFoundation.Controllers.Api
         }
 
         // 9. GET SCHOOLS MAPPING FOR A SPECIFIC VOLUNTEER
+        // =========================================================
+        // 9. GET SCHOOLS MAPPING FOR A SPECIFIC VOLUNTEER
+        // =========================================================
         [HttpGet("mapping-schools/{volunteerId}")]
         public async Task<IActionResult> GetVolunteerSchoolMapping(int volunteerId)
         {
             var aff = await GetCurrentAffiliate();
-            if (aff == null) return Unauthorized();
 
-            string affiliateIdStr = aff.UserID.ToString();
+            if (aff == null)
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "Affiliate not found."
+                });
 
-            // Affiliate ke saare assigned active schools
-            var allAssignedSchools = await _context.Institutes
-                .Where(i => i.ReferredByAffiliateId == affiliateIdStr && i.IsActive)
-                .Select(i => new { i.InstituteID, Name = i.Name })
+            // ---------------------------------------------------------
+            // CHECK VOLUNTEER
+            // ---------------------------------------------------------
+            var volunteer = await _context.Volunteers
+                .FirstOrDefaultAsync(v =>
+                    v.Id == volunteerId &&
+                    v.AffiliateId == aff.UserID &&
+                    v.IsActive &&
+                    !v.IsDeleted);
+
+            if (volunteer == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Volunteer not found."
+                });
+            }
+
+            // ---------------------------------------------------------
+            // GET AFFILIATE REFERRAL CODE
+            // ---------------------------------------------------------
+            var referralCode = await _context.WJ_ReferralCodes
+                .Where(x => x.UserID == aff.UserID)
+                .Select(x => x.ReferralCode)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrWhiteSpace(referralCode))
+            {
+                return Ok(new
+                {
+                    success = true,
+                    volunteerId = volunteer.Id,
+                    assignedSchools = new List<object>(),
+                    unassignedSchools = new List<object>()
+                });
+            }
+
+            // ---------------------------------------------------------
+            // GET ALL SCHOOLS OF AFFILIATE
+            // ---------------------------------------------------------
+            var allSchools = await _context.SchoolProfileDetails
+                .Where(x => x.referralcode == referralCode)
+                .Select(x => new
+                {
+                    instituteId = x.instituteid,
+                    name = x.institute_name
+                })
+                .OrderBy(x => x.name)
                 .ToListAsync();
 
-            // Jo schools is volunteer ko already mapped hain
+            // ---------------------------------------------------------
+            // GET EXISTING MAPPINGS
+            // ---------------------------------------------------------
             var mappedSchoolIds = await _context.VolunteerInstituteMappings
-                .Where(m => m.VolunteerId == volunteerId && !m.IsDeleted)
+                .Where(m =>
+                    m.VolunteerId == volunteerId &&
+                    !m.IsDeleted &&
+                    m.IsActive)
                 .Select(m => m.InstituteId)
+                .Distinct()
                 .ToListAsync();
 
-            var assignedList = allAssignedSchools.Where(s => mappedSchoolIds.Contains(s.InstituteID)).ToList();
-            var unassignedList = allAssignedSchools.Where(s => !mappedSchoolIds.Contains(s.InstituteID)).ToList();
+            // ---------------------------------------------------------
+            // ASSIGNED
+            // ---------------------------------------------------------
+            var assignedSchools = allSchools
+                .Where(s => mappedSchoolIds.Contains(s.instituteId))
+                .ToList();
+
+            // ---------------------------------------------------------
+            // UNASSIGNED
+            // ---------------------------------------------------------
+            var unassignedSchools = allSchools
+                .Where(s => !mappedSchoolIds.Contains(s.instituteId))
+                .ToList();
 
             return Ok(new
             {
                 success = true,
-                assignedSchools = assignedList,
-                unassignedSchools = unassignedList
+                volunteerId = volunteer.Id,
+                assignedSchools,
+                unassignedSchools
             });
         }
 
+        // =========================================================
         // 10. SAVE MULTIPLE SCHOOL MAPPINGS FOR VOLUNTEER
+        // =========================================================
         [HttpPost("save-mapping")]
-        public async Task<IActionResult> SaveVolunteerMapping([FromBody] VolunteerMappingDto model)
+        public async Task<IActionResult> SaveVolunteerMapping(
+     [FromBody] VolunteerMappingDto model)
         {
-            var aff = await GetCurrentAffiliate();
-            if (aff == null) return Unauthorized();
-
-            string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? aff.UserID.ToString();
-
-            // 1. Is volunteer ke saare existing mappings hata dein
-            var existingMappings = await _context.VolunteerInstituteMappings
-                .Where(m => m.VolunteerId == model.VolunteerId)
-                .ToListAsync();
-
-            _context.VolunteerInstituteMappings.RemoveRange(existingMappings);
-
-            // 2. Agar naye schools select hue hain
-            if (model.InstituteIds != null && model.InstituteIds.Any())
+            try
             {
-                // Agar rule yeh hai ki ek school sirf ek hi volunteer ke paas ho sakta hai,
-                // toh baaki volunteers ke paas se yeh schools pehle remove kar dein:
-                var conflictingMappings = await _context.VolunteerInstituteMappings
-                    .Where(m => model.InstituteIds.Contains(m.InstituteId) && !m.IsDeleted)
-                    .ToListAsync();
+                var aff = await GetCurrentAffiliate();
 
-                if (conflictingMappings.Any())
+                if (aff == null)
                 {
-                    _context.VolunteerInstituteMappings.RemoveRange(conflictingMappings);
-                }
-
-                // Ab naye mappings add karein with History tracking
-                foreach (var instId in model.InstituteIds)
-                {
-                    _context.VolunteerInstituteMappings.Add(new VolunteerInstituteMapping
+                    return Unauthorized(new
                     {
-                        VolunteerId = model.VolunteerId,
-                        InstituteId = instId,
-                        IsActive = true,
-                        CreatedDate = DateTime.UtcNow,
-                        LastUpdatedBy = currentUserId,
-                        ModifiedDate = DateTime.UtcNow
+                        success = false,
+                        message = "Affiliate not found."
                     });
                 }
-            }
 
-            await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "School mappings and update history saved successfully." });
+                if (model == null)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Invalid mapping data received."
+                    });
+                }
+
+                if (model.VolunteerId <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Invalid VolunteerId."
+                    });
+                }
+
+                var instituteIds = model.InstituteIds?
+                    .Where(x => x > 0)
+                    .Distinct()
+                    .ToList()
+                    ?? new List<int>();
+
+                // ---------------------------------------------------------
+                // CHECK VOLUNTEER
+                // ---------------------------------------------------------
+                var volunteer = await _context.Volunteers
+                    .FirstOrDefaultAsync(v =>
+                        v.Id == model.VolunteerId &&
+                        v.AffiliateId == aff.UserID &&
+                        v.IsActive &&
+                        !v.IsDeleted);
+
+                if (volunteer == null)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Volunteer not found or does not belong to this affiliate."
+                    });
+                }
+
+                // ---------------------------------------------------------
+                // GET REFERRAL CODE
+                // ---------------------------------------------------------
+                var referralCode = await _context.WJ_ReferralCodes
+                    .Where(x => x.UserID == aff.UserID)
+                    .Select(x => x.ReferralCode)
+                    .FirstOrDefaultAsync();
+
+                if (string.IsNullOrWhiteSpace(referralCode))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Referral code not found for current affiliate."
+                    });
+                }
+
+                // ---------------------------------------------------------
+                // GET AFFILIATE SCHOOLS
+                // ---------------------------------------------------------
+                var affiliateSchoolIds = await _context.SchoolProfileDetails
+                    .Where(x => x.referralcode == referralCode)
+                    .Select(x => x.instituteid)
+                    .Distinct()
+                    .ToListAsync();
+
+                // ---------------------------------------------------------
+                // CHECK INVALID SCHOOL IDs
+                // ---------------------------------------------------------
+                var invalidInstituteIds = instituteIds
+                    .Except(affiliateSchoolIds)
+                    .ToList();
+
+                if (invalidInstituteIds.Any())
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "One or more selected schools do not belong to this affiliate.",
+                        invalidInstituteIds
+                    });
+                }
+
+                // ---------------------------------------------------------
+                // CURRENT USER
+                // ---------------------------------------------------------
+                string currentUserId =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? aff.UserID.ToString();
+
+                // ---------------------------------------------------------
+                // EXISTING MAPPINGS
+                // ---------------------------------------------------------
+                var existingMappings =
+                    await _context.VolunteerInstituteMappings
+                        .Where(m =>
+                            m.VolunteerId == model.VolunteerId)
+                        .ToListAsync();
+
+                // ---------------------------------------------------------
+                // SOFT DELETE OLD MAPPINGS
+                // ---------------------------------------------------------
+                foreach (var mapping in existingMappings)
+                {
+                    mapping.IsDeleted = true;
+                    mapping.IsActive = false;
+                    mapping.ModifiedDate = DateTime.UtcNow;
+                    mapping.LastUpdatedBy = currentUserId;
+                }
+
+                // ---------------------------------------------------------
+                // ADD / REACTIVATE SELECTED MAPPINGS
+                // ---------------------------------------------------------
+                foreach (var instituteId in instituteIds)
+                {
+                    var existingMapping = existingMappings
+                        .FirstOrDefault(x =>
+                            x.InstituteId == instituteId);
+
+                    if (existingMapping != null)
+                    {
+                        existingMapping.IsDeleted = false;
+                        existingMapping.IsActive = true;
+                        existingMapping.ModifiedDate = DateTime.UtcNow;
+                        existingMapping.LastUpdatedBy = currentUserId;
+
+                        continue;
+                    }
+
+                    // -----------------------------------------------------
+                    // SCHOOL ALREADY ASSIGNED TO OTHER VOLUNTEER?
+                    // -----------------------------------------------------
+                    var assignedToOther =
+                        await _context.VolunteerInstituteMappings
+                            .AnyAsync(m =>
+                                m.InstituteId == instituteId &&
+                                m.VolunteerId != model.VolunteerId &&
+                                !m.IsDeleted &&
+                                m.IsActive);
+
+                    if (assignedToOther)
+                    {
+                        return BadRequest(new
+                        {
+                            success = false,
+                            message =
+                                $"School ID {instituteId} is already assigned to another volunteer."
+                        });
+                    }
+
+                    // -----------------------------------------------------
+                    // NEW MAPPING
+                    // -----------------------------------------------------
+                    _context.VolunteerInstituteMappings.Add(
+                        new VolunteerInstituteMapping
+                        {
+                            VolunteerId = model.VolunteerId,
+                            InstituteId = instituteId,
+                            IsActive = true,
+                            IsDeleted = false,
+                            CreatedDate = DateTime.UtcNow,
+                            ModifiedDate = DateTime.UtcNow,
+                            LastUpdatedBy = currentUserId
+                        });
+                }
+
+                // ---------------------------------------------------------
+                // SAVE
+                // ---------------------------------------------------------
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "School mappings saved successfully.",
+                    volunteerId = model.VolunteerId,
+                    mappedSchools = instituteIds.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Error saving mappings.",
+                    error = ex.InnerException?.Message ?? ex.Message
+                });
+            }
         }
 
         [HttpGet("my-assigned-schools")]

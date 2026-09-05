@@ -39,8 +39,53 @@ namespace HemFoundation.Controllers.Api
         }
 
         // 2. CREATE NEW ROLE
+       
         [HttpPost("create")]
         public async Task<IActionResult> CreateRole([FromBody] CreateRoleDto model)
+        {
+            if (string.IsNullOrWhiteSpace(model.RoleName))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Role name is required."
+                });
+            }
+
+            string roleName = model.RoleName.Trim();
+
+            // Check duplicate role
+            var existingRole = await _context.AspNetRoles
+                .FirstOrDefaultAsync(x => x.Name == roleName);
+
+            if (existingRole != null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = $"Role '{roleName}' already exists."
+                });
+            }
+
+            // Create role
+            var role = new AspNetRoles
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = roleName,
+
+            };
+
+            _context.AspNetRoles.Add(role);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Role '{roleName}' created successfully!"
+            });
+        }
+        public async Task<IActionResult> CreateRole1([FromBody] CreateRoleDto model)
         {
             if (string.IsNullOrWhiteSpace(model.RoleName))
                 return BadRequest(new { success = false, message = "Role name is required." });
@@ -61,8 +106,63 @@ namespace HemFoundation.Controllers.Api
         }
 
         // 3. UPDATE / RENAME ROLE BY ID
+        
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateRole(string id, [FromBody] CreateRoleDto model)
+        public async Task<IActionResult> UpdateRole(
+    string id,
+    [FromBody] CreateRoleDto model)
+        {
+            if (string.IsNullOrWhiteSpace(model.RoleName))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Role name cannot be empty."
+                });
+            }
+
+            string newName = model.RoleName.Trim();
+
+            // Get role directly from aspnetroles table
+            var role = await _context.AspNetRoles
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (role == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Role not found."
+                });
+            }
+
+            // Check duplicate role name
+            var existingRole = await _context.AspNetRoles
+                .FirstOrDefaultAsync(x =>
+                    x.Name == newName &&
+                    x.Id != id);
+
+            if (existingRole != null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = $"Role '{newName}' already exists."
+                });
+            }
+
+            // ONLY Name will be changed
+            role.Name = newName;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Role renamed to '{newName}' successfully!"
+            });
+        }
+        public async Task<IActionResult> UpdateRole1(string id, [FromBody] CreateRoleDto model)
         {
             var role = await _roleManager.FindByIdAsync(id);
             if (role == null)
@@ -92,31 +192,111 @@ namespace HemFoundation.Controllers.Api
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteRole(string id)
         {
-            var role = await _roleManager.FindByIdAsync(id);
-            if (role == null)
-                return NotFound(new { success = false, message = "Role not found." });
-
-            if (role.Name!.Equals("Admin", StringComparison.OrdinalIgnoreCase))
-                return BadRequest(new { success = false, message = "The 'Admin' role cannot be deleted." });
-
-            // Using _userManager to check users in role correctly
-            var usersInRole = await _userManager.GetUsersInRoleAsync(role.Name!);
-            if (usersInRole.Count > 0)
-                return BadRequest(new { success = false, message = $"Cannot delete role '{role.Name}' because it is assigned to active users." });
-
-            // Remove associated menu rights first to prevent constraint violations
-            var rightsToRemove = await _context.RoleMenuRights.Where(r => r.RoleId == id).ToListAsync();
-            if (rightsToRemove.Any())
+            try
             {
-                _context.RoleMenuRights.RemoveRange(rightsToRemove);
-                await _context.SaveChangesAsync();
+                // -----------------------------------------
+                // 1. Role ko direct DB se get karo
+                //    RoleManager use nahi karna
+                //    ConcurrencyStamp bhi read nahi hoga
+                // -----------------------------------------
+                var role = await _context.AspNetRoles
+                    .Where(r => r.Id == id)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.Name
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (role == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Role not found."
+                    });
+                }
+
+                // -----------------------------------------
+                // 2. Admin role delete nahi karna
+                // -----------------------------------------
+                if (string.Equals(
+                        role.Name,
+                        "Admin",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "The 'Admin' role cannot be deleted."
+                    });
+                }
+
+                // -----------------------------------------
+                // 3. Check karo role kisi user ko assigned hai ya nahi
+                //    UserManager use nahi karna
+                // -----------------------------------------
+                var usersInRole = await _context
+                    .Set<IdentityUserRole<string>>()
+                    .AnyAsync(x => x.RoleId == id);
+
+                if (usersInRole)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message =
+                            $"Cannot delete role '{role.Name}' because it is assigned to users."
+                    });
+                }
+
+                // -----------------------------------------
+                // 4. Pehle Role Menu Rights delete karo
+                // -----------------------------------------
+                var rightsToRemove = await _context.RoleMenuRights
+                    .Where(r => r.RoleId == id)
+                    .ToListAsync();
+
+                if (rightsToRemove.Any())
+                {
+                    _context.RoleMenuRights.RemoveRange(rightsToRemove);
+
+                    await _context.SaveChangesAsync();
+                }
+
+                // -----------------------------------------
+                // 5. Role direct SQL se delete karo
+                //    RoleManager.DeleteAsync() nahi
+                //    Isliye ConcurrencyStamp check nahi hoga
+                // -----------------------------------------
+                var deletedRows = await _context.Database
+                    .ExecuteSqlInterpolatedAsync(
+                        $"DELETE FROM public.aspnetroles WHERE id = {id}");
+
+                if (deletedRows == 0)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Role not found or already deleted."
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Role '{role.Name}' deleted successfully!"
+                });
             }
-
-            var result = await _roleManager.DeleteAsync(role);
-            if (!result.Succeeded)
-                return BadRequest(new { success = false, message = "Failed to delete role." });
-
-            return Ok(new { success = true, message = $"Role '{role.Name}' deleted successfully!" });
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Failed to delete role.",
+                    error = ex.InnerException?.Message ?? ex.Message
+                });
+            }
         }
 
         // 5. GET MENUS AND RIGHTS FOR A SPECIFIC ROLE

@@ -9,10 +9,16 @@ public static class IdentitySeeder
 {
     public static async Task SeedAdminAsync(IServiceProvider serviceProvider)
     {
-        var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
-        var passwordHasher = new PasswordHasher<ApplicationUser>();
+        var context =
+            serviceProvider.GetRequiredService<ApplicationDbContext>();
 
-        // 1. Seed Roles
+        // =========================================================
+        // 1. Roles Seed
+        // =========================================================
+        // IdentityRole / RoleManager use nahi kar rahe hain.
+        // Isse ConcurrencyStamp ki koi requirement nahi rahegi.
+        // =========================================================
+
         string[] roles =
         {
             "WJ_Admin",
@@ -26,57 +32,36 @@ public static class IdentitySeeder
 
         foreach (var roleName in roles)
         {
-            var roleExists = await context.Roles.AnyAsync(r => r.Name == roleName);
+            // Directly aspnetroles se check
+            var roleExists = await context.AspNetRoles
+                .Where(r => r.Name == roleName)
+                .Select(r => r.Id)
+                .AnyAsync();
+
             if (!roleExists)
             {
-                context.Roles.Add(new IdentityRole
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = roleName
-                });
+                var roleId = Guid.NewGuid().ToString();
+
+                // Direct SQL INSERT
+                // ConcurrencyStamp intentionally nahi hai.
+                await context.Database.ExecuteSqlInterpolatedAsync($@"
+                    INSERT INTO public.aspnetroles
+                        (id, ""Name"")
+                    VALUES
+                        ({roleId}, {roleName})
+                ");
             }
         }
-        await context.SaveChangesAsync();
 
-        // 2. Seed Default Admin User Safely via EF Core
-        //var adminUser = await context.Users.FirstOrDefaultAsync(u => u.UserName == "admin");
 
-        //if (adminUser == null)
-        //{
-        //    var userId = Guid.NewGuid().ToString();
-        //    var hashedPassword = passwordHasher.HashPassword(null!, "Admin@123");
-
-        //    // Use standard EF Core tracking insertion to avoid conflict constraint errors
-        //    var newUser = new ApplicationUser
-        //    {
-        //        Id = userId,
-        //        UserName = "admin",
-        //        Email = "admin@hemfoundation.org",
-        //        EmailConfirmed = true,
-        //        PasswordHash = hashedPassword,
-        //        SecurityStamp = Guid.NewGuid().ToString(),
-        //        LockoutEnabled = false,
-        //        AccessFailedCount = 0
-        //    };
-
-        //    context.Users.Add(newUser);
-        //    await context.SaveChangesAsync();
-
-        //    // 3. Assign WJ_Admin role
-        //    var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "WJ_Admin");
-        //    if (adminRole != null)
-        //    {
-        //        var hasRole = await context.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == adminRole.Id);
-        //        if (!hasRole)
-        //        {
-        //            context.UserRoles.Add(new IdentityUserRole<string>
-        //            {
-        //                UserId = userId,
-        //                RoleId = adminRole.Id
-        //            });
-        //            await context.SaveChangesAsync();
-        //        }
-        //    }
-        //}
+        // =========================================================
+        // 2. Default Admin User
+        // =========================================================
+        // Abhi aapne Admin user creation comment ki hui hai,
+        // isliye yahan kuch nahi karna.
+        //
+        // Agar future me Admin user create karna ho to bhi
+        // UserManager use nahi karenge, direct insert karenge.
+        // =========================================================
     }
 }

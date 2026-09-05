@@ -214,20 +214,19 @@ namespace HemFoundation.Data
             });
 
             // Identity Configurations
-            // Identity Configurations
             builder.Entity<IdentityRole>(entity =>
             {
                 entity.ToTable("aspnetroles", "public");
+
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).HasColumnName("id");
-                entity.Property(e => e.Name).HasColumnName("Name");
 
-                // YE LINE HATA DEIN (Yahi error ki wajah hai):
-                // entity.Ignore(e => e.NormalizedName); 
+                entity.Property(e => e.Id)
+                    .HasColumnName("id");
 
-                // Agar database mein normalizedname column hai toh map karein, nahi toh chhod dein:
-                entity.Property(e => e.NormalizedName).HasColumnName("normalizedname");
-                entity.Property(e => e.ConcurrencyStamp).HasColumnName("concurrencystamp");
+                entity.Property(e => e.Name)
+                    .HasColumnName("Name");
+
+                
             });
 
             builder.Entity<ApplicationUser>(entity =>
@@ -289,9 +288,46 @@ namespace HemFoundation.Data
                 entity.ToTable("users", "public");
                 entity.HasKey(e => e.UserID);
                 entity.Property(e => e.AspNetUserID).HasColumnName("aspnetuserid");
+
                 entity.HasOne(e => e.AspNetUsers)
                       .WithMany(u => u.Users)
                       .HasForeignKey(e => e.AspNetUserID);
+
+                // 1. IsActive
+                entity.Property(e => e.IsActive)
+                      .HasColumnName("isactive")
+                      .HasColumnType("bit(1)")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new bool[] { v.Value }) : null,
+                          v => v != null && v.Count > 0 ? v.Get(0) : (bool?)null
+                      );
+
+                // 2. IsMobileVerified
+                entity.Property(e => e.IsMobileVerified)
+                      .HasColumnName("ismobileverified")
+                      .HasColumnType("bit(1)")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new bool[] { v.Value }) : null,
+                          v => v != null && v.Count > 0 ? v.Get(0) : (bool?)null
+                      );
+
+                // 3. IsEmailVerified
+                entity.Property(e => e.IsEmailVerified)
+                      .HasColumnName("isemailverified")
+                      .HasColumnType("bit(1)")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new bool[] { v.Value }) : null,
+                          v => v != null && v.Count > 0 ? v.Get(0) : (bool?)null
+                      );
+
+                // 4. isUserDeactivated
+                entity.Property(e => e.isUserDeactivated)
+                      .HasColumnName("isuserdeactivated")
+                      .HasColumnType("bit(1)")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new bool[] { v.Value }) : null,
+                          v => v != null && v.Count > 0 ? v.Get(0) : (bool?)null
+                      );
             });
 
             builder.Entity<Quiz>(entity =>
