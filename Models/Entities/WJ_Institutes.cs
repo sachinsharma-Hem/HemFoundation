@@ -14,10 +14,10 @@ namespace HemFoundation.Models.Entities
         [Column("instituteid")]
 
         public int InstituteID { get; set; }
-        [Column("instituteType")]
+        [Column("institutetype")]
 
         public string? InstituteType { get; set; }
-        [Column("name")]
+        [Column("Name")]
 
         public string? Name { get; set; }
         [Column("bannerimageurl")]

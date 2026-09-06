@@ -3,6 +3,7 @@ using HemFoundation.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxTokenParser;
 
 namespace HemFoundation.Controllers.Api
 {
@@ -106,55 +107,62 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("school-calendar")]
         public async Task<IActionResult> GetSchoolCalendar()
         {
-            string? currentUserId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(currentUserId)) return Unauthorized(new { success = false, message = "Not logged in" });
+            int? currentUserId = HttpContext.Session.GetInt32("UserID");
 
-            var institute = await _context.Institutes.FirstOrDefaultAsync(i => i.AspNetUserID == currentUserId);
+            if (currentUserId == null || currentUserId == 0)
+            {
+                // Fall back to claims if session is missing
+                string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                currentUserId = int.TryParse(claimId, out int parsed) ? parsed : 0;
+            }
+            if (string.IsNullOrEmpty(currentUserId.ToString())) return Unauthorized(new { success = false, message = "Not logged in" });
+
+            var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
             if (institute == null) return BadRequest(new { success = false, message = "School profile not found" });
 
-            var schoolStandardNames = await _context.Students
-                .Where(s => s.InstituteID == institute.InstituteID && s.IsActive && s.Standard != null)
-                .Select(s => s.Standard).Distinct().ToListAsync();
+            //var schoolStandardNames = await _context.ViewWjStudentsDetailsInfo
+            //    .Where(s => s.InstituteID == institute.instituteid &&  s.Standard != null)
+            //    .Select(s => s.Standard).Distinct().ToListAsync();
 
-            var standardIds = await _context.StandardMasters
-                .Where(s => schoolStandardNames.Contains(s.StandardName))
-                .Select(s => s.Id).ToListAsync();
+            //var standardIds = await _context.StandardMasters
+            //    .Where(s => schoolStandardNames.Contains(s.StandardName))
+            //    .Select(s => s.Id).ToListAsync();
 
-            var grades = await _context.ValueGradeMasters
-                .Where(g => g.IsActive && standardIds.Contains(g.StandardId))
-                .OrderBy(g => g.StandardId).ToListAsync();
+            //var grades = await _context.StandardMasters
+            //    .OrderBy(g => g.StandardName).ToListAsync();
 
-            var gradeIds = grades.Select(g => g.Id).ToList();
+            //var gradeIds = grades.Select(g => g.Id).ToList();
 
-            var values = await _context.ValueItemMasters
-                .Where(v => v.IsActive && gradeIds.Contains(v.GradeId)).ToListAsync();
+            //var values = await _context.ValueItemMasters
+            //    .Where(v => v.IsActive && gradeIds.Contains(v.GradeId)).ToListAsync();
 
-            // NAYA: Check submissions to mark "Completed"
-            var submittedActivityIds = await _context.ActivitySubmissions
-                .Where(s => s.InstituteId == institute.InstituteID)
-                .Select(s => s.ValueItemId)
-                .Distinct()
-                .ToListAsync();
+            //// NAYA: Check submissions to mark "Completed"
+            //var submittedActivityIds = await _context.ActivitySubmissions
+            //    .Where(s => s.InstituteId == institute.instituteid)
+            //    .Select(s => s.ValueItemId)
+            //    .Distinct()
+            //    .ToListAsync();
 
-            var result = grades.Select(g => new
-            {
-                g.Id,
-                g.GradeName,
-                g.GroupName,
-                g.ButtonName,
-                Capacities = values.Where(v => v.GradeId == g.Id).Select(v => new
-                {
-                    v.Id, // NAYA: URL ke liye ID zaroori hai
-                    v.CapacityName,
-                    v.ValueTitleEng,
-                    v.ValueTitleHin,
-                    v.ValueImageUrl,
-                    v.ActivityPdfUrl,
-                    IsCompleted = submittedActivityIds.Contains(v.Id) // NAYA: Status Check
-                }).ToList()
-            });
+            //var result = grades.Select(g => new
+            //{
+            //    g.Id,
+            //    g.StandardName,
+            //    g.GroupName,
+            //    g.ButtonName,
+            //    Capacities = values.Where(v => v.GradeId == g.Id).Select(v => new
+            //    {
+            //        v.Id, // NAYA: URL ke liye ID zaroori hai
+            //        v.CapacityName,
+            //        v.ValueTitleEng,
+            //        v.ValueTitleHin,
+            //        v.ValueImageUrl,
+            //        v.ActivityPdfUrl,
+            //        IsCompleted = submittedActivityIds.Contains(v.Id) // NAYA: Status Check
+            //    }).ToList()
+            //});
 
-            return Ok(new { success = true, data = result });
+          //  return Ok(new { success = true, data = result });
+            return Ok(new { success = true, data = "" });
         }
 
         // ================== ACTIVITY SUBMISSION APIS ==================

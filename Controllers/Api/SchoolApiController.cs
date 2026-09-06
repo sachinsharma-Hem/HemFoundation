@@ -1,235 +1,191 @@
-﻿//using HemFoundation.Data;
-//using Microsoft.AspNetCore.Mvc;
-//using Microsoft.EntityFrameworkCore;
-//using System.Security.Claims;
+﻿using HemFoundation.Data;
+using HemFoundation.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
-//namespace HemFoundation.Controllers.Api
-//{
-//    [Route("api/school")]
-//    [ApiController]
-//    public class SchoolApiController : ControllerBase
-//    {
-//        private readonly ApplicationDbContext _context;
-//        private readonly IWebHostEnvironment _env;
+namespace HemFoundation.Controllers.Api
+{
+    [Route("api/school")]
+    [ApiController]
+    public class SchoolApiController : ControllerBase
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-//        public SchoolApiController(ApplicationDbContext context, IWebHostEnvironment env)
-//        {
-//            _context = context;
-//            _env = env;
-//        }
-       
+        public SchoolApiController(ApplicationDbContext context, IWebHostEnvironment env)
+        {
+            _context = context;
+            _env = env;
+        }
 
-//        [HttpGet("stats")]
-//        public async Task<IActionResult> GetSchoolStats()
-//        {
-//            string? userEmail = HttpContext.Session.GetString("UserEmail");
-//            if (string.IsNullOrEmpty(userEmail))
-//                return Unauthorized(new { success = false, message = "User not logged in." });
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetSchoolStats()
+        {
 
-//            var institute = await (from i in _context.Institutes
-//                                   join u in _context.Users on i.AspNetUserID equals u.Id
-//                                   where u.Email == userEmail || u.UserName == userEmail
-//                                   select i).FirstOrDefaultAsync();
+            // 1. Retrieve it as a nullable integer directly from the session
+            int? userId = HttpContext.Session.GetInt32("UserID");
 
-//            if (institute == null)
-//                return NotFound(new { success = false, message = "Institute profile not found for this user." });
+            if (userId == null || userId == 0)
+            {
+                // Fall back to claims if session is missing
+                string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                userId = int.TryParse(claimId, out int parsed) ? parsed : 0;
+            }
 
-//            int studentsCount = await _context.Students
-//                .Where(s => s.InstituteID == institute.InstituteID && s.IsActive)
-//                .CountAsync();
+            if (userId == null || userId == 0)
+            {
+                return Unauthorized(new { success = false, message = "User not logged in." });
+            }
+            if (userId==0)
+                return Unauthorized(new { success = false, message = "User not logged in." });
+            var institute = await (from i in _context.SchoolProfileDetails
+                                   join u in _context.Users on i.instituteid equals u.UserID
+                                   where u.UserID == userId
+                                   select i).FirstOrDefaultAsync();
 
-//            return Ok(new
-//            {
-//                success = true,
-//                instituteName = institute.Name,
-//                isVerified = institute.IsVerify,
-//                studentsCount = studentsCount
-//            });
-//        }
+            if (institute == null)
+                return NotFound(new { success = false, message = "Institute profile not found for this user." });
 
-//        [HttpPost("Dashboard/UploadPartnershipLetter")]
-//        public async Task<IActionResult> UploadPartnershipLetter([FromForm] IFormFile letterFile)
-//        {
-//            // ============================================
-//            // 1. Get logged-in AspNetUser ID
-//            // ============================================
+           
 
-//            string? userId = HttpContext.Session.GetString("UserId");
+            return Ok(new
+            {
+                success = true,
+                instituteName = institute.institute_name,
+                isVerified = institute.isverify,
+                studentsCount = institute.associatedstudents
+            });
+        }
+        [HttpPost("Dashboard/UploadPartnershipLetter")]
+        public async Task<IActionResult> UploadKnowledgePartnership([FromForm(Name = "letterFile")] IFormFile UploadDoc)
+        {
+            // ============================================
+            // 1. Get logged-in User ID (Session or Claims)
+            // ============================================
+            // 1. Retrieve it as a nullable integer directly from the session
+            int? userId = HttpContext.Session.GetInt32("UserID");
 
-//            if (string.IsNullOrEmpty(userId))
-//            {
-//                userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-//            }
+            if (userId == null || userId == 0)
+            {
+                // Fall back to claims if session is missing
+                string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                userId = int.TryParse(claimId, out int parsed) ? parsed : 0;
+            }
 
-//            if (string.IsNullOrEmpty(userId))
-//            {
-//                return Unauthorized(new
-//                {
-//                    success = false,
-//                    message = "User not logged in."
-//                });
-//            }
+            if (userId == null || userId == 0)
+            {
+                return Unauthorized(new { success = false, message = "User not logged in." });
+            }
 
+            // ============================================
+            // 2. Find Institute from WJ_Institutes using AspNetUserID or UserID
+            // ============================================
+            var institute = await _context.WJ_Institutes
+                .FirstOrDefaultAsync(i =>  i.InstituteID == userId);
 
-//            // ============================================
-//            // 2. Find Institute using AspNetUserID
-//            // ============================================
+            if (institute == null)
+            {
+                return NotFound(new { success = false, message = "Institute profile not found." });
+            }
 
-//            var institute = await _context.Institutes
-//                .FirstOrDefaultAsync(i =>
-//                    i.AspNetUserID == userId &&
-//                    i.IsActive);
+            int instituteId = institute.InstituteID;
 
-//            if (institute == null)
-//            {
-//                return NotFound(new
-//                {
-//                    success = false,
-//                    message = "Institute profile not found."
-//                });
-//            }
+            // ============================================
+            // 3. Check if Partnership Letter is already uploaded
+            // ============================================
+            // Checking via Entity Framework instead of raw SQL injection-prone queries
+            bool alreadyUploaded = await _context.KnowledgePartnersList
+                .AnyAsync(k => k.InstituteID == instituteId && k.FileUrl != null);
 
+            if (alreadyUploaded)
+            {
+                return BadRequest(new { success = false, message = "You have already uploaded Partnership Letter." });
+            }
 
-//            // ============================================
-//            // 3. Validate file
-//            // ============================================
+            // ============================================
+            // 4. Validate file presence and extension
+            // ============================================
+            if (UploadDoc == null || UploadDoc.Length == 0)
+            {
+                return BadRequest(new { success = false, message = "Please select a valid file." });
+            }
 
-//            if (letterFile == null || letterFile.Length == 0)
-//            {
-//                return BadRequest(new
-//                {
-//                    success = false,
-//                    message = "Please select a valid PDF file."
-//                });
-//            }
+            var extension = Path.GetExtension(UploadDoc.FileName).ToLowerInvariant();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".txt", ".pdf" };
 
+            if (!allowedExtensions.Contains(extension))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Only .jpg, .jpeg, .png, .txt and .pdf extension files are allowed to upload."
+                });
+            }
 
-//            // Only PDF
-//            var extension = Path.GetExtension(letterFile.FileName)
-//                .ToLowerInvariant();
+            // Optional 10MB size limit check
+            if (UploadDoc.Length > 10 * 1024 * 1024)
+            {
+                return BadRequest(new { success = false, message = "File size must not exceed 10 MB." });
+            }
 
-//            if (extension != ".pdf")
-//            {
-//                return BadRequest(new
-//                {
-//                    success = false,
-//                    message = "Only PDF files are allowed."
-//                });
-//            }
+            // ============================================
+            // 5. Prepare Directory & Unique File Path
+            // ============================================
+            string rawInstituteName = string.IsNullOrWhiteSpace(institute.Name) ? "School" : institute.Name.Trim();
+            string sanitizedInstituteName = string.Concat(rawInstituteName.Where(char.IsLetterOrDigit));
 
+            // Match legacy folder pattern: {InstituteID}_{InstituteName}
+            string folderName = $"{instituteId}_{sanitizedInstituteName}";
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "Uploads", "KnowledgePartnerships", folderName);
 
-//            // Optional: 10 MB maximum
-//            const long maxFileSize = 10 * 1024 * 1024;
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
 
-//            if (letterFile.Length > maxFileSize)
-//            {
-//                return BadRequest(new
-//                {
-//                    success = false,
-//                    message = "File size must not exceed 10 MB."
-//                });
-//            }
+            string originalFileNameWithoutExt = Path.GetFileNameWithoutExtension(UploadDoc.FileName);
+            string safeFileName = string.Concat(originalFileNameWithoutExt.Where(c => char.IsLetterOrDigit(c) || c == '_' || c == '-'));
+            string uniqueFileName = $"{safeFileName}_{Guid.NewGuid():N}{extension}";
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
+            // ============================================
+            // 6. Save File to Disk
+            // ============================================
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await UploadDoc.CopyToAsync(stream);
+            }
 
-//            // ============================================
-//            // 4. Create upload directory
-//            // ============================================
+            // Relative file path structure for database storage
+            string saveFileName = $"/Uploads/KnowledgePartnerships/{folderName}/{uniqueFileName}";
 
-//            var uploadsFolder = Path.Combine(
-//                _env.WebRootPath,
-//                "uploads",
-//                "partnershipletters"
-//            );
+            // ============================================
+            // 7. Insert Record into Database 
+            // ============================================
+            // Recommended: Use your EF Core Context DbData model instead of raw SqlCommand for PostgreSQL compatibility
+            var partnerRecord = new KnowledgePartnersList
+            {
+                InstituteID = instituteId,
+                InstituteName = rawInstituteName,
+                FileUrl = saveFileName
+                //CreatedOn = DateTime.UtcNow
+            };
 
-//            if (!Directory.Exists(uploadsFolder))
-//            {
-//                Directory.CreateDirectory(uploadsFolder);
-//            }
+            _context.KnowledgePartnersList.Add(partnerRecord);
+            await _context.SaveChangesAsync();
 
-
-//            // ============================================
-//            // 5. Generate safe unique file name
-//            // ============================================
-
-//            string sanitizedInstituteName =
-//                string.IsNullOrWhiteSpace(institute.Name)
-//                    ? "School"
-//                    : string.Concat(
-//                        institute.Name.Where(char.IsLetterOrDigit)
-//                      );
-
-//            string dateStr =
-//                DateTime.UtcNow.ToString("yyyy-MM-dd_HHmmss");
-
-//            string uniqueFileName =
-//                $"{sanitizedInstituteName}_{dateStr}_{Guid.NewGuid():N}.pdf";
-
-//            string filePath =
-//                Path.Combine(uploadsFolder, uniqueFileName);
-
-
-//            // ============================================
-//            // 6. Save file
-//            // ============================================
-
-//            using (var stream = new FileStream(
-//                filePath,
-//                FileMode.Create))
-//            {
-//                await letterFile.CopyToAsync(stream);
-//            }
-
-
-//            // ============================================
-//            // 7. Delete old letter if re-uploading
-//            // ============================================
-
-//            if (!string.IsNullOrWhiteSpace(institute.PartnershipLetterPath))
-//            {
-//                var oldRelativePath =
-//                    institute.PartnershipLetterPath
-//                        .TrimStart('/')
-//                        .Replace('/', Path.DirectorySeparatorChar);
-
-//                var oldFilePath =
-//                    Path.Combine(_env.WebRootPath, oldRelativePath);
-
-//                if (System.IO.File.Exists(oldFilePath))
-//                {
-//                    try
-//                    {
-//                        System.IO.File.Delete(oldFilePath);
-//                    }
-//                    catch
-//                    {
-//                        // Old file deletion failure should not
-//                        // prevent new upload from succeeding.
-//                    }
-//                }
-//            }
-
-
-//            // ============================================
-
-//            // ============================================
-
-//            institute.PartnershipLetterPath =
-//                "/uploads/partnershipletters/" + uniqueFileName;
-
-//            await _context.SaveChangesAsync();
-
-
-//            // ============================================
-//            // 9. Success
-//            // ============================================
-
-//            return Ok(new
-//            {
-//                success = true,
-//                message = "Partnership letter uploaded successfully.",
-//                fileUrl = institute.PartnershipLetterPath
-//            });
-//        }
-
-//    }
-//}
+            // ============================================
+            // 8. Return Success Response
+            // ============================================
+            return Ok(new
+            {
+                success = true,
+                message = extension == ".jpg" || extension == ".jpeg" || extension == ".png"
+                    ? "Image Uploaded Successfully!!!!...."
+                    : "File Uploaded Successfully!!!!....",
+                fileUrl = saveFileName
+            });
+        }
+    }
+}

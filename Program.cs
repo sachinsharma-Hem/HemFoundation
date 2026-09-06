@@ -1,3 +1,4 @@
+using HemFoundation.Common;
 using HemFoundation.Data;
 using HemFoundation.Data.Seed;
 using HemFoundation.Models;
@@ -122,6 +123,7 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHostedService<AttendanceBackgroundWorker>();
+builder.Services.AddTransient<SMSManager>();
 // Build
 var app = builder.Build();
 
@@ -150,7 +152,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllers();
-
+EmailManager.Initialize(app.Configuration);
 // 7. Seed Admin Data
 using (var scope = app.Services.CreateScope())
 {

@@ -40,7 +40,7 @@
             break;
     }
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @section Scripts {
     <script>
         $(document).ready(function() {
@@ -105,7 +105,8 @@
                     processData: false,
                     success: function (response) {
                         if (response.success) {
-                            alert(response.message || "Partnership letter uploaded successfully.");
+                             Swal.Fire("Success",response.message|| "Partnership letter uploaded successfully.","sucees");
+                           // alert(response.message || "Partnership letter uploaded successfully.");
                             const modalElement = document.getElementById('uploadLetterModal');
                             if (modalElement) {
                                 const modalInstance = bootstrap.Modal.getInstance(modalElement);
@@ -113,7 +114,8 @@
                             }
                             setTimeout(function () { window.location.reload(); }, 500);
                         } else {
-                            alert(response.message || "Upload failed.");
+                            Swal.Fire("Info",response.message,"info");
+                            //(response.message || "Upload failed.");
                             $submitBtn.prop('disabled', false).html(originalHtml);
                         }
                     },
@@ -122,7 +124,8 @@
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             message = xhr.responseJSON.message;
                         }
-                        alert(message);
+                        Swal.fire("Info", message, "info");
+                       // alert(message);
                         $submitBtn.prop('disabled', false).html(originalHtml);
                     }
                 });

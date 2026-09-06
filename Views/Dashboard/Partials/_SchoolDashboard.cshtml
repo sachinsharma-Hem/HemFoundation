@@ -14,7 +14,7 @@
         ? institute.Name
         : "School Institution";
 
-    bool hasUploadedLetter = !string.IsNullOrEmpty(institute?.PartnershipLetterPath);
+    bool hasUploadedLetter = ViewBag.hasUploadedLetter;
 }
 
 <div class="container-fluid py-3 bg-light min-vh-100">
@@ -147,7 +147,7 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <span class="text-muted small fw-bold text-uppercase tracking-wider">Active Students</span>
-                            <h2 class="fw-bold text-dark mt-2 mb-0">@(ViewBag.StudentsCount ?? 0)</h2>
+                            <h2 class="fw-bold text-dark mt-2 mb-0">@(ViewBag.ActivetudentCount ?? 0)</h2>
                         </div>
                         <div class="bg-primary-subtle text-primary p-3 rounded-4 fs-4 shadow-sm icon-float">
                             <i class="bi bi-people-fill"></i>
@@ -190,9 +190,9 @@
         <div class="card-body p-4">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="text-muted small fw-bold text-uppercase tracking-wider">Total Volunteers</span>
+                    <span class="text-muted small fw-bold text-uppercase tracking-wider">Active Teacher</span>
                     <!-- ClassesCount Hata Kar VolunteersCount Laga Diya Hai -->
-                    <h2 class="fw-bold text-dark mt-2 mb-0">@(ViewBag.VolunteersCount ?? 0)</h2>
+                            <h2 class="fw-bold text-dark mt-2 mb-0">@(ViewBag.ActiveTeacherCount ?? 0)</h2>
                 </div>
                 <div class="bg-info-subtle text-info p-3 rounded-4 fs-4 shadow-sm icon-float">
                     <i class="bi bi-shield-check"></i>
@@ -220,7 +220,7 @@
                     <span class="fw-semibold">Partnership Confirmed: You have already uploaded the Partnership Letter.</span>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="@institute.PartnershipLetterPath" target="_blank" class="btn btn-light btn-sm rounded-pill px-4 fw-bold text-success border-0">
+                    <a href="@ViewBag.PartnershipLetterPath" target="_blank" class="btn btn-light btn-sm rounded-pill px-4 fw-bold text-success border-0">
                         <i class="bi bi-eye-fill me-1"></i> View Letter
                     </a>
                     <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#uploadLetterModal">

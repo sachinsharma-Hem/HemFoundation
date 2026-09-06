@@ -30,30 +30,30 @@ public static class IdentitySeeder
             "HF_Volunteers"
         };
 
-<<<<<<< Updated upstream
-        foreach (var roleName in roles)
-        {
-            // Directly aspnetroles se check
-            var roleExists = await context.AspNetRoles
-                .Where(r => r.Name == roleName)
-                .Select(r => r.Id)
-                .AnyAsync();
 
-            if (!roleExists)
-            {
-                var roleId = Guid.NewGuid().ToString();
+        //foreach (var roleName in roles)
+        //{
+        //    // Directly aspnetroles se check
+        //    var roleExists = await context.AspNetRoles
+        //        .Where(r => r.Name == roleName)
+        //        .Select(r => r.Id)
+        //        .AnyAsync();
 
-                // Direct SQL INSERT
-                // ConcurrencyStamp intentionally nahi hai.
-                await context.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO public.aspnetroles
-                        (id, ""Name"")
-                    VALUES
-                        ({roleId}, {roleName})
-                ");
-            }
-        }
-=======
+        //    if (!roleExists)
+        //    {
+        //        var roleId = Guid.NewGuid().ToString();
+
+        //        // Direct SQL INSERT
+        //        // ConcurrencyStamp intentionally nahi hai.
+        //        await context.Database.ExecuteSqlInterpolatedAsync($@"
+        //            INSERT INTO public.aspnetroles
+        //                (id, ""Name"")
+        //            VALUES
+        //                ({roleId}, {roleName})
+        //        ");
+        //    }
+        //}
+
         //foreach (var roleName in roles)
         //{
         //    var roleExists = await context.Roles.AnyAsync(r => r.Name == roleName);
@@ -67,7 +67,6 @@ public static class IdentitySeeder
         //    }
         //}
         //await context.SaveChangesAsync();
->>>>>>> Stashed changes
 
 
         // =========================================================

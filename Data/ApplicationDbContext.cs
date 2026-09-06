@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections;
 using System.Reflection.Emit;
-
+using System.Collections;
 namespace HemFoundation.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
@@ -32,6 +32,7 @@ namespace HemFoundation.Data
         public DbSet<Affiliate> Affiliates { get; set; }
         public DbSet<WJ_Institutes> WJ_Institutes { get; set; }
         public DbSet<Student> Students { get; set; }
+        public DbSet<ViewWjStudentsDetailsInfo> ViewWjStudentsDetailsInfo { get; set; }
         public DbSet<StandardMaster> StandardMasters { get; set; }
         public DbSet<WJ_Teacher> WJ_Teachers { get; set; }
         public DbSet<Parent> Parents { get; set; }
@@ -75,7 +76,7 @@ namespace HemFoundation.Data
         public DbSet<AffiliateExpense> AffiliateExpenses { get; set; }
         public DbSet<VolunteerInstituteMapping> VolunteerInstituteMappings { get; set; }
 
-
+        public DbSet<KnowledgePartnersList> KnowledgePartnersList { get; set; }
         public DbSet<Quiz> Quiz { get; set; }
         public DbSet<Examination> Examination { get; set; }
         public DbSet<ExaminationRecords> ExaminationRecords { get; set; }
@@ -119,6 +120,10 @@ namespace HemFoundation.Data
 
         public DbSet<WJ_ReferralCodes> WJ_ReferralCodes { get; set; }
         public DbSet<SchoolProfileDetailsDto> SchoolProfileDetails { get; set; }
+        public DbSet<ViewHfTeacherDetails> ViewHfTeacherDetails { get; set; }
+        public DbSet<WJ_StudentAssociates> WJ_StudentAssociates { get; set; }
+        public DbSet<WJ_Students> WJ_Students { get; set; }
+        public DbSet<WJ_TeacherAssociates> WJ_TeacherAssociates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -233,8 +238,10 @@ namespace HemFoundation.Data
 
                 entity.Property(e => e.Name)
                     .HasColumnName("Name");
+                entity.Ignore(e => e.NormalizedName);
+                entity.Ignore(e => e.ConcurrencyStamp);
 
-                
+
             });
 
             builder.Entity<ApplicationUser>(entity =>
@@ -530,7 +537,60 @@ namespace HemFoundation.Data
                 entity.Property(e => e.IsDeleted)
                     .HasColumnName("IsDeleted");
             });
+            builder.Entity<ViewWjStudentsDetailsInfo>(entity =>
+            {
+                entity.Property(e => e.IsActive).HasColumnType("boolean");
+                entity.Property(e => e.IsPaid).HasColumnType("boolean");
+                entity.Property(e => e.SharingPermission).HasColumnType("boolean");
+                entity.Property(e => e.IsMobileVerified).HasColumnType("boolean");
+                entity.Property(e => e.IsEmailVerified).HasColumnType("boolean");
+                entity.Property(e => e.IsUserDeactivated).HasColumnType("boolean");
+            });
+            // Required for BitArray
 
+            // Inside OnModelCreating:
+            builder.Entity<WJ_Students>(entity =>
+            {
+                // Map C# bool? to BitArray for PostgreSQL 'bit' columns without changing the DB
+                entity.Property(e => e.IsActive)
+                      .HasColumnType("bit")
+                      .HasConversion(
+                          v => v.HasValue ? new BitArray(new[] { v.Value }) : null,
+                          v => v != null && v.Count > 0 ? v[0] : (bool?)null
+                      );
+
+                entity.Property(e => e.IsPaid)
+                      .HasColumnType("bit")
+                      .HasConversion(
+                          v => new BitArray(new[] { v }),
+                          v => v != null && v.Count > 0 ? v[0] : false
+                      );
+
+                entity.Property(e => e.SharingPermission)
+                      .HasColumnType("bit")
+                      .HasConversion(
+                          v => v.HasValue ? new BitArray(new[] { v.Value }) : null,
+                          v => v != null && v.Count > 0 ? v[0] : (bool?)null
+                      );
+            });
+            builder.Entity<WJ_StudentAssociates>(entity =>
+            {
+                entity.Property(e => e.IsPrimaryAssociate)
+                      .HasColumnType("bit")
+                      .HasConversion(
+                          v => v.HasValue ? new BitArray(new[] { v.Value }) : null,
+                          v => v != null && v.Count > 0 ? v[0] : (bool?)null
+                      );
+            });
+            builder.Entity<WJ_TeacherAssociates>(entity =>
+            {
+                entity.Property(e => e.IsPrimaryAssociate)
+                      .HasColumnType("bit")
+                      .HasConversion(
+                          v => v.HasValue ? new BitArray(new[] { v.Value }) : null,
+                          v => v != null && v.Count > 0 ? v[0] : (bool?)null
+                      );
+            });
         }
 
 

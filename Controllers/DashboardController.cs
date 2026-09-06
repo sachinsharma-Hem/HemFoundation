@@ -3,7 +3,7 @@ using HemFoundation.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-
+using HemFoundation.Models.DTOs;
 namespace HemFoundation.Controllers
 {
     public class DashboardController : Controller
@@ -32,20 +32,60 @@ namespace HemFoundation.Controllers
             // ==========================================
             // 1. SCHOOL PORTAL LOGIC
             // ==========================================
-            if (!string.IsNullOrEmpty(portal) && portal.Equals("school", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(portal) &&
+     portal.Equals("school", StringComparison.OrdinalIgnoreCase))
             {
-                Institute? institute = null;
+                SchoolProfileDetailsDto? institute = null;
+
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    institute = await _context.vw_school_profile_details.AsNoTracking().FirstOrDefaultAsync(i => i.AspNetUserID == userId && i.IsActive);
-                }
+                    // =====================================================
+                    // 1. Current logged-in user find karo
+                    // =====================================================
+                    var currentUser = await _context.Users
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(u =>
+                            u.AspNetUserID == userId);
 
+                    // =====================================================
+                    // 2. Users.UserID = InstituteID ke according school find
+                    // =====================================================
+                    if (currentUser != null)
+                    {
+                        institute = await _context.SchoolProfileDetails
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(i =>
+                                i.instituteid == currentUser.UserID);
+                    }
+                }
+              
+                // =====================================================
+                // 3. School mil gayi to dashboard counts
+                // =====================================================
                 if (institute != null)
                 {
-                    ViewBag.StudentsCount = await _context.Students.CountAsync(s => s.InstituteID == institute.InstituteID && s.IsActive);
-                    ViewBag.TeachersCount = await _context.Teachers.CountAsync(t => t.InstituteID == institute.InstituteID && t.IsActive);
-                    ViewBag.VolunteersCount = await _context.Volunteers.CountAsync(v => v.InstituteId == institute.InstituteID && v.IsActive);
-                    ViewBag.InstituteName = institute.Name;
+                    var instituteId = institute.instituteid;
+                    var knowledgePartner = await _context.KnowledgePartnersList
+         .FirstOrDefaultAsync(k => k.InstituteID == instituteId && k.FileUrl != null);
+
+                    bool alreadyUploaded = knowledgePartner != null;
+
+                    ViewBag.StudentsCount =  institute.associatedstudents;
+                    ViewBag.ActivetudentCount = institute.activestudents;
+                    ViewBag.TeachersCount = institute.totalteachers;
+                    ViewBag.ActiveTeacherCount = institute.activeteachers;
+                    ViewBag.InstituteName = institute.institute_name;
+                    ViewBag.hasUploadedLetter = alreadyUploaded;
+                    ViewBag.PartnershipLetterPath = knowledgePartner?.FileUrl;
+                }
+                else
+                {
+                    ViewBag.StudentsCount = 0;
+                    ViewBag.TeachersCount = 0;
+                    ViewBag.VolunteersCount = 0;
+                    ViewBag.InstituteName = "";
+                    ViewBag.hasUploadedLetter = false;
+                    ViewBag.PartnershipLetterPath = null;
                 }
             }
             // ==========================================
