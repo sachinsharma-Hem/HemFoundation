@@ -3,20 +3,32 @@
   "WorkspaceRootPath": "H:\\Rajan Thakur\\Project\\HemFoundation\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\valueofyear\\activitysubmission.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\valueofyear\\activitysubmission.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\api\\valueapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\valueapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\entities\\valueitemmaster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\entities\\valueitemmaster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\creativityactivitiessubmission2021.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\creativityactivitiessubmission2021.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\api\\authapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\authapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\api\\universalregisterapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\universalregisterapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\hfrelmanagegrouplist.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\hfrelmanagegrouplist.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\vw_valueitemmasters.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\vw_valueitemmasters.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\valueofyear\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -25,6 +37,22 @@
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\valueofyearcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\valueofyearcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\entities\\valueitemmaster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\entities\\valueitemmaster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\registration\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\registration\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\viewhfteacherdetails.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\viewhfteacherdetails.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\api\\universalregisterapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\universalregisterapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -45,14 +73,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\entities\\wj_teacher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\entities\\wj_teacher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\api\\authapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\authapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\registration\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\registration\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\common\\utility.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -83,10 +103,6 @@
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\schoolapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\viewhfteacherdetails.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\viewhfteacherdetails.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\viewwjstudentsdetailsinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\viewwjstudentsdetailsinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
@@ -98,17 +114,17 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 11,
               "Title": "ViewHfTeacherDetails.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\ViewHfTeacherDetails.cs",
               "RelativeDocumentMoniker": "Models\\ViewHfTeacherDetails.cs",
               "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\ViewHfTeacherDetails.cs",
               "RelativeToolTip": "Models\\ViewHfTeacherDetails.cs",
-              "ViewState": "AgIAADcAAAAAAAAAAAAowEwAAAAzAAAAAAAAAA==",
+              "ViewState": "AgIAADAAAAAAAAAAAAAQwEIAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-06T10:35:30.173Z",
               "IsPinned": true,
@@ -116,13 +132,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "ValueApiController.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\ValueApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\Api\\ValueApiController.cs",
               "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\ValueApiController.cs",
               "RelativeToolTip": "Controllers\\Api\\ValueApiController.cs",
-              "ViewState": "AgIAAJIAAAAAAAAAAAAgwKMAAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAAD0BAAAAAAAAAIAwwE4BAABKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-06T15:02:29.444Z",
               "IsPinned": true,
@@ -130,54 +146,102 @@
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{c6f34f0d-7ae5-4f3a-be61-fe0c21ae9eb8}"
-            },
-            {
-              "$type": "Bookmark",
               "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "ValueItemMaster.cs",
-              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\ValueItemMaster.cs",
-              "RelativeDocumentMoniker": "Models\\Entities\\ValueItemMaster.cs",
-              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\ValueItemMaster.cs",
-              "RelativeToolTip": "Models\\Entities\\ValueItemMaster.cs",
-              "ViewState": "AgIAAAcAAAAQnJmZmdkxwA0AAAAWAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-06T17:02:57.208Z",
+              "DocumentIndex": 0,
+              "Title": "ActivitySubmission.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\ValueOfYear\\ActivitySubmission.cshtml",
+              "RelativeDocumentMoniker": "Views\\ValueOfYear\\ActivitySubmission.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\ValueOfYear\\ActivitySubmission.cshtml",
+              "RelativeToolTip": "Views\\ValueOfYear\\ActivitySubmission.cshtml",
+              "ViewState": "AgIAAHQAAAAAAAAAAAApwIQAAABAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-07T06:24:48.513Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
+              "Title": "CreativityActivitiesSubmission2021.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\CreativityActivitiesSubmission2021.cs",
+              "RelativeDocumentMoniker": "Models\\CreativityActivitiesSubmission2021.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\CreativityActivitiesSubmission2021.cs",
+              "RelativeToolTip": "Models\\CreativityActivitiesSubmission2021.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAhwCMAAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-07T05:35:43.101Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "HfRelManageGroupList.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\HfRelManageGroupList.cs",
+              "RelativeDocumentMoniker": "Models\\HfRelManageGroupList.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\HfRelManageGroupList.cs",
+              "RelativeToolTip": "Models\\HfRelManageGroupList.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-07T05:29:45.9Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
               "Title": "Index.cshtml",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\ValueOfYear\\Index.cshtml",
               "RelativeDocumentMoniker": "Views\\ValueOfYear\\Index.cshtml",
               "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\ValueOfYear\\Index.cshtml",
               "RelativeToolTip": "Views\\ValueOfYear\\Index.cshtml",
-              "ViewState": "AgIAAPIAAAAwZWZmZiYwwJkAAAATAAAAAAAAAA==",
+              "ViewState": "AgIAAMYAAAAAAAAAAAAAANgAAABmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-09-06T15:08:22.704Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
+              "Title": "vw_valueitemmasters.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\vw_valueitemmasters.cs",
+              "RelativeDocumentMoniker": "Models\\vw_valueitemmasters.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\vw_valueitemmasters.cs",
+              "RelativeToolTip": "Models\\vw_valueitemmasters.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-07T03:48:47.231Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ValueItemMaster.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\ValueItemMaster.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\ValueItemMaster.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\ValueItemMaster.cs",
+              "RelativeToolTip": "Models\\Entities\\ValueItemMaster.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAQwBQAAABUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T17:02:57.208Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
               "Title": "ValueOfYearController.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\ValueOfYearController.cs",
               "RelativeDocumentMoniker": "Controllers\\ValueOfYearController.cs",
               "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\ValueOfYearController.cs",
               "RelativeToolTip": "Controllers\\ValueOfYearController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAuwBMAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-06T15:08:03.435Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 15,
               "Title": "EmailManager.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Services\\EmailManager.cs",
               "RelativeDocumentMoniker": "Services\\EmailManager.cs",
@@ -190,7 +254,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 17,
               "Title": "WJ_Teacher.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\WJ_Teacher.cs",
               "RelativeDocumentMoniker": "Models\\Entities\\WJ_Teacher.cs",
@@ -203,7 +267,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 13,
               "Title": "Program.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
@@ -211,12 +275,11 @@
               "RelativeToolTip": "Program.cs",
               "ViewState": "AgIAAJEAAAAAZGZmZuYcwJoAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-06T13:46:10.211Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-06T13:46:10.211Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 14,
               "Title": "appsettings.json",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\appsettings.json",
               "RelativeDocumentMoniker": "appsettings.json",
@@ -224,12 +287,11 @@
               "RelativeToolTip": "appsettings.json",
               "ViewState": "AgIAAAUAAAAANDMzMzMbwCEAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-09-06T13:41:16.7Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-06T13:41:16.7Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 19,
               "Title": "SMSManager.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Common\\SMSManager.cs",
               "RelativeDocumentMoniker": "Common\\SMSManager.cs",
@@ -242,7 +304,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 21,
               "Title": "StudentRegistration.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\StudentRegistration.cs",
               "RelativeDocumentMoniker": "Models\\StudentRegistration.cs",
@@ -255,7 +317,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 18,
               "Title": "Utility.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Common\\Utility.cs",
               "RelativeDocumentMoniker": "Common\\Utility.cs",
@@ -268,20 +330,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 10,
               "Title": "Index.cshtml",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Registration\\Index.cshtml",
               "RelativeDocumentMoniker": "Views\\Registration\\Index.cshtml",
               "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Registration\\Index.cshtml",
               "RelativeToolTip": "Views\\Registration\\Index.cshtml",
-              "ViewState": "AgIAALUAAAAAMzMzM5MwwNQAAABIAAAAAAAAAA==",
+              "ViewState": "AgIAALIAAAAAJzMzMzPbv80AAAA7AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-09-06T12:23:07.868Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 22,
               "Title": "RegistrationController.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\RegistrationController.cs",
               "RelativeDocumentMoniker": "Controllers\\RegistrationController.cs",
@@ -289,12 +351,11 @@
               "RelativeToolTip": "Controllers\\RegistrationController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-06T12:22:57.673Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-06T12:22:57.673Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 16,
               "Title": "WJ_TeacherAssociates.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\WJ_TeacherAssociates.cs",
               "RelativeDocumentMoniker": "Models\\Entities\\WJ_TeacherAssociates.cs",
@@ -307,7 +368,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 20,
               "Title": "WJ_Students.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\WJ_Students.cs",
               "RelativeDocumentMoniker": "Models\\Entities\\WJ_Students.cs",
@@ -320,7 +381,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 23,
               "Title": "WJ_StudentAssociates.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\WJ_StudentAssociates.cs",
               "RelativeDocumentMoniker": "Models\\Entities\\WJ_StudentAssociates.cs",
@@ -328,25 +389,24 @@
               "RelativeToolTip": "Models\\Entities\\WJ_StudentAssociates.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-06T11:40:47.419Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-06T11:40:47.419Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 3,
               "Title": "AuthApiController.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\AuthApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\Api\\AuthApiController.cs",
               "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\AuthApiController.cs",
               "RelativeToolTip": "Controllers\\Api\\AuthApiController.cs",
-              "ViewState": "AgIAABgAAAAAMzMzM7MTwC4AAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAACEAAAAAAAAAAAAAAC4AAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-06T08:25:04.125Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 24,
               "Title": "SchoolApiController.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\SchoolApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\Api\\SchoolApiController.cs",
@@ -354,12 +414,11 @@
               "RelativeToolTip": "Controllers\\Api\\SchoolApiController.cs",
               "ViewState": "AgIAAA8AAAAQmZmZmXkxwBoAAAALAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-06T07:27:03.127Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-06T07:27:03.127Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 12,
               "Title": "UniversalRegisterApiController.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\UniversalRegisterApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\Api\\UniversalRegisterApiController.cs",
@@ -372,20 +431,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "ApplicationDbContext.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Data\\ApplicationDbContext.cs",
               "RelativeDocumentMoniker": "Data\\ApplicationDbContext.cs",
               "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Data\\ApplicationDbContext.cs",
               "RelativeToolTip": "Data\\ApplicationDbContext.cs",
-              "ViewState": "AgIAAGIAAAAAAAAAAAAcwGsAAAAeAAAAAAAAAA==",
+              "ViewState": "AgIAAEcCAAAAODMzM/MhwFgCAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-05T10:25:49.02Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 25,
               "Title": "ViewWjStudentsDetailsInfo.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\ViewWjStudentsDetailsInfo.cs",
               "RelativeDocumentMoniker": "Models\\ViewWjStudentsDetailsInfo.cs",
@@ -393,8 +452,7 @@
               "RelativeToolTip": "Models\\ViewWjStudentsDetailsInfo.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACUAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-06T10:21:11.306Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-06T10:21:11.306Z"
             }
           ]
         }

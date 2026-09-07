@@ -120,49 +120,56 @@ namespace HemFoundation.Controllers.Api
             var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
             if (institute == null) return BadRequest(new { success = false, message = "School profile not found" });
 
-            //var schoolStandardNames = await _context.ViewWjStudentsDetailsInfo
-            //    .Where(s => s.InstituteID == institute.instituteid &&  s.Standard != null)
-            //    .Select(s => s.Standard).Distinct().ToListAsync();
+            var schoolStandardNames = await _context.ViewWjStudentsDetailsInfo
+                .Where(s => s.InstituteID == institute.instituteid && s.Standard != null)
+                .Select(s => s.Standard).Distinct().ToListAsync();
 
-            //var standardIds = await _context.StandardMasters
-            //    .Where(s => schoolStandardNames.Contains(s.StandardName))
-            //    .Select(s => s.Id).ToListAsync();
+            var standardIds = await _context.StandardMasters
+                .Where(s => schoolStandardNames.Contains(s.StandardName))
+                .Select(s => s.Id).ToListAsync();
+            string[] excludedStandards = { "13th", "14th", "15th", "All", "Teacher" };
 
+            var grades = await _context.StandardMasters
+                .Where(g => !excludedStandards.Contains(g.StandardName))
+                .OrderBy(g => g.Id) // Orders by ID instead of StandardName
+                .ToListAsync();
             //var grades = await _context.StandardMasters
             //    .OrderBy(g => g.StandardName).ToListAsync();
 
-            //var gradeIds = grades.Select(g => g.Id).ToList();
+            var gradeIds = grades.Select(g => g.Id).ToList();
+            var gradeNames = grades.Select(g => g.StandardName).ToList();
 
-            //var values = await _context.ValueItemMasters
-            //    .Where(v => v.IsActive && gradeIds.Contains(v.GradeId)).ToListAsync();
+            var values = await _context.vw_valueitemmasters
+            .Where(v =>  v.GradeId != null && gradeNames.Contains(v.GradeId))
+            .ToListAsync();
+            //var values = await _context.vw_valueitemmasters
+            //   .Where(v => v.IsActive && gradeIds.Contains(v.GradeId.ToString())).ToListAsync();
 
-            //// NAYA: Check submissions to mark "Completed"
-            //var submittedActivityIds = await _context.ActivitySubmissions
-            //    .Where(s => s.InstituteId == institute.instituteid)
-            //    .Select(s => s.ValueItemId)
-            //    .Distinct()
-            //    .ToListAsync();
+            // NAYA: Check submissions to mark "Completed"
+            var submittedActivityIds = await _context.ActivitySubmissions
+                .Where(s => s.InstituteId == institute.instituteid)
+                .Select(s => s.ValueItemId)
+                .Distinct()
+                .ToListAsync();
 
-            //var result = grades.Select(g => new
-            //{
-            //    g.Id,
-            //    g.StandardName,
-            //    g.GroupName,
-            //    g.ButtonName,
-            //    Capacities = values.Where(v => v.GradeId == g.Id).Select(v => new
-            //    {
-            //        v.Id, // NAYA: URL ke liye ID zaroori hai
-            //        v.CapacityName,
-            //        v.ValueTitleEng,
-            //        v.ValueTitleHin,
-            //        v.ValueImageUrl,
-            //        v.ActivityPdfUrl,
-            //        IsCompleted = submittedActivityIds.Contains(v.Id) // NAYA: Status Check
-            //    }).ToList()
-            //});
+            var result = grades.Select(g => new
+            {
+                g.Id,
+                g.StandardName,               
+                Capacities = values.Where(v => v.GradeId == g.StandardName).Select(v => new
+                {
+                    v.Id, // NAYA: URL ke liye ID zaroori hai
+                    v.CapacityName,
+                    v.ValueTitleEng,
+                    v.ValueTitleHin,
+                    v.ValueImageUrl,
+                    v.ActivityPdfUrl,
+                    IsCompleted = submittedActivityIds.Contains(v.Id) // NAYA: Status Check
+                }).ToList()
+            });
 
-          //  return Ok(new { success = true, data = result });
-            return Ok(new { success = true, data = "" });
+            return Ok(new { success = true, data = result });
+            
         }
 
         // ================== ACTIVITY SUBMISSION APIS ==================
@@ -170,45 +177,54 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("activity-page-data/{valueItemId}")]
         public async Task<IActionResult> GetActivityPageData(int valueItemId)
         {
-            string? currentUserId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var institute = await _context.Institutes.FirstOrDefaultAsync(i => i.AspNetUserID == currentUserId);
+            int? currentUserId = HttpContext.Session.GetInt32("UserID");
+
+            if (currentUserId == null || currentUserId == 0)
+            {
+                // Fall back to claims if session is missing
+                string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                currentUserId = int.TryParse(claimId, out int parsed) ? parsed : 0;
+            }
+            if (string.IsNullOrEmpty(currentUserId.ToString())) return Unauthorized(new { success = false, message = "Not logged in" });
+
+            var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
             if (institute == null) return BadRequest(new { success = false, message = "School not found." });
 
-            var valueItem = await _context.ValueItemMasters.FirstOrDefaultAsync(v => v.Id == valueItemId);
+            var valueItem = await _context.vw_valueitemmasters.FirstOrDefaultAsync(v => v.Id == valueItemId);
             if (valueItem == null) return BadRequest(new { success = false, message = "Activity not found." });
 
-            var grade = await _context.ValueGradeMasters.FirstOrDefaultAsync(g => g.Id == valueItem.GradeId);
-            var standard = await _context.StandardMasters.FirstOrDefaultAsync(s => s.Id == grade.StandardId);
+            var grade = await _context.StandardMasters.FirstOrDefaultAsync(g => g.StandardName == valueItem.GradeId);
+            var standard = await _context.StandardMasters.FirstOrDefaultAsync(s => s.StandardName == grade.StandardName);
 
             // 1. Us standard ke saare students
-            var students = await _context.Students
-    .Where(s => s.InstituteID == institute.InstituteID && s.Standard == standard.StandardName && s.IsActive)
-    .Select(s => new { Id = s.StudentID, Name = s.FirstName + " " + s.LastName }) // <--- ISE UPDATE KIYA
-    .ToListAsync();
+            var students = await _context.ViewWjStudentsDetailsInfo
+                .Where(s => s.InstituteID == institute.instituteid && s.Standard == standard.StandardName)
+                .Select(s => new { Id = s.StudentId, Name = s.FirstName + " " + s.LastName }) // <--- ISE UPDATE KIYA
+                .ToListAsync();
+            var submissions = await _context.creativityActivitiesSubmission2021s
+              .Where(s => s.InstituteID == institute.instituteid && s.MainCourseID == valueItemId)
+              .ToListAsync();
+
 
             // 2. Existing Groups aur unke students
-            var groups = await _context.ActivityGroups
-                .Where(g => g.InstituteId == institute.InstituteID && g.ValueItemId == valueItemId && g.IsActive)
+            var groups = await _context.HfRelManageGroupList
+                .Where(g => g.IsAllocatedBy == institute.instituteid && g.MainCourseID==valueItem.Id)
                 .ToListAsync();
 
-            var groupStudents = await _context.ActivityGroupStudents
-                .Where(gs => groups.Select(g => g.Id).Contains(gs.GroupId))
+            var groupStudents = await _context.HfRelManageGroupList
+                .Where(g => g.IsAllocatedBy == institute.instituteid && g.MainCourseID == valueItem.Id)
                 .ToListAsync();
-
             // 3. Existing Submissions
-            var submissions = await _context.ActivitySubmissions
-                .Where(s => s.InstituteId == institute.InstituteID && s.ValueItemId == valueItemId)
-                .ToListAsync();
 
             return Ok(new
             {
                 success = true,
-                activity = new { valueItem.CapacityName, valueItem.ValueTitleEng, grade.GradeName },
+                activity = new { valueItem.CapacityName, valueItem.ValueTitleEng, grade.StandardName },
                 students,
                 groups = groups.Select(g => new {
-                    g.Id,
+                    g.MgslId,
                     g.GroupName,
-                    StudentIds = groupStudents.Where(gs => gs.GroupId == g.Id).Select(gs => gs.StudentId).ToList()
+                    StudentIds = groupStudents.Where(gs => gs.MgslId == g.MgslId).Select(gs => gs.StudentID).ToList()
                 }),
                 submissions
             });
@@ -225,18 +241,25 @@ namespace HemFoundation.Controllers.Api
             if (requestGroups == null || !requestGroups.Any())
                 return BadRequest(new { success = false, message = "No data received." });
 
-            string? currentUserId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var institute = await _context.Institutes.FirstOrDefaultAsync(i => i.AspNetUserID == currentUserId);
+            int? currentUserId = HttpContext.Session.GetInt32("UserID");
 
-            if (institute == null)
-                return BadRequest(new { success = false, message = "Institute not found." });
+            if (currentUserId == null || currentUserId == 0)
+            {
+                // Fall back to claims if session is missing
+                string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                currentUserId = int.TryParse(claimId, out int parsed) ? parsed : 0;
+            }
+            if (string.IsNullOrEmpty(currentUserId.ToString())) return Unauthorized(new { success = false, message = "Not logged in" });
+
+            var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
+            if (institute == null) return BadRequest(new { success = false, message = "School not found." });
 
             // Puraani mappings delete karein
-            var oldGroups = await _context.ActivityGroups.Where(g => g.InstituteId == institute.InstituteID && g.ValueItemId == valueItemId).ToListAsync();
-            var oldMappings = await _context.ActivityGroupStudents.Where(gs => oldGroups.Select(g => g.Id).Contains(gs.GroupId)).ToListAsync();
+            var oldGroups = await _context.HfRelManageGroupList.Where(g => g.IsAllocatedBy == institute.instituteid && g.MainCourseID == valueItemId).ToListAsync();
+           // var oldMappings = await _context.ActivityGroupStudents.Where(gs => oldGroups.Select(g => g.Id).Contains(gs.GroupId)).ToListAsync();
 
-            _context.ActivityGroupStudents.RemoveRange(oldMappings);
-            _context.ActivityGroups.RemoveRange(oldGroups);
+            //_context.HfRelManageGroupList.RemoveRange(oldMappings);
+            _context.HfRelManageGroupList.RemoveRange(oldGroups);
             await _context.SaveChangesAsync();
 
             // Nayi mappings add karein
@@ -245,22 +268,27 @@ namespace HemFoundation.Controllers.Api
                 // Agar group name empty hai toh default naam de dein
                 string gName = string.IsNullOrWhiteSpace(rg.GroupName) ? "Group" : rg.GroupName;
 
-                var newGroup = new ActivityGroup
-                {
-                    InstituteId = institute.InstituteID,
-                    ValueItemId = valueItemId,
-                    GroupName = gName
-                };
+               
 
-                _context.ActivityGroups.Add(newGroup);
-                await _context.SaveChangesAsync(); // Id generate karne ke liye
+               // _context.ActivityGroups.Add(newGroup);
+                //await _context.SaveChangesAsync(); // Id generate karne ke liye
 
                 // Null check lagaya hai taaki array empty hone par crash na ho
                 if (rg.StudentIds != null && rg.StudentIds.Any())
                 {
                     foreach (var sid in rg.StudentIds)
                     {
-                        _context.ActivityGroupStudents.Add(new ActivityGroupStudent { GroupId = newGroup.Id, StudentId = sid });
+                        var newGroup = new HfRelManageGroupList
+                        {
+                            IsAllocatedBy = institute.instituteid,
+                            MainCourseID = valueItemId,
+                            GroupName = gName,
+                            StudentID=sid,
+                            IsAllocated=true,
+
+                        };
+
+                        _context.HfRelManageGroupList.Add(newGroup);
                     }
                 }
             }
@@ -271,22 +299,32 @@ namespace HemFoundation.Controllers.Api
         [HttpPost("submit-activity")]
         public async Task<IActionResult> SubmitActivity([FromForm] int ValueItemId, [FromForm] string Comment, IFormFile? ImageFile, IFormFile? VideoFile)
         {
-            string? currentUserId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var institute = await _context.Institutes.FirstOrDefaultAsync(i => i.AspNetUserID == currentUserId);
+            int? currentUserId = HttpContext.Session.GetInt32("UserID");
 
-            if (institute == null) return BadRequest(new { success = false, message = "Institute not found." });
+            if (currentUserId == null || currentUserId == 0)
+            {
+                // Fall back to claims if session is missing
+                string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                currentUserId = int.TryParse(claimId, out int parsed) ? parsed : 0;
+            }
+            if (string.IsNullOrEmpty(currentUserId.ToString())) return Unauthorized(new { success = false, message = "Not logged in" });
+
+            var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
+            if (institute == null) return BadRequest(new { success = false, message = "School not found." });
+
 
             // Check if submission already exists for this Capacity (ValueItemId)
-            bool exists = await _context.ActivitySubmissions.AnyAsync(s => s.InstituteId == institute.InstituteID && s.ValueItemId == ValueItemId);
+            bool exists = await _context.creativityActivitiesSubmission2021s.AnyAsync(s => s.InstituteID == institute.instituteid && s.MainCourseID == ValueItemId);
             if (exists) return BadRequest(new { success = false, message = "Activity already submitted for this capacity." });
 
             // GroupId ko by default 0 rakha gaya hai kyunki ye overall capacity submission hai
-            var submission = new ActivitySubmission
+            var submission = new CreativityActivitiesSubmission2021
             {
-                InstituteId = institute.InstituteID,
-                ValueItemId = ValueItemId,
-                GroupId = 0,
-                Comment = Comment
+                InstituteID = institute.instituteid,
+                MainCourseID = ValueItemId,
+
+                ShortDescription = Comment,
+                CreatedDate = System.DateTime.Now
             };
 
             string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "submissions");
@@ -296,16 +334,16 @@ namespace HemFoundation.Controllers.Api
             {
                 string imgName = $"{Guid.NewGuid()}_{ImageFile.FileName}";
                 using (var fs = new FileStream(Path.Combine(uploadsFolder, imgName), FileMode.Create)) { await ImageFile.CopyToAsync(fs); }
-                submission.ImageUrl = $"/uploads/submissions/{imgName}";
+                submission.ImageActivity = $"/uploads/submissions/{imgName}";
             }
             if (VideoFile != null)
             {
                 string vidName = $"{Guid.NewGuid()}_{VideoFile.FileName}";
                 using (var fs = new FileStream(Path.Combine(uploadsFolder, vidName), FileMode.Create)) { await VideoFile.CopyToAsync(fs); }
-                submission.VideoUrl = $"/uploads/submissions/{vidName}";
+                submission.VideoActivity = $"/uploads/submissions/{vidName}";
             }
 
-            _context.ActivitySubmissions.Add(submission);
+            _context.creativityActivitiesSubmission2021s.Add(submission);
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Capacity activity submitted successfully!" });

@@ -177,8 +177,8 @@
                 <div class="col-xl-3 col-lg-4 col-md-6">
                     <div class="card grade-card shadow-sm h-100 text-center">
                         <div class="grade-card-top">
-                            <div class="grade-title mb-1">${grade.gradeName}</div>
-                            <div class="grade-subtitle text-uppercase">${grade.groupName}</div>
+                                            <div class="grade-title mb-1">${grade.standardName}</div>
+                                            <div class="grade-subtitle text-uppercase">${grade.standardName}</div>
                         </div>
                         <div class="p-3 bg-white">
                             <button class="btn btn-warning-custom w-100 rounded-pill fw-bold shadow-sm" onclick="showCapacities(${grade.id})">
@@ -196,13 +196,13 @@
             if (!grade) return;
 
             // Set Title dynamically
-            $('#selectedGradeTitle').html(`<span class="text-primary">${grade.gradeName}</span> - Annual Activity`);
+            $('#selectedGradeTitle').html(`<span class="text-primary">${grade.standardName}</span> - Annual Activity`);
             
             let html = '';
             if (grade.capacities && grade.capacities.length > 0) {
                 grade.capacities.forEach(cap => {
-                    let imgUrl = cap.valueImageUrl || '/images/default-value.jpg';
-                    
+                    let imgUrl1 = cap.valueImageUrl || '/images/default-value.jpg';
+                    let imgUrl = cap.valueImageUrl ? cap.valueImageUrl : `/Uploads/Common_Document/${cap.valueTitleEng}.jpg`;
                     // NAYA: Dynamic Action Button (Checks isCompleted flag)
                     let actionBtn = cap.isCompleted 
                         ? `<a href="/ValueOfYear/ActivitySubmission/${cap.id}" class="btn btn-success w-100 rounded-pill fw-bold btn-sm shadow-sm"><i class="bi bi-check-circle-fill me-1"></i> Completed</a>`
@@ -214,7 +214,7 @@
                             <img src="${imgUrl}" class="capacity-img" alt="${cap.valueTitleEng}">
                             <div class="card-body text-center p-3 d-flex flex-column">
                                 <div class="mb-2">
-                                    <span class="capacity-badge shadow-sm">${cap.capacityName}</span>
+                                            <span class="capacity-badge shadow-sm">${cap.valueTitleEng}</span>
                                 </div>
                                 <h6 class="fw-bolder text-dark mb-0">${cap.valueTitleEng}</h6>
                                 <p class="small text-muted mb-3 fw-semibold">${cap.valueTitleHin}</p>

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HemFoundation.Models.Entities
 {
-    [Table("vw_valueitemmasters")] // Maps directly to the PostgreSQL database view or table
+    // Maps directly to the PostgreSQL database view or table
     public class ValueItemMaster
     {
         [Key]

@@ -106,6 +106,12 @@ namespace HemFoundation.Data
         public DbSet<BulkUploadLog> BulkUploadLogs { get; set; }
         public DbSet<ValueGradeMaster> ValueGradeMasters { get; set; }
         public DbSet<ValueItemMaster> ValueItemMasters { get; set; }
+        public DbSet<vw_valueitemmasters> vw_valueitemmasters { get; set; }
+
+        public DbSet<HfRelManageGroupList> HfRelManageGroupList {  get; set; }
+        public DbSet<CreativityActivitiesSubmission2021> creativityActivitiesSubmission2021s { get; set; }
+
+
         public DbSet<ActivityGroup> ActivityGroups { get; set; }
         public DbSet<ActivityGroupStudent> ActivityGroupStudents { get; set; }
         public DbSet<ActivitySubmission> ActivitySubmissions { get; set; }
@@ -588,6 +594,15 @@ namespace HemFoundation.Data
                       .HasColumnType("bit")
                       .HasConversion(
                           v => v.HasValue ? new BitArray(new[] { v.Value }) : null,
+                          v => v != null && v.Count > 0 ? v[0] : (bool?)null
+                      );
+            });
+            builder.Entity<HfRelManageGroupList>(entity =>
+            {
+                entity.Property(e => e.IsAllocated)
+                      .HasColumnType("bit")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
                           v => v != null && v.Count > 0 ? v[0] : (bool?)null
                       );
             });

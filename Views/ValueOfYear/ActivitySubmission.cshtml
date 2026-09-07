@@ -298,10 +298,10 @@
                         </div>
                     </div>
                     <div class="card bg-light border-0 rounded-4 p-4 mt-3">
-                        <p class="mb-3"><b>Your Observation:</b> <br> ${existingSubmission.comment || 'N/A'}</p>
+                                <p class="mb-3"><b>Your Observation:</b> <br> ${existingSubmission.shortDescription || 'N/A'}</p>
                         <div class="d-flex gap-2">
-                            ${existingSubmission.imageUrl ? `<a href="${existingSubmission.imageUrl}" target="_blank" class="btn btn-outline-dark fw-bold rounded-pill"><i class="bi bi-image"></i> View Image</a>` : ''}
-                            ${existingSubmission.videoUrl ? `<a href="${existingSubmission.videoUrl}" target="_blank" class="btn btn-outline-dark fw-bold rounded-pill"><i class="bi bi-camera-video"></i> View Video</a>` : ''}
+                            ${existingSubmission.imageActivity ? `<a href="${existingSubmission.imageActivity}" target="_blank" class="btn btn-outline-dark fw-bold rounded-pill"><i class="bi bi-image"></i> View Image</a>` : ''}
+                            ${existingSubmission.videoActivity ? `<a href="${existingSubmission.videoActivity}" target="_blank" class="btn btn-outline-dark fw-bold rounded-pill"><i class="bi bi-camera-video"></i> View Video</a>` : ''}
                         </div>
                     </div>
                 `);
