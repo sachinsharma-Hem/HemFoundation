@@ -4,25 +4,28 @@
     // Session se user ki details uthana
     string fullName = Context.Session.GetString("UserFullName") ?? "Valued Partner";
     string email = Context.Session.GetString("UserEmail") ?? "N/A";
-    string role = Context.Session.GetString("UserRole") ?? "User";
+
+    // Role string ko underscore (_) se split karke aakhri part nikalna
+    string rawRole = Context.Session.GetString("UserRole") ?? "User";
+    string displayRole = rawRole.Contains("_") ? rawRole.Split('_').Last() : rawRole;
 }
 
 <div class="row g-4 mb-4">
     <!-- User Profile Summary Widget -->
     <div class="col-xl-4 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+        <div class="card border border-2 border-light-subtle shadow-sm rounded-4 bg-white p-4 h-100">
             <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 60px; height: 60px;">
+                <div class="bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center fw-bold fs-3 flex-shrink-0" style="width: 60px; height: 60px;">
                     @fullName.Substring(0, 1).ToUpper()
                 </div>
-                <div>
-                    <h5 class="fw-bold text-dark m-0">@fullName</h5>
-                    <span class="badge bg-success-subtle text-success mt-1 px-2 py-1 rounded-pill small">Role: @role</span>
+                <div class="overflow-hidden">
+                    <h5 class="fw-bold text-dark m-0 text-truncate">@fullName</h5>
+                    <span class="badge bg-success-subtle text-success mt-1 px-2 py-1 rounded-pill small">Role: @displayRole</span>
                 </div>
             </div>
-            <hr class="text-muted opacity-25">
+            <hr class="text-muted opacity-25 my-2">
             <ul class="list-unstyled small text-muted m-0 d-flex flex-column gap-2">
-                <li><i class="bi bi-envelope-at me-2 text-success"></i> <strong>Email:</strong> @email</li>
+                <li class="text-truncate"><i class="bi bi-envelope-at me-2 text-success"></i> <strong>Email:</strong> @email</li>
                 <li><i class="bi bi-shield-check me-2 text-success"></i> <strong>Account Status:</strong> <span class="text-success fw-bold">Active & Verified</span></li>
             </ul>
         </div>
@@ -30,15 +33,15 @@
 
     <!-- Quick Stats Widget -->
     <div class="col-xl-8 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-center">
-            <div class="row text-center g-3">
-                <div class="col-4 border-end">
+        <div class="card border border-2 border-light-subtle shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-center">
+            <div class="row text-center g-3 align-items-center">
+                <div class="col-4 border-end border-light">
                     <h6 class="text-muted small mb-1">Portal Type</h6>
-                    <h5 class="fw-bold text-dark m-0">@role Portal</h5>
+                    <h5 class="fw-bold text-dark m-0">@displayRole Portal</h5>
                 </div>
-                <div class="col-4 border-end">
+                <div class="col-4 border-end border-light">
                     <h6 class="text-muted small mb-1">Security</h6>
-                    <h5 class="fw-bold text-success m-0">JWT Secured</h5>
+                    <h5 class="fw-bold text-success m-0">Fully Protected</h5>
                 </div>
                 <div class="col-4">
                     <h6 class="text-muted small mb-1">Session</h6>
@@ -47,4 +50,4 @@
             </div>
         </div>
     </div>
-</div>
+</div>  

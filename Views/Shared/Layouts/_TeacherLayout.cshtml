@@ -53,6 +53,15 @@
                 box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.1);
                 border: none;
             }
+            /* Logo Hover & Transition Effect without click capability */
+            .navbar-brand img.navbar-brand-img {
+                transition: transform 0.3s ease, filter 0.3s ease;
+            }
+
+            .navbar-brand:hover img.navbar-brand-img {
+                transform: scale(1.05); /* Thoda sa zoom hoga */
+                filter: brightness(1.1); /* Thoda bright hoga */
+            }
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -62,9 +71,9 @@
         <nav class="navbar navbar-expand-lg top-navbar-custom px-3 py-2 shadow-sm">
             <div class="container-fluid">
 
-                <!-- Logo & Brand -->
-                <a class="navbar-brand d-flex align-items-center gap-2 me-4" href="/Teacher/Dashboard">
-                    <img src="~/images/logo/logo.png" alt="HemFoundation Logo" class="navbar-brand-img" />
+                <!-- Logo & Brand (Non-clickable, hover effects only) -->
+                <a class="navbar-brand d-flex align-items-center gap-2 me-4 text-decoration-none" href="javascript:void(0);" style="cursor: default; transition: transform 0.3s ease, filter 0.3s ease;">
+                    <img src="~/images/logo/logo.png" alt="HemFoundation Logo" class="navbar-brand-img" style="transition: transform 0.3s ease, opacity 0.3s ease;" />
                 </a>
 
                 <!-- Mobile Toggle Button -->
