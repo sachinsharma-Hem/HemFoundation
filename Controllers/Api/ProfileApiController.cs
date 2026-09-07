@@ -41,107 +41,36 @@ namespace HemFoundation.Controllers.Api
             var roles = await _userManager.GetRolesAsync(user);
             string primaryRole = roles.FirstOrDefault() ?? "User";
 
-            object profileData = null;
+            // Fetch custom profile details from 'users' table using AspNetUserID
+            var customUser = await _context.Users.FirstOrDefaultAsync(u => u.AspNetUserID == userId);
+            string orgName = "";
 
-            if (primaryRole.Equals("WJ_Affiliate", StringComparison.OrdinalIgnoreCase))
+            if (primaryRole.Equals("WJ_Affiliate", StringComparison.OrdinalIgnoreCase) || primaryRole.Equals("WJ_School", StringComparison.OrdinalIgnoreCase))
             {
-                //var aff = await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId || a.EmailID == user.Email);
-                var users = await _context.Users.FirstOrDefaultAsync(i => i.AspNetUserID == userId);
-                var aff = await _context.WJ_Institutes
-    .Where(i => i.InstituteID == users.UserID)
-    .Select(i => i.SocialOrgName)
-    .FirstOrDefaultAsync();
-                profileData = new
+                if (customUser != null)
                 {
-                    users?.FirstName,
-                    users?.LastName,
-                    organisationName = aff,
-                    address = users?.AddressLine1,
-                    users?.CityName,
-                    pincode = users?.Pincode,
-                    mobileNo = users?.MobileNo,
-                    photoUrl = users?.PhotoUrl
-                };
+                    var institute = await _context.WJ_Institutes
+                        .Where(i => i.InstituteID == customUser.UserID)
+                        .FirstOrDefaultAsync();
+
+                    orgName = primaryRole.Equals("WJ_Affiliate", StringComparison.OrdinalIgnoreCase)
+                        ? (institute?.SocialOrgName ?? "")
+                        : (institute?.Name ?? "");
+                }
             }
-            else if (primaryRole.Equals("WJ_School", StringComparison.OrdinalIgnoreCase))
+
+            var profileData = new
             {
-                var users = await _context.Users.FirstOrDefaultAsync(i => i.AspNetUserID == userId);
-                var sch = await _context.WJ_Institutes.FirstOrDefaultAsync(i => i.InstituteID == users.UserID);
-                profileData = new
-                {
-                    users?.FirstName,
-                    users?.LastName,
-                    organisationName = sch?.Name,
-                    address = users?.AddressLine1,
-                    users?.CityName,
-                    //users?.State,
-                    pincode = users?.Pincode,
-                    mobileNo = users?.MobileNo,
-                    photoUrl = users?.PhotoUrl
-                };
-            }
-            else if (primaryRole.Equals("WJ_Teacher", StringComparison.OrdinalIgnoreCase))
-            {
-                var tch = await _context.Users.FirstOrDefaultAsync(t => t.AspNetUserID == userId);
-                profileData = new
-                {
-                    tch?.FirstName,
-                    tch?.LastName,
-                    organisationName = "",
-                    address = tch?.AddressLine1,
-                    tch?.CityName,
-                    //tch?.State,
-                    pincode = tch?.Pincode,
-                    mobileNo = tch?.MobileNo,
-                    photoUrl = tch?.PhotoUrl
-                };
-            }
-            else if (primaryRole.Equals("HF_PARENT", StringComparison.OrdinalIgnoreCase))
-            {
-                var par = await _context.Users.FirstOrDefaultAsync(p => p.AspNetUserID == userId);
-                profileData = new
-                {
-                    par?.FirstName,
-                    par?.LastName,
-                    organisationName = "",
-                    address = par?.AddressLine1,
-                    par?.CityName,
-                   
-                    pincode = par?.Pincode,
-                    photoUrl = par?.PhotoUrl
-                };
-            }
-            else if (primaryRole.Equals("WJ_Students", StringComparison.OrdinalIgnoreCase))
-            {
-                var par = await _context.Users.FirstOrDefaultAsync(p => p.AspNetUserID == userId);
-                profileData = new
-                {
-                    par?.FirstName,
-                    par?.LastName,
-                    organisationName = "",
-                    address = par?.AddressLine1,
-                    par?.CityName,
-                    //par?.State,
-                    pincode = par?.Pincode,
-                    photoUrl = par?.PhotoUrl
-                };
-            }
-            else
-            {
-                var adm = await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
-                profileData = new
-                {
-                    adm?.FirstName,
-                    adm?.LastName,
-                    organisationName = "",
-                    address = adm?.AddressLine1,
-                    adm?.CityName,
-                    //adm?.State,
-                    pincode = adm?.Pincode,
-                    mobileNo = adm?.MobileNo,
-                    photoUrl = adm?.PhotoUrl
-                };
-            }
+                firstName = customUser?.FirstName ?? "",
+                lastName = customUser?.LastName ?? "",
+                organisationName = orgName,
+                address = customUser?.AddressLine1 ?? "",
+                city = customUser?.CityName ?? "",
+                state = "", // Add state property if available in Users model
+                pincode = customUser?.Pincode ?? "",
+                mobileNo = customUser?.MobileNo ?? user.PhoneNumber ?? "",
+                photoUrl = string.IsNullOrEmpty(customUser?.PhotoUrl) ? "/uploads/profiles/default-avatar.png" : customUser.PhotoUrl
+            };
 
             return Ok(new
             {
@@ -150,11 +79,11 @@ namespace HemFoundation.Controllers.Api
                 user = new
                 {
                     user.Id,
-                    user.FullName,
+                    fullName = (customUser != null ? $"{customUser.FirstName} {customUser.LastName}".Trim() : user.UserName),
                     user.Email,
-                    user.PhoneNumber
+                    phoneNumber = customUser?.MobileNo ?? user.PhoneNumber
                 },
-                profile = profileData ?? new { }
+                profile = profileData
             });
         }
 
@@ -169,13 +98,7 @@ namespace HemFoundation.Controllers.Api
             if (user == null)
                 return NotFound(new { success = false, message = "User not found." });
 
-            if (!string.IsNullOrEmpty(model.FullName))
-            {
-                user.FullName = model.FullName;
-                user.PhoneNumber = model.PhoneNumber ?? user.PhoneNumber;
-                await _userManager.UpdateAsync(user);
-            }
-
+            // Handle Photo Upload
             string photoUrl = string.Empty;
             if (model.ProfilePhoto != null && model.ProfilePhoto.Length > 0)
             {
@@ -193,107 +116,53 @@ namespace HemFoundation.Controllers.Api
                 photoUrl = $"/uploads/profiles/Updates/{uniqueFileName}";
             }
 
-            var roles = await _userManager.GetRolesAsync(user);
-            string primaryRole = roles.FirstOrDefault() ?? "User";
+            // Update AspNetUsers phone number if provided
+            if (!string.IsNullOrEmpty(model.PhoneNumber))
+            {
+                user.PhoneNumber = model.PhoneNumber;
+                await _userManager.SetPhoneNumberAsync(user, model.PhoneNumber);
+            }
 
-            if (primaryRole.Equals("WJ_Affiliate", StringComparison.OrdinalIgnoreCase))
+            // Update Custom 'Users' Table
+            var customUser = await _context.Users.FirstOrDefaultAsync(u => u.AspNetUserID == userId);
+            if (customUser != null)
             {
-                var affiliate = await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId || a.EmailID == user.Email);
-                if (affiliate != null)
+                customUser.FirstName = model.FirstName ?? customUser.FirstName;
+                customUser.LastName = model.LastName ?? customUser.LastName;
+                customUser.MobileNo = model.PhoneNumber ?? customUser.MobileNo;
+                customUser.AddressLine1 = model.Address ?? customUser.AddressLine1;
+                customUser.CityName = model.City ?? customUser.CityName;
+                customUser.Pincode = model.Pincode ?? customUser.Pincode;
+
+                if (!string.IsNullOrEmpty(photoUrl))
                 {
-                    affiliate.FirstName = model.FirstName ?? affiliate.FirstName;
-                    affiliate.LastName = model.LastName ?? affiliate.LastName;
-                    //affiliate.OrganisationName = model.OrganisationName ?? affiliate.OrganisationName;
-                    affiliate.MobileNo = model.PhoneNumber ?? affiliate.MobileNo;
-                    affiliate.AddressLine1 = model.Address ?? affiliate.AddressLine1;
-                    affiliate.CityName = model.City ?? affiliate.CityName;
-                    //affiliate.State = model.State ?? affiliate.State;
-                    affiliate.Pincode = model.Pincode ?? affiliate.Pincode;
-                    if (!string.IsNullOrEmpty(photoUrl)) affiliate.PhotoUrl = photoUrl;
-                    _context.Users.Update(affiliate);
+                    customUser.PhotoUrl = photoUrl;
                 }
-            }
-            else if (primaryRole.Equals("WJ_School", StringComparison.OrdinalIgnoreCase))
-            {
-                var institute = await _context.Users.FirstOrDefaultAsync(i => i.AspNetUserID == userId || i.EmailID == user.Email);
-                if (institute != null)
-                {
-                    institute.FirstName = model.FirstName ?? institute.FirstName;
-                    institute.LastName = model.LastName ?? institute.LastName;
-                    //institute.Name = model.OrganisationName ?? institute.Name;
-                    institute.MobileNo = model.PhoneNumber ?? institute.MobileNo;
-                    institute.AddressLine1 = model.Address ?? institute.AddressLine1;
-                    institute.CityName = model.City ?? institute.CityName;
-                    //institute.State = model.State ?? institute.State;
-                    institute.Pincode = model.Pincode ?? institute.Pincode;
-                    if (!string.IsNullOrEmpty(photoUrl)) institute.PhotoUrl = photoUrl;
-                    _context.Users.Update(institute);
-                }
-            }
-            else if (primaryRole.Equals("WJ_Teacher", StringComparison.OrdinalIgnoreCase))
-            {
-                var teacher = await _context.Users.FirstOrDefaultAsync(t => t.AspNetUserID == userId || t.EmailID == user.Email);
-                if (teacher != null)
-                {
-                    teacher.FirstName = model.FirstName ?? teacher.FirstName;
-                    teacher.LastName = model.LastName ?? teacher.LastName;
-                    teacher.MobileNo = model.PhoneNumber ?? teacher.MobileNo;
-                    teacher.AddressLine1 = model.Address ?? teacher.AddressLine1;
-                    teacher.CityName = model.City ?? teacher.CityName;
-                    teacher.Pincode = model.Pincode ?? teacher.Pincode;
-                    if (!string.IsNullOrEmpty(photoUrl)) teacher.PhotoUrl = photoUrl;
-                    _context.Users.Update(teacher);
-                }
-            }
-            else if (primaryRole.Equals("HF_PARENT", StringComparison.OrdinalIgnoreCase))
-            {
-                var parent = await _context.Users.FirstOrDefaultAsync(p => p.AspNetUserID == userId || p.EmailID == user.Email);
-                if (parent != null)
-                {
-                    parent.FirstName = model.FirstName ?? parent.FirstName;
-                    parent.LastName = model.LastName ?? parent.LastName;
-                    parent.AddressLine1 = model.Address ?? parent.AddressLine1;
-                    parent.CityName = model.City ?? parent.CityName;
-                    //parent.State = model.State ?? parent.State;
-                    parent.Pincode = model.Pincode ?? parent.Pincode;
-                    if (!string.IsNullOrEmpty(photoUrl)) parent.PhotoUrl = photoUrl;
-                    _context.Users.Update(parent);
-                }
-            }
-            else if (primaryRole.Equals("WJ_Students", StringComparison.OrdinalIgnoreCase))
-            {
-                var parent = await _context.Users.FirstOrDefaultAsync(p => p.AspNetUserID == userId || p.EmailID == user.Email);
-                if (parent != null)
-                {
-                    parent.FirstName = model.FirstName ?? parent.FirstName;
-                    parent.LastName = model.LastName ?? parent.LastName;
-                    parent.AddressLine1 = model.Address ?? parent.AddressLine1;
-                    parent.CityName = model.City ?? parent.CityName;
-                    //parent.State = model.State ?? parent.State;
-                    parent.Pincode = model.Pincode ?? parent.Pincode;
-                    if (!string.IsNullOrEmpty(photoUrl)) parent.PhotoUrl = photoUrl;
-                    _context.Users.Update(parent);
-                }
+
+                _context.Users.Update(customUser);
+                await _context.SaveChangesAsync();
             }
             else
             {
-                var admin = await _context.Admins.FirstOrDefaultAsync(a => a.IdentityUserId == userId || a.Email == user.Email);
-                if (admin != null)
+                // Fallback if custom user row doesn't exist yet
+                var newUserRecord = new Users
                 {
-                    admin.FirstName = model.FirstName ?? admin.FirstName;
-                    admin.LastName = model.LastName ?? admin.LastName;
-                    admin.MobileNo = model.PhoneNumber ?? admin.MobileNo;
-                    admin.Address = model.Address ?? admin.Address;
-                    admin.City = model.City ?? admin.City;
-                    admin.State = model.State ?? admin.State;
-                    admin.PinCode = model.Pincode ?? admin.PinCode;
-                    if (!string.IsNullOrEmpty(photoUrl)) admin.ProfileImage = photoUrl;
-                    _context.Admins.Update(admin);
-                }
+                    AspNetUserID = userId,
+                    EmailID = user.Email,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    MobileNo = model.PhoneNumber,
+                    AddressLine1 = model.Address,
+                    CityName = model.City,
+                    Pincode = model.Pincode,
+                    PhotoUrl = string.IsNullOrEmpty(photoUrl) ? "/uploads/profiles/default-avatar.png" : photoUrl,
+                    CreatedDate = DateTime.Now
+                };
+                _context.Users.Add(newUserRecord);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "Profile updated successfully!", photoUrl });
+            return Ok(new { success = true, message = "Profile updated successfully!", photoUrl = string.IsNullOrEmpty(photoUrl) ? customUser?.PhotoUrl : photoUrl });
         }
 
         [HttpPost("change-password")]

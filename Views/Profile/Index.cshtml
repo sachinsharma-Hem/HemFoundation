@@ -1,7 +1,5 @@
 ﻿@{
     ViewData["Title"] = "View & Edit Profile";
-
-    // Controller se aane wala layout yahan set ho jayega
     Layout = ViewBag.SelectedLayout as string ?? "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
 }
 
@@ -10,7 +8,8 @@
         <div class="col-xl-4">
             <div class="card border-0 shadow-sm rounded-4 text-center p-4 mb-4" style="background-color: var(--card-bg);">
                 <div class="position-relative d-inline-block mx-auto mb-3">
-                    <img id="profile-avatar-img" src="https://via.placeholder.com/120" class="rounded-circle shadow-sm border border-3 border-success object-fit-cover" style="width: 130px; height: 130px;" alt="Profile Photo" />
+                    <!-- Default fallback image added -->
+                    <img id="profile-avatar-img" src="/uploads/profiles/default-avatar.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" class="rounded-circle shadow-sm border border-3 border-success object-fit-cover" style="width: 130px; height: 130px;" alt="Profile Photo" />
                     <label for="photoUploadInput" class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle p-2 shadow cursor-pointer" title="Change Photo" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
                         <i class="bi bi-camera-fill small"></i>
                     </label>
@@ -51,7 +50,7 @@
                             <input type="text" id="txtLastName" class="form-control rounded-3 shadow-none" />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Mobile Number / Username</label>
+                            <label class="form-label small fw-semibold">Mobile Number</label>
                             <input type="text" id="txtMobileNo" class="form-control rounded-3 shadow-none" />
                         </div>
                         <div class="col-md-6 org-field">
@@ -92,7 +91,7 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
 
             // Load Profile Data
@@ -100,7 +99,7 @@
                 url: '/api/profile/details',
                 type: 'GET',
                 headers: { 'Authorization': 'Bearer ' + token },
-                success: function (res) {
+                success: function(res) {
                     if (res.success) {
                         $('#lbl-fullname').text(res.user.fullName || res.user.email);
                         $('#lbl-email').text(res.user.email);
@@ -117,18 +116,18 @@
                         $('#txtPincode').val(res.profile.pincode || '');
 
                         const photo = res.profile.photoUrl;
-                        if (photo && photo !== '-') {
+                        if (photo) {
                             $('#profile-avatar-img').attr('src', photo);
                         }
                     }
                 }
             });
 
-            // Pincode Auto-fill Logic (India Post API)
-            $('#txtPincode').on('keyup', function () {
+            // Pincode Auto-fill Logic
+            $('#txtPincode').on('keyup', function() {
                 let pincode = $(this).val().trim();
                 if (pincode.length === 6) {
-                    $.get(`https://api.postalpincode.in/pincode/${pincode}`, function (data) {
+                    $.get(`https://api.postalpincode.in/pincode/${pincode}`, function(data) {
                         if (data && data[0].Status === "Success") {
                             let postOffice = data[0].PostOffice[0];
                             $('#txtCity').val(postOffice.District);
@@ -140,12 +139,12 @@
 
             // Photo Preview
             let selectedPhotoFile = null;
-            $('#photoUploadInput').on('change', function (e) {
+            $('#photoUploadInput').on('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
                     selectedPhotoFile = file;
                     const reader = new FileReader();
-                    reader.onload = function (event) {
+                    reader.onload = function(event) {
                         $('#profile-avatar-img').attr('src', event.target.result);
                     };
                     reader.readAsDataURL(file);
@@ -153,10 +152,9 @@
             });
 
             // Save Profile Form Submission
-            $('#formUpdateProfile').on('submit', function (e) {
+            $('#formUpdateProfile').on('submit', function(e) {
                 e.preventDefault();
                 let formData = new FormData();
-                formData.append('fullName', $('#txtFirstName').val() + ' ' + $('#txtLastName').val());
                 formData.append('firstName', $('#txtFirstName').val());
                 formData.append('lastName', $('#txtLastName').val());
                 formData.append('phoneNumber', $('#txtMobileNo').val());
@@ -177,18 +175,18 @@
                     processData: false,
                     contentType: false,
                     headers: { 'Authorization': 'Bearer ' + token },
-                    success: function (res) {
+                    success: function(res) {
                         alert(res.message);
                         location.reload();
                     },
-                    error: function (err) {
+                    error: function(err) {
                         alert(err.responseJSON?.message || 'Update failed');
                     }
                 });
             });
 
             // Change Password Form
-            $('#formChangePassword').on('submit', function (e) {
+            $('#formChangePassword').on('submit', function(e) {
                 e.preventDefault();
                 const payload = {
                     currentPassword: $('#txtCurrentPassword').val(),
@@ -201,11 +199,11 @@
                     contentType: 'application/json',
                     headers: { 'Authorization': 'Bearer ' + token },
                     data: JSON.stringify(payload),
-                    success: function (res) {
+                    success: function(res) {
                         alert(res.message);
                         $('#formChangePassword')[0].reset();
                     },
-                    error: function (err) {
+                    error: function(err) {
                         alert(err.responseJSON?.message || 'Password change failed');
                     }
                 });
