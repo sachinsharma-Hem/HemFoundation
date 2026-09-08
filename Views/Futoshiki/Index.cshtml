@@ -260,6 +260,7 @@
             type: "GET",
             data: { CID: GetCID },
             success: function(respose) {
+                debugger
                 if (respose && respose.length >= 5) {
                     if (respose[4] == "OK") {
                         FMasterArray.push(respose[0]);

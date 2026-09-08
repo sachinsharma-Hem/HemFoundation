@@ -29,6 +29,7 @@ namespace HemFoundation.Controllers
             // 1. Get the current logged-in user's actual database UserID from our session or claims
             int loggedInUserID = HttpContext.Session.GetInt32("UserID") ?? 0;
 
+
             // Fallback if session userID hasn't been cached yet
             if (loggedInUserID == 0)
             {

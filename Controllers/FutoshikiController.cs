@@ -50,6 +50,7 @@ namespace HemFoundation.Controllers
                     {
                         int.TryParse(userIdClaim, out userId);
                     }
+                    userId = HttpContext.Session.GetInt32("UserID") ?? 0;
                 }
 
                 DataSet ds = await GeFutoshikiDBAsync(Convert.ToInt32(CID), userId);
@@ -153,6 +154,7 @@ namespace HemFoundation.Controllers
                 {
                     int.TryParse(userIdClaim, out userId);
                 }
+                userId = HttpContext.Session.GetInt32("UserID") ?? 0;
             }
 
             try
@@ -246,6 +248,7 @@ namespace HemFoundation.Controllers
                 {
                     int.TryParse(userIdClaim, out userId);
                 }
+                userId = HttpContext.Session.GetInt32("UserID") ?? 0;
             }
 
             try

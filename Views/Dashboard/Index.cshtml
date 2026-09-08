@@ -112,7 +112,7 @@
                                 const modalInstance = bootstrap.Modal.getInstance(modalElement);
                                 if (modalInstance) modalInstance.hide();
                             }
-                            setTimeout(function () { window.location.reload(); }, 500);
+                            setTimeout(function () { window.location.reload(); }, 1000);
                         } else {
                             Swal.Fire("Info",response.message,"info");
                             //(response.message || "Upload failed.");

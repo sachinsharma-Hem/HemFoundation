@@ -170,7 +170,7 @@
                                         bool isHighlight = (item.FirstIndex == i || item.SecondIndex == i || item.ThirdIndex == i || item.FourthIndex == i);
                                         string boxClass = isHighlight ? "letter-box letter-highlight" : "letter-box letter-normal";
 
-                                        <input type="text" value=""
+                                        <input type="text" value="" autocomplete="off"
                                                class="@boxClass text-uppercase"
                                                onkeypress="CheckValueMaxLength(this)"
                                                id="@("answer" + j + i)"
