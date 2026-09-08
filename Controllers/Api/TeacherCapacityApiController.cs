@@ -21,7 +21,7 @@ namespace HemFoundation.Controllers.Api
         public async Task<IActionResult> GetCapacityDetails(int categoryId)
         {
             var category = await _context.WebinarMcqCategories
-                .FirstOrDefaultAsync(x => x.Id == categoryId && !x.IsDeleted);
+                .FirstOrDefaultAsync(x => x.Id == categoryId );
 
             if (category == null) return NotFound(new { success = false, message = "Category not found" });
 

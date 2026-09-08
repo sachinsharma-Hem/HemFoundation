@@ -159,10 +159,20 @@ namespace HemFoundation.Controllers.Api
                 m.MenuType
             }).ToList();
 
+            // --- Business user (users table) se naam aur details nikal rahe hain ---
+            string firstName = businessUser != null ? (businessUser.FirstName ?? "") : "";
+            string lastName = businessUser != null ? (businessUser.LastName ?? "") : "";
+            string userrealfullName = !string.IsNullOrEmpty(firstName) ? $"{firstName} {lastName}".Trim() : (user.UserName ?? "");
+            string mobileNo = businessUser != null ? (businessUser.MobileNo ?? "") : "";
+
+            // --- Session values set karein ---
             HttpContext.Session.SetString("IsAdminLoggedIn", "true");
             HttpContext.Session.SetString("UserId", user.Id);
             HttpContext.Session.SetString("UserEmail", user.Email ?? "");
-            HttpContext.Session.SetString("UserFullName", user.UserName ?? "");
+            HttpContext.Session.SetString("UserFullName", fullName);
+            HttpContext.Session.SetString("FirstName", firstName); // <-- Yeh naya add kiya
+            HttpContext.Session.SetString("LastName", lastName);   // <-- Yeh naya add kiya
+            HttpContext.Session.SetString("UserMobile", mobileNo); // <-- Yeh naya add kiya
             HttpContext.Session.SetString("UserRole", primaryRole);
             HttpContext.Session.SetInt32("UserID", businessUser?.UserID ?? 0);
             HttpContext.Session.SetString("AspNetUserID", user.Id);
@@ -176,8 +186,11 @@ namespace HemFoundation.Controllers.Api
                 user = new
                 {
                     user.Id,
-                    FullName = user.UserName,
-                    user.Email,
+                    FullName = userrealfullName,
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Email = user.Email,
+                    MobileNo = mobileNo,
                     Roles = roles
                 },
                 menus,

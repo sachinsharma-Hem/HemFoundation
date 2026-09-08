@@ -36,8 +36,7 @@ namespace HemFoundation.Controllers.Api
                 "courseallotedto" => await _context.CourseAllotedTos.Where(x => !x.IsDeleted).ToListAsync(),
                 "mcqlevel" => await _context.CourseMcqLevels.Where(x => !x.IsDeleted).ToListAsync(),
                 "levels" => await _context.CourseLevels.Where(x => !x.IsDeleted).ToListAsync(),
-                "webinarmcqcategory" => await _context.WebinarMcqCategories
-                    .Where(x => !x.IsDeleted)
+                "webinarmcqcategory" => await _context.WebinarMcqCategories                   
                     .Include(x => x.OrderNumber)
                     .OrderBy(x => x.OrderNumber != null ? x.OrderNumber.DisplayOrder : int.MaxValue)
                     .ToListAsync(),
@@ -193,7 +192,7 @@ namespace HemFoundation.Controllers.Api
                         if (id > 0 && wmc == null) return NotFound(new { success = false, message = "Not found." });
                         wmc.Name = name?.Trim() ?? string.Empty;
                         wmc.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
-                        wmc.IsLocked = isLocked ?? false;
+                       // wmc.IsLocked = isLocked ?? false;
                         wmc.IsActive = activeStatus;
                         wmc.OrderNumberId = orderNumberId > 0 ? orderNumberId : null; // Save Order ID
 

@@ -117,7 +117,7 @@ namespace HemFoundation.Controllers.Api
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { success = false, message = "User not found." });
 
-            var affiliate = await _context.Affiliates.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
+            var affiliate = await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
             if (affiliate == null)
                 return Unauthorized(new { success = false, message = "Affiliate profile not found." });
 

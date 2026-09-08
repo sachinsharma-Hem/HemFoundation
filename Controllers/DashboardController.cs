@@ -1,9 +1,11 @@
 ﻿using HemFoundation.Data;
+using HemFoundation.Models.DTOs;
 using HemFoundation.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Claims;
-using HemFoundation.Models.DTOs;
+using HemFoundation.DTOs;
 namespace HemFoundation.Controllers
 {
     public class DashboardController : Controller
@@ -290,62 +292,126 @@ namespace HemFoundation.Controllers
 
         //    return View("~/Views/Dashboard/Index.cshtml");
         //}
-
-
-
-        // --- Dynamic MCQ Capacities Hub ---       
         [HttpGet("Teacher/McqHub")]
         public async Task<IActionResult> McqHub()
         {
-            // Database se active categories fetch karke DisplayOrder ke hisaab se sort karenge
-            var categories = await _context.WebinarMcqCategories
-                .Where(x => x.IsActive && !x.IsDeleted)
-                .Include(x => x.OrderNumber)
-                .OrderBy(x => x.OrderNumber != null ? x.OrderNumber.DisplayOrder : int.MaxValue)
+            int? teacherId = HttpContext.Session.GetInt32("UserID");
+
+            // FromSqlRaw ki jagah yahan Database.SqlQuery use kiya gaya hai
+            var quizStatusList = await _context.Database
+                .SqlQuery<TeacherQuizHubDto>($"SELECT * FROM hf_sp_get_teacher_quiz_completion_status({teacherId})")
                 .ToListAsync();
 
-            return View("~/Views/Teacher/McqHub.cshtml", categories);
+            return View("~/Views/Teacher/McqHub.cshtml", quizStatusList);
         }
+
+
 
         [HttpGet("Teacher/LoadCapacity/{id}")]
         public async Task<IActionResult> LoadCapacity(int id)
         {
-            var category = await _context.WebinarMcqCategories
-                .Include(x => x.OrderNumber)
-                .FirstOrDefaultAsync(x => x.Id == id);
-
-            if (category == null || category.IsDeleted)
+            try
             {
-                return BadRequest("Invalid capacity requested.");
+                if (id <= 0)
+                {
+                    return BadRequest("Invalid CourseID.");
+                }
+
+                var mainTopic = await _context.Topics
+                    .AsNoTracking()
+                    .Where(t => t.CourseID == id && t.ParentTopicID == null)
+                    .OrderBy(t => t.Order)
+                    .FirstOrDefaultAsync();
+
+                if (mainTopic == null)
+                {
+                    return BadRequest($"No main topic found for CourseID {id}.");
+                }
+
+                int topicsCount = await _context.Topics
+                    .AsNoTracking()
+                    .Where(t => t.CourseID == id && t.ParentTopicID == null)
+                    .CountAsync();
+
+                // Sub-topics count jinka parent mainTopic ki ID ho
+                int subTopicsCount = await _context.Topics
+                    .AsNoTracking()
+                    .Where(t => t.CourseID == id && t.ParentTopicID == mainTopic.TopicID)
+                    .CountAsync();
+
+                ViewBag.TopicsCount = topicsCount > 0 ? topicsCount : 1;
+                ViewBag.SubTopicsCount = subTopicsCount > 0 ? subTopicsCount : 2;
+
+                var viewModel = new CapacityViewModel
+                {
+                    Id = mainTopic.CourseID,
+                    Name = mainTopic.TopicName ?? "Cognitive Capacity",
+                    Description = mainTopic.Description ?? "Manage evaluations and interactive modules for this capacity.",
+                    ImageUrl = !string.IsNullOrWhiteSpace(mainTopic.TrainerResource) ? mainTopic.TrainerResource : "/images/default-course.png"
+                };
+
+                string firstWord = viewModel.Name?.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.ToLowerInvariant() ?? "cognitive";
+
+                string viewName = firstWord switch
+                {
+                    "cognitive" => "~/Views/Teacher/_Cognitive.cshtml",
+                    "social" => "~/Views/Teacher/_Social.cshtml",
+                    "ethical" => "~/Views/Teacher/_Ethical.cshtml",
+                    "emotional" => "~/Views/Teacher/_Emotional.cshtml",
+                    "life" => "~/Views/Teacher/_LifeSkills.cshtml",
+                    _ => "~/Views/Teacher/_Cognitive.cshtml"
+                };
+
+                return PartialView(viewName, viewModel);
             }
-
-            // CourseTopics aur CourseSubTopics ka count nikal rahe hain (Category ID ya Name ke base par)
-            // Agar aapke paas CourseRegistrationId ya mapping hai toh us hisaab se filter karein
-            int topicsCount = await _context.CourseTopics
-                .Where(t => t.TopicName.Contains(category.Name ?? "") && !t.IsDeleted)
-                .CountAsync();
-
-            int subTopicsCount = await _context.CourseSubTopics
-                .Where(st => !st.IsDeleted)
-                .CountAsync();
-
-            ViewBag.TopicsCount = topicsCount > 0 ? topicsCount : 1; // Fallback demo count
-            ViewBag.SubTopicsCount = subTopicsCount > 0 ? subTopicsCount : 2; // Fallback demo count
-
-            // Database name ka pehla word nikal kar partial view load karenge
-            string firstWord = category.Name?.Split(' ')[0].ToLower() ?? "cognitive";
-
-            string viewName = firstWord switch
+            catch (Exception ex)
             {
-                "cognitive" => "~/Views/Teacher/_Cognitive.cshtml",
-                "social" => "~/Views/Teacher/_Social.cshtml",
-                "ethical" => "~/Views/Teacher/_Ethical.cshtml",
-                "emotional" => "~/Views/Teacher/_Emotional.cshtml",
-                "life" => "~/Views/Teacher/_LifeSkills.cshtml",
-                _ => "~/Views/Teacher/_Cognitive.cshtml"
-            };
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
 
-            return PartialView(viewName, category);
+        [HttpGet("api/teacher-capacity/details/{courseId}")]
+        public async Task<IActionResult> GetCapacityDetails(int courseId)
+        {
+            try
+            {
+                var mainTopic = await _context.Topics
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.CourseID == courseId && t.ParentTopicID == null);
+
+                if (mainTopic == null)
+                    return NotFound(new { success = false, message = "Topic not found" });
+
+                // Sub-topics nikal rahe hain jinka ParentTopicID mainTopic ke TopicID se match kare
+                var subTopicsList = await _context.Topics
+                    .AsNoTracking()
+                    .Where(t => t.CourseID == courseId && t.ParentTopicID == mainTopic.TopicID)
+                    .ToListAsync();
+
+                var subTopics = subTopicsList.Select(st => new {
+                    id = st.TopicID,
+                    subTopicName = st.TopicName ?? "Untitled Module",
+                    videoLink = st.TrainerVideo ?? st.StudentVideo ?? "",
+                    numberOfQuestions = st.NoOfQuestion ?? 0,
+                    mcqThumbnail = !string.IsNullOrEmpty(st.TrainerResource) ? st.TrainerResource : (mainTopic.TrainerResource ?? "/images/default-course.png")
+                }).ToList();
+
+                int topicsCount = await _context.Topics.CountAsync(t => t.CourseID == courseId && t.ParentTopicID == null);
+                int subTopicsCount = subTopics.Count;
+
+                return Ok(new
+                {
+                    success = true,
+                    courseRegId = courseId,
+                    category = new { imageUrl = mainTopic.TrainerResource ?? "/images/default-course.png" },
+                    counts = new { topicsCount, subTopicsCount },
+                    subTopics = subTopics
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet("Dashboard/DownloadSampleLetter")]
