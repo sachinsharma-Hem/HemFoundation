@@ -20,6 +20,7 @@ namespace HemFoundation.Data
         {
         }
 
+        public DbSet<PblReportTeacherDto> PblReportTeacherDtos { get; set; }
         public DbSet<Institute> Institutes { get; set; }
         public DbSet<Teacher> Teachers { get; set; }
         public virtual DbSet<AspNetRoles> AspNetRoles { get; set; }
@@ -37,6 +38,8 @@ namespace HemFoundation.Data
         public DbSet<WJ_Teacher> WJ_Teachers { get; set; }
         public DbSet<Parent> Parents { get; set; }
         public DbSet<MainCourse> MainCourses { get; set; }
+
+        public DbSet<MainCourseSetup> MainCourseSetups { get; set; }
         public DbSet<CourseCategory> CourseCategories { get; set; }
         public DbSet<CourseSubCategory> CourseSubCategories { get; set; }
         public DbSet<CourseOrderNumber> CourseOrderNumbers { get; set; }
@@ -106,6 +109,12 @@ namespace HemFoundation.Data
         public DbSet<BulkUploadLog> BulkUploadLogs { get; set; }
         public DbSet<ValueGradeMaster> ValueGradeMasters { get; set; }
         public DbSet<ValueItemMaster> ValueItemMasters { get; set; }
+        public DbSet<vw_valueitemmasters> vw_valueitemmasters { get; set; }
+
+        public DbSet<HfRelManageGroupList> HfRelManageGroupList {  get; set; }
+        public DbSet<CreativityActivitiesSubmission2021> creativityActivitiesSubmission2021s { get; set; }
+
+
         public DbSet<ActivityGroup> ActivityGroups { get; set; }
         public DbSet<ActivityGroupStudent> ActivityGroupStudents { get; set; }
         public DbSet<ActivitySubmission> ActivitySubmissions { get; set; }
@@ -124,7 +133,11 @@ namespace HemFoundation.Data
         public DbSet<WJ_StudentAssociates> WJ_StudentAssociates { get; set; }
         public DbSet<WJ_Students> WJ_Students { get; set; }
         public DbSet<WJ_TeacherAssociates> WJ_TeacherAssociates { get; set; }
+        public DbSet<CertifiedStudentsDto> CertifiedStudentsDtos { get; set; }
 
+        public DbSet<TeacherActivityLog> TeacherActivityLogs { get; set; }
+        public DbSet<ValueCertification> ValueCertifications { get; set; }
+        public DbSet<StudentActivityLog> StudentActivityLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -662,7 +675,26 @@ namespace HemFoundation.Data
                           v => v != null && v.Count > 0 ? v[0] : (bool?)null
                       );
             });
-            
+
+            builder.Entity<HfRelManageGroupList>(entity =>
+            {
+                entity.Property(e => e.IsAllocated)
+                      .HasColumnType("bit")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                          v => v != null && v.Count > 0 ? v[0] : (bool?)null
+                      );
+            });
+            builder.Entity<PblReportTeacherDto>().HasNoKey();
+       
+            builder.Entity<TeacherActivityLog>().HasNoKey();
+            builder.Entity<ValueCertification>(entity =>
+            {
+                entity.ToTable("wj_value_certification");
+               
+            });
+            builder.Entity<StudentActivityLog>().HasNoKey();
+
         }
 
 
