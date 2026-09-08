@@ -1,0 +1,66 @@
+﻿@model IEnumerable<HemFoundation.Controllers.Courseh>
+
+@{
+    ViewData["Title"] = "Values & Courses";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    string selectedStandard = ViewBag.SelectedStandard as string ?? "3";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4 fw-bold text-dark">Values Curriculum - Standard @selectedStandard</h2>
+
+    <!-- Standard Selection Toolbar -->
+    <div class="mb-4 d-flex flex-wrap gap-2">
+        @for (int i = 3; i <= 12; i++)
+        {
+            string activeClass = (selectedStandard == i.ToString()) ? "btn-primary" : "btn-outline-primary";
+            <a href="@Url.Action("Display", "Values", new { standard = i })" class="btn @activeClass rounded-pill px-3 fw-semibold">
+                Std @i
+            </a>
+        }
+    </div>
+
+    <!-- Course Cards Grid -->
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var course in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0 rounded-4 d-flex flex-column">
+                        <div class="card-body text-center p-4 d-flex flex-column">
+                            <div class="mb-3">
+                                <span class="badge bg-light text-primary px-3 py-2 rounded-pill shadow-sm">
+                                    Course ID: @(string.IsNullOrEmpty(course.MainCourseID) ? "N/A" : course.MainCourseID)
+                                </span>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-2">@course.CourseName</h5>
+                            <p class="text-muted small mb-4">Value Code: @course.CourseValue</p>
+
+                            <div class="mt-auto">
+                                @if (!string.IsNullOrEmpty(course.PdfSrc))
+                                {
+                                    <a href="@course.PdfSrc" target="_blank" class="btn btn-primary w-100 rounded-pill fw-bold btn-sm shadow-sm">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> View Study Material
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-secondary w-100 rounded-pill fw-bold btn-sm" disabled>No Material</button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="alert alert-warning text-center py-4 rounded-4" role="alert">
+                    No courses found for Standard @selectedStandard.
+                </div>
+            </div>
+        }
+    </div>
+</div>

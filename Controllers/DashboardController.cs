@@ -88,6 +88,95 @@ namespace HemFoundation.Controllers
                     ViewBag.PartnershipLetterPath = null;
                 }
             }
+
+            else if (!string.IsNullOrEmpty(portal) &&
+     portal.Equals("teacher", StringComparison.OrdinalIgnoreCase))
+            {
+                int? teacherId = HttpContext.Session.GetInt32("UserID");
+
+                // 2. Fetch teacher details from view_hf_teacher_details
+                // (Assuming you have an entity or DTO mapped to view_hf_teacher_details)
+                var teacherDetails = await _context.ViewHfTeacherDetails // Update DbSet name to match your DbContext
+                    .FirstOrDefaultAsync(t => t.TeacherID == teacherId);
+
+                if (teacherDetails == null)
+                {
+                    return NotFound("Teacher profile not found.");
+                }
+
+                // Extract standards and institute ID assigned to this teacher
+                // teacherDetails.Standard might contain comma-separated values like "1st-A,1st-B,2nd"
+                var assignedStandards = !string.IsNullOrEmpty(teacherDetails.Standard)
+                    ? teacherDetails.Standard.Split(',').Select(s => s.Trim()).ToList()
+                    : new List<string>();
+
+                int? instituteId = teacherDetails.InstituteID;
+
+                // =========================================================
+                // 3. CALCULATE COUNTS
+                // =========================================================
+
+                // A. Number of MCQ activities done by this teacher 
+                // From: hf_view_teacheractivitylog where teacherid = @TeacherID
+                int mcqCount = await _context.TeacherActivityLogs
+                    .Where(log => log.TeacherID == teacherId)
+                    .CountAsync();
+
+                // B. Total students under this teacher's standards/institute 
+                // From: view_wj_students_detailsinfo matching standard or standard-division & institute
+                var allStudents = await _context.ViewWjStudentsDetailsInfo
+                    .Where(s => s.InstituteID == instituteId)
+                    .ToListAsync();
+
+                // Filter students matching the teacher's assigned standards (handling format like "1st-A" or "1st")
+                int totalStudentsCount = allStudents.Count(s =>
+                    assignedStandards.Contains(s.Standard) ||
+                    assignedStandards.Contains(s.Standard + "-" + s.Division)
+                );
+
+                // C. Certified students count for this teacher's classes/institute
+                // From: wj_value_certification filtered by teacher's standards & institute
+                var certifiedStudents = await _context.ValueCertifications
+                    .Where(vc => vc.InstituteID == instituteId)
+                    .ToListAsync();
+
+                int certifiedStudentsCount = certifiedStudents.Count(vc =>
+                    assignedStandards.Contains(vc.Standard) ||
+                    assignedStandards.Contains(vc.Standard + "-" + vc.Division)
+                );
+
+                // 2. Fetch logs matching institute from hf_view_studentactivitylog
+                var studentLogs = await _context.StudentActivityLogs
+                    .Where(log => log.InstituteID == instituteId)
+                    .ToListAsync();
+
+                // 3. Filter out "Survey" activities, match standards, and get distinct active students
+                // 3. Filter out "Survey" activities, match standards, and get distinct active students
+                int activeStudentsCount = studentLogs
+                    .Where(log =>
+                        // Filter out Survey activities (case-insensitive check)
+                        (log.ActivityType == null || !log.ActivityType.Equals("Survey", StringComparison.OrdinalIgnoreCase)) &&
+                        // Match teacher's standards directly
+                        (!string.IsNullOrEmpty(log.Standard) && assignedStandards.Contains(log.Standard.Trim()))
+                    )
+                    .Select(log => log.StudentID)
+                    .Distinct()
+                    .Count();
+
+                // 4. Pass the exact count to ViewBag
+                ViewBag.ActiveStudentsCount = activeStudentsCount;
+
+                // =========================================================
+                // 4. PASS DATA TO VIEWS VIA VIEWBAG OR VIEWMODEL
+                // =========================================================
+                ViewBag.TeacherName = teacherDetails.FirstName+" "+teacherDetails.LastName;
+                ViewBag.AssignedStandards = teacherDetails.Standard;
+                ViewBag.InstituteName = teacherDetails.InstituteName;
+
+                ViewBag.McqCount = mcqCount;
+                ViewBag.TotalStudentsCount = totalStudentsCount;
+                ViewBag.CertifiedStudentsCount = certifiedStudentsCount;
+            }
             // ==========================================
             // 2. STUDENT PORTAL LOGIC (NAYA ADD KIYA HAI)
             // ==========================================
