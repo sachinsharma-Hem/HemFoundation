@@ -115,5 +115,8 @@ namespace HemFoundation.Models.Entities
         public int? OrderNumberId { get; set; }
         [ForeignKey("OrderNumberId")]
         public virtual CourseOrderNumber? OrderNumber { get; set; }
+        // --- Yeh line add kar dein taaki EF Core 'IsDeleted' ko SQL result me na dhoonde ---
+        [NotMapped]
+        public string? IsDeleted { get; set; }
     }
 }

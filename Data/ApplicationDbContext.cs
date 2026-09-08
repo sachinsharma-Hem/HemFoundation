@@ -484,17 +484,88 @@ namespace HemFoundation.Data
                           v => v != null ? (bool?)v[0] : null
                       );
             });
-
             builder.Entity<Topics>(entity =>
             {
                 entity.ToTable("topics");
+
+                entity.HasKey(e => e.TopicID);
+
+                entity.Property(e => e.TopicID)
+                    .HasColumnName("topicid");
+
+                entity.Property(e => e.CourseID)
+                    .HasColumnName("courseid");
+
+                entity.Property(e => e.ParentTopicID)
+                    .HasColumnName("parenttopicid");
+
+                entity.Property(e => e.TopicName)
+                    .HasColumnName("topicname");
+
+                entity.Property(e => e.Description)
+                    .HasColumnName("description");
+
+                entity.Property(e => e.TrainerVideo)
+                    .HasColumnName("trainervideo");
+
+                entity.Property(e => e.StudentVideo)
+                    .HasColumnName("studentvideo");
+
+                entity.Property(e => e.HindiVideo)
+                    .HasColumnName("hindivideo");
+
+                entity.Property(e => e.TrainerNote)
+                    .HasColumnName("trainernote");
+
+                entity.Property(e => e.StudentNote)
+                    .HasColumnName("studentnote");
+
+                entity.Property(e => e.Order)
+                    .HasColumnName("Order");
+
                 entity.Property(e => e.IsActive)
-                      .HasColumnName("isactive")
-                      .HasConversion(
-                          v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
-                          v => v != null ? (bool?)v[0] : null
-                      );
+                    .HasColumnName("isactive");
+
+                entity.Property(e => e.CreatedBy)
+                    .HasColumnName("createdby");
+
+                entity.Property(e => e.CreatedDate)
+                    .HasColumnName("createddate");
+
+                entity.Property(e => e.ModifiedBy)
+                    .HasColumnName("modifiedby");
+
+                entity.Property(e => e.ModifiedDate)
+                    .HasColumnName("modifieddate");
+
+                entity.Property(e => e.TrainerResource)
+                    .HasColumnName("trainerresource");
+
+                entity.Property(e => e.StudentResourse)
+                    .HasColumnName("studentresourse");
+
+                entity.Property(e => e.TrainerExercise)
+                    .HasColumnName("trainerexercise");
+
+                entity.Property(e => e.StudentExercise)
+                    .HasColumnName("studentexercise");
+
+                entity.Property(e => e.languageID)
+                    .HasColumnName("languageid");
+
+                entity.Property(e => e.NoOfQuestion)
+                    .HasColumnName("noofquestion");
             });
+            //builder.Entity<Topics>(entity =>
+            //{
+            //    entity.ToTable("topics");
+            //    entity.Property(e => e.IsActive)
+            //          .HasColumnName("isactive")
+            //          .HasConversion(
+            //              v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+            //              v => v != null ? (bool?)v[0] : null
+            //          );
+            //});
             builder.Entity<View_WJ_Course_Topics>(entity =>
             {
                 entity.HasNoKey();
@@ -591,6 +662,7 @@ namespace HemFoundation.Data
                           v => v != null && v.Count > 0 ? v[0] : (bool?)null
                       );
             });
+            
         }
 
 

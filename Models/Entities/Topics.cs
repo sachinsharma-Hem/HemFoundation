@@ -23,37 +23,38 @@ namespace HemFoundation.Models.Entities
         public int? ParentTopicID { get; set; }
 
         [Column("topicname")]
-        public string TopicName { get; set; }
+        public string? TopicName { get; set; }
 
         [Column("description")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [Column("trainervideo")]
-        public string TrainerVideo { get; set; }
+        public string? TrainerVideo { get; set; }
 
         [Column("studentvideo")]
-        public string StudentVideo { get; set; }
+        public string? StudentVideo { get; set; }
 
         [Column("hindivideo")]
-        public string HindiVideo { get; set; }
+        public string? HindiVideo { get; set; }
 
         [Column("trainernote")]
-        public string TrainerNote { get; set; }
+        public string? TrainerNote { get; set; }
 
         [Column("studentnote")]
-        public string StudentNote { get; set; }
+        public string? StudentNote { get; set; }
 
-        [Column("order")]
+        // PostgreSQL column is "Order"
+        [Column("Order")]
         public int? Order { get; set; }
 
         [Column("isactive")]
         public bool? IsActive { get; set; }
 
         [Column("createdby")]
-        public int CreatedBy { get; set; }
+        public int? CreatedBy { get; set; }
 
         [Column("createddate")]
-        public DateTime CreatedDate { get; set; }
+        public DateTime? CreatedDate { get; set; }
 
         [Column("modifiedby")]
         public int? ModifiedBy { get; set; }
@@ -62,16 +63,16 @@ namespace HemFoundation.Models.Entities
         public DateTime? ModifiedDate { get; set; }
 
         [Column("trainerresource")]
-        public string TrainerResource { get; set; }
+        public string? TrainerResource { get; set; }
 
-        [Column("studentresource")] // Matches your lowercase database column
-        public string StudentResourse { get; set; }
+        [Column("studentresourse")]
+        public string? StudentResourse { get; set; }
 
         [Column("trainerexercise")]
-        public string TrainerExercise { get; set; }
+        public string? TrainerExercise { get; set; }
 
         [Column("studentexercise")]
-        public string StudentExercise { get; set; }
+        public string? StudentExercise { get; set; }
 
         [Column("languageid")]
         public int? languageID { get; set; }
@@ -79,7 +80,6 @@ namespace HemFoundation.Models.Entities
         [Column("noofquestion")]
         public int? NoOfQuestion { get; set; }
 
-        public virtual Courses Courses { get; set; }
         public virtual ICollection<Questions> Questions { get; set; }
     }
 }

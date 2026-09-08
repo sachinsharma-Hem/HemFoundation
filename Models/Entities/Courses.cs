@@ -130,9 +130,10 @@ namespace HemFoundation.Models.Entities
 
         [NotMapped]
         public virtual ICollection<Questions> Questions1 { get; set; }
+        [NotMapped]
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Topics> Topics { get; set; }
-
         [NotMapped]
         public virtual ICollection<QuizCourseLevels> QuizCourseLevels { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
