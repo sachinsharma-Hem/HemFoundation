@@ -171,45 +171,61 @@ namespace HemFoundation.Controllers.Api
 
                 if (vol == null)
                 {
-                    return NotFound(new
-                    {
-                        success = false,
-                        message = "Volunteer not found."
-                    });
+                    return NotFound(new { success = false, message = "Volunteer not found." });
                 }
 
                 vol.FirstName = model.FirstName;
                 vol.LastName = model.LastName;
-                vol.MobileNo = model.MobileNo;
+
+                // Ensure MobileNo is max 10 characters
+                string updateMobile = model.MobileNo?.Trim() ?? "";
+                if (updateMobile.Length > 10)
+                    updateMobile = updateMobile.Substring(updateMobile.Length - 10); // Takes last 10 digits
+                vol.MobileNo = updateMobile;
+
                 vol.Email = model.Email;
                 vol.InstituteId = model.InstituteId;
                 vol.ModifiedDate = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new
-                {
-                    success = true,
-                    message = "Volunteer updated successfully."
-                });
+                return Ok(new { success = true, message = "Volunteer updated successfully." });
             }
 
             // =====================================================
             // NEW REGISTRATION
             // =====================================================
 
-            string baseMobile = model.MobileNo.Trim();
+            // Ensure baseMobile is strictly 10 characters (removes country codes like +91)
+            string baseMobile = model.MobileNo?.Trim() ?? "";
+            if (baseMobile.Length > 10)
+            {
+                baseMobile = baseMobile.Substring(baseMobile.Length - 10);
+            }
 
             string uniqueUsername = baseMobile;
             int counter = 1;
 
-            while (await _context.Set<ApplicationUser>()
-                .AnyAsync(x => x.UserName == uniqueUsername))
+            // Checking uniqueness
+            while (await _context.Set<ApplicationUser>().AnyAsync(x => x.UserName == uniqueUsername))
             {
-                uniqueUsername = $"{baseMobile}_{counter}";
+                // NOTE: Agar username limit 10 hai, toh suffix add karne ke liye aage ke digits hatane padenge
+                // Example: "98765432" + "_1" = 10 chars
+                string suffix = $"_{counter}";
+                int allowedBaseLength = 10 - suffix.Length; // 10 is max DB length
+
+                if (allowedBaseLength > 0)
+                {
+                    uniqueUsername = $"{baseMobile.Substring(0, allowedBaseLength)}{suffix}";
+                }
+                else
+                {
+                    uniqueUsername = $"{baseMobile}_{counter}"; // Agar DB column bada hai toh chal jayega
+                }
                 counter++;
             }
 
+            // Password_ DB mein bada hona chahiye. Agar 10 ki limit hai to uniqueUsername 10 chars ka hi hona chahiye.
             string password = uniqueUsername;
 
             // =====================================================
@@ -220,9 +236,7 @@ namespace HemFoundation.Controllers.Api
             {
                 Id = Guid.NewGuid().ToString(),
                 UserName = uniqueUsername,
-                Email = string.IsNullOrWhiteSpace(model.Email)
-                    ? null
-                    : model.Email.Trim(),
+                Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim(),
                 PhoneNumber = baseMobile,
                 EmailConfirmed = true,
                 PhoneNumberConfirmed = false,
@@ -238,15 +252,10 @@ namespace HemFoundation.Controllers.Api
             // ROLE = Volunteer
             // =====================================================
 
-            var role = await _context.AspNetRoles
-                .FirstOrDefaultAsync(x => x.Name == "Volunteer");
+            var role = await _context.AspNetRoles.FirstOrDefaultAsync(x => x.Name == "Volunteer");
             if (role == null)
             {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "Role 'Volunteer' not found in aspnetroles."
-                });
+                return BadRequest(new { success = false, message = "Role 'Volunteer' not found in aspnetroles." });
             }
 
             // =====================================================
@@ -262,7 +271,7 @@ namespace HemFoundation.Controllers.Api
             );
 
             // =====================================================
-            // GENERATE SHARED ID (Users & Volunteers dono ke liye same)
+            // GENERATE SHARED ID
             // =====================================================
             int nextId = 1;
             if (await _context.Users.AnyAsync())
@@ -277,9 +286,9 @@ namespace HemFoundation.Controllers.Api
 
             var customUser = new Users
             {
-                UserID = nextId, // Dono jagah yeh hi ID jayegi
+                UserID = nextId,
                 UserCode = uniqueUsername,
-                FirstName = model.FirstName,
+                FirstName = model.FirstName, // Check DB limits for names too
                 LastName = model.LastName,
                 MobileNo = baseMobile,
                 EmailID = model.Email,
@@ -287,7 +296,7 @@ namespace HemFoundation.Controllers.Api
                 CreatedBy = aff.UserID,
                 CreatedDate = DateTime.UtcNow,
                 AspNetUserID = appUser.Id,
-                RegisterFrom = "Volunteer",
+                RegisterFrom = "Volunteer", // 9 chars
                 Password_ = password,
                 IsMobileVerified = false,
                 IsEmailVerified = false,
@@ -302,7 +311,7 @@ namespace HemFoundation.Controllers.Api
 
             var volunteer = new Volunteer
             {
-                Id = nextId, // Yahan bhi wahi same ID set kar di hai
+                Id = nextId,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 MobileNo = baseMobile,
@@ -313,7 +322,6 @@ namespace HemFoundation.Controllers.Api
                 Password_ = password,
                 IsActive = true,
                 IsDeleted = false,
-
                 CreatedDate = DateTime.UtcNow
             };
 

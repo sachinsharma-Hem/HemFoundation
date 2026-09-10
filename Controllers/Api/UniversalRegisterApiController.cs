@@ -273,7 +273,7 @@ namespace HemFoundation.Controllers.Api
 
                     InstituteType = "Affiliate",
 
-                    IsActive = 1,
+                    IsActive = true,
 
                     IsVerify = false
                 };
