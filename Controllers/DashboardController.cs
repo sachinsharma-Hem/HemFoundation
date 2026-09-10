@@ -1,11 +1,13 @@
 ﻿using HemFoundation.Data;
+using HemFoundation.DTOs;
+using HemFoundation.Models;
 using HemFoundation.Models.DTOs;
 using HemFoundation.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Claims;
-using HemFoundation.DTOs;
 namespace HemFoundation.Controllers
 {
     public class DashboardController : Controller
@@ -317,6 +319,7 @@ namespace HemFoundation.Controllers
                     return BadRequest("Invalid CourseID.");
                 }
 
+                // Main Topic
                 var mainTopic = await _context.Topics
                     .AsNoTracking()
                     .Where(t => t.CourseID == id && t.ParentTopicID == null)
@@ -328,29 +331,107 @@ namespace HemFoundation.Controllers
                     return BadRequest($"No main topic found for CourseID {id}.");
                 }
 
+                // Main Topics Count
                 int topicsCount = await _context.Topics
                     .AsNoTracking()
                     .Where(t => t.CourseID == id && t.ParentTopicID == null)
                     .CountAsync();
 
-                // Sub-topics count jinka parent mainTopic ki ID ho
+                // Sub Topics Count
                 int subTopicsCount = await _context.Topics
                     .AsNoTracking()
-                    .Where(t => t.CourseID == id && t.ParentTopicID == mainTopic.TopicID)
+                    .Where(t =>
+                        t.CourseID == id &&
+                        t.ParentTopicID == mainTopic.TopicID)
                     .CountAsync();
 
-                ViewBag.TopicsCount = topicsCount > 0 ? topicsCount : 1;
-                ViewBag.SubTopicsCount = subTopicsCount > 0 ? subTopicsCount : 2;
+                // Get Quiz List
+                var quizStatusList = await _context.Database
+                    .SqlQuery<TeacherQuizHubDto>(
+                        $"SELECT * FROM hf_sp_get_teacher_quiz_completion_status({id})"
+                    )
+                    .ToListAsync();
+
+                // ==========================================
+                // MAIN TOPIC NAME
+                // ==========================================
+
+                string topicName = (mainTopic.TopicName ?? "").Trim();
+
+                // ==========================================
+                // MATCH TOPIC NAME WITH QUIZ NAME
+                // ==========================================
+
+                var matchedQuiz = quizStatusList
+                    .FirstOrDefault(x =>
+                        string.Equals(
+                            (x.name ?? "").Trim(),
+                            topicName,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                        ||
+                        string.Equals(
+                            (x.quizname ?? "").Trim(),
+                            topicName,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    );
+
+                // ==========================================
+                // GET MATCHED QUIZ ID
+                // ==========================================
+
+                int? quizId = matchedQuiz?.quizid;
+
+                // Optional ViewBag
+                ViewBag.QuizId = quizId;
+                ViewBag.QuizName = matchedQuiz?.quizname;
+
+                ViewBag.TopicsCount = topicsCount > 0
+                    ? topicsCount
+                    : 1;
+
+                ViewBag.SubTopicsCount = subTopicsCount > 0
+                    ? subTopicsCount
+                    : 2;
+
+                // ==========================================
+                // CAPACITY VIEW MODEL
+                // ==========================================
 
                 var viewModel = new CapacityViewModel
                 {
                     Id = mainTopic.CourseID,
-                    Name = mainTopic.TopicName ?? "Cognitive Capacity",
-                    Description = mainTopic.Description ?? "Manage evaluations and interactive modules for this capacity.",
-                    ImageUrl = !string.IsNullOrWhiteSpace(mainTopic.TrainerResource) ? mainTopic.TrainerResource : "/images/default-course.png"
+
+                    Name = mainTopic.TopicName
+                        ?? "Cognitive Capacity",
+
+                    Description = mainTopic.Description
+                        ?? "Manage evaluations and interactive modules for this capacity.",
+
+                    ImageUrl = !string.IsNullOrWhiteSpace(mainTopic.TrainerResource)
+                        ? mainTopic.TrainerResource
+                        : "/images/default-course.png",
+
+                    // Matched Quiz ID
+                    QuizId = quizId,
+
+                    // Optional Quiz Name
+                    QuizName = matchedQuiz?.quizname
                 };
 
-                string firstWord = viewModel.Name?.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.ToLowerInvariant() ?? "cognitive";
+                // ==========================================
+                // SELECT PARTIAL VIEW
+                // ==========================================
+
+                string firstWord = viewModel.Name?
+                    .Split(
+                        ' ',
+                        StringSplitOptions.RemoveEmptyEntries
+                    )
+                    .FirstOrDefault()?
+                    .ToLowerInvariant()
+                    ?? "cognitive";
 
                 string viewName = firstWord switch
                 {
@@ -370,7 +451,7 @@ namespace HemFoundation.Controllers
             }
         }
 
-        [HttpGet("api/teacher-capacity/details/{courseId}")]
+        [HttpGet("details/{courseId}")]
         public async Task<IActionResult> GetCapacityDetails(int courseId)
         {
             try
@@ -382,7 +463,6 @@ namespace HemFoundation.Controllers
                 if (mainTopic == null)
                     return NotFound(new { success = false, message = "Topic not found" });
 
-                // Sub-topics nikal rahe hain jinka ParentTopicID mainTopic ke TopicID se match kare
                 var subTopicsList = await _context.Topics
                     .AsNoTracking()
                     .Where(t => t.CourseID == courseId && t.ParentTopicID == mainTopic.TopicID)
@@ -393,7 +473,10 @@ namespace HemFoundation.Controllers
                     subTopicName = st.TopicName ?? "Untitled Module",
                     videoLink = st.TrainerVideo ?? st.StudentVideo ?? "",
                     numberOfQuestions = st.NoOfQuestion ?? 0,
-                    mcqThumbnail = !string.IsNullOrEmpty(st.TrainerResource) ? st.TrainerResource : (mainTopic.TrainerResource ?? "/images/default-course.png")
+                    languageId = st.languageID ?? 1,
+                    // Sahi column (TrainerExercise) map karein aur '~' symbol hatayein jisse browser image load kar sake
+                    mcqThumbnail = !string.IsNullOrEmpty(st.TrainerExercise) ? st.TrainerExercise.Replace("~", "") :
+                                   (!string.IsNullOrEmpty(st.TrainerResource) ? st.TrainerResource.Replace("~", "") : "")
                 }).ToList();
 
                 int topicsCount = await _context.Topics.CountAsync(t => t.CourseID == courseId && t.ParentTopicID == null);
@@ -403,7 +486,7 @@ namespace HemFoundation.Controllers
                 {
                     success = true,
                     courseRegId = courseId,
-                    category = new { imageUrl = mainTopic.TrainerResource ?? "/images/default-course.png" },
+                    category = new { imageUrl = (mainTopic.TrainerResource ?? "").Replace("~", "") },
                     counts = new { topicsCount, subTopicsCount },
                     subTopics = subTopics
                 });

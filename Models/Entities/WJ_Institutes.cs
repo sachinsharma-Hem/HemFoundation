@@ -27,13 +27,11 @@ namespace HemFoundation.Models.Entities
 
         public string? ProfileUrl { get; set; }
         [Column("isactive")]
-
-        public bool? IsActive { get; set; }
+        public bool IsActive { get; set; }
         [Column("referralcode")]
 
         public string? ReferralCode { get; set; }
         [Column("isverify")]
-
         public bool IsVerify { get; set; }
         [Column("profession")]
 

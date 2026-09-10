@@ -86,66 +86,128 @@ namespace HemFoundation.Controllers.Api
                 profile = profileData
             });
         }
-
         [HttpPost("update")]
-        public async Task<IActionResult> UpdateProfile([FromForm] ProfileUpdateDto model)
+        public async Task<IActionResult> UpdateProfile(
+    [FromForm] ProfileUpdateDto model)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { success = false, message = "User not authenticated." });
-
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-                return NotFound(new { success = false, message = "User not found." });
-
-            // Handle Photo Upload
-            string photoUrl = string.Empty;
-            if (model.ProfilePhoto != null && model.ProfilePhoto.Length > 0)
             {
-                string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles", "Updates");
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "User not authenticated."
+                });
+            }
+
+            // 1. Get Identity User
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "User not found."
+                });
+            }
+
+            // 2. Handle Photo Upload
+            string photoUrl = string.Empty;
+
+            if (model.ProfilePhoto != null &&
+                model.ProfilePhoto.Length > 0)
+            {
+                string uploadsFolder = Path.Combine(
+                    _env.WebRootPath,
+                    "uploads",
+                    "profiles",
+                    "Updates"
+                );
+
                 if (!Directory.Exists(uploadsFolder))
+                {
                     Directory.CreateDirectory(uploadsFolder);
+                }
 
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + model.ProfilePhoto.FileName;
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                string uniqueFileName =
+                    Guid.NewGuid().ToString() + "_" +
+                    Path.GetFileName(model.ProfilePhoto.FileName);
 
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                string filePath = Path.Combine(
+                    uploadsFolder,
+                    uniqueFileName
+                );
+
+                using (var fileStream = new FileStream(
+                    filePath,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None))
                 {
                     await model.ProfilePhoto.CopyToAsync(fileStream);
                 }
-                photoUrl = $"/uploads/profiles/Updates/{uniqueFileName}";
+
+                photoUrl =
+                    $"/uploads/profiles/Updates/{uniqueFileName}";
             }
 
-            // Update AspNetUsers phone number if provided
-            if (!string.IsNullOrEmpty(model.PhoneNumber))
+            // 3. Update AspNetUsers directly
+            if (!string.IsNullOrWhiteSpace(model.PhoneNumber))
             {
-                user.PhoneNumber = model.PhoneNumber;
-                await _userManager.SetPhoneNumberAsync(user, model.PhoneNumber);
+                user.PhoneNumber = model.PhoneNumber.Trim();
+
+                _context.Entry(user)
+                    .Property(x => x.PhoneNumber)
+                    .IsModified = true;
             }
 
-            // Update Custom 'Users' Table
-            var customUser = await _context.Users.FirstOrDefaultAsync(u => u.AspNetUserID == userId);
+            // 4. Get Custom Users record
+            var customUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.AspNetUserID == userId);
+
             if (customUser != null)
             {
-                customUser.FirstName = model.FirstName ?? customUser.FirstName;
-                customUser.LastName = model.LastName ?? customUser.LastName;
-                customUser.MobileNo = model.PhoneNumber ?? customUser.MobileNo;
-                customUser.AddressLine1 = model.Address ?? customUser.AddressLine1;
-                customUser.CityName = model.City ?? customUser.CityName;
-                customUser.Pincode = model.Pincode ?? customUser.Pincode;
+                customUser.FirstName =
+                    string.IsNullOrWhiteSpace(model.FirstName)
+                        ? customUser.FirstName
+                        : model.FirstName.Trim();
+
+                customUser.LastName =
+                    string.IsNullOrWhiteSpace(model.LastName)
+                        ? customUser.LastName
+                        : model.LastName.Trim();
+
+                customUser.MobileNo =
+                    string.IsNullOrWhiteSpace(model.PhoneNumber)
+                        ? customUser.MobileNo
+                        : model.PhoneNumber.Trim();
+
+                customUser.AddressLine1 =
+                    string.IsNullOrWhiteSpace(model.Address)
+                        ? customUser.AddressLine1
+                        : model.Address.Trim();
+
+                customUser.CityName =
+                    string.IsNullOrWhiteSpace(model.City)
+                        ? customUser.CityName
+                        : model.City.Trim();
+
+                customUser.Pincode =
+                    string.IsNullOrWhiteSpace(model.Pincode)
+                        ? customUser.Pincode
+                        : model.Pincode.Trim();
 
                 if (!string.IsNullOrEmpty(photoUrl))
                 {
                     customUser.PhotoUrl = photoUrl;
                 }
-
-                _context.Users.Update(customUser);
-                await _context.SaveChangesAsync();
             }
             else
             {
-                // Fallback if custom user row doesn't exist yet
-                var newUserRecord = new Users
+                // 5. Create Users record if it does not exist
+                customUser = new Users
                 {
                     AspNetUserID = userId,
                     EmailID = user.Email,
@@ -155,32 +217,193 @@ namespace HemFoundation.Controllers.Api
                     AddressLine1 = model.Address,
                     CityName = model.City,
                     Pincode = model.Pincode,
-                    PhotoUrl = string.IsNullOrEmpty(photoUrl) ? "/uploads/profiles/default-avatar.png" : photoUrl,
-                    CreatedDate = DateTime.Now
+                    PhotoUrl = string.IsNullOrEmpty(photoUrl)
+                        ? "/uploads/profiles/default-avatar.png"
+                        : photoUrl,
+                    IsActive = true,
+                    CreatedBy = 1,
+                    CreatedDate = DateTime.UtcNow
                 };
-                _context.Users.Add(newUserRecord);
-                await _context.SaveChangesAsync();
+
+                _context.Users.Add(customUser);
             }
 
-            return Ok(new { success = true, message = "Profile updated successfully!", photoUrl = string.IsNullOrEmpty(photoUrl) ? customUser?.PhotoUrl : photoUrl });
+            // 6. Save
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = "Profile updated successfully!",
+                photoUrl = string.IsNullOrEmpty(photoUrl)
+                    ? customUser.PhotoUrl
+                    : photoUrl
+            });
         }
+        //[HttpPost("update")]
+        //public async Task<IActionResult> UpdateProfile([FromForm] ProfileUpdateDto model)
+        //{
+        //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //    if (string.IsNullOrEmpty(userId))
+        //        return Unauthorized(new { success = false, message = "User not authenticated." });
+
+        //    var user = await _userManager.FindByIdAsync(userId);
+        //    if (user == null)
+        //        return NotFound(new { success = false, message = "User not found." });
+
+        //    // Handle Photo Upload
+        //    string photoUrl = string.Empty;
+        //    if (model.ProfilePhoto != null && model.ProfilePhoto.Length > 0)
+        //    {
+        //        string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles", "Updates");
+        //        if (!Directory.Exists(uploadsFolder))
+        //            Directory.CreateDirectory(uploadsFolder);
+
+        //        string uniqueFileName = Guid.NewGuid().ToString() + "_" + model.ProfilePhoto.FileName;
+        //        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+        //        using (var fileStream = new FileStream(filePath, FileMode.Create))
+        //        {
+        //            await model.ProfilePhoto.CopyToAsync(fileStream);
+        //        }
+        //        photoUrl = $"/uploads/profiles/Updates/{uniqueFileName}";
+        //    }
+
+        //    // Update AspNetUsers phone number if provided
+        //    if (!string.IsNullOrEmpty(model.PhoneNumber))
+        //    {
+        //        user.PhoneNumber = model.PhoneNumber;
+        //        await _userManager.SetPhoneNumberAsync(user, model.PhoneNumber);
+        //    }
+
+        //    // Update Custom 'Users' Table
+        //    var customUser = await _context.Users.FirstOrDefaultAsync(u => u.AspNetUserID == userId);
+        //    if (customUser != null)
+        //    {
+        //        customUser.FirstName = model.FirstName ?? customUser.FirstName;
+        //        customUser.LastName = model.LastName ?? customUser.LastName;
+        //        customUser.MobileNo = model.PhoneNumber ?? customUser.MobileNo;
+        //        customUser.AddressLine1 = model.Address ?? customUser.AddressLine1;
+        //        customUser.CityName = model.City ?? customUser.CityName;
+        //        customUser.Pincode = model.Pincode ?? customUser.Pincode;
+
+        //        if (!string.IsNullOrEmpty(photoUrl))
+        //        {
+        //            customUser.PhotoUrl = photoUrl;
+        //        }
+
+        //        _context.Users.Update(customUser);
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    else
+        //    {
+        //        // Fallback if custom user row doesn't exist yet
+        //        var newUserRecord = new Users
+        //        {
+        //            AspNetUserID = userId,
+        //            EmailID = user.Email,
+        //            FirstName = model.FirstName,
+        //            LastName = model.LastName,
+        //            MobileNo = model.PhoneNumber,
+        //            AddressLine1 = model.Address,
+        //            CityName = model.City,
+        //            Pincode = model.Pincode,
+        //            PhotoUrl = string.IsNullOrEmpty(photoUrl) ? "/uploads/profiles/default-avatar.png" : photoUrl,
+        //            CreatedDate = DateTime.Now
+        //        };
+        //        _context.Users.Add(newUserRecord);
+        //        await _context.SaveChangesAsync();
+        //    }
+
+        //    return Ok(new { success = true, message = "Profile updated successfully!", photoUrl = string.IsNullOrEmpty(photoUrl) ? customUser?.PhotoUrl : photoUrl });
+        //}
 
         [HttpPost("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
+        public async Task<IActionResult> ChangePassword(
+    [FromBody] ChangePasswordDto model)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-                return NotFound(new { success = false, message = "User not found." });
-
-            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
-            if (!result.Succeeded)
+            if (model == null ||
+                string.IsNullOrWhiteSpace(model.CurrentPassword) ||
+                string.IsNullOrWhiteSpace(model.NewPassword))
             {
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                return BadRequest(new { success = false, message = errors });
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Current password and new password are required."
+                });
             }
 
-            return Ok(new { success = true, message = "Password changed successfully!" });
+            if (string.IsNullOrWhiteSpace(model.NewPassword) ||
+                model.NewPassword.Length < 6)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "New password must be at least 6 characters long."
+                });
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "User not authenticated."
+                });
+            }
+
+            // Find user by Identity ID
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "User not found."
+                });
+            }
+
+            // Verify current password directly
+            var passwordHasher = new PasswordHasher<ApplicationUser>();
+
+            var verificationResult = passwordHasher.VerifyHashedPassword(
+                user,
+                user.PasswordHash ?? string.Empty,
+                model.CurrentPassword
+            );
+
+            if (verificationResult == PasswordVerificationResult.Failed)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Current password is incorrect."
+                });
+            }
+
+            // Generate new password hash
+            var newPasswordHash = passwordHasher.HashPassword(
+                user,
+                model.NewPassword
+            );
+
+            // Update password hash
+            user.PasswordHash = newPasswordHash;
+
+            _context.Entry(user)
+                .Property(x => x.PasswordHash)
+                .IsModified = true;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = "Password changed successfully!"
+            });
         }
     }
 

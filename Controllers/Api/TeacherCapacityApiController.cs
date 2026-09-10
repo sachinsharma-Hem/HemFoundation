@@ -20,33 +20,44 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("details/{categoryId}")]
         public async Task<IActionResult> GetCapacityDetails(int categoryId)
         {
-            var category = await _context.WebinarMcqCategories
-                .FirstOrDefaultAsync(x => x.Id == categoryId );
+            // categoryId yaha par CourseID ki tarah kaam karega
 
-            if (category == null) return NotFound(new { success = false, message = "Category not found" });
+            // 1. Main Topic nikalna (Jiska ParentTopicID null hai)
+            var mainTopic = await _context.Topics
+                .FirstOrDefaultAsync(x => x.CourseID == categoryId && x.ParentTopicID == null);
 
-            var matchedCourse = await _context.CourseRegistrations
-                .FirstOrDefaultAsync(c => c.CourseName.ToLower().Contains(category.Name.ToLower()) && !c.IsDeleted);
+            if (mainTopic == null)
+                return NotFound(new { success = false, message = "Topic not found for this course." });
 
-            int courseRegId = matchedCourse != null ? matchedCourse.Id : category.Id;
-
-            int topicsCount = await _context.CourseTopics.CountAsync(x => x.CourseRegistrationId == courseRegId && !x.IsDeleted);
-            int subTopicsCount = await _context.CourseSubTopics.CountAsync(x => x.CourseRegistrationId == courseRegId && !x.IsDeleted);
-
-            var subTopics = await _context.CourseSubTopics
-                .Where(x => x.CourseRegistrationId == courseRegId && !x.IsDeleted)
-                .OrderBy(x => x.DisplayOrderId)
+            // 2. Sub-Topics nikalna (Jinka ParentTopicID null NAHI hai)
+            var subTopicsData = await _context.Topics
+                .Where(x => x.CourseID == categoryId && x.ParentTopicID != null)
+                .OrderBy(x => x.Order)
                 .ToListAsync();
+
+            int topicsCount = 1; // Main topic ek hi hai
+            int subTopicsCount = subTopicsData.Count;
+
+            // 3. Frontend (JS) ko jo format chahiye usme map karna
+            var subTopics = subTopicsData.Select(x => new
+            {
+                id = x.TopicID,
+                subTopicName = x.TopicName,
+                videoLink = x.TrainerVideo,          // First card me video play karne ke liye
+                mcqThumbnail = x.TrainerExercise,    // Banner/Image ke liye
+                numberOfQuestions = x.NoOfQuestion ?? 0,
+                languageId = x.languageID ?? 1
+            }).ToList();
 
             return Ok(new
             {
                 success = true,
-                courseRegId = courseRegId,
+                courseRegId = categoryId,
                 category = new
                 {
-                    category.Name,
-                    category.Description,
-                    ImageUrl = category.ImageUrl ?? "/images/default-course.png"
+                    Name = mainTopic.TopicName,
+                    Description = mainTopic.Description,
+                    ImageUrl = "/images/default-course.png" // Agar topic me image ka column nahi hai to default bhejenge
                 },
                 counts = new { topicsCount, subTopicsCount },
                 subTopics
