@@ -52,3 +52,5 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+.vs/HemFoundation.slnx/FileContentIndex/3e9fc615-b924-46a0-8a3a-5f9becde5394.vsidx
+.vs/HemFoundation.slnx/v18/DocumentLayout.backup.json

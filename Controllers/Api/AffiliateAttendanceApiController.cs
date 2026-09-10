@@ -172,8 +172,7 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("admin/affiliate-list")]
         public async Task<IActionResult> GetAffiliateList()
         {
-            var list = await _context.Affiliates
-                .Where(a => a.IsActive)
+            var list = await _context.Users
                 .Select(a => new
                 {
                     a.UserID,
@@ -476,7 +475,7 @@ namespace HemFoundation.Controllers.Api
             if (absentDays < 0) absentDays = 0;
 
             // Fetch Affiliate details for Name & ID
-            var affiliate = await _context.Affiliates.FirstOrDefaultAsync(a => a.UserID == affId);
+            var affiliate = await _context.Users.FirstOrDefaultAsync(a => a.UserID == affId);
             string affName = affiliate != null ? $"{affiliate.FirstName} {affiliate.LastName}" : "Affiliate";
             string affCode = affiliate?.UserCode ?? affId.ToString();
 
@@ -523,7 +522,7 @@ namespace HemFoundation.Controllers.Api
             }
 
             var list = await query
-                .Join(_context.Affiliates,
+                .Join(_context.Users,
                     leave => leave.AffiliateId,
                     aff => aff.UserID,
                     (leave, aff) => new
@@ -604,7 +603,7 @@ namespace HemFoundation.Controllers.Api
     public class AdminLeaveUpdateModel
     {
         public long LeaveId { get; set; }
-        public string Status { get; set; } = string.Empty; // "Approved" or "Rejected"
+        public string Status { get; set; } = string.Empty; 
         public string? Remarks { get; set; }
     }
     public class PunchModel
