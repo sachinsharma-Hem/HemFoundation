@@ -146,9 +146,9 @@ namespace HemFoundation.Controllers.Api
             //   .Where(v => v.IsActive && gradeIds.Contains(v.GradeId.ToString())).ToListAsync();
 
             // NAYA: Check submissions to mark "Completed"
-            var submittedActivityIds = await _context.ActivitySubmissions
-                .Where(s => s.InstituteId == institute.instituteid)
-                .Select(s => s.ValueItemId)
+            var submittedActivityIds = await _context.creativityActivitiesSubmission2021s
+                .Where(s => s.InstituteID == institute.instituteid)
+                .Select(s => s.MainCourseID)
                 .Distinct()
                 .ToListAsync();
 
