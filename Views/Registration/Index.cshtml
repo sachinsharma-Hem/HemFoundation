@@ -2,47 +2,114 @@
     ViewData["Title"] = "School Registration & Management Hub";
     Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
 }
+
+<!-- Tabulator CSS -->
+<link href="https://unpkg.com/tabulator-tables@6.2.5/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
+<!-- MultiSelect CSS for Standard Modal -->
+<link href="~/Content/MultiSelect/bootstrap-multiselect.css" rel="stylesheet" />
+
 <style>
     /* Container Background */
     .glass-nav-pills {
-        background-color: rgba(240, 242, 245, 0.6); /* Very soft gray */
+        background-color: rgba(240, 242, 245, 0.6);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.4);
     }
 
-    /* Inactive Tab Styles */
-    .glass-nav-pills .nav-link {
+        /* Inactive Tab Styles */
+        .glass-nav-pills .nav-link {
+            color: #6c757d;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border: 1px solid transparent;
+            padding: 0.6rem 1rem;
+        }
+
+            /* Hover Effect for Inactive Tabs */
+            .glass-nav-pills .nav-link:hover {
+                color: #495057;
+                background-color: rgba(255, 255, 255, 0.5);
+            }
+
+            /* =========================================
+            ACTIVE TAB: THE GLASSMORPHISM EFFECT
+            ========================================= */
+            .glass-nav-pills .nav-link.active {
+                background: linear-gradient(135deg, rgba(111, 66, 193, 0.1), rgba(13, 110, 253, 0.05)) !important;
+                backdrop-filter: blur(10px) saturate(150%);
+                -webkit-backdrop-filter: blur(10px) saturate(150%);
+                color: #6f42c1 !important;
+                border: 1px solid rgba(111, 66, 193, 0.25);
+                box-shadow: 0 4px 15px rgba(111, 66, 193, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+                transform: translateY(-1px);
+            }
+
+    /* Tabulator Customizations to Match Bootstrap */
+    .tabulator {
+        border: 1px solid #dee2e6 !important;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+        .tabulator .tabulator-header {
+            background-color: #f8f9fa !important;
+            font-weight: bold;
+        }
+
+    .action-icon-btn {
+        padding: 4px 8px;
+        margin: 0 2px;
         color: #6c757d;
-        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-        border: 1px solid transparent;
-        padding: 0.6rem 1rem;
+        transition: color 0.2s ease;
     }
 
-    /* Hover Effect for Inactive Tabs */
-    .glass-nav-pills .nav-link:hover {
-        color: #495057;
-        background-color: rgba(255, 255, 255, 0.5);
+        .action-icon-btn:hover {
+            color: #6f42c1;
+        }
+
+    .cur-pointer {
+        cursor: pointer;
     }
 
-    /* =========================================
-       ACTIVE TAB: THE GLASSMORPHISM EFFECT
-       ========================================= */
-    .glass-nav-pills .nav-link.active {
-        /* Soft semi-transparent theme color (Purple/Blue mix) */
-        background: linear-gradient(135deg, rgba(111, 66, 193, 0.1), rgba(13, 110, 253, 0.05)) !important;
-        
-        /* Blur Effect */
-        backdrop-filter: blur(10px) saturate(150%);
-        -webkit-backdrop-filter: blur(10px) saturate(150%);
-        
-        /* Text Color & Soft Border */
-        color: #6f42c1 !important; /* Elegant Purple Text */
-        border: 1px solid rgba(111, 66, 193, 0.25);
-        
-        /* Floating Shadow */
-        box-shadow: 0 4px 15px rgba(111, 66, 193, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.6);
-        transform: translateY(-1px);
+    .multiselect-native-select .btn-group {
+        width: 100% !important;
+    }
+
+    .multiselect-container {
+        width: 100% !important;
+        max-height: 250px;
+        overflow-y: auto;
+    }
+    /* Ensure proper Bootstrap modal backdrop overlay layer */
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+    }
+
+    /* Fix Bootstrap Multiselect dropdown inside Modals */
+    .modal .mult-select-container, .modal .multiselect-container {
+        z-index: 1056 !important;
+        position: absolute !important;
+    }
+
+    .modal-content {
+        background-clip: padding-box;
+        background-color: #fff;
+        border: 0 solid rgba(0,0,0,.2);
+        border-radius: 1rem;
+        outline: 0;
+    }
+    /* Force multiselect container dropdown to display above modal elements */
+    .modal .multiselect-container.dropdown-menu {
+        position: absolute !important;
+        inset: auto auto 0 0 !important;
+        transform: translate(0px, 38px) !important;
+        width: 100% !important;
+        z-index: 1060 !important;
+    }
+
+    /* Ensure modal body does not clip absolute dropdown items */
+    .modal-body {
+        overflow: visible !important;
     }
 </style>
 
@@ -50,47 +117,82 @@
     <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
         <h4 class="fw-bold text-dark mb-4"><i class="bi bi-ui-checks-grid text-primary me-2"></i> School Management & Registration Hub</h4>
 
-       <!-- 4 Tabs Navigation with Glassmorphism -->
-<ul class="nav nav-pills nav-fill gap-2 p-2 rounded-pill mb-4 glass-nav-pills shadow-sm" id="regHubTabs" role="tablist">
-    <li class="nav-item">
-        <button class="nav-link active rounded-pill fw-bold" id="student-tab" data-bs-toggle="tab" data-bs-target="#studentContent" type="button">
-            <i class="bi bi-mortarboard-fill me-2"></i> Students Directory
-        </button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link rounded-pill fw-bold" id="teacher-tab" data-bs-toggle="tab" data-bs-target="#teacherContent" type="button">
-            <i class="bi bi-people-fill me-2"></i> Teachers Directory
-        </button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link rounded-pill fw-bold" id="volunteer-tab" data-bs-toggle="tab" data-bs-target="#volunteerContent" type="button">
-            <i class="bi bi-shield-check me-2"></i> Volunteers Directory
-        </button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link rounded-pill fw-bold" id="bulk-tab" data-bs-toggle="tab" data-bs-target="#bulkContent" type="button">
-            <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i> Bulk Upload & Reports
-        </button>
-    </li>
-</ul>
+        <!-- 4 Tabs Navigation with Glassmorphism -->
+        <ul class="nav nav-pills nav-fill gap-2 p-2 rounded-pill mb-4 glass-nav-pills shadow-sm" id="regHubTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active rounded-pill fw-bold" id="student-tab" data-bs-toggle="tab" data-bs-target="#studentContent" type="button">
+                    <i class="bi bi-mortarboard-fill me-2"></i> Students Directory
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill fw-bold" id="teacher-tab" data-bs-toggle="tab" data-bs-target="#teacherContent" type="button">
+                    <i class="bi bi-people-fill me-2"></i> Teachers Directory
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill fw-bold" id="volunteer-tab" data-bs-toggle="tab" data-bs-target="#volunteerContent" type="button">
+                    <i class="bi bi-shield-check me-2"></i> Volunteers Directory
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill fw-bold" id="bulk-tab" data-bs-toggle="tab" data-bs-target="#bulkContent" type="button">
+                    <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i> Bulk Upload & Reports
+                </button>
+            </li>
+        </ul>
 
         <div class="tab-content" id="regHubTabsContent">
-            
+
             <!-- TAB 1: STUDENTS LIST -->
             <div class="tab-pane fade show active" id="studentContent">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold text-dark m-0">Enrolled Students</h5>
-                    <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalAddStudent">
-                        <i class="bi bi-person-plus-fill me-1"></i> Add New Student
-                    </button>
+                    <div class="d-flex align-items-center">
+                        <input type="text" id="studentSearchInput" class="form-control form-control-sm d-inline-block w-auto me-2" placeholder="Search students..." onkeyup="filterTabulator('student', this.value)">
+                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm me-2" onclick="exportTable('student', 'xlsx')">
+                            <i class="fas fa-file-excel me-1"></i> Export Excel
+                        </button>
+                        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddStudent">
+                            <i class="bi bi-person-plus-fill me-1"></i> Add New Student
+                        </button>
+                    </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle small border" id="studentsTable">
-                        <thead class="table-light">
-                            <tr><th>Name</th><th>Standard</th><th>Division</th><th>Guardian Name</th><th>Mobile</th></tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                <div id="studentTableContainer"></div>
+            </div>
+
+            <!-- REASSIGN GRADE MODAL (STUDENT) -->
+            <div class="modal fade" id="Dv_StandardModal" tabindex="-1" role="dialog" aria-hidden="true" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content border-0 shadow" style="border-radius:14px;">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title font-weight-bold text-purple-brand"><i class="fas fa-graduation-cap me-2"></i>Reassign Grade</h5>
+                            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center pt-2">
+                            <h6 id="lbl_Student_Name" class="fw-bold text-secondary mb-3">Student Name</h6>
+                            <input type="hidden" id="hd_StudentID" value="0" />
+
+                            <div class="form-group text-start mb-3">
+                                <label class="small fw-bold text-muted mb-1">Standard / Class *</label>
+                                <select id="dll_student_standard" class="form-select form-select-md">
+                                    <option value="" disabled selected>-- Select Standard --</option>
+                                    @for (int i = 3; i <= 15; i++)
+                                    {
+                                        string suffix = (i == 1) ? "st" : (i == 2) ? "nd" : (i == 3) ? "rd" : "th";
+                                        <option value="@(i)@suffix">@(i)@suffix</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group text-start mb-4">
+                                <label class="small fw-bold text-muted mb-1">Division / Section</label>
+                                <input type="text" id="dv_division" class="form-control form-control-md" placeholder="e.g. A, B, Rose" maxlength="10">
+                            </div>
+
+                            <button class="btn btn-primary rounded-pill w-100 fw-bold py-2 bg-purple-brand border-0" onclick="setStandard()" id="btnSet" style="background-color: #6f42c1;">
+                                Save Structural Assignment
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -98,33 +200,32 @@
             <div class="tab-pane fade" id="teacherContent">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold text-dark m-0">Active Teachers</h5>
-                    <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalAddTeacher">
-                        <i class="bi bi-person-plus-fill me-1"></i> Add New Teacher
-                    </button>
+                    <div class="d-flex align-items-center">
+                        <input type="text" id="teacherSearchInput" class="form-control form-control-sm d-inline-block w-auto me-2" placeholder="Search teachers..." onkeyup="filterTabulator('teacher', this.value)">
+                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm me-2" onclick="exportTable('teacher', 'xlsx')">
+                            <i class="fas fa-file-excel me-1"></i> Export Excel
+                        </button>
+                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalAddTeacher">
+                            <i class="bi bi-person-plus-fill me-1"></i> Add New Teacher
+                        </button>
+                    </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle small border" id="teachersTable">
-                        <thead class="table-light">
-                            <tr><th>Name</th><th>Qualification</th><th>Email</th><th>Mobile</th><th>City</th></tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+                <!-- Tabulator Container -->
+                <div id="teacherTableContainer"></div>
             </div>
 
-            <!-- TAB 3: VOLUNTEERS LIST (NAYA) -->
+            <!-- TAB 3: VOLUNTEERS LIST -->
             <div class="tab-pane fade" id="volunteerContent">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold text-dark m-0">Assigned Volunteers</h5>
+                    <div class="d-flex align-items-center">
+                        <input type="text" id="volunteerSearchInput" class="form-control form-control-sm d-inline-block w-auto me-2" placeholder="Search volunteers..." onkeyup="filterTabulator('volunteer', this.value)">
+                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="exportTable('volunteer', 'xlsx')">
+                            <i class="fas fa-file-excel me-1"></i> Export Excel
+                        </button>
+                    </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle small border" id="volunteersTable">
-                        <thead class="table-light">
-                            <tr><th>Name</th><th>Mobile</th><th>Email</th><th>Status</th><th>Added On</th></tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+                <div id="volunteerTableContainer"></div>
             </div>
 
             <!-- TAB 4: BULK UPLOAD -->
@@ -169,8 +270,46 @@
     </div>
 </div>
 
-<!-- ================= MODALS FOR INTERNAL REGISTRATION ================= -->
+<!-- ================= MODALS ================= -->
+<!-- ASSIGN STANDARD MODAL (TEACHER) -->
+<!-- ASSIGN STANDARD MODAL (TEACHER) -->
+<div class="modal fade" id="assignStandardList" tabindex="-1" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; background-color: #ffffff;">
+            <div class="modal-header border-0 pb-0">
+                <h4 class="modal-title font-weight-bold" style="color:#6f42c1;"><i class="fas fa-tags me-2"></i>Map Class Allocations</h4>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-3">
+                <input type="hidden" id="teacherId" value="0" />
 
+                <div class="bg-light rounded-3 p-3 mb-4 border">
+                    <span class="small text-muted d-block fw-bold text-uppercase tracking-wider">Selected Faculty Member</span>
+                    <h4 class="fw-bold text-dark mb-0" id="teacherName">Teacher Name</h4>
+                </div>
+
+                <div class="form-group">
+                    <label class="fw-bold text-secondary mb-2" for="dll_Standard">Assigned Grades / Standards</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="w-100 position-relative">
+                            <select id="dll_Standard" class="form-control" multiple="multiple"></select>
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm ms-2 px-3 rounded-pill fw-bold" id="clearStandards" style="white-space:nowrap;">
+                            <i class="fas fa-undo me-1"></i> Clear
+                        </button>
+                    </div>
+                    <small class="form-text text-muted mt-1">Select all standards or subsections this teacher is authorized to access.</small>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" onclick="fnSubmitStandardToTeacher()" class="btn btn-primary border-0 rounded-pill px-4 fw-bold text-white" style="background-color:#6f42c1;">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- ADD STUDENT MODAL -->
 <div class="modal fade" id="modalAddStudent" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -210,7 +349,7 @@
             <div class="modal-body">
                 <form id="frmAddTeacher">
                     <input type="hidden" name="portalId" value="2" />
-                      <input type="hidden" name="role" value="WJ_Teacher" />
+                    <input type="hidden" name="role" value="WJ_Teacher" />
                     <div class="row g-3">
                         <div class="col-md-6"><label class="small fw-bold">First Name</label><input type="text" name="firstName" class="form-control" required></div>
                         <div class="col-md-6"><label class="small fw-bold">Last Name</label><input type="text" name="lastName" class="form-control" required></div>
@@ -226,9 +365,22 @@
     </div>
 </div>
 
+<!-- REQUIRED DEPENDENCY ORDER: jQuery MUST load first -->
+
+
 @section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Tabulator JS, SheetJS, Moment.js, SweetAlert2 & MultiSelect -->
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.5/dist/js/tabulator.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/Content/MultiSelect/bootstrap-multiselect.js" type="text/javascript"></script>
     <script>
-        $(document).ready(function () {
+      
+        let studentTable, teacherTable, volunteerTable;
+
+        $(document).ready(function() {
             // Check URL parameter to auto-open specific tab
             const urlParams = new URLSearchParams(window.location.search);
             const activeTab = urlParams.get('tab');
@@ -236,6 +388,49 @@
             else if (activeTab === 'teacher') $('#teacher-tab').tab('show');
             else if (activeTab === 'volunteer') $('#volunteer-tab').tab('show');
             else if (activeTab === 'bulk') $('#bulk-tab').tab('show');
+
+            // Setup Standard MultiSelect Options for Teacher Modal
+            $('#clearStandards').on('click', function() {
+                $('#dll_Standard').multiselect('clearSelection');
+            });
+
+            // Inside $(document).ready(function() {
+            var standardData = [
+                "3rd", "3rd-A", "3rd-B", "3rd-C", "3rd-D",
+                "4th", "4th-A", "4th-B", "4th-C", "4th-D",
+                "5th", "5th-A", "5th-B", "5th-C", "5th-D",
+                "6th", "6th-A", "6th-B", "6th-C", "6th-D",
+                "7th", "7th-A", "7th-B", "7th-C", "7th-D",
+                "8th", "8th-A", "8th-B", "8th-C", "8th-D",
+                "9th", "9th-A", "9th-B", "9th-C", "9th-D",
+                "10th", "10th-A", "10th-B", "10th-C", "10th-D",
+                "11th", "11th-A", "11th-B", "11th-C", "11th-D",
+                "12th", "12th-A", "12th-B", "12th-C", "12th-D",
+                "13th", "13th-A", "13th-B", "13th-C", "13th-D",
+                "14th", "14th-A", "14th-B", "14th-C", "14th-D",
+                "15th", "15th-A", "15th-B", "15th-C", "15th-D"
+            ];
+
+            var $selectElement = $('#dll_Standard');
+            $selectElement.empty(); // Prevent duplicate appending if re-triggered
+            $.each(standardData, function(index, value) {
+                $selectElement.append($('<option>', { value: value, text: value }));
+            });
+
+            if ($selectElement.length && typeof $selectElement.multiselect === 'function') {
+                $selectElement.multiselect({
+                    nonSelectedText: 'Select Assigned Grades',
+                    enableFiltering: true,
+                    includeSelectAllOption: true,
+                    filterPlaceholder: 'Search class records...',
+                    maxHeight: 250,
+                    buttonClass: 'btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between',
+                    templates: {
+                        button: '<button type="button" class="multiselect dropdown-toggle btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between" data-bs-toggle="dropdown" aria-expanded="false"><span class="multiselect-selected-text"></span></button>'
+                    }
+                });
+            }
+            // });
 
             loadSchoolHubData();
 
@@ -247,35 +442,42 @@
             });
 
             function loadSchoolHubData() {
-                $.get('/api/universal/school-lists', function (res) {
+                // Fetch all data from the centralized Universal API endpoint
+                $.get('/api/universal/school-lists', function(res) {
                     if (res.success) {
-                        let studentRows = '';
-                        res.students.forEach(s => { studentRows += `<tr><td>${s.firstName} ${s.lastName}</td><td>${s.standard || '-'}</td><td>${s.division || '-'}</td><td>${s.gardianName || '-'}</td><td>${s.guardianMobileNo || '-'}</td></tr>`; });
-                        $('#studentsTable tbody').html(studentRows || '<tr><td colspan="5" class="text-center text-muted">No students found.</td></tr>');
+                        initStudentTable(res.students || []);
 
-                        let teacherRows = '';
-                        res.teachers.forEach(t => { teacherRows += `<tr><td>${t.firstName} ${t.lastName}</td><td>${t.qualification || '-'}</td><td>${t.emailID || '-'}</td><td>${t.mobileNo || '-'}</td><td>${t.city || '-'}</td></tr>`; });
-                        $('#teachersTable tbody').html(teacherRows || '<tr><td colspan="5" class="text-center text-muted">No teachers found.</td></tr>');
+                        let teachersList = res.teachers || [];
+                        teachersList.forEach(function(teacher) {
+                            var fname = teacher.firstName || teacher.FirstName || '';
+                            var lname = teacher.lastName || teacher.LastName || '';
+                            teacher.FirstName = (fname + ' ' + lname).trim();
 
-                        // NAYA: Populate Volunteers
-                        let volunteerRows = '';
-                        if(res.volunteers && res.volunteers.length > 0) {
-                            res.volunteers.forEach(v => {
-                                let statusBadge = v.isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-danger-subtle text-danger">Inactive</span>';
-                                volunteerRows += `<tr><td>${v.firstName} ${v.lastName}</td><td>${v.mobileNo || '-'}</td><td>${v.email || '-'}</td><td>${statusBadge}</td><td>${new Date(v.createdDate).toLocaleDateString()}</td></tr>`; 
-                            });
-                        }
-                        $('#volunteersTable tbody').html(volunteerRows || '<tr><td colspan="5" class="text-center text-muted">No assigned volunteers found.</td></tr>');
+                            let rawDate = teacher.createdDate || teacher.CreatedDate;
+                            if (rawDate) {
+                                teacher.CreatedDate = moment(rawDate).format('DD-MMM-YYYY hh:mm A');
+                            } else {
+                                teacher.CreatedDate = "N/A";
+                            }
+                        });
+                        initTeacherTable(teachersList);
+                        initVolunteerTable(res.volunteers || []);
 
                         let logRows = '';
-                        res.logs.forEach(l => { logRows += `<tr><td><span class="badge bg-info-subtle text-info">${l.uploadType}</span></td><td>${l.fileName}</td><td><span class="badge bg-success-subtle text-success">${l.status}</span></td><td>${new Date(l.uploadedDate).toLocaleString()}</td><td><a href="${l.filePath}" target="_blank" class="btn btn-sm btn-light border"><i class="bi bi-download"></i></a></td></tr>`; });
+                        (res.logs || []).forEach(l => {
+                            logRows += `<tr><td><span class="badge bg-info-subtle text-info">${l.uploadType}</span></td><td>${l.fileName}</td><td><span class="badge bg-success-subtle text-success">${l.status}</span></td><td>${new Date(l.uploadedDate).toLocaleString()}</td><td><a href="${l.filePath}" target="_blank" class="btn btn-sm btn-light border"><i class="bi bi-download"></i></a></td></tr>`;
+                        });
                         $('#logsTable tbody').html(logRows || '<tr><td colspan="5" class="text-center text-muted">No bulk uploads recorded.</td></tr>');
                     }
+                }).fail(function() {
+                    initStudentTable([]);
+                    initTeacherTable([]);
+                    initVolunteerTable([]);
                 });
             }
 
             // AJAX Handlers for Modals using Universal API
-            $('#frmAddStudent, #frmAddTeacher').on('submit', function (e) {
+            $('#frmAddStudent, #frmAddTeacher').on('submit', function(e) {
                 e.preventDefault();
                 let $form = $(this);
                 let formData = new FormData(this);
@@ -287,27 +489,27 @@
                     data: formData,
                     processData: false,
                     contentType: false,
-                    success: function (res) {
+                    success: function(res) {
                         if (res.success) {
                             alert(res.message);
                             $form[0].reset();
-                            if(isStudent) $('#modalAddStudent').modal('hide');
+                            if (isStudent) $('#modalAddStudent').modal('hide');
                             else $('#modalAddTeacher').modal('hide');
-                            loadSchoolHubData(); 
+                            loadSchoolHubData();
                         }
                     },
-                    error: function (xhr) {
+                    error: function(xhr) {
                         alert(xhr.responseJSON?.message || "Registration failed.");
                     }
                 });
             });
 
-            $('#downloadTemplateBtn').on('click', function () {
+            $('#downloadTemplateBtn').on('click', function() {
                 let type = $('#bulkUploadType').val();
                 window.location.href = `/api/universal/download-sample/${type}`;
             });
 
-            $('#bulkUploadForm').on('submit', function (e) {
+            $('#bulkUploadForm').on('submit', function(e) {
                 e.preventDefault();
                 let file = $('#bulkExcelFile')[0].files[0];
                 let type = $('#bulkUploadType').val();
@@ -323,18 +525,441 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function (res) {
+                    success: function(res) {
                         if (res.success) {
                             alert(res.message);
                             $('#bulkUploadForm')[0].reset();
                             loadSchoolHubData();
                         }
                     },
-                    error: function (xhr) {
+                    error: function(xhr) {
                         alert(xhr.responseJSON?.message || "Upload failed.");
                     }
                 });
             });
+        });
+
+        // --- TABULATOR INITIALIZATION ---
+        function initStudentTable(data) {
+            studentTable = new Tabulator("#studentTableContainer", {
+                data: data,
+                layout: "fitColumns",
+                pagination: "local",
+                paginationSize: 10,
+                paginationSizeSelector: [10, 25, 50, 100],
+                movableColumns: true,
+                columns: [
+                    { formatter: "rownum", title: "SrNo", hozAlign: "center", width: 60 },
+                    { title: "Students ID", field: "Students ID", formatter: cell => cell.getData().studentId || cell.getData().StudentID || '-' },
+                    {
+                        title: "Student Name",
+                        field: "firstName",
+                        formatter: cell => {
+                            let d = cell.getData();
+                            return `${d.firstName || d.FirstName || ''} ${d.lastName || d.LastName || ''}`;
+                        }
+                    },
+                    { title: "City", field: "cityName", formatter: cell => cell.getData().cityName || cell.getData().CityName || '-' },
+                    { title: "Mobile Number", field: "mobileNo", formatter: cell => cell.getData().mobileNo || cell.getData().MobileNo || '-' },
+                    { title: "Gender", field: "gender", formatter: cell => cell.getData().gender || cell.getData().Gender || '-' },
+                    {
+                        title: "Std / Div",
+                        field: "standard",
+                        hozAlign: "center",
+                        formatter: cell => {
+                            let d = cell.getData();
+                            let sId = d.studentId || d.StudentID || 0;
+                            let fName = d.firstName || d.FirstName || '';
+                            let lName = d.lastName || d.LastName || '';
+                            let std = d.standard || d.Standard || '-';
+                            let div = d.division || d.Division || '-';
+                            return `<span class="text-purple fw-bold" role="button" onclick="ChangeStandard(${sId}, '${fName} ${lName}', '${std}', '${div}')"><i class="fas fa-edit small me-1 opacity-50"></i>${std}-${div}</span>`;
+                        }
+                    },
+                    { title: "Username", field: "username", formatter: cell => cell.getData().username || cell.getData().Username || '-' },
+                    { title: "Password", field: "password_", formatter: cell => cell.getData().password || cell.getData().Password || '-' },
+                    {
+                        title: "Report",
+                        field: "coins",
+                        hozAlign: "center",
+                        formatter: cell => {
+                            let d = cell.getData();
+                            let sId = d.studentId || d.StudentID || 0;
+                            let coins = d.coins || d.Coins || 0;
+                            return `<a target="_blank" href="/marks/PrintStudentScorecard?id=${sId}" class="ms-2 text-info" title="Print Scorecard"><i class="fas fa-print"></i></a>`;
+                        }
+                    },
+                    {
+                        title: "Actions",
+                        hozAlign: "center",
+                        formatter: cell => {
+                            let d = cell.getData();
+                            let sId = d.studentId || d.StudentID || 0;
+                            return `<a class="text-danger cursor-pointer" onclick="DeleteStudentRosterRow(${sId})" title="Remove Student Link"><i class="fas fa-trash-alt"></i></a>`;
+                        }
+                    },
+                    {
+                        title: "SMS",
+                        hozAlign: "center",
+                        formatter: cell => {
+                            let d = cell.getData();
+                            let sId = d.studentId || d.StudentID || 0;
+                            return `<button type="button" data-id="${sId}" class="btn btn-outline-primary btn-xs fw-bold px-2 rounded-pill SendSMSINS">Send SMS</button>`;
+                        }
+                    }
+                ],
+            });
+        }
+
+        function initTeacherTable(data) {
+            teacherTable = new Tabulator("#teacherTableContainer", {
+                data: data,
+                layout: "fitColumns",
+                pagination: "local",
+                paginationSize: 10,
+                paginationSizeSelector: [10, 25, 50, 100],
+                movableColumns: true,
+                columns: [
+                    { title: "ID", field: "teacherId", hozAlign: "center", width: 70, formatter: cell => cell.getData().teacherId || cell.getData().TeacherID || cell.getData().teacherID || "N/A" },
+                    { title: "Teacher Name", field: "FirstName", formatter: cell => cell.getData().FirstName || cell.getData().firstName || '' },
+                    { title: "Institute Name", field: "instituteName", formatter: cell => cell.getData().instituteName || cell.getData().InstituteName || "N/A" },
+                    { title: "City", field: "cityName", formatter: cell => cell.getData().cityName || cell.getData().CityName || cell.getData().city || "N/A" },
+                    { title: "Mobile", field: "mobileNo", formatter: cell => cell.getData().mobileNo || cell.getData().MobileNo || "N/A" },
+                    { title: "Gender", field: "gender", formatter: cell => cell.getData().gender || cell.getData().Gender || "N/A" },
+                    { title: "Username", field: "userName", formatter: cell => cell.getData().userName || cell.getData().UserName || "N/A" },
+                    { title: "Password", field: "password_", formatter: cell => cell.getData().password_ || cell.getData().Password_ || "N/A" },
+                    {
+                        title: "Standards",
+                        field: "standard",
+                        formatter: cell => {
+                            let std = cell.getData().standard || cell.getData().Standard;
+                            return std ? std : '<span class="badge bg-warning text-dark">Unassigned</span>';
+                        }
+                    },
+                    { title: "Registered Date", field: "CreatedDate", formatter: cell => cell.getData().CreatedDate || cell.getData().createdDate || "N/A" },
+                    {
+                        title: "Action",
+                        hozAlign: "center",
+                        headerSort: false,
+                        formatter: cell => {
+                            let r = cell.getData();
+                            let tId = r.teacherId || r.TeacherID || r.teacherID || 0;
+                            return `<a class="action-icon-btn text-danger cur-pointer" onclick="DeleteTeacher(${tId})" title="Delete"><i class="fas fa-trash-alt"></i></a>` +
+                                `<a class="action-icon-btn text-info" href="/Admin/ExportTeacherPerformanceExcel?TeacherID=${tId}&type=Teacher" title="Performance"><i class="fas fa-chart-bar"></i></a>`;
+                        }
+                    },
+                    {
+                        title: "SMS",
+                        hozAlign: "center",
+                        headerSort: false,
+                        formatter: cell => {
+                            let r = cell.getData();
+                            let tId = r.teacherId || r.TeacherID || r.teacherID || 0;
+                            return `<button type="button" data-id="${tId}" class="btn btn-outline-primary btn-xs px-2 SendSMSINSTeacher font-weight-bold rounded-pill">Send SMS</button>`;
+                        }
+                    },
+                    {
+                        title: "Assign",
+                        hozAlign: "center",
+                        headerSort: false,
+                        formatter: cell => {
+                            let r = cell.getData();
+                            let tId = r.teacherId || r.TeacherID || r.teacherID || 0;
+                            let fName = (r.FirstName || r.firstName || '').replace(/'/g, "\\'");
+                            let std = r.standard || r.Standard || '';
+                            return `<a href="#" onclick="fnAssignTeacher(${tId}, '${fName}', '${std}')" data-bs-toggle="modal" data-bs-target="#assignStandardList" class="btn btn-outline-purple btn-xs px-2 font-weight-bold rounded-pill" style="color:#6f42c1; border-color:#6f42c1;">Assign Standard</a>`;
+                        }
+                    }
+                ]
+            });
+        }
+
+        function initVolunteerTable(data) {
+            volunteerTable = new Tabulator("#volunteerTableContainer", {
+                data: data,
+                layout: "fitColumns",
+                pagination: "local",
+                paginationSize: 10,
+                columns: [
+                    { formatter: "rownum", title: "SrNo", hozAlign: "center", width: 60 },
+                    {
+                        title: "Name",
+                        field: "firstName",
+                        formatter: cell => {
+                            let v = cell.getData();
+                            return `${v.firstName || v.FirstName || ''} ${v.lastName || v.LastName || ''}`;
+                        }
+                    },
+                    { title: "Mobile", field: "mobileNo", formatter: cell => cell.getData().mobileNo || cell.getData().MobileNo || '-' },
+                    { title: "Email", field: "email", formatter: cell => cell.getData().email || cell.getData().Email || '-' },
+                    {
+                        title: "Status",
+                        field: "isActive",
+                        hozAlign: "center",
+                        formatter: cell => {
+                            let isActive = cell.getData().isActive !== undefined ? cell.getData().isActive : cell.getData().IsActive;
+                            return isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-danger-subtle text-danger">Inactive</span>';
+                        }
+                    },
+                    {
+                        title: "Added On",
+                        field: "createdDate",
+                        formatter: cell => {
+                            let dateVal = cell.getData().createdDate || cell.getData().CreatedDate;
+                            return dateVal ? new Date(dateVal).toLocaleDateString() : '-';
+                        }
+                    }
+                ]
+            });
+        }
+
+        // --- GLOBAL SEARCH FILTER FOR TABULATOR ---
+        function filterTabulator(type, query) {
+            let table = type === 'student' ? studentTable : type === 'teacher' ? teacherTable : volunteerTable;
+            if (table) {
+                if (!query) {
+                    table.clearFilter();
+                } else {
+                    table.setFilter(function(data) {
+                        return Object.values(data).some(val => val !== null && val !== undefined && String(val).toLowerCase().includes(query.toLowerCase()));
+                    });
+                }
+            }
+        }
+
+        // --- EXPORT TO EXCEL ---
+        function exportTable(type, format) {
+            let table = type === 'student' ? studentTable : type === 'teacher' ? teacherTable : volunteerTable;
+            if (table) {
+                if (format === 'xlsx') {
+                    table.download("xlsx", "DirectoryReport.xlsx", { sheetName: "Data" });
+                }
+            }
+        }
+
+        // Open Reassign Grade Modal (Student)
+        function ChangeStandard(studentID, studentName, currentStd, currentDiv) {
+            $("#hd_StudentID").val(studentID);
+            $("#lbl_Student_Name").text(studentName);
+            $("#dll_student_standard").val(currentStd);
+            $("#dv_division").val(currentDiv);
+            var standardModal = new bootstrap.Modal(document.getElementById('Dv_StandardModal'));
+            standardModal.show();
+        }
+
+        // Save Reassigned Grade (Student)
+        function setStandard() {
+            var StudentId = parseInt($("#hd_StudentID").val());
+            var Standard = $("#dll_student_standard").val();
+            var Division = $("#dv_division").val();
+
+            if (StudentId > 0 && Standard) {
+                $.ajax({
+                    type: "GET",
+                    url: '/api/school/ChangeStandard',
+                    dataType: 'json',
+                    data: { StudentId: StudentId, Standard: Standard, Division: Division },
+                    success: function(response) {
+                        if (response.success) {
+                            var modalEl = document.getElementById('Dv_StandardModal');
+                            var modal = bootstrap.Modal.getInstance(modalEl);
+                            modal.hide();
+                            Swal.fire("Assigned!", response.message, "success").then(() => { location.reload(); });
+                        } else {
+                            Swal.fire("Denied", response.message, "error");
+                        }
+                    }
+                });
+            } else {
+                Swal.fire("Info", "Please select a grade and division before continuing.", "warning");
+            }
+        }
+
+        // Unmap / Delete Student Link
+        function DeleteStudentRosterRow(StudentId) {
+            Swal.fire({
+                title: 'Unmap Student?',
+                text: "This removes the association between this student and your institution mappings.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Unmap Link'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "GET",
+                        url: '/api/school/UnmapStudent',
+                        dataType: 'json',
+                        data: { StudentId: StudentId },
+                        success: function(response) {
+                            if (response.Success) {
+                                Swal.fire("Removed!", response.Data, "success").then(() => { location.reload(); });
+                            } else {
+                                Swal.fire("Info", response.Message, "error");
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- TEACHER ACTIONS ---
+
+        // Trigger text dispatch automation workflows securely for Teachers
+        $(document).on('click', '.SendSMSINS', function() {
+            var targetBtn = $(this);
+            Swal.fire({
+                title: 'Send Details?',
+                text: "Are you sure you want to resend login credentials to this phone number?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#6f42c1',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Send SMS'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var ID = targetBtn.attr("data-id");
+                    $.post("/api/school/SendPasswordUser", { ID: ID }, function(data) {
+                        if (data == '1') {
+                            Swal.fire('Success', 'Message Sent Successfully!!', 'success');
+                        } else {
+                            Swal.fire('Info', 'Unable to send message. Please try again.', 'info');
+                        }
+                    });
+                }
+            });
+        });
+        $(document).on('click', '.SendSMSINSTeacher', function() {
+            var targetBtn = $(this);
+            Swal.fire({
+                title: 'Send Details?',
+                text: "Are you sure you want to resend login credentials to this phone number?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#6f42c1',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Send SMS'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var ID = targetBtn.attr("data-id");
+                    $.post("/api/school/SendPasswordTeacher", { ID: ID }, function(data) {
+                        if (data == '1') {
+                            Swal.fire('Success', 'Message Sent Successfully!!', 'success');
+                        } else {
+                            Swal.fire('Info', 'Unable to send message. Please try again.', 'info');
+                        }
+                    });
+                }
+            });
+        });
+        // Delete Teacher Confirmation Flow
+        function DeleteTeacher(TeacherID) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This will permanently purge this teacher from your school rosters. This action cannot be reversed!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Delete'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "GET",
+                        url: '/api/school/deleteteacher',
+                        data: { TeacherID: TeacherID },
+                        dataType: 'json',
+                        success: function(result) {
+                            if (result.Success) {
+                                Swal.fire('Success!', result.Message, 'success').then(() => { location.reload(); });
+                            } else {
+                                Swal.fire('Info', result.Message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Exception Caught', 'Relational integrity constraints blocked immediate elimination.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        // Open Assign Standards Modal for Teacher
+        function fnAssignTeacher(teacherId, teacherName, standard) {
+            $('#dll_Standard').multiselect("clearSelection");
+            $('#teacherName').text(teacherName);
+            $('#teacherId').val(teacherId);
+            if (standard) {
+                var standardArray = standard.split(',');
+                $('#dll_Standard').multiselect('select', standardArray);
+            }
+        }
+
+        // Submit Assigned Standards for Teacher
+            function fnSubmitStandardToTeacher() {
+                var teacherId = $('#teacherId').val();
+                var standarddata = [];
+
+                var selectedStandard = $("#dll_Standard")[0];
+                if (selectedStandard && selectedStandard.selectedOptions) {
+                    for (var i = 0; i < selectedStandard.selectedOptions.length; i++) {
+                        standarddata.push(selectedStandard.selectedOptions[i].text);
+                    }
+                }
+
+                if (standarddata.length == 0) {
+                    Swal.fire('Selection Empty', 'Please match at least 1 grade standard subset row to proceed.', 'warning');
+                    return false;
+                }
+
+                var standard = standarddata.join();
+
+                $.ajax({
+                    type: "GET",
+                    url: '/api/school/assign-standards',
+                    data: { teacherId: teacherId, standard: standard },
+                    dataType: 'json',
+                    success: function(result) {
+                        // Support both camelCase (JSON default) and PascalCase property returns
+                        let isSuccess = result.success !== undefined ? result.success : result.Success;
+                        let messageText = result.message || result.Message || "Standards assigned successfully.";
+
+                        if (isSuccess) {
+                            var modalEl = document.getElementById('assignStandardList');
+                            var modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) {
+                                modal.hide();
+                            } else {
+                                // Fallback cleanup if instance wasn't stored
+                                $('#assignStandardList').modal('hide');
+                                $('.modal-backdrop').remove();
+                                $('body').removeClass('modal-open');
+                            }
+
+                            Swal.fire('Assigned!', messageText, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Info', messageText, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire('Error', xhr.responseJSON?.message || 'An execution anomaly halted standard directory updates.', 'error');
+                    }
+                });
+            }
+        $selectElement.multiselect({
+            nonSelectedText: 'Select Assigned Grades',
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            filterPlaceholder: 'Search class records...',
+            maxHeight: 250,
+            buttonClass: 'btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between',
+            // Force Bootstrap 5 dropdown toggle attribute
+            templates: {
+                button: '<button type="button" class="multiselect dropdown-toggle btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between" data-bs-toggle="dropdown" aria-expanded="false"><span class="multiselect-selected-text"></span></button>'
+            }
         });
     </script>
 }

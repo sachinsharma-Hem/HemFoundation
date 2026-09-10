@@ -197,8 +197,23 @@ namespace HemFoundation.Controllers
             List<object> list = new List<object>();
             try
             {
-                int userId = 1;
-                int.TryParse(HttpContext.Session.GetString("UserId"), out userId);
+                int userId = HttpContext.Session.GetInt32("TempStudentID") ?? 0;
+
+                if (userId == 0)
+                {
+                    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (!string.IsNullOrEmpty(userIdClaim))
+                    {
+                        int.TryParse(userIdClaim, out userId);
+                    }
+                }
+                if (userId == null || userId == 0)
+                {
+
+                    list.Add("0");
+                    list.Add("Session expired. Please login again.");
+                    return Json(list);
+                }
                 int pracIdInt = Convert.ToInt32(PracID);
                 int game24IdInt = Convert.ToInt32(Game24ID);
                 int gameTopicIdInt = Convert.ToInt32(GameTopicID);
@@ -231,15 +246,15 @@ namespace HemFoundation.Controllers
                 };
                 _context.Game24Solution.Add(solution);
 
-                var coinRecord = new WJ_Coins
-                {
-                    StudentID = userId,
-                    CoinFor = "Game24",
-                    ReferenceID = courseIdInt, // assign int, not string
-                    Coins = 0,
-                    CreatedOn = DateTime.Now
-                };
-                _context.WJ_Coins.Add(coinRecord);
+                //var coinRecord = new WJ_Coins
+                //{
+                //    StudentID = userId,
+                //    CoinFor = "Game24",
+                //    ReferenceID = courseIdInt, // assign int, not string
+                //    Coins = 0,
+                //    CreatedOn = DateTime.Now
+                //};
+                //_context.WJ_Coins.Add(coinRecord);
 
                 await _context.SaveChangesAsync();
 
@@ -271,8 +286,13 @@ namespace HemFoundation.Controllers
             }
             catch (Exception ex)
             {
-                list.Add(ex.Message);
+                string errorMsg = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    errorMsg += " " + ex.InnerException.Message;
+                }
                 list.Add("Something went wrong...");
+                list.Add(errorMsg);
             }
             return Json(list);
         }

@@ -262,13 +262,22 @@
             url: '@Url.Action("Save24ForSkip", "Game24")',
             data: { game24ID: R, gameTopicID: k, cID: CourseID, solutionAnswers: 'NA', pracID: @ViewBag.PracticleID },
             success: function(response) {
-                resetGame();
-                setTimeout(function() {
-                    btn_Next();
+                if (response[0] == "1" || response[0] == "0") {
+                    Swal.fire("Congrats!", response[1], "success");
+                    resetGame();
                     setTimeout(function() {
-                        location.reload();
+                        window.location = '@Url.Action("Index", "Learn")';
                     }, 2000);
-                }, 2000);
+                } else {
+                    Swal.fire("Info", response[1], "info");
+                    resetGame();
+                    setTimeout(function() {
+                        btn_Next();
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    }, 2000);
+                }
             },
             error: function(response) {
                 alert("Error: " + JSON.stringify(response));

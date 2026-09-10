@@ -15,20 +15,20 @@ namespace HemFoundation.Models.Entities
         }
 
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         [Column("teacherid")]
-        [ForeignKey("Users")]
         public int TeacherID { get; set; }
 
         [Column("standard")]
-        public string Standard { get; set; }
+        public string? Standard { get; set; }
 
         [Column("division")]
-        public string Division { get; set; }
+        public string? Division { get; set; }
 
         [Column("profileurl")]
-        public string ProfileUrl { get; set; }
+        public string? ProfileUrl { get; set; }
 
-       
+        [ForeignKey("TeacherID")]
         public virtual Users Users { get; set; }
 
         public virtual ICollection<WJ_TeacherAssociates> WJ_TeacherAssociates { get; set; }

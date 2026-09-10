@@ -279,6 +279,19 @@
             var Question = '@Html.Raw(ViewBag.Question)';
             var pp = humanize(Question);
             document.getElementById("lblquest").innerHTML = pp;
+            var serverMessage = '@TempData["Message"]';
+            if (serverMessage === "All scramble questions are already answered or not available.") {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Already Submitted',
+                    text: serverMessage,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                setTimeout(function() {
+                    window.location.href = '/learn/index';
+                }, 1500);
+            }
         });
 
         function CheckValueMaxLength(obj) {
@@ -360,19 +373,40 @@
                                 window.location.href = '/learn/index';
                             }, 1000);
                         } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: data ? data.message : 'Unknown error',
-                                confirmButtonColor: '#0284c7'
-                            });
-                            $submitBtn.prop('disabled', false);
+                           
+                            if (data.message = "Answer already submitted.")
+                            {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: data.message,
+                                    timer: 1000,
+                                    showConfirmButton: false
+                                });
+                                setTimeout(function() {
+                                    window.location.href = '/learn/index';
+                                }, 1000);
+                                $submitBtn.prop('disabled', true);
+                            }
+                            else
+                            {
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: 'Info',
+                                    text: data ? data.message : 'Unknown error',
+                                    confirmButtonColor: '#0284c7'
+                                });
+                                $submitBtn.prop('disabled', false);
+                            }
+
+                           
+                            
                         } 
                     },
                     error: function() {
                         Swal.fire({
-                            icon: 'error',
-                            title: 'Failed',
+                            icon: 'Info',
+                            title: 'Info',
                             text: 'Failed to submit the answer. Please try again.',
                             confirmButtonColor: '#0284c7'
                         });
@@ -416,20 +450,39 @@
                                 window.location.href = '/learn/index';
                             }, 3000);
                         } else {
-                            
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data ? data.message : 'Unknown error',
-                            confirmButtonColor: '#0284c7'
-                        });
+
+
+
+                        if (data.message = "Answer already submitted.") {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: data.message,
+                                timer: 1000,
+                                showConfirmButton: false
+                            });
+                            setTimeout(function() {
+                                window.location.href = '/learn/index';
+                            }, 1000);
+                            $submitBtn.prop('disabled', true);
+                        }
+                        else {
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Info',
+                                text: data ? data.message : 'Unknown error',
+                                confirmButtonColor: '#0284c7'
+                            });
                             $submitBtn.prop('disabled', false);
+                        }
+                            
+                       
                         }
                     },
                     error: function() {
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Failed',
+                        icon: 'info',
+                        title: 'Info',
                         text: 'Failed to submit the answer. Please try again.',
                         confirmButtonColor: '#0284c7'
                     });
