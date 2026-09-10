@@ -138,6 +138,8 @@ namespace HemFoundation.Data
         public DbSet<TeacherActivityLog> TeacherActivityLogs { get; set; }
         public DbSet<ValueCertification> ValueCertifications { get; set; }
         public DbSet<StudentActivityLog> StudentActivityLogs { get; set; }
+
+        public DbSet<View_HF_Affiliate> View_HF_Affiliate { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -147,7 +149,9 @@ namespace HemFoundation.Data
             var seedDate = DateTime.SpecifyKind(new DateTime(2026, 1, 1), DateTimeKind.Utc);
 
             builder.Entity<QuizCourseLevels>().HasNoKey();
-
+            builder.Entity<View_HF_Affiliate>()
+    .HasNoKey()
+    .ToView("view_hf_affiliate");
             builder.Entity<SchoolProfileDetailsDto>(entity =>
             {
                 entity.HasNoKey();

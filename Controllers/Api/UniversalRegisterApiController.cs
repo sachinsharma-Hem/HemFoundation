@@ -102,13 +102,20 @@ namespace HemFoundation.Controllers.Api
 
             // 1. Create AspNetUser & Role mapping cleanly via Utility helper method (Bypassing EF Core translation bugs)
             string aspNetUserId = await HemFoundation.Common.Utility.CreateIdentityUserRawAsync(_context, uniqueUsername, model.EmailID, baseMobile, roleName);
-
+            // Convert gender to database format
+            string? genderCode = gender?.Trim().ToLower() switch
+            {
+                "male" => "1",
+                "female" => "2",
+                "other" => "3",
+                _ => null
+            };
             // 2. Create entry in core [Users] table to generate shared Primary Key (UserID)
             var coreUser = new HemFoundation.Models.Entities.Users
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                Gender = gender,
+                Gender = genderCode,
                 MobileNo = baseMobile,
                 EmailID = model.EmailID,
                 IsActive = true,
@@ -143,20 +150,32 @@ namespace HemFoundation.Controllers.Api
                 if (inst != null) mappedInstituteId = inst.InstituteID;
             }
 
-            // 3. Role-specific table mapping and relationship handling
-            if (roleName == "School" || roleName == "Institute")
+            if (roleName == "WJ_School")
             {
                 var institute = new WJ_Institutes
                 {
                     InstituteID = generatedUserId,
+
+                    // Database expects "School" here
                     InstituteType = "School",
+
+                    // School / Institute name
                     Name = model.OrganisationName ?? "N/A",
+
                     TypeOfOrganisation = model.TypeOfOrganisation ?? "N/A",
+
                     ProfileUrl = photoUrl,
+
                     IsActive = true,
+
                     IsVerify = false,
-                    ReferralCode = referredBy
+
+                    // Affiliate referral code / referred-by code
+                    ReferralCode = string.IsNullOrWhiteSpace(referredBy)
+                        ? null
+                        : referredBy.Trim()
                 };
+
                 _context.WJ_Institutes.Add(institute);
             }
             else if (roleName == "WJ_Students")
@@ -174,13 +193,16 @@ namespace HemFoundation.Controllers.Api
                     IsPaid = false,
                     SharingPermission = false
                 };
+
                 _context.WJ_Students.Add(student);
 
-                // Process referral and association mapping if referral code is provided
+                // Process referral and association mapping
                 if (!string.IsNullOrEmpty(referredBy))
                 {
                     var refCodeRecord = await _context.WJ_ReferralCodes
-                        .FirstOrDefaultAsync(rc => rc.ReferralCode == referredBy && rc.IsActive == true);
+                        .FirstOrDefaultAsync(rc =>
+                            rc.ReferralCode == referredBy &&
+                            rc.IsActive == true);
 
                     if (refCodeRecord != null)
                     {
@@ -191,23 +213,26 @@ namespace HemFoundation.Controllers.Api
 
                         if (isInstitute)
                         {
-                            _context.WJ_StudentAssociates.Add(new WJ_StudentAssociates
-                            {
-                                StudentID = generatedUserId,
-                                InstituteID = referralUserId,
-                                IsPrimaryAssociate = true
-                            });
+                            _context.WJ_StudentAssociates.Add(
+                                new WJ_StudentAssociates
+                                {
+                                    StudentID = generatedUserId,
+                                    InstituteID = referralUserId,
+                                    IsPrimaryAssociate = true
+                                });
                         }
                     }
                 }
-                else if (mappedInstituteId.HasValue && mappedInstituteId.Value > 0)
+                else if (mappedInstituteId.HasValue &&
+                         mappedInstituteId.Value > 0)
                 {
-                    _context.WJ_StudentAssociates.Add(new WJ_StudentAssociates
-                    {
-                        StudentID = generatedUserId,
-                        InstituteID = mappedInstituteId.Value,
-                        IsPrimaryAssociate = true
-                    });
+                    _context.WJ_StudentAssociates.Add(
+                        new WJ_StudentAssociates
+                        {
+                            StudentID = generatedUserId,
+                            InstituteID = mappedInstituteId.Value,
+                            IsPrimaryAssociate = true
+                        });
                 }
             }
             else if (roleName == "WJ_Teacher")
@@ -219,29 +244,40 @@ namespace HemFoundation.Controllers.Api
                     Division = division,
                     ProfileUrl = photoUrl
                 };
+
                 _context.WJ_Teachers.Add(teacher);
 
-                if (mappedInstituteId.HasValue && mappedInstituteId.Value > 0)
+                if (mappedInstituteId.HasValue &&
+                    mappedInstituteId.Value > 0)
                 {
-                    _context.WJ_TeacherAssociates.Add(new WJ_TeacherAssociates
-                    {
-                        TeacherID = generatedUserId,
-                        InstituteID = mappedInstituteId.Value,
-                        IsPrimaryAssociate = true
-                    });
+                    _context.WJ_TeacherAssociates.Add(
+                        new WJ_TeacherAssociates
+                        {
+                            TeacherID = generatedUserId,
+                            InstituteID = mappedInstituteId.Value,
+                            IsPrimaryAssociate = true
+                        });
                 }
             }
-            else if (roleName == "Affiliate")
+            else if (roleName == "WJ_Affiliate")
             {
                 var affiliate = new WJ_Institutes
                 {
                     InstituteID = generatedUserId,
+
                     SocialOrgName = model.OrganisationName ?? "N/A",
+
                     TypeOfOrganisation = model.TypeOfOrganisation ?? "N/A",
+
                     ProfileUrl = photoUrl,
+
                     InstituteType = "Affiliate",
-                    IsActive = true
+
+                    IsActive = 1,
+
+                    IsVerify = false
                 };
+
                 _context.WJ_Institutes.Add(affiliate);
             }
 
@@ -489,14 +525,21 @@ namespace HemFoundation.Controllers.Api
 
             return Ok(new { success = true, message = $"{roleName} registered successfully!" });
         }
-
         [HttpGet("affiliates-list")]
         public async Task<IActionResult> GetAffiliatesList()
         {
-            var list = await _context.Affiliates
-                .Where(a => a.IsActive)
-                .Select(a => new { id = a.UserCode, name = $"{a.FirstName} {a.LastName} ({a.OrganisationName})" })
+            var list = await _context.View_HF_Affiliate
+                .AsNoTracking()
+                .Where(x => x.SchoolCount >= 5)
+                .Select(x => new
+                {
+                    id = x.InstituteID,
+                    name = (x.FirstName ?? "") + " " + (x.LastName ?? "")
+                })
+                .Distinct()
+                .OrderBy(x => x.name)
                 .ToListAsync();
+
             return Ok(list);
         }
 
@@ -511,9 +554,6 @@ namespace HemFoundation.Controllers.Api
             return Ok(list);
         }
 
-        // ====================================================================
-        // NAYE APIS: Bulk Upload, Sample Download, Aur School Lists ke liye
-        // ====================================================================
 
         [HttpPost("bulk-upload")]
         public async Task<IActionResult> BulkUpload([FromForm] IFormFile excelFile, [FromForm] string uploadType)
