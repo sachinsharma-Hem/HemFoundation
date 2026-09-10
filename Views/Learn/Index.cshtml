@@ -770,6 +770,8 @@
                 data: { mainCourseId: mcId },
                 success: function(courses) {
                     var html = '';
+                    var savedCourseId = localStorage.getItem('last_active_course_id');
+                    var savedCourseJson = null;
                     if (courses && courses.length > 0) {
                         $.each(courses, function(i, c) {
                             var statusValue = c.status || c.Status || 'Start';
@@ -780,8 +782,16 @@
                             var courseIdVal = c.courseID || c.CourseID;
                             var courseNameVal = c.courseName || c.CourseName;
 
+                            var serializedCourseStr = escape(JSON.stringify(c));
+
+                            // If this fetched course matches our last active course, update the fresh JSON storage!
+                            if (savedCourseId && parseInt(courseIdVal) === parseInt(savedCourseId)) {
+                                savedCourseJson = serializedCourseStr;
+                                localStorage.setItem('last_active_course_json', serializedCourseStr);
+                            }
+
                             html += '<a href="javascript:void(0);" class="week-nav-card ' + isLocked + ' week-trigger-' + courseIdVal + '" ' +
-                                'onclick="activateWorkspaceStage(' + courseIdVal + ', ' + mcId + ', ' + globalWeekIndex + ', \'' + escape(JSON.stringify(c)) + '\')">' +
+                                'onclick="activateWorkspaceStage(' + courseIdVal + ', ' + mcId + ', ' + globalWeekIndex + ', \'' + serializedCourseStr + '\')">' +
                                 '<div class="indicator-dot dot-' + statusClass + '"></div>' +
                                 '<div style="flex-grow:1; display:flex; justify-content:space-between; align-items:center; padding-right:8px;">' +
                                 '<span style="font-size:13px; font-weight:600; color:var(--slate-800);">' + courseNameVal + '</span>' +
@@ -794,15 +804,35 @@
                         html = '<div class="p-sm text-center text-muted small">No weeks loaded.</div>';
                     }
                     targetContainer.html(html);
+                   // var savedCourseId = localStorage.getItem('last_active_course_id');
+                    var savedMcId = localStorage.getItem('last_active_mc_id');
+                    var savedWeekIndex = localStorage.getItem('last_active_week_index');
+                   /// var savedCourseJson = localStorage.getItem('last_active_course_json');
+
+                    if (savedCourseId && savedMcId && savedCourseJson && parseInt(savedMcId) === parseInt(mcId)) {
+                        // Check if this container contains the saved course
+                        if ($('#sidebar-weeks-container-' + mcId + ' .week-trigger-' + savedCourseId).length > 0) {
+                            // Expand the parent accordion collapse section
+                            $('#collapse-mc-' + mcId).show();
+                            // Trigger activation smoothly after a short DOM tick
+                            setTimeout(function() {
+                                activateWorkspaceStage(parseInt(savedCourseId), parseInt(savedMcId), parseInt(savedWeekIndex || 1), savedCourseJson);
+                            }, 50);
+                        }
+                    }
                 }
             });
         }
 
         function activateWorkspaceStage(courseId, mcId, weekIndex, escapedCourseObj) {
+            debugger
             var courseData = JSON.parse(unescape(escapedCourseObj));
             var isLockedVal = courseData.isLocked !== undefined ? courseData.isLocked : courseData.IsLocked;
             var lockMsgVal = courseData.lockReasonMessage || courseData.LockReasonMessage || "Please finish previous items before moving forward.";
-
+            localStorage.setItem('last_active_course_id', courseId);
+              localStorage.setItem('last_active_mc_id', mcId);
+          localStorage.setItem('last_active_week_index', weekIndex);
+          localStorage.setItem('last_active_course_json', escapedCourseObj);
             if (isLockedVal) {
                 Swal.fire({
                     title: 'Section Locked',
@@ -1040,7 +1070,7 @@
                     html += '<div class="activity-card-footer">';
                     if (resVal && resVal.trim() !== '' && resVal !== 'NULL') {
                         var cleanRes = resVal.replace(/^~\//, 'https://www.hemvirtues.in/');
-                        html += '<a href="' + cleanRes + '" download class="btn btn-action-pill btn-pill-secondary" onclick="event.stopPropagation()"><i class="fa fa-download"></i> Resources</a>';
+                        html += '<a href="' + cleanRes + '" download class="btn btn-action-pill btn-pill-secondary" target="blank" onclick="event.stopPropagation()"><i class="fa fa-download"></i> Resources</a>';
                     }
                     if (trainerVidVal && trainerVidVal.trim() !== '' && trainerVidVal !== 'NULL') {
                         var tutorialCleanUrl = trainerVidVal.replace(/^~\//, 'https://www.hemvirtues.in/');
