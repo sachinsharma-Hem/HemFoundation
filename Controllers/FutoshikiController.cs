@@ -178,12 +178,13 @@ namespace HemFoundation.Controllers
                         }
                     }
 
-                    string postData = "INSERT INTO futoshiki_answer(fid, courseid, iscreatedby) VALUES (@FID, @CourseID, @UserID)";
+                    string postData = "INSERT INTO futoshiki_answer(fid, courseid, iscreatedby,submittime,isanswer) VALUES (@FID, @CourseID, @UserID,@Datetime,1)";
                     using (var insertCommand = new NpgsqlCommand(postData, conn))
                     {
                         insertCommand.Parameters.AddWithValue("@FID", Convert.ToInt32(FID));
                         insertCommand.Parameters.AddWithValue("@CourseID", Convert.ToInt32(CourseID));
                         insertCommand.Parameters.AddWithValue("@UserID", userId);
+                        insertCommand.Parameters.AddWithValue("@Datetime", DateTime.Now);
 
                         int rowsAffected = await insertCommand.ExecuteNonQueryAsync();
 
@@ -272,12 +273,13 @@ namespace HemFoundation.Controllers
                         }
                     }
 
-                    string postData = "INSERT INTO futoshiki_answer(fid, courseid, iscreatedby) VALUES (@FID, @CourseID, @UserID)";
+                    string postData = "INSERT INTO futoshiki_answer(fid, courseid, iscreatedby,submittime,isanswer) VALUES (@FID, @CourseID, @UserID,@Datetime,0)";
                     using (var insertCommand = new NpgsqlCommand(postData, conn))
                     {
                         insertCommand.Parameters.AddWithValue("@FID", Convert.ToInt32(FID));
                         insertCommand.Parameters.AddWithValue("@CourseID", Convert.ToInt32(CourseID));
                         insertCommand.Parameters.AddWithValue("@UserID", userId);
+                        insertCommand.Parameters.AddWithValue("@Datetime",DateTime.Now );
 
                         int rowsAffected = await insertCommand.ExecuteNonQueryAsync();
 

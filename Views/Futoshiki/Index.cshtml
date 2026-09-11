@@ -400,6 +400,14 @@
                         window.location = '/learn/index';
                     }, 3000);
                 }
+                else {
+                    Swal.fire({
+                        title: "Info!",
+                        text: data[1],
+                        icon: "info"
+                    });
+
+                }
             },
             error: function() {
                 $checkBtn.removeClass('disabled').css('pointer-events', 'auto');
@@ -414,19 +422,47 @@
             type: "POST",
             data: { FID: FutoshikiID, CourseID: GetCID, PractID: @ViewBag.PracticleID },
             success: function(data) {
-                if (data[0] == "OK") {
-                    setTimeout(function() {
-                        btn_Next();
-                    }, 2000);
-                } else if (data[0] == "RNOTOk") {
+                if (data[0] === "OK") {
+                    // If saving was successful
                     if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
-                        Swal.fire({ title: "Congrats!", text: "You have completed all games....", icon: "success" });
+                        Swal.fire({
+                            title: "Success!",
+                            text: "Record saved successfully..",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        alert("Record saved successfully..");
+                        location.reload();
+                    }
+                }
+                else if (data[0] === "RNOTOk") {
+                    // If all games are completed
+                    if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                        Swal.fire({
+                            title: "Fantastic Job!",
+                            text: "You have completed all games....",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '/learn/index';
+                        });
                     } else {
                         alert("You have completed all games....");
+                        window.location.href = '/learn/index';
                     }
-                    setTimeout(function() {
-                        window.location = '/learn/index';
-                    }, 3000);
+                }
+                else {
+                    Swal.fire({
+                        title: "Info!",
+                        text: data[1],
+                        icon: "info"
+                    });
+
                 }
             }
         });

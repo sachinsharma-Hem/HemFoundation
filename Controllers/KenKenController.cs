@@ -216,12 +216,13 @@ namespace HemFoundation.Controllers
                 {
                     try
                     {
-                        string insertAnswersQuery = "INSERT INTO ken_answers (kmid, courseid, iscreatedby) VALUES (@KMID, @CourseID, @UserID)";
+                        string insertAnswersQuery = "INSERT INTO ken_answers (kmid, courseid, iscreatedby,submittime,isanswer) VALUES (@KMID, @CourseID, @UserID,@Datetime,1)";
                         using (var insertCommand = new NpgsqlCommand(insertAnswersQuery, conn, transaction))
                         {
                             insertCommand.Parameters.AddWithValue("@KMID", Convert.ToInt32(KMID));
                             insertCommand.Parameters.AddWithValue("@CourseID", Convert.ToInt32(CourseID));
                             insertCommand.Parameters.AddWithValue("@UserID", userId);
+                            insertCommand.Parameters.AddWithValue("@Datetime", DateTime.Now);
 
                             int rowsAffected = await insertCommand.ExecuteNonQueryAsync();
 
@@ -321,13 +322,14 @@ namespace HemFoundation.Controllers
                         }
                     }
 
-                    string postData = "INSERT INTO ken_answers(kmid, courseid, iscreatedby) VALUES (@KMID, @CourseID, @UserID)";
+                    string postData = "INSERT INTO ken_answers(kmid, courseid, iscreatedby,submittime,isanswer) VALUES (@KMID, @CourseID, @UserID,@Datetime,0)";
                     int rowsAffected = 0;
                     using (var insertCommand = new NpgsqlCommand(postData, conn))
                     {
                         insertCommand.Parameters.AddWithValue("@KMID", Convert.ToInt32(KMID));
                         insertCommand.Parameters.AddWithValue("@CourseID", Convert.ToInt32(CourseID));
                         insertCommand.Parameters.AddWithValue("@UserID", userId);
+                        insertCommand.Parameters.AddWithValue("@Datetime", DateTime.Now);
                         rowsAffected = await insertCommand.ExecuteNonQueryAsync();
                     }
 
