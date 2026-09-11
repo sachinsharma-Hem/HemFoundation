@@ -665,24 +665,47 @@
             type: "POST",
             data: { KMID: GlobalKMID, CourseID: CourseID, PractID: GetPractID },
             success: function(data) {
-                if (data[0] == "OK") {
+                if (data[0] === "OK") {
+                    // If saving was successful
                     if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
-                        Swal.fire({ title: "Congrats!", text: "Record saved successfully..", icon: "success" });
+                        Swal.fire({
+                            title: "Success!",
+                            text: "Record saved successfully..",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
                     } else {
-                        alert("Congrats! Record saved successfully..");
+                        alert("Record saved successfully..");
+                        location.reload();
                     }
-                    setTimeout(function() {
-                        btn_Next();
-                    }, 3000);
-                } else if (data[0] == "RNOTOk") {
+                }
+                else if (data[0] === "RNOTOk") {
+                    // If all games are completed
                     if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
-                        Swal.fire({ title: "Congrats!", text: "You have completed all games....", icon: "success" });
+                        Swal.fire({
+                            title: "Fantastic Job!",
+                            text: "You have completed all games....",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '/learn/index';
+                        });
                     } else {
-                        alert("Congrats! You have completed all games....");
+                        alert("You have completed all games....");
+                        window.location.href = '/learn/index';
                     }
-                    setTimeout(function() {
-                        window.location = '/learn/index';
-                    }, 5000);
+                }
+                else {
+                    Swal.fire({
+                        title: "Info!",
+                        text: data[1],
+                        icon: "info"
+                    });
+
                 }
             },
             error: function() {
@@ -697,12 +720,48 @@
             type: "POST",
             data: { KMID: GlobalKMID, CourseID: CourseID, PractID: GetPractID },
             success: function(data) {
-                if (data[0] == "OK") {
-                    btn_Next();
-                } else if (data[0] == "RNOTOk") {
-                    setTimeout(function() {
-                        window.location = '/learn/index';
-                    }, 5000);
+                if (data[0] === "OK") {
+                    // If saving was successful
+                    if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                        Swal.fire({
+                            title: "Success!",
+                            text: "Record saved successfully..",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        alert("Record saved successfully..");
+                        location.reload();
+                    }
+                }
+                else if (data[0] === "RNOTOk") {
+                    // If all games are completed
+                    if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                        Swal.fire({
+                            title: "Fantastic Job!",
+                            text: "You have completed all games....",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '/learn/index';
+                        });
+                    } else {
+                        alert("You have completed all games....");
+                        window.location.href = '/learn/index';
+                    }
+                }
+                else
+                {
+                    Swal.fire({
+                        title: "Info!",
+                        text: data[1],
+                        icon: "info"
+                    });
+
                 }
             }
         });

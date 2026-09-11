@@ -3,8 +3,41 @@
   "WorkspaceRootPath": "H:\\Sachin\\Project\\HemFoundation\\",
   "Documents": [
     {
+<<<<<<< Updated upstream
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\shared\\partials\\_herosection.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\shared\\partials\\_herosection.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+=======
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\teacherhandout\\display.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\teacherhandout\\display.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\dashboard\\partials\\_teacherdashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\dashboard\\partials\\_teacherdashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\reportcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\reportcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\kenkencontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\kenkencontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\futoshikicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\futoshikicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\kenken\\kenkenindex.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\kenken\\kenkenindex.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\futoshiki\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\futoshiki\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\game24controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\game24controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+>>>>>>> Stashed changes
     },
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\account\\register.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -22,7 +55,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
+<<<<<<< Updated upstream
           "SelectedChildIndex": 4,
+=======
+          "SelectedChildIndex": 1,
+>>>>>>> Stashed changes
           "Children": [
             {
               "$type": "Bookmark",
@@ -47,7 +84,34 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Display.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\TeacherHandout\\Display.cshtml",
+              "RelativeDocumentMoniker": "Views\\TeacherHandout\\Display.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\TeacherHandout\\Display.cshtml",
+              "RelativeToolTip": "Views\\TeacherHandout\\Display.cshtml",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAABkAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-11T07:16:54.39Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ReportController.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\ReportController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ReportController.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\ReportController.cs",
+              "RelativeToolTip": "Controllers\\ReportController.cs",
+              "ViewState": "AgIAAIoAAAAAAAAAAAAYwKEAAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T06:39:49.019Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
+<<<<<<< Updated upstream
               "Title": "Register.cshtml",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Account\\Register.cshtml",
               "RelativeDocumentMoniker": "Views\\Account\\Register.cshtml",
@@ -70,6 +134,207 @@
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-09-11T06:17:57.838Z",
               "EditorCaption": ""
+=======
+              "Title": "_TeacherDashboard.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Dashboard\\Partials\\_TeacherDashboard.cshtml",
+              "RelativeDocumentMoniker": "Views\\Dashboard\\Partials\\_TeacherDashboard.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Dashboard\\Partials\\_TeacherDashboard.cshtml",
+              "RelativeToolTip": "Views\\Dashboard\\Partials\\_TeacherDashboard.cshtml",
+              "ViewState": "AgIAADMAAAAAAAAAAAAAAEMAAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-11T06:39:21.164Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "KenKenController.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\KenKenController.cs",
+              "RelativeDocumentMoniker": "Controllers\\KenKenController.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\KenKenController.cs",
+              "RelativeToolTip": "Controllers\\KenKenController.cs",
+              "ViewState": "AgIAADkBAAAAAAAAAAAIwEsBAABZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T06:21:45.525Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "KenKenIndex.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\KenKen\\KenKenIndex.cshtml",
+              "RelativeDocumentMoniker": "Views\\KenKen\\KenKenIndex.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\KenKen\\KenKenIndex.cshtml",
+              "RelativeToolTip": "Views\\KenKen\\KenKenIndex.cshtml",
+              "ViewState": "AgIAAJYCAAAAAAAAAAAYwL4CAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-11T06:21:44.757Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "FutoshikiController.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\FutoshikiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\FutoshikiController.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\FutoshikiController.cs",
+              "RelativeToolTip": "Controllers\\FutoshikiController.cs",
+              "ViewState": "AgIAAAsBAAAA6MzMzMwJwBkBAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T04:55:33.065Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Futoshiki\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Futoshiki\\Index.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Futoshiki\\Index.cshtml",
+              "RelativeToolTip": "Views\\Futoshiki\\Index.cshtml",
+              "ViewState": "AgIAAIEBAAAAAAAAAAAowIsBAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-11T04:54:34.183Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Game24\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Game24\\Index.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Game24\\Index.cshtml",
+              "RelativeToolTip": "Views\\Game24\\Index.cshtml",
+              "ViewState": "AgIAAP0AAAAAuMzMzMwIwBYBAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-10T11:56:01.108Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Game24Controller.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Game24Controller.cs",
+              "RelativeDocumentMoniker": "Controllers\\Game24Controller.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Game24Controller.cs",
+              "RelativeToolTip": "Controllers\\Game24Controller.cs",
+              "ViewState": "AgIAALYAAAAAAAAAAAASwMMAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-10T11:55:54.966Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Scramble\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Scramble\\Index.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Scramble\\Index.cshtml",
+              "RelativeToolTip": "Views\\Scramble\\Index.cshtml",
+              "ViewState": "AgIAAA8BAAAAz8zMzAwkwBoBAABgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-10T11:30:53.999Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Dashboard\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Dashboard\\Index.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Dashboard\\Index.cshtml",
+              "RelativeToolTip": "Views\\Dashboard\\Index.cshtml",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAACwAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-10T11:20:53.6Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "UniversalRegisterApiController.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\UniversalRegisterApiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Api\\UniversalRegisterApiController.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\UniversalRegisterApiController.cs",
+              "RelativeToolTip": "Controllers\\Api\\UniversalRegisterApiController.cs",
+              "ViewState": "AgIAAE8CAAAAAAAAAAAmwGYCAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-10T11:16:32.358Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Learn\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Learn\\Index.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Learn\\Index.cshtml",
+              "RelativeToolTip": "Views\\Learn\\Index.cshtml",
+              "ViewState": "AgIAAEMEAAAAAAAAAADgv1QEAAC6AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-10T10:25:47.786Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "LearnController.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\LearnController.cs",
+              "RelativeDocumentMoniker": "Controllers\\LearnController.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\LearnController.cs",
+              "RelativeToolTip": "Controllers\\LearnController.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAABgAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-10T10:25:42.305Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "WJ_Teacher.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\WJ_Teacher.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\WJ_Teacher.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\WJ_Teacher.cs",
+              "RelativeToolTip": "Models\\Entities\\WJ_Teacher.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-10T10:16:07.878Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "SchoolApiController.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\SchoolApiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Api\\SchoolApiController.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\SchoolApiController.cs",
+              "RelativeToolTip": "Controllers\\Api\\SchoolApiController.cs",
+              "ViewState": "AgIAAAABAAAAmZmZmZkowI4BAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-10T10:09:16.896Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Registration\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Registration\\Index.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Registration\\Index.cshtml",
+              "RelativeToolTip": "Views\\Registration\\Index.cshtml",
+              "ViewState": "AgIAAKYBAAAAQGZmZmbiv70BAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-10T08:31:21.381Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Role\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Role\\Index.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Role\\Index.cshtml",
+              "RelativeToolTip": "Views\\Role\\Index.cshtml",
+              "ViewState": "AgIAAFEBAAAAWGZmZmYUwBQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-10T08:30:42.624Z"
+>>>>>>> Stashed changes
             }
           ]
         }
