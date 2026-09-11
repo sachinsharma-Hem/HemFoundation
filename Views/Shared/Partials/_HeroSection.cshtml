@@ -61,14 +61,53 @@
 <section class="py-4 py-lg-5 bg-light">
     <div class="container-fluid">
         <!-- Main White Card -->
-        <div class="bg-white rounded-4 shadow-sm border p-3 p-md-4">
+        <style>
+                    /* Modern Glassmorphism Effect (React/Vite Style) */
+                    .hem-glass-panel {
+                        background: rgba(255, 255, 255, 0.65); /* Semi-transparent white */
+                        backdrop-filter: blur(12px);
+                        -webkit-backdrop-filter: blur(12px);
+                        border: 1px solid rgba(255, 255, 255, 0.8);
+                        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+                    }
+
+                    /* Optional: Adding a soft modern glow to icons for that premium look */
+                    .hem-imp-icon {
+                        width: 50px;
+                        height: 50px;
+                        border-radius: 12px;
+                    }
+
+                    .hem-imp-tricolor {
+                        background: linear-gradient(135deg, #ff993320, #ffffff20, #13880820);
+                        color: #138808;
+                    }
+
+                    .hem-imp-purple {
+                        background: rgba(111, 66, 193, 0.1);
+                        color: #6f42c1;
+                    }
+
+                    .hem-imp-blue {
+                        background: rgba(13, 110, 253, 0.1);
+                        color: #0d6efd;
+                    }
+
+                    .hem-imp-green {
+                        background: rgba(25, 135, 84, 0.1);
+                        color: #198754;
+                    }
+        </style>
+
+        <!-- Replaced 'bg-white shadow-sm border' with 'hem-glass-panel' -->
+        <div class="hem-glass-panel rounded-4 p-3 p-md-4">
             <div class="row g-4 align-items-center">
 
-                <!-- Box 1: Title & Tricolor Icon -->
+                <!-- Box 1: Title & Icon -->
                 <div class="col-12 col-sm-6 col-lg-3 hem-imp-item hem-imp-border-end">
                     <div class="d-flex align-items-center gap-3 p-2">
                         <div class="hem-imp-icon hem-imp-tricolor d-flex align-items-center justify-content-center flex-shrink-0">
-                            <i class="bi bi-map-fill fs-4"></i>
+                            <i class="bi bi-stars fs-4"></i> <!-- Changed to stars for an 'Impact' feel -->
                         </div>
                         <div>
                             <h2 class="m-0 fw-bold fs-4" style="color: #1A5235;">Our Impact</h2>
@@ -94,7 +133,7 @@
                 <div class="col-12 col-sm-6 col-lg-3 hem-imp-item hem-imp-border-end">
                     <div class="d-flex align-items-center gap-3 p-2">
                         <div class="hem-imp-icon hem-imp-blue d-flex align-items-center justify-content-center flex-shrink-0">
-                            <i class="bi bi-people-fill fs-4"></i>
+                            <i class="bi bi-person-video3 fs-4"></i> <!-- Updated to look more like a trainer/teacher -->
                         </div>
                         <div>
                             <h3 class="m-0 fw-bold fs-3 text-dark hem-counter" data-target="15564">0</h3>
@@ -107,7 +146,7 @@
                 <div class="col-12 col-sm-6 col-lg-3 hem-imp-item">
                     <div class="d-flex align-items-center gap-3 p-2">
                         <div class="hem-imp-icon hem-imp-green d-flex align-items-center justify-content-center flex-shrink-0">
-                            <i class="bi bi-building fs-4"></i>
+                            <i class="bi bi-buildings-fill fs-4"></i> <!-- Updated to buildings-fill to look like an institution/campus -->
                         </div>
                         <div>
                             <h3 class="m-0 fw-bold fs-3 text-dark hem-counter" data-target="7670">0</h3>
@@ -128,14 +167,18 @@
         <div class="text-center mb-5">
             <h2 class="fw-bold hem-why-title">Why Schools Choose Hem Virtues?</h2>
             <div class="hem-why-line mx-auto"></div>
+            <p class="text-muted small mt-2">Click on any card to explore how Hem Foundation empowers students.</p>
         </div>
 
-        <!-- 6 Cards Grid -->
+        <!-- 6 Cards Grid (Added data attributes & pointer cursor) -->
         <div class="row g-4 justify-content-center">
 
             <!-- Card 1: Character Building -->
             <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                <div class="hem-why-card hem-card-green bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100">
+                <div class="hem-why-card hem-card-green bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100 shadow-sm why-card-trigger"
+                     style="cursor: pointer;"
+                     data-title="Character Building & Core Values"
+                     data-desc="Hem Foundation believes that true education goes beyond academics. We focus heavily on character building by instilling core values, ethics, and a positive mindset in students. Through our initiative, students learn value points entirely free of cost, helping them grow into responsible and compassionate future leaders.">
                     <div class="hem-why-icon hem-icon-green mb-3">
                         <i class="bi bi-heart-fill"></i>
                     </div>
@@ -146,7 +189,10 @@
 
             <!-- Card 2: Digital Learning -->
             <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                <div class="hem-why-card hem-card-blue bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100">
+                <div class="hem-why-card hem-card-blue bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100 shadow-sm why-card-trigger"
+                     style="cursor: pointer;"
+                     data-title="Next-Gen Digital Learning"
+                     data-desc="We leverage modern technology to make learning fun and accessible. Hem Foundation provides free digital tools, engaging value education modules, and interactive content so that every student can access quality learning regardless of their background.">
                     <div class="hem-why-icon hem-icon-blue mb-3">
                         <i class="bi bi-display"></i>
                     </div>
@@ -157,7 +203,10 @@
 
             <!-- Card 3: Project-Based Learning -->
             <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                <div class="hem-why-card hem-card-purple bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100">
+                <div class="hem-why-card hem-card-purple bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100 shadow-sm why-card-trigger"
+                     style="cursor: pointer;"
+                     data-title="Project-Based Practical Learning"
+                     data-desc="Hem Foundation integrates activity-based learning and real-life projects. Students learn value points by implementing them in practical community projects, ensuring free skill development and real-world impact.">
                     <div class="hem-why-icon hem-icon-purple mb-3">
                         <i class="bi bi-clipboard-check-fill"></i>
                     </div>
@@ -168,7 +217,10 @@
 
             <!-- Card 4: Teacher Ready Resources -->
             <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                <div class="hem-why-card hem-card-orange bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100">
+                <div class="hem-why-card hem-card-orange bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100 shadow-sm why-card-trigger"
+                     style="cursor: pointer;"
+                     data-title="Comprehensive Teacher Support & Free Resources"
+                     data-desc="We empower educators and schools by providing ready-to-use lesson plans, digital value modules, and worksheets completely free, ensuring seamless delivery of moral education in classrooms.">
                     <div class="hem-why-icon hem-icon-orange mb-3">
                         <i class="bi bi-easel-fill"></i>
                     </div>
@@ -179,7 +231,10 @@
 
             <!-- Card 5: Parent Engagement -->
             <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                <div class="hem-why-card hem-card-green bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100">
+                <div class="hem-why-card hem-card-green bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100 shadow-sm why-card-trigger"
+                     style="cursor: pointer;"
+                     data-title="Strong Parent Engagement & Community Support"
+                     data-desc="Education is a collaborative journey. Hem Foundation involves parents directly in the value education journey, ensuring that children receive consistent moral guidance and support both at school and at home.">
                     <div class="hem-why-icon hem-icon-green mb-3">
                         <i class="bi bi-people-fill"></i>
                     </div>
@@ -190,7 +245,10 @@
 
             <!-- Card 6: Performance Insights -->
             <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                <div class="hem-why-card hem-card-blue bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100">
+                <div class="hem-why-card hem-card-blue bg-white rounded-4 p-4 text-center d-flex flex-column align-items-center h-100 shadow-sm why-card-trigger"
+                     style="cursor: pointer;"
+                     data-title="Advanced Performance & Value Tracking"
+                     data-desc="Schools and teachers receive valuable insights and progress metrics. Our tracking system evaluates student growth in character building and value points to ensure continuous moral enhancement.">
                     <div class="hem-why-icon hem-icon-blue mb-3">
                         <i class="bi bi-graph-up-arrow"></i>
                     </div>
@@ -911,62 +969,98 @@
 
                         <!-- Card 1: Watch Films -->
                         <div class="col-6 col-sm-4 col-xl-2 hem-app-col">
-                            <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
-                                <div class="hem-app-icon-box hem-box-red mb-2 shadow-sm">
-                                    <i class="bi bi-play-circle-fill"></i>
+                            <a href="https://www.youtube.com/playlist?list=PL_cukav0qxOe9anlQd2w8PFrPP9yDqth2"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="text-decoration-none d-block h-100">
+
+                                <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
+                                    <div class="hem-app-icon-box hem-box-red mb-2 shadow-sm">
+                                        <i class="bi bi-play-circle-fill"></i>
+                                    </div>
+                                    <h6 class="m-0 fw-bold hem-app-text">Watch<br>Films</h6>
                                 </div>
-                                <h6 class="m-0 fw-bold hem-app-text">Watch<br>Films</h6>
-                            </div>
+                            </a>
                         </div>
 
                         <!-- Card 2: Complete MCQs -->
                         <div class="col-6 col-sm-4 col-xl-2 hem-app-col">
-                            <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
-                                <div class="hem-app-icon-box hem-box-blue mb-2 shadow-sm">
-                                    <i class="bi bi-card-checklist"></i>
+                            <a href="https://www.youtube.com/playlist?list=PL_cukav0qxOe9anlQd2w8PFrPP9yDqth2"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="text-decoration-none d-block h-100">
+
+                                <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
+                                    <div class="hem-app-icon-box hem-box-blue mb-2 shadow-sm">
+                                        <i class="bi bi-card-checklist"></i>
+                                    </div>
+                                    <h6 class="m-0 fw-bold hem-app-text">Complete<br>MCQs</h6>
                                 </div>
-                                <h6 class="m-0 fw-bold hem-app-text">Complete<br>MCQs</h6>
-                            </div>
+                            </a>
                         </div>
 
                         <!-- Card 3: Do PBL Activities -->
                         <div class="col-6 col-sm-4 col-xl-2 hem-app-col">
-                            <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
-                                <div class="hem-app-icon-box hem-box-green mb-2 shadow-sm">
-                                    <i class="bi bi-people-fill"></i>
+                            <a href="https://www.youtube.com/playlist?list=PL_cukav0qxOe9anlQd2w8PFrPP9yDqth2"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="text-decoration-none d-block h-100">
+
+                                <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
+                                    <div class="hem-app-icon-box hem-box-green mb-2 shadow-sm">
+                                        <i class="bi bi-people-fill"></i>
+                                    </div>
+                                    <h6 class="m-0 fw-bold hem-app-text">Do PBL<br>Activities</h6>
                                 </div>
-                                <h6 class="m-0 fw-bold hem-app-text">Do PBL<br>Activities</h6>
-                            </div>
+                            </a>
                         </div>
 
                         <!-- Card 4: Earn Points -->
                         <div class="col-6 col-sm-4 col-xl-2 hem-app-col">
-                            <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
-                                <div class="hem-app-icon-box hem-box-yellow mb-2 shadow-sm">
-                                    <i class="bi bi-star-fill"></i>
+                            <a href="https://www.youtube.com/playlist?list=PL_cukav0qxOe9anlQd2w8PFrPP9yDqth2"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="text-decoration-none d-block h-100">
+
+                                <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
+                                    <div class="hem-app-icon-box hem-box-yellow mb-2 shadow-sm">
+                                        <i class="bi bi-star-fill"></i>
+                                    </div>
+                                    <h6 class="m-0 fw-bold hem-app-text">Earn<br>Points</h6>
                                 </div>
-                                <h6 class="m-0 fw-bold hem-app-text">Earn<br>Points</h6>
-                            </div>
+                            </a>
                         </div>
 
-                        <!-- Card 5: Get Certificates -->
+                        <!-- Card 5: Get Badge -->
                         <div class="col-6 col-sm-4 col-xl-2 hem-app-col">
-                            <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
-                                <div class="hem-app-icon-box hem-box-cyan mb-2 shadow-sm">
-                                    <i class="bi bi-award-fill"></i>
+                            <a href="https://www.youtube.com/playlist?list=PL_cukav0qxOe9anlQd2w8PFrPP9yDqth2"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="text-decoration-none d-block h-100">
+
+                                <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
+                                    <div class="hem-app-icon-box hem-box-cyan mb-2 shadow-sm">
+                                        <i class="bi bi-award-fill"></i>
+                                    </div>
+                                    <h6 class="m-0 fw-bold hem-app-text">Get<br>Badge</h6>
                                 </div>
-                                <h6 class="m-0 fw-bold hem-app-text">Get<br>Badge</h6>
-                            </div>
+                            </a>
                         </div>
 
-                        <!-- Card 6: Build Character -->
+                        <!-- Card 6: Grow Values -->
                         <div class="col-6 col-sm-4 col-xl-2 hem-app-col">
-                            <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
-                                <div class="hem-app-icon-box hem-box-purple mb-2 shadow-sm">
-                                    <i class="bi bi-shield-check"></i>
+                            <a href="https://www.youtube.com/playlist?list=PL_cukav0qxOe9anlQd2w8PFrPP9yDqth2"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="text-decoration-none d-block h-100">
+
+                                <div class="hem-app-card rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center h-100">
+                                    <div class="hem-app-icon-box hem-box-purple mb-2 shadow-sm">
+                                        <i class="bi bi-shield-check"></i>
+                                    </div>
+                                    <h6 class="m-0 fw-bold hem-app-text">Grow<br>Values</h6>
                                 </div>
-                                <h6 class="m-0 fw-bold hem-app-text">Grow<br>Values</h6>
-                            </div>
+                            </a>
                         </div>
 
                     </div>
@@ -1202,3 +1296,50 @@
         </div>
     </div>
 </div>
+
+<!-- Why Choose Us Detail Modal -->
+<div class="modal fade" id="whyChooseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+            <div class="modal-header bg-success text-white px-4 py-3 border-0">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2 m-0">
+                    <i class="bi bi-stars text-warning fs-4"></i>
+                    <span id="whyModalTitle">Feature Details</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 p-md-4 bg-white text-center">
+                <div class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill mb-3 fw-semibold small">
+                    ✨ Hema Foundation Initiative: Free Education & Value Points
+                </div>
+                <p id="whyModalDesc" class="text-secondary mb-4 lh-base" style="font-size: 0.95rem;"></p>
+                <button type="button" class="btn btn-dark rounded-pill px-5 py-2 fw-bold shadow-sm" data-bs-dismiss="modal">
+                    Got It, Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to handle click and populate modal dynamically -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const cards = document.querySelectorAll(".why-card-trigger");
+        const modalTitle = document.getElementById("whyModalTitle");
+        const modalDesc = document.getElementById("whyModalDesc");
+
+        cards.forEach(card => {
+            card.addEventListener("click", function() {
+                const title = this.getAttribute("data-title");
+                const desc = this.getAttribute("data-desc");
+
+                modalTitle.textContent = title;
+                modalDesc.textContent = desc;
+
+                // Open Bootstrap Modal
+                const myModal = new bootstrap.Modal(document.getElementById('whyChooseModal'));
+                myModal.show();
+            });
+        });
+    });
+</script>

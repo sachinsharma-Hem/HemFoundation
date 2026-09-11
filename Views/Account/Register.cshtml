@@ -27,7 +27,23 @@
                         <input type="hidden" id="hdnPortalId" value="@portalId" />
 
                         <div class="row g-3">
+                            <!-- First Name -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-secondary mb-1" id="lblFirstName">First Name <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtFirstName" placeholder="First Name" required />
+                                </div>
+                            </div>
 
+                            <!-- Last Name -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-secondary mb-1" id="lblLastName">Last Name <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-person-fill"></i></span>
+                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtLastName" placeholder="Last Name" required />
+                                </div>
+                            </div>
                             <!-- Student Specific: Standard Dropdown -->
                             <div class="col-md-6 student-field d-none">
                                 <label class="form-label small fw-bold text-secondary mb-1">Standard / Class <span class="text-danger">*</span></label>
@@ -47,7 +63,16 @@
                                     <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtDivision" placeholder="e.g. A, B, C" />
                                 </div>
                             </div>
-
+                            <!-- Gender Dropdown (Loaded from Database API) -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-secondary mb-1">Gender <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-gender-ambiguous"></i></span>
+                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="ddlGender" required>
+                                        <option value="">-- Loading Genders --</option>
+                                    </select>
+                                </div>
+                            </div>
                             <!-- Student Specific: Guardian Name -->
                             <div class="col-md-6 student-field d-none">
                                 <label class="form-label small fw-bold text-secondary mb-1">Guardian / Parent Name <span class="text-danger">*</span></label>
@@ -104,34 +129,9 @@
                                 </div>
                             </div>
 
-                            <!-- First Name -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1" id="lblFirstName">First Name <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-person"></i></span>
-                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtFirstName" placeholder="First Name" required />
-                                </div>
-                            </div>
+                           
 
-                            <!-- Last Name -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1" id="lblLastName">Last Name <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-person-fill"></i></span>
-                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtLastName" placeholder="Last Name" required />
-                                </div>
-                            </div>
-
-                            <!-- Gender Dropdown (Loaded from Database API) -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1">Gender <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-gender-ambiguous"></i></span>
-                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="ddlGender" required>
-                                        <option value="">-- Loading Genders --</option>
-                                    </select>
-                                </div>
-                            </div>
+                           
 
                             <!-- Mobile No -->
                             <div class="col-md-6">
