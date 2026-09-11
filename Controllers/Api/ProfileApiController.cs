@@ -515,7 +515,23 @@ namespace HemFoundation.Controllers.Api
 
 
             // =========================================================
-            // 9. Success
+            // 9. Update volunteers.password_ (If volunteer record exists)
+            //    PLAIN TEXT password will be stored here
+            // =========================================================
+
+            await _context
+                .Volunteers
+                .Where(v => v.AspNetUserId == userId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(
+                        v => v.Password_,
+                        model.NewPassword
+                    )
+                );
+
+
+            // =========================================================
+            // 10. Success
             // =========================================================
 
             return Ok(new
