@@ -462,26 +462,18 @@ namespace HemFoundation.Controllers
                     {
                         await conn.OpenAsync();
 
-                        using (var cmd = new NpgsqlCommand("CALL public.hf_sp_checkpblstatus(@p_courseid, @p_userid, @p_status)", conn))
+                        // Query the function using SELECT instead of CALL
+                        using (var cmd = new NpgsqlCommand("SELECT public.hf_sp_checkpblstatus(@p_courseid, @p_userid)", conn))
                         {
-                            cmd.CommandType = CommandType.Text;
-
-                            // Input parameters
                             cmd.Parameters.AddWithValue("@p_courseid", courseID);
                             cmd.Parameters.AddWithValue("@p_userid", studentID);
 
-                            // Output parameter
-                            var statusParam = new NpgsqlParameter("@p_status", NpgsqlTypes.NpgsqlDbType.Integer)
-                            {
-                                Direction = ParameterDirection.Output
-                            };
-                            cmd.Parameters.Add(statusParam);
+                            // ExecuteScalarAsync directly captures the returned integer value
+                            var result = await cmd.ExecuteScalarAsync();
 
-                            await cmd.ExecuteNonQueryAsync();
-
-                            if (statusParam.Value != null && statusParam.Value != DBNull.Value)
+                            if (result != null && result != DBNull.Value)
                             {
-                                status = Convert.ToInt32(statusParam.Value);
+                                status = Convert.ToInt32(result);
                             }
                         }
                     }
