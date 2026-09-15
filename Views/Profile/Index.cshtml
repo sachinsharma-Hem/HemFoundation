@@ -3,12 +3,16 @@
     Layout = ViewBag.SelectedLayout as string ?? "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
 }
 
+<!-- Select2 CSS for Searchable School Dropdown -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
 <div class="container-fluid py-4">
     <div class="row g-4">
+        <!-- Left Sidebar: Avatar & Password -->
         <div class="col-xl-4">
             <div class="card border-0 shadow-sm rounded-4 text-center p-4 mb-4" style="background-color: var(--card-bg);">
                 <div class="position-relative d-inline-block mx-auto mb-3">
-                    <!-- Default fallback image added -->
                     <img id="profile-avatar-img" src="/uploads/profiles/default-avatar.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" class="rounded-circle shadow-sm border border-3 border-success object-fit-cover" style="width: 130px; height: 130px;" alt="Profile Photo" />
                     <label for="photoUploadInput" class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle p-2 shadow cursor-pointer" title="Change Photo" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
                         <i class="bi bi-camera-fill small"></i>
@@ -36,7 +40,52 @@
             </div>
         </div>
 
+        <!-- Right Main Content -->
         <div class="col-xl-8">
+
+            <!-- Student Specific Information Card -->
+            <div id="studentInfoCard" class="card border-0 shadow-sm rounded-4 p-4 mb-4 d-none" style="background-color: var(--card-bg);">
+                <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-mortarboard-fill text-success me-2"></i> Academic & Guardian Details</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Standard</label>
+                        <input type="text" id="txtStandard" class="form-control rounded-3 shadow-none" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Division</label>
+                        <input type="text" id="txtDivision" class="form-control rounded-3 shadow-none" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Gender</label>
+                        <select id="txtGender" class="form-select rounded-3 shadow-none">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Institute / School Name (Search & Update)</label>
+                        <select id="ddlInstitute" class="form-select rounded-3 shadow-none" style="width: 100%;">
+                            <option value="">Select or Search School...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Guardian Name</label>
+                        <input type="text" id="txtGuardianName" class="form-control rounded-3 shadow-none" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Guardian Email ID</label>
+                        <input type="email" id="txtGuardianEmail" class="form-control rounded-3 shadow-none" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Guardian Mobile No</label>
+                        <input type="text" id="txtGuardianMobile" class="form-control rounded-3 shadow-none" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Information Form -->
             <div class="card border-0 shadow-sm rounded-4 p-4" style="background-color: var(--card-bg);">
                 <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-person-lines-fill text-success me-2"></i> Profile Information</h5>
                 <form id="formUpdateProfile" enctype="multipart/form-data">
@@ -53,10 +102,6 @@
                             <label class="form-label small fw-semibold">Mobile Number</label>
                             <input type="text" id="txtMobileNo" class="form-control rounded-3 shadow-none" />
                         </div>
-                       @*  <div class="col-md-6 org-field">
-                            <label class="form-label small fw-semibold">Organisation Name</label>
-                            <input type="text" id="txtOrgName" class="form-control rounded-3 shadow-none" />
-                        </div> *@
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Email ID</label>
                             <input type="email" id="txtEmail" class="form-control rounded-3 shadow-none" disabled />
@@ -71,11 +116,11 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">City</label>
-                            <input type="text" id="txtCity" class="form-control rounded-3 shadow-none" readonly style="background-color: #f8f9fa;" />
+                            <input type="text" id="txtCity" class="form-control rounded-3 shadow-none bg-light" readonly />
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">State</label>
-                            <input type="text" id="txtState" class="form-control rounded-3 shadow-none" readonly style="background-color: #f8f9fa;" />
+                            <input type="text" id="txtState" class="form-control rounded-3 shadow-none bg-light" readonly />
                         </div>
                         <div class="col-12 mt-4 pt-2 border-top d-flex justify-content-end align-items-center gap-2">
                             <button type="submit" class="btn btn-success px-4 py-2 rounded-3 fw-semibold shadow-sm">
@@ -90,9 +135,32 @@
 </div>
 
 @section Scripts {
+    <!-- Select2 JS for Searchable Dropdown -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
             const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+            let currentUserRole = '';
+
+            // Initialize Select2 Searchable Dropdown for Institutes
+            $('#ddlInstitute').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Search and select school...',
+                allowClear: true,
+                ajax: {
+                    url: '/api/profile/institutes',
+                    dataType: 'json',
+                    delay: 250,
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    data: function (params) {
+                        return { term: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
+                }
+            });
 
             // Load Profile Data
             $.ajax({
@@ -101,6 +169,7 @@
                 headers: { 'Authorization': 'Bearer ' + token },
                 success: function(res) {
                     if (res.success) {
+                        currentUserRole = res.role;
                         $('#lbl-fullname').text(res.user.fullName || res.user.email);
                         $('#lbl-email').text(res.user.email);
                         $('#lbl-role').text(res.role);
@@ -109,21 +178,36 @@
                         $('#txtLastName').val(res.profile.lastName || '');
                         $('#txtMobileNo').val(res.user.phoneNumber || res.profile.mobileNo || '');
                         $('#txtEmail').val(res.user.email);
-                        $('#txtOrgName').val(res.profile.organisationName || '');
                         $('#txtAddress').val(res.profile.address || '');
                         $('#txtCity').val(res.profile.city || '');
                         $('#txtState').val(res.profile.state || '');
                         $('#txtPincode').val(res.profile.pincode || '');
+                        $('#txtGender').val(res.profile.gender || '');
 
                         const photo = res.profile.photoUrl;
                         if (photo) {
                             $('#profile-avatar-img').attr('src', photo);
                         }
+
+                        if (res.role && res.role.toLowerCase() === 'wj_students') {
+                            $('#studentInfoCard').removeClass('d-none');
+                            $('#txtStandard').val(res.profile.standard === 'Not Updated' ? '' : res.profile.standard);
+                            $('#txtDivision').val(res.profile.division === 'Not Updated' ? '' : res.profile.division);
+                            $('#txtGuardianName').val(res.profile.guardianName === 'Not Updated' ? '' : res.profile.guardianName);
+                            $('#txtGuardianEmail').val(res.profile.guardianEmail === 'Not Updated' ? '' : res.profile.guardianEmail);
+                            $('#txtGuardianMobile').val(res.profile.guardianMobile === 'Not Updated' ? '' : res.profile.guardianMobile);
+
+                            // Pre-fill existing institute in searchable dropdown if available
+                            if (res.profile.studentInstituteId && res.profile.studentInstituteName) {
+                                let newOption = new Option(res.profile.studentInstituteName, res.profile.studentInstituteId, true, true);
+                                $('#ddlInstitute').append(newOption).trigger('change');
+                            }
+                        }
                     }
                 }
             });
 
-            // Pincode Auto-fill Logic
+            // Pincode Auto-fill
             $('#txtPincode').on('keyup', function() {
                 let pincode = $(this).val().trim();
                 if (pincode.length === 6) {
@@ -151,18 +235,27 @@
                 }
             });
 
-            // Save Profile Form Submission
+            // Save Form Submission
             $('#formUpdateProfile').on('submit', function(e) {
                 e.preventDefault();
                 let formData = new FormData();
                 formData.append('firstName', $('#txtFirstName').val());
                 formData.append('lastName', $('#txtLastName').val());
                 formData.append('phoneNumber', $('#txtMobileNo').val());
-                formData.append('organisationName', $('#txtOrgName').val());
                 formData.append('address', $('#txtAddress').val());
                 formData.append('city', $('#txtCity').val());
                 formData.append('state', $('#txtState').val());
                 formData.append('pincode', $('#txtPincode').val());
+
+                if (currentUserRole && currentUserRole.toLowerCase() === 'wj_students') {
+                    formData.append('standard', $('#txtStandard').val());
+                    formData.append('division', $('#txtDivision').val());
+                    formData.append('gender', $('#txtGender').val());
+                    formData.append('guardianName', $('#txtGuardianName').val());
+                    formData.append('guardianEmail', $('#txtGuardianEmail').val());
+                    formData.append('guardianMobile', $('#txtGuardianMobile').val());
+                    formData.append('instituteID', $('#ddlInstitute').val() || '');
+                }
 
                 if (selectedPhotoFile) {
                     formData.append('profilePhoto', selectedPhotoFile);

@@ -168,7 +168,7 @@ namespace HemFoundation.Controllers.Api
 
                     IsActive = true,
 
-                    IsVerify = false,
+                    IsVerify =  true,
 
                     // Affiliate referral code / referred-by code
                     ReferralCode = string.IsNullOrWhiteSpace(referredBy)

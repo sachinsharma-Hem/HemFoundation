@@ -44,6 +44,7 @@
                                     <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtLastName" placeholder="Last Name" required />
                                 </div>
                             </div>
+
                             <!-- Student Specific: Standard Dropdown -->
                             <div class="col-md-6 student-field d-none">
                                 <label class="form-label small fw-bold text-secondary mb-1">Standard / Class <span class="text-danger">*</span></label>
@@ -63,16 +64,21 @@
                                     <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtDivision" placeholder="e.g. A, B, C" />
                                 </div>
                             </div>
-                            <!-- Gender Dropdown (Loaded from Database API) -->
+
+                            <!-- Gender Dropdown (Male, Female, Other with single-letter values M, F, O) -->
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-secondary mb-1">Gender <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-gender-ambiguous"></i></span>
                                     <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="ddlGender" required>
-                                        <option value="">-- Loading Genders --</option>
+                                        <option value="">-- Select Gender --</option>
+                                        <option value="M">Male</option>
+                                        <option value="F">Female</option>
+                                        <option value="O">Other</option>
                                     </select>
                                 </div>
                             </div>
+
                             <!-- Student Specific: Guardian Name -->
                             <div class="col-md-6 student-field d-none">
                                 <label class="form-label small fw-bold text-secondary mb-1">Guardian / Parent Name <span class="text-danger">*</span></label>
@@ -128,10 +134,6 @@
                                     </select>
                                 </div>
                             </div>
-
-                           
-
-                           
 
                             <!-- Mobile No -->
                             <div class="col-md-6">
@@ -214,10 +216,24 @@
 </div>
 
 <style>
-    .shadow-xl { box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.08) !important; }
-    .hover-scale { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .hover-scale:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 0.5rem 1.5rem rgba(25, 135, 84, 0.25) !important; }
-    .form-control:focus, .form-select:focus { background-color: #fff !important; box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.12) !important; border-color: #198754 !important; }
+    .shadow-xl {
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .hover-scale {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .hover-scale:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1.5rem rgba(25, 135, 84, 0.25) !important;
+        }
+
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.12) !important;
+        border-color: #198754 !important;
+    }
 </style>
 
 @section Scripts {
@@ -240,7 +256,7 @@
                 $('#ddlStandard, #txtGuardianName').addClass('req-field');
                 $('#txtOrgName, #ddlOrgType').removeClass('req-field');
                 loadStandardsDropdown();
-            } 
+            }
             else if (portalId == "4") { // School
                 $('#formHeader').text("School Registration");
                 $('#badgeRole').html(`<i class="bi bi-building text-warning me-1"></i> School Portal`);
@@ -270,19 +286,6 @@
                 $('#badgeRole').html(`<i class="bi bi-star-fill text-info me-1"></i> Affiliate Partner`);
                 $('#referredByContainer').hide();
             }
-        }
-
-        // Database-driven Gender Dropdown Loader (Assuming route is /api/lookup/genders)
-        function loadGendersDropdown() {
-            $.get('/api/lookup/genders', function(res) {
-                let $dropdown = $('#ddlGender');
-                $dropdown.empty().append('<option value="">-- Select Gender --</option>');
-                if (res && res.success && res.data) {
-                    res.data.forEach(item => {
-                        $dropdown.append(`<option value="${item.text}">${item.text}</option>`);
-                    });
-                }
-            });
         }
 
         function loadStandardsDropdown() {
@@ -337,7 +340,6 @@
 
         $(document).ready(function() {
             customizeFormLabels();
-            loadGendersDropdown(); // <-- Loaded dynamically from Lookup API
 
             $('#universalRegisterForm').on('submit', function(e) {
                 e.preventDefault();
@@ -348,7 +350,7 @@
                 formData.append("portalId", $('#hdnPortalId').val());
                 formData.append("firstName", $('#txtFirstName').val().trim());
                 formData.append("lastName", $('#txtLastName').val().trim());
-                formData.append("gender", $('#ddlGender').val());
+                formData.append("gender", $('#ddlGender').val()); // Sends "M", "F", or "O" directly
                 formData.append("mobileNo", $('#txtMobileNo').val().trim());
                 formData.append("emailID", $('#txtEmailID').val().trim());
                 formData.append("address", $('#txtAddress').val().trim());
