@@ -3,6 +3,14 @@
   "WorkspaceRootPath": "H:\\Sachin\\Project\\HemFoundation\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\shared\\partials\\_loginmodal.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\shared\\partials\\_loginmodal.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\api\\universalregisterapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\universalregisterapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -42,7 +50,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -54,7 +62,33 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "_LoginModal.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Shared\\Partials\\_LoginModal.cshtml",
+              "RelativeDocumentMoniker": "Views\\Shared\\Partials\\_LoginModal.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Shared\\Partials\\_LoginModal.cshtml",
+              "RelativeToolTip": "Views\\Shared\\Partials\\_LoginModal.cshtml",
+              "ViewState": "AgIAABUAAAAAAAAAAAAAACIAAAAaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-15T12:01:07.815Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Properties\\launchSettings.json",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-09-15T12:00:08.254Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "Register.cshtml",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Account\\Register.cshtml",
               "RelativeDocumentMoniker": "Views\\Account\\Register.cshtml",
@@ -62,12 +96,11 @@
               "RelativeToolTip": "Views\\Account\\Register.cshtml",
               "ViewState": "AgIAAIABAAAAAAAAAAAwwJABAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-15T10:57:27.699Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-15T10:57:27.699Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "UniversalRegisterApiController.cs",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\UniversalRegisterApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\Api\\UniversalRegisterApiController.cs",
@@ -80,7 +113,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 7,
               "Title": "ApplicationDbContext.cs",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Data\\ApplicationDbContext.cs",
               "RelativeDocumentMoniker": "Data\\ApplicationDbContext.cs",
@@ -88,12 +121,11 @@
               "RelativeToolTip": "Data\\ApplicationDbContext.cs",
               "ViewState": "AgIAABgAAAAAAAAAAIA7wCEAAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-15T06:10:59.68Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-15T06:10:59.68Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "Index.cshtml",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Profile\\Index.cshtml",
               "RelativeDocumentMoniker": "Views\\Profile\\Index.cshtml",
@@ -101,12 +133,11 @@
               "RelativeToolTip": "Views\\Profile\\Index.cshtml",
               "ViewState": "AgIAACQBAAAAAAAAAAAAADEBAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-15T06:43:36.829Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-15T06:43:36.829Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "ProfileApiController.cs",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\ProfileApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\Api\\ProfileApiController.cs",
@@ -114,12 +145,11 @@
               "RelativeToolTip": "Controllers\\Api\\ProfileApiController.cs",
               "ViewState": "AgIAADEAAAAAAAAAAAAcwEUAAABZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-15T06:06:54.553Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-15T06:06:54.553Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "WJ_Institutes.cs",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Models\\Entities\\WJ_Institutes.cs",
               "RelativeDocumentMoniker": "Models\\Entities\\WJ_Institutes.cs",
@@ -127,12 +157,11 @@
               "RelativeToolTip": "Models\\Entities\\WJ_Institutes.cs",
               "ViewState": "AgIAABMAAAAAAAAAAAAgwCAAAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-15T10:21:26.693Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-15T10:21:26.693Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 9,
               "Title": "_SchoolDashboard.cshtml",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dashboard\\Partials\\_SchoolDashboard.cshtml",
               "RelativeDocumentMoniker": "Views\\Dashboard\\Partials\\_SchoolDashboard.cshtml",
@@ -140,12 +169,11 @@
               "RelativeToolTip": "Views\\Dashboard\\Partials\\_SchoolDashboard.cshtml",
               "ViewState": "AgIAACkAAAAAAAAAAAAgwDMAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-15T09:22:46.79Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-15T09:22:46.79Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 8,
               "Title": "WJ_Students.cs",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Models\\Entities\\WJ_Students.cs",
               "RelativeDocumentMoniker": "Models\\Entities\\WJ_Students.cs",
@@ -153,8 +181,7 @@
               "RelativeToolTip": "Models\\Entities\\WJ_Students.cs",
               "ViewState": "AgIAACEAAAAAAAAAAAAcwDYAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-15T10:18:39.717Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-15T10:18:39.717Z"
             }
           ]
         }
