@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Security.Claims;
 
 
 namespace HemFoundation.Controllers
@@ -39,7 +40,22 @@ namespace HemFoundation.Controllers
         [HttpGet]
         public IActionResult Index(int QuizId, int LevelID, int TopicID, string IsInstituteQuiz, string Iscertificate, int LanguageID, bool IsAttempt, int ExamID, string IsDB)
         {
-            int currentLoggedInUserId = HttpContext.Session.GetInt32("TempStudentID") ?? 1;
+            //int currentLoggedInUserId = HttpContext.Session.GetInt32("TempStudentID") ?? 1;
+
+            int currentLoggedInUserId = HttpContext.Session.GetInt32("TempStudentID") ?? 0;
+            if (currentLoggedInUserId == 0)
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!string.IsNullOrEmpty(userIdClaim))
+                {
+                    int.TryParse(userIdClaim, out currentLoggedInUserId);
+                }
+                currentLoggedInUserId = HttpContext.Session.GetInt32("UserID") ?? 0;
+            }
+
+
+
+
             ViewBag.UserID = currentLoggedInUserId;
 
             ExamModel model = new ExamModel
@@ -96,7 +112,19 @@ namespace HemFoundation.Controllers
         [HttpGet]
         public JsonResult GetQuestions(int id, int LevelID, int TopicID, string Iscertificate, int LangId)
         {
-            int userID = HttpContext.Session.GetInt32("TempStudentID") ?? 1;
+           // int userID = HttpContext.Session.GetInt32("TempStudentID") ?? 1;
+            int userID = HttpContext.Session.GetInt32("TempStudentID") ?? 0;
+            if (userID == 0)
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!string.IsNullOrEmpty(userIdClaim))
+                {
+                    int.TryParse(userIdClaim, out userID);
+                }
+                userID = HttpContext.Session.GetInt32("UserID") ?? 0;
+            }
+
+
             var result = new JsonResponse<List<QuestionViewModel>>();
 
             try
@@ -132,10 +160,15 @@ namespace HemFoundation.Controllers
             {
                 // Retrieve student ID from session matching your existing pattern
                 int userID = HttpContext.Session.GetInt32("TempStudentID") ?? 0;
-                if (userID <= 0)
+                //int userID = HttpContext.Session.GetInt32("TempStudentID") ?? 0;
+                if (userID == 0)
                 {
-                    // Fallback or handle unauthenticated user session logic if necessary
-                    userID = 1; // Or pull from user manager if needed
+                    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (!string.IsNullOrEmpty(userIdClaim))
+                    {
+                        int.TryParse(userIdClaim, out userID);
+                    }
+                    userID = HttpContext.Session.GetInt32("UserID") ?? 0;
                 }
 
                 var user = _context.Users.Find(userID);
@@ -212,12 +245,18 @@ namespace HemFoundation.Controllers
             try
             {
                 // Retrieve user ID from session matching your project patterns
+                //int userID = HttpContext.Session.GetInt32("TempStudentID") ?? 0;
                 int userID = HttpContext.Session.GetInt32("TempStudentID") ?? 0;
-                if (userID <= 0)
+                if (userID == 0)
                 {
-                    userID = 1; // Fallback user session handler if needed
+                    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (!string.IsNullOrEmpty(userIdClaim))
+                    {
+                        int.TryParse(userIdClaim, out userID);
+                    }
+                    userID = HttpContext.Session.GetInt32("UserID") ?? 0;
                 }
-
+               
                 bool IsAttempted = Convert.ToBoolean(IsAttempt);
 
                 if (IsAttempted == false)
@@ -369,18 +408,36 @@ namespace HemFoundation.Controllers
         public async Task<IActionResult> Survey(int courseID, int topicID, int languageID = 1)
         {
             // 1. Session check for .NET Core
-            int? studentId = HttpContext.Session.GetInt32("UserID");
-            if (!studentId.HasValue)
+            //int? studentId = HttpContext.Session.GetInt32("UserID");
+            //if (!studentId.HasValue)
+            //{
+            //    studentId = HttpContext.Session.GetInt32("TempStudentID");
+            //}
+
+          
+
+            int studentId = HttpContext.Session.GetInt32("TempStudentID") ?? 0;
+            if (studentId == 0)
             {
-                studentId = HttpContext.Session.GetInt32("TempStudentID");
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!string.IsNullOrEmpty(userIdClaim))
+                {
+                    int.TryParse(userIdClaim, out studentId);
+                }
+                studentId = HttpContext.Session.GetInt32("UserID") ?? 0;
             }
 
-            if (!studentId.HasValue)
+            if (studentId == 0)
             {
                 return RedirectToAction("Login", "Account");
             }
+            //if (!studentId.HasValue)
+            //{
+            //    return RedirectToAction("Login", "Account");
+            //}
 
-            int studentID = studentId.Value;
+
+            int studentID = studentId;
             ViewData["SurveyData"] = null;
 
             QuizModel obj = new QuizModel();
@@ -676,18 +733,30 @@ namespace HemFoundation.Controllers
         public IActionResult Survey1(int courseID, int topicID, int languageID = 1)
         {
             // 1. Session check for .NET Core
-            int? studentId = HttpContext.Session.GetInt32("UserID");
-            if (!studentId.HasValue)
+            //int? studentId = HttpContext.Session.GetInt32("UserID");
+            //if (!studentId.HasValue)
+            //{
+            //    studentId = HttpContext.Session.GetInt32("TempStudentID");
+            //}
+
+           
+
+            int studentId = HttpContext.Session.GetInt32("TempStudentID") ?? 0;
+            if (studentId == 0)
             {
-                studentId = HttpContext.Session.GetInt32("TempStudentID");
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!string.IsNullOrEmpty(userIdClaim))
+                {
+                    int.TryParse(userIdClaim, out studentId);
+                }
+                studentId = HttpContext.Session.GetInt32("UserID") ?? 0;
             }
 
-            if (!studentId.HasValue)
+            if (studentId==0)
             {
                 return RedirectToAction("Login", "Account");
             }
-
-            int studentID = studentId.Value;
+            int studentID = studentId;
             ViewData["SurveyData"] = null;
 
             QuizModel obj = new QuizModel();

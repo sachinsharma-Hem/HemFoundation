@@ -31,8 +31,24 @@ Swal.fire({
 }).then(function () {
     ///window.location.href = '@Url.Action("Learn", "Course")' + '?courseName=' + encodedCourseName + '&LanguageID=1';
     if (lowerCourseName.includes("survey")) {
+        Swal.fire({
+    title: 'Loading ...',
+    text: 'Please wait while we prepare your session.',
+    allowOutsideClick: false,
+    didOpen: () => {
+        Swal.showLoading();
+    }
+});
            window.location.href = '@Url.Action("Index", "Learn")';
     } else {
+        Swal.fire({
+    title: 'Loading ...',
+    text: 'Please wait while we prepare your session.',
+    allowOutsideClick: false,
+    didOpen: () => {
+        Swal.showLoading();
+    }
+});
             window.location.href = '@Url.Action("Index", "Learn")';
            //window.location.href = '@Url.Action("Index", "Learn")' + '?courseName=' + encodedCourseName + '&LanguageID='+@ViewBag.LanguageID;
        }
@@ -54,8 +70,24 @@ Swal.fire({
             confirmButtonText: 'OK'
         }).then(function () {
             if (lowerCourseName.includes("survey")) {
+                Swal.fire({
+    title: 'Loading ...',
+    text: 'Please wait while we prepare your session.',
+    allowOutsideClick: false,
+    didOpen: () => {
+        Swal.showLoading();
+    }
+});
                 window.location.href = '@Url.Action("Index", "Learn")';
             } else {
+                Swal.fire({
+    title: 'Loading ...',
+    text: 'Please wait while we prepare your session.',
+    allowOutsideClick: false,
+    didOpen: () => {
+        Swal.showLoading();
+    }
+});
                 window.location.href = '@Url.Action("Index", "Learn")' + '?courseName=' + encodedCourseName + '&LanguageID='+@ViewBag.LanguageID;
             }
            /// window.location.href = '@Url.Action("Index", "Learn")' + '?courseName=' + encodedCourseName + '&LanguageID=1';
@@ -78,8 +110,24 @@ Swal.fire({
      }).then(function () {
          ///window.location.href = '@Url.Action("Learn", "Course")' + '?courseName=' + encodedCourseName + '&LanguageID=1';
          if (lowerCourseName.includes("survey")) {
+             Swal.fire({
+    title: 'Loading ...',
+    text: 'Please wait while we prepare your session.',
+    allowOutsideClick: false,
+    didOpen: () => {
+        Swal.showLoading();
+    }
+});
                 window.location.href = '@Url.Action("Profile", "Student")';
             } else {
+                Swal.fire({
+    title: 'Loading ...',
+    text: 'Please wait while we prepare your session.',
+    allowOutsideClick: false,
+    didOpen: () => {
+        Swal.showLoading();
+    }
+});
                 window.location.href = '@Url.Action("Learn", "Course")' + '?courseName=' + encodedCourseName + '&LanguageID='+@ViewBag.LanguageID;
             }
      });

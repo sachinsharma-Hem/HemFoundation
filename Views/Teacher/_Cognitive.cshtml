@@ -126,7 +126,7 @@
 
                         html += `
                             <div class="col-xl-4 col-md-6">
-                                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 overflow-hidden d-flex flex-column cursor-pointer light-card module-card" onclick="openCogModule(${st.id}, '${st.videoLink || ''}', '${st.subTopicName}', ${st.languageId})">
+                                        <div class="card border-0 shadow-sm rounded-4 bg-white h-100 overflow-hidden d-flex flex-column cursor-pointer light-card module-card" onclick="openCogModule(${st.id}, '${st.videoLink || ''}', '${st.subTopicName}', ${st.languageId}, ${st.examinationId})">
                                     <!-- Image Container height set to 180px for perfect 16:9 look -->
                                     <div class="position-relative w-100 bg-dark border-bottom overflow-hidden" style="height:180px;">
                                         <img src="${imgSrc}" alt="${st.subTopicName}" class="w-100 h-100" style="object-fit: cover; object-position: center; opacity: ${isVideo ? '0.8' : '1'};" onerror="this.onerror=null; this.src='${fallbackImg}';" />
@@ -154,7 +154,7 @@
         });
 
         // Universal Click Handler for Sub-Topics
-        window.openCogModule = function(subTopicId, videoLink, title, languageId) {
+        window.openCogModule = function(subTopicId, videoLink, title, languageId, examinationId) {
             if (videoLink && videoLink.trim() !== '' && videoLink !== 'null') {
                 let embedUrl = videoLink.includes('watch?v=') ? videoLink.replace('watch?v=', 'embed/') : videoLink;
                 $('#cogVideoTitle').text(title);
@@ -165,8 +165,9 @@
                 let quizIdVal = $('#quizId').val() || 0;
                 let topicIdVal = subTopicId;
                 let langIdVal = languageId || 1;
-                let examIdVal = 0; 
-                let redirectUrl = `/Exam/Index?QuizId=${quizIdVal}&TopicID=${topicIdVal}&LevelID=1&LanguageID=${langIdVal}&IsInstituteQuiz=false&IsAttempt=true&ExamID=${examIdVal}`;
+                let examIdVal = examinationId||0;
+                let isAttemptVal = examIdVal !== 0;
+                let redirectUrl = `/Exam/Index?QuizId=${quizIdVal}&TopicID=${topicIdVal}&LevelID=1&LanguageID=${langIdVal}&IsInstituteQuiz=false&IsAttempt=${isAttemptVal}&ExamID=${examIdVal}`;
                 window.location.href = redirectUrl;
             }
         };

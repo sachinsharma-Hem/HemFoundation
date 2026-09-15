@@ -449,7 +449,7 @@ namespace HemFoundation.Controllers.Api
         }
 
         [HttpGet]
-        [Route("api/school/assign-standards")]
+        [Route("assign-standards")]
         public IActionResult AssignStandardsnonaut(int teacherId, string standard)
         {
             try

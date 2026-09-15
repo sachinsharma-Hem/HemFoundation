@@ -241,6 +241,9 @@
                         <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="exportTable('volunteer', 'xlsx')">
                             <i class="fas fa-file-excel me-1"></i> Export Excel
                         </button>
+                        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddVolunteer">
+                            <i class="bi bi-person-plus-fill me-1"></i> Add New Volunteer
+                        </button>
                     </div>
                 </div>
                 <div id="volunteerTableContainer"></div>
@@ -256,6 +259,7 @@
                             <select id="bulkUploadType" class="form-select rounded-3 shadow-none" required>
                                 <option value="Student">Students Bulk Upload</option>
                                 <option value="Teacher">Teachers Bulk Upload</option>
+                                <option value="Volunteer">Volunteer Bulk Upload</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -289,7 +293,7 @@
 </div>
 
 <!-- ================= MODALS ================= -->
-<!-- ASSIGN STANDARD MODAL (TEACHER) -->
+
 <!-- ASSIGN STANDARD MODAL (TEACHER) -->
 <div class="modal fade" id="assignStandardList" tabindex="-1" aria-hidden="true" data-bs-backdrop="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -383,6 +387,32 @@
     </div>
 </div>
 
+
+<!--Add Volunteer Model-->
+<div class="modal fade" id="modalAddVolunteer" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="fw-bold text-success"><i class="bi bi-people-fill me-2"></i> Register New Volunteer</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="frmAddVolunteer">
+                    <input type="hidden" name="portalId" value="7" />
+                    <input type="hidden" name="role" value="HF_Volunteers" />
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="small fw-bold">First Name</label><input type="text" name="firstName" class="form-control" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Last Name</label><input type="text" name="lastName" class="form-control" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Mobile No (Username)</label><input type="text" name="mobileNo" class="form-control" maxlength="10" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Email ID</label><input type="email" name="emailID" class="form-control" required></div>                    
+                        <div class="col-md-6"><label class="small fw-bold">City</label><input type="text" name="city" class="form-control" required></div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 rounded-pill mt-4 fw-bold">Submit Volunteer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- REQUIRED DEPENDENCY ORDER: jQuery MUST load first -->
 
 
@@ -495,7 +525,7 @@
             }
 
             // AJAX Handlers for Modals using Universal API
-            $('#frmAddStudent, #frmAddTeacher').on('submit', function(e) {
+            $('#frmAddStudent, #frmAddTeacher, #frmAddVolunteer').on('submit', function(e) {
                 e.preventDefault();
                 let $form = $(this);
                 let formData = new FormData(this);
@@ -568,7 +598,11 @@
                 movableColumns: true,
                 columns: [
                     { formatter: "rownum", title: "SrNo", hozAlign: "center", width: 60 },
-                    { title: "Students ID", field: "Students ID", formatter: cell => cell.getData().studentId || cell.getData().StudentID || '-' },
+                    {
+                        title: "Students ID",
+                        field: "studentId", // Use consistent lowercase or handle getter safely
+                        formatter: cell => cell.getData().studentId || cell.getData().StudentID || '-'
+                    },
                     {
                         title: "Student Name",
                         field: "firstName",
@@ -595,21 +629,34 @@
                         }
                     },
                     { title: "Username", field: "username", formatter: cell => cell.getData().username || cell.getData().Username || '-' },
-                    { title: "Password", field: "password_", formatter: cell => cell.getData().password || cell.getData().Password || '-' },
                     {
-                        title: "Report",
-                        field: "coins",
-                        hozAlign: "center",
+                        title: "Password",
+                        field: "password_", // Make sure this matches your data JSON key (e.g., "password_", "Password_", or "password")
                         formatter: cell => {
                             let d = cell.getData();
-                            let sId = d.studentId || d.StudentID || 0;
-                            let coins = d.coins || d.Coins || 0;
-                            return `<a target="_blank" href="/marks/PrintStudentScorecard?id=${sId}" class="ms-2 text-info" title="Print Scorecard"><i class="fas fa-print"></i></a>`;
+                            return d.password_ || d.Password_ || d.password || d.Password || '-';
+                        },
+                        accessorDownload: function(value, data, type, column, row) {
+                            // This explicitly forces Tabulator to grab the value during .xlsx export
+                            return data.password_ || data.Password_ || data.password || data.Password || '';
                         }
                     },
+                    // {
+                    //     title: "Report",
+                    //     field: "coins",
+                    //     hozAlign: "center",
+                    //     download: false,
+                    //     formatter: cell => {
+                    //         let d = cell.getData();
+                    //         let sId = d.studentId || d.StudentID || 0;
+                    //         let coins = d.coins || d.Coins || 0;
+                    //         return `<a target="_blank" href="/marks/PrintStudentScorecard?id=${sId}" class="ms-2 text-info" title="Print Scorecard"><i class="fas fa-print"></i></a>`;
+                    //     }
+                    // },
                     {
                         title: "Actions",
                         hozAlign: "center",
+                        download: false,
                         formatter: cell => {
                             let d = cell.getData();
                             let sId = d.studentId || d.StudentID || 0;
@@ -619,6 +666,7 @@
                     {
                         title: "SMS",
                         hozAlign: "center",
+                        download: false,
                         formatter: cell => {
                             let d = cell.getData();
                             let sId = d.studentId || d.StudentID || 0;
@@ -638,7 +686,22 @@
                 paginationSizeSelector: [10, 25, 50, 100],
                 movableColumns: true,
                 columns: [
-                    { title: "ID", field: "teacherId", hozAlign: "center", width: 70, formatter: cell => cell.getData().teacherId || cell.getData().TeacherID || cell.getData().teacherID || "N/A" },
+                    { formatter: "rownum", title: "SrNo", hozAlign: "center", width: 60 },
+                    { 
+                        title: "ID", 
+                        field: "teacherId", 
+                        hozAlign: "center", 
+                        width: 70, 
+                        formatter: cell => {
+                            let r = cell.getData();
+                            return r.teacherId || r.TeacherID || r.teacherID || "N/A";
+                        },
+                        accessorDownload: function(value, data, type, column, row) {
+                            // Ensures the ID is explicitly captured during Excel download
+                            return data.teacherId || data.TeacherID || data.teacherID || '';
+                        }
+                    },
+                  //  { title: "ID", field: "teacherId", hozAlign: "center", width: 70, formatter: cell => cell.getData().teacherId || cell.getData().TeacherID || cell.getData().teacherID || "N/A" },
                     { title: "Teacher Name", field: "FirstName", formatter: cell => cell.getData().FirstName || cell.getData().firstName || '' },
                     { title: "Institute Name", field: "instituteName", formatter: cell => cell.getData().instituteName || cell.getData().InstituteName || "N/A" },
                     { title: "City", field: "cityName", formatter: cell => cell.getData().cityName || cell.getData().CityName || cell.getData().city || "N/A" },
@@ -699,7 +762,22 @@
                 pagination: "local",
                 paginationSize: 10,
                 columns: [
-                    { formatter: "rownum", title: "SrNo", hozAlign: "center", width: 60 },
+                    { formatter: "rownum", title: "SrNo", hozAlign: "center", width: 60 },                    
+                    { 
+                        title: "ID", 
+                        field: "id", 
+                        hozAlign: "center", 
+                        width: 70, 
+                        formatter: cell => {
+                            let r = cell.getData();
+                            return r.iD || r.ID || r.id || "N/A";
+                        },
+                        accessorDownload: function(value, data, type, column, row) {
+                            // Ensures the ID is explicitly captured during Excel download
+                            return data.iD || data.ID || data.id || '';
+                        }
+                    },
+                    { title: "Mobile", field: "mobileNo", formatter: cell => cell.getData().mobileNo || cell.getData().MobileNo || '-' },
                     {
                         title: "Name",
                         field: "firstName",
@@ -710,23 +788,29 @@
                     },
                     { title: "Mobile", field: "mobileNo", formatter: cell => cell.getData().mobileNo || cell.getData().MobileNo || '-' },
                     { title: "Email", field: "email", formatter: cell => cell.getData().email || cell.getData().Email || '-' },
-                    {
-                        title: "Status",
-                        field: "isActive",
-                        hozAlign: "center",
-                        formatter: cell => {
-                            let isActive = cell.getData().isActive !== undefined ? cell.getData().isActive : cell.getData().IsActive;
-                            return isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-danger-subtle text-danger">Inactive</span>';
-                        }
-                    },
-                    {
-                        title: "Added On",
-                        field: "createdDate",
-                        formatter: cell => {
-                            let dateVal = cell.getData().createdDate || cell.getData().CreatedDate;
-                            return dateVal ? new Date(dateVal).toLocaleDateString() : '-';
-                        }
-                    }
+                    // {
+                    //     title: "Status",
+                    //     field: "isActive",
+                    //     hozAlign: "center",
+                    //     formatter: cell => {
+                    //         let isActive = cell.getData().isActive !== undefined ? cell.getData().isActive : cell.getData().IsActive;
+                    //         return isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-danger-subtle text-danger">Inactive</span>';
+                    //     }
+                    // },
+                   
+                    { title: "Username", field: "username", formatter: cell => cell.getData().username || cell.getData().Username || '-' },
+                    { title: "Password", field: "password_", formatter: cell => cell.getData().password_ || cell.getData().Password || '-' }
+                    // ,
+                    // {
+                    //     title: "SMS",
+                    //     hozAlign: "center",
+                    //     headerSort: false,
+                    //     formatter: cell => {
+                    //         let r = cell.getData();
+                    //         let tId = r.teacherId || r.TeacherID || r.teacherID || 0;
+                    //         return `<button type="button" data-id="${tId}" class="btn btn-outline-primary btn-xs px-2 SendSMSINSTeacher font-weight-bold rounded-pill">Send SMS</button>`;
+                    //     }
+                    // }
                 ]
             });
         }
@@ -967,17 +1051,17 @@
                     }
                 });
             }
-        $selectElement.multiselect({
-            nonSelectedText: 'Select Assigned Grades',
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            filterPlaceholder: 'Search class records...',
-            maxHeight: 250,
-            buttonClass: 'btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between',
-            // Force Bootstrap 5 dropdown toggle attribute
-            templates: {
-                button: '<button type="button" class="multiselect dropdown-toggle btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between" data-bs-toggle="dropdown" aria-expanded="false"><span class="multiselect-selected-text"></span></button>'
-            }
-        });
+        // $selectElement.multiselect({
+        //     nonSelectedText: 'Select Assigned Grades',
+        //     enableFiltering: true,
+        //     includeSelectAllOption: true,
+        //     filterPlaceholder: 'Search class records...',
+        //     maxHeight: 250,
+        //     buttonClass: 'btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between',
+        //     // Force Bootstrap 5 dropdown toggle attribute
+        //     templates: {
+        //         button: '<button type="button" class="multiselect dropdown-toggle btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between" data-bs-toggle="dropdown" aria-expanded="false"><span class="multiselect-selected-text"></span></button>'
+        //     }
+        // });
     </script>
 }
