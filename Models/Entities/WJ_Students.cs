@@ -20,22 +20,22 @@ namespace HemFoundation.Models.Entities
         public int StudentID { get; set; }
 
         [Column("standard")]
-        public string Standard { get; set; }
+        public string? Standard { get; set; }
 
         [Column("division")]
-        public string Division { get; set; }
+        public string? Division { get; set; }
 
         [Column("gardianname")]
-        public string GardianName { get; set; }
+        public string? GardianName { get; set; }
 
         [Column("referralcode")]
-        public string ReferralCode { get; set; }
+        public string? ReferralCode { get; set; }
 
         [Column("registrationamount")]
-        public decimal RegistrationAmount { get; set; }
+        public decimal? RegistrationAmount { get; set; }
 
         [Column("profileurl")]
-        public string ProfileUrl { get; set; }
+        public string? ProfileUrl { get; set; }
 
         [Column("isactive")]
         public bool? IsActive { get; set; }
@@ -47,19 +47,19 @@ namespace HemFoundation.Models.Entities
         public DateTime? TrialPeriodTill { get; set; }
 
         [Column("rollno")]
-        public string RollNo { get; set; }
+        public string? RollNo { get; set; }
 
         [Column("sharingpermission")]
         public bool? SharingPermission { get; set; }
 
         [Column("levelpath")]
-        public string LevelPath { get; set; }
+        public string? LevelPath { get; set; }
 
         [Column("guardianemailid")]
-        public string GuardianEmailID { get; set; }
+        public string? GuardianEmailID { get; set; }
 
         [Column("guardianmobileno")]
-        public string GuardianMobileNo { get; set; }
+        public string? GuardianMobileNo { get; set; }
 
         public virtual Users Users { get; set; }
 
