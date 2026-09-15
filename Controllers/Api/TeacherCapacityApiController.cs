@@ -1,4 +1,5 @@
-﻿using HemFoundation.Data;
+﻿using DocumentFormat.OpenXml.InkML;
+using HemFoundation.Data;
 using HemFoundation.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,16 @@ namespace HemFoundation.Controllers.Api
             int subTopicsCount = subTopicsData.Count;
 
             // 3. Frontend (JS) ko jo format chahiye usme map karna
+            //var subTopics = subTopicsData.Select(x => new
+            //{
+            //    id = x.TopicID,
+            //    subTopicName = x.TopicName,
+            //    videoLink = x.TrainerVideo,          // First card me video play karne ke liye
+            //    mcqThumbnail = x.TrainerExercise,    // Banner/Image ke liye
+            //    numberOfQuestions = x.NoOfQuestion ?? 0,
+            //    languageId = x.languageID ?? 1,
+                
+            //}).ToList();
             var subTopics = subTopicsData.Select(x => new
             {
                 id = x.TopicID,
@@ -46,9 +57,14 @@ namespace HemFoundation.Controllers.Api
                 videoLink = x.TrainerVideo,          // First card me video play karne ke liye
                 mcqThumbnail = x.TrainerExercise,    // Banner/Image ke liye
                 numberOfQuestions = x.NoOfQuestion ?? 0,
-                languageId = x.languageID ?? 1
-            }).ToList();
+                languageId = x.languageID ?? 1,
 
+                // Fetch examinationid where examtopicid matches the topic and endtime is not null
+                examinationId = _context.Examination
+                .Where(e => e.ExamTopicID == x.TopicID && e.EndTime != null)
+                .Select(e => (int?)e.ExaminationID)
+                .FirstOrDefault() // Or use relevant logic if multiple exist
+            }).ToList();
             return Ok(new
             {
                 success = true,

@@ -6,6 +6,7 @@ using HemFoundation.Migrations;
 using HemFoundation.Models;
 using HemFoundation.Models.Entities;
 using HemFoundation.Models.Identity;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -150,6 +151,8 @@ namespace HemFoundation.Controllers.Api
                 if (inst != null) mappedInstituteId = inst.InstituteID;
             }
 
+            String roleNAME = HttpContext.Session.GetString("UserRole") ?? "NA";
+
             if (roleName == "WJ_School")
             {
                 var institute = new WJ_Institutes
@@ -279,6 +282,45 @@ namespace HemFoundation.Controllers.Api
                 };
 
                 _context.WJ_Institutes.Add(affiliate);
+            }
+            else if (roleName == "HF_Volunteers")
+            {
+
+                Int32 associateintid = 0;Int32 associateaffiliate = 0;
+               
+                if(roleNAME == "WJ_School")
+                {
+                    associateintid = currentUserId??0;
+                }
+                else if(roleNAME == "WJ_Affiliate")
+                {
+                    associateaffiliate = currentUserId??0;
+                }
+
+
+
+                var volunteer = new Volunteer
+                {
+                    Id = generatedUserId,
+
+                    FirstName = model.FirstName,
+
+                    LastName = model.LastName,
+
+                    MobileNo = model.MobileNo,
+
+                    Email =model.EmailID,
+
+                    InstituteId = associateintid,
+
+                    AffiliateId = associateaffiliate,
+                    AspNetUserId = aspNetUserId,
+                    Password_ = model.MobileNo,
+                    IsActive = true,
+                    IsDeleted = false
+                };
+
+                _context.Volunteers.Add(volunteer);
             }
 
             await _context.SaveChangesAsync();
@@ -613,10 +655,15 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("download-sample/{fileType}")]
         public IActionResult DownloadSample(string fileType)
         {
-            string fileName = fileType.Equals("Teacher", StringComparison.OrdinalIgnoreCase)
-                ? "SampleTeacherRegistration.xlsx"
-                : "SampleStudentRegistration.xlsx";
-
+            //string fileName = fileType.Equals("Teacher", StringComparison.OrdinalIgnoreCase)
+            //    ? "SampleTeacherRegistration.xlsx"
+            //    : "SampleStudentRegistration.xlsx";
+            string fileName = fileType?.ToLowerInvariant() switch
+            {
+                "teacher" => "SampleTeacherRegistration.xlsx",
+                "volunteer" => "SampleVolunteerRegistration.xlsx",
+                _ => "SampleStudentRegistration.xlsx" // Default fallback for Student or invalid values
+            };
             // Path: wwwroot/images/bulkUploadSample/
             var filePath = Path.Combine(_env.WebRootPath, "images", "bulkUploadSample", fileName);
 
@@ -652,7 +699,47 @@ namespace HemFoundation.Controllers.Api
             var teachers = await _context.ViewHfTeacherDetails.Where(t => t.InstituteID == institute.instituteid && t.IsActive == true).ToListAsync();
             var logs = await _context.BulkUploadLogs.Where(l => l.InstituteID == institute.instituteid).OrderByDescending(l => l.UploadedDate).ToListAsync();
 
-            var volunteers = await _context.Volunteers.Where(v => v.InstituteId == institute.instituteid && !v.IsDeleted).ToListAsync();
+            // var volunteers = await _context.Volunteers.Where(v => v.InstituteId == institute.instituteid && !v.IsDeleted).ToListAsync();
+            var volunteers = new List<VolunteerWithUsernameDto>();
+            using (var command = _context.Database.GetDbConnection().CreateCommand())
+            {
+                command.CommandText = @"
+                    SELECT v.*, a.username 
+                        FROM public.""Volunteers"" v
+                        JOIN public.aspnetusers a ON v.""AspNetUserId"" = a.id
+                        WHERE v.""IsDeleted"" = false and v.""InstituteId""=@instituteId";
+
+                // Add parameter safely to prevent SQL injection
+                var parameter = command.CreateParameter();
+                parameter.ParameterName = "@instituteId";
+                parameter.Value = institute.instituteid;
+                command.Parameters.Add(parameter);
+
+                await _context.Database.OpenConnectionAsync();
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        volunteers.Add(new VolunteerWithUsernameDto
+                        {
+                            // Map your properties here as needed
+                            Username = reader["username"]?.ToString(),
+                            Password_ = reader["password_"]?.ToString(),
+                            AspNetUserId = reader["username"]?.ToString(),
+                            AffiliateId = Convert.ToInt32(reader["affiliateId"]?.ToString()),
+                            InstituteId = Convert.ToInt32(reader["instituteId"]?.ToString()),
+                            FirstName = reader["firstName"]?.ToString(),
+                            LastName = reader["lastName"]?.ToString(),
+                            Email= reader["email"]?.ToString(),
+                            MobileNo= reader["mobileNo"]?.ToString(),
+                            ID= Convert.ToInt32(reader["Id"]?.ToString()),
+
+
+                        });
+
+                    }
+                }
+            }
 
             return Ok(new { success = true, students, teachers, logs, volunteers });
         }
