@@ -333,7 +333,7 @@ namespace HemFoundation.Controllers.Api
             }
         }
       
-        [HttpPost("SendPasswordUser")]
+      [HttpPost("SendPasswordUser")]
         public async Task<IActionResult> SendPasswordUser([FromForm] int id)
         {
             string result = "0";

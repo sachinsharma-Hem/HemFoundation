@@ -3,6 +3,7 @@
   "WorkspaceRootPath": "H:\\Rajan Thakur\\Project\\HemFoundation\\",
   "Documents": [
     {
+
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\registration\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\registration\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
@@ -149,6 +150,18 @@
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\wwwroot\\css\\home\\home-hero.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:wwwroot\\css\\home\\home-hero.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\dashboard\\partials\\_affiliatedashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\dashboard\\partials\\_affiliatedashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\shared\\partials\\_loginmodal.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\shared\\partials\\_loginmodal.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\api\\universalregisterapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\universalregisterapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+
     }
   ],
   "DocumentGroupContainers": [
@@ -165,6 +178,7 @@
               "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             },
             {
+
               "$type": "Document",
               "DocumentIndex": 31,
               "Title": "ExamBAL.cs",
@@ -331,10 +345,27 @@
               "ViewState": "AgIAAC4BAAAAAAAAAAAawD0BAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-16T06:29:30.398Z",
+
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{c6f34f0d-7ae5-4f3a-be61-fe0c21ae9eb8}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "_AffiliateDashboard.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dashboard\\Partials\\_AffiliateDashboard.cshtml",
+              "RelativeDocumentMoniker": "Views\\Dashboard\\Partials\\_AffiliateDashboard.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dashboard\\Partials\\_AffiliateDashboard.cshtml",
+              "RelativeToolTip": "Views\\Dashboard\\Partials\\_AffiliateDashboard.cshtml",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAAABwAAABDAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-16T08:42:31.344Z",
+
               "EditorCaption": ""
             },
             {
               "$type": "Document",
+
               "DocumentIndex": 13,
               "Title": "_TeacherLayout.cshtml",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Shared\\Layouts\\_TeacherLayout.cshtml",
@@ -381,10 +412,22 @@
               "ViewState": "AgIAAOMCAAAAAAAAAAAqwOUCAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-09-16T06:29:30.401Z",
+
+              "DocumentIndex": 1,
+              "Title": "_LoginModal.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Shared\\Partials\\_LoginModal.cshtml",
+              "RelativeDocumentMoniker": "Views\\Shared\\Partials\\_LoginModal.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Shared\\Partials\\_LoginModal.cshtml",
+              "RelativeToolTip": "Views\\Shared\\Partials\\_LoginModal.cshtml",
+              "ViewState": "AgIAADMAAAAAAAAAAAAAADgAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-16T08:39:10.261Z",
+
               "EditorCaption": ""
             },
             {
               "$type": "Document",
+
               "DocumentIndex": 14,
               "Title": "Display.cshtml",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\TeacherHandout\\Display.cshtml",
@@ -631,6 +674,18 @@
               "ViewState": "AgIAALsEAAAAAAAAAAAswM0EAAA9AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-09-16T06:29:30.446Z"
+
+              "DocumentIndex": 2,
+              "Title": "UniversalRegisterApiController.cs",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\UniversalRegisterApiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Api\\UniversalRegisterApiController.cs",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\UniversalRegisterApiController.cs",
+              "RelativeToolTip": "Controllers\\Api\\UniversalRegisterApiController.cs",
+              "ViewState": "AgIAAE8BAAAAAAAAAAAswG0BAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-16T08:01:06.657Z",
+              "EditorCaption": ""
+
             }
           ]
         }
