@@ -312,6 +312,10 @@
                     }, 2000);
                 } else {
                     Swal.fire("Congrats!", response[1], "success");
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                   
                     btn_Next();
                     $checkBtn.removeClass('disabled').css('pointer-events', 'auto');
                 }

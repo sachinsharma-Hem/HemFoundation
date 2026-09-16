@@ -328,11 +328,13 @@ namespace HemFoundation.Controllers.Api
             // 4. Notifications (SMS and Email Handling)
             try
             {
+               
                 if (!string.IsNullOrEmpty(baseMobile))
                 {
+                    _smsManager.StudentRegistration(baseMobile, model.FirstName, uniqueUsername, baseMobile);
                     if (roleName == "WJ_Students")
                     {
-                        _smsManager.StudentRegistration(baseMobile, model.FirstName, uniqueUsername, baseMobile);
+                       
                     }
                     else
                     {
