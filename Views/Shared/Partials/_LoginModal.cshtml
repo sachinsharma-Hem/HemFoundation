@@ -1,4 +1,5 @@
-﻿<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+﻿<!-- Login / Forgot Password Unified Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg rounded-5 overflow-hidden bg-white p-2">
 
@@ -12,46 +13,47 @@
             <div class="modal-body px-4 py-4">
                 <div class="text-start mb-4">
                     <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold mb-2 small">
-                        <i class="bi bi-shield-lock-fill me-1"></i> Secure Portal Access
+                        <i class="bi bi-shield-lock-fill me-1" id="badgeIcon"></i> <span id="badgeText">Secure Portal Access</span>
                     </span>
                     <h3 class="fw-bold text-dark tracking-tight mb-1" id="loginModalLabel">Welcome Back</h3>
-                    <p class="text-muted small m-0">Please enter your credentials to access the dashboard.</p>
+                    <p class="text-muted small m-0" id="modalSubText">Please enter your credentials to access the dashboard.</p>
                 </div>
 
                 <form id="ajaxLoginForm" class="needs-validation" novalidate>
-                    <!-- Type changed from 'email' to 'text' to accept both Email and Mobile Number -->
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control rounded-4 border-0 bg-light px-3 shadow-none custom-input" id="loginEmail" placeholder="Email or Mobile Number" required>
-                        <label for="loginEmail" class="text-muted ps-3">
+                        <label for="loginEmail" class="text-muted ps-3" id="loginEmailLabel">
                             <i class="bi bi-person text-success me-2"></i> Email Address or Mobile No
                         </label>
                     </div>
 
-                    <div class="form-floating mb-4">
-                        <input type="password" class="form-control rounded-4 border-0 bg-light px-3 shadow-none custom-input" id="loginPassword" placeholder="Password" required>
+                    <div class="form-floating mb-4" id="passwordFieldContainer">
+                        <input type="password" class="form-control rounded-4 border-0 bg-light px-3 shadow-none custom-input" id="loginPassword" placeholder="Password">
                         <label for="loginPassword" class="text-muted ps-3">
                             <i class="bi bi-key text-success me-2"></i> Password
                         </label>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-4 px-1">
-                       @*  <div class="form-check">
+                        <div class="form-check" id="rememberMeContainer">
                             <input type="checkbox" class="form-check-input rounded-2 border-secondary" id="rememberMe">
                             <label class="form-check-label small text-secondary fw-medium" for="rememberMe">Remember me</label>
-                        </div> *@
-@*                         <a href="javascript:void(0);" class="small text-success text-decoration-none fw-bold hover-underline">Forgot Password?</a>
- *@                    </div>
+                        </div>
 
-                    <button type="submit" class="btn btn-success w-100 py-3 rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center transition-all hover-scale">
-                        <span>Sign In to Dashboard</span>
-                        <i class="bi bi-arrow-right-short ms-2 fs-4"></i>
+                        <a href="javascript:void(0);" id="toggleForgotPassword" class="small text-success text-decoration-none fw-bold hover-underline">Forgot Password?</a>
+                        <a href="javascript:void(0);" id="backToLogin" class="small text-secondary text-decoration-none fw-medium hover-underline d-none"><i class="bi bi-arrow-left me-1"></i> Back to Login</a>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="btn btn-success w-100 py-3 rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center transition-all hover-scale">
+                        <span id="btnText">Sign In to Dashboard</span>
+                        <span id="btnSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
                     </button>
                 </form>
             </div>
 
             <div class="modal-footer border-0 bg-light rounded-4 py-3 justify-content-center mb-1">
                 <p class="text-muted small m-0 d-flex align-items-center">
-                    <i class="bi bi-shield-check text-success fs-5 me-2"></i> Protected by HemFoundation JWT Security
+                    <i class="bi bi-shield-check text-success fs-5 me-2"></i> Protected by HEMA Foundation
                 </p>
             </div>
 
@@ -59,6 +61,7 @@
     </div>
 </div>
 
+<!-- Toast Notification Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
     <div id="liveToast" class="toast align-items-center text-white border-0 shadow-lg rounded-4" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex p-2 align-items-center">

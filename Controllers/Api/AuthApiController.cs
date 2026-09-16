@@ -1,4 +1,5 @@
-﻿using HemFoundation.Data;
+﻿using HemFoundation.Common;
+using HemFoundation.Data;
 using HemFoundation.DTOs;
 using HemFoundation.Models.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -210,5 +211,65 @@ namespace HemFoundation.Controllers.Api
 
             return Ok(new { success = true, message = "Logged out successfully from server." });
         }
+        // --- FORGOT PASSWORD ENDPOINT (Sends credentials via SMS using users table join) ---
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+        {
+            string identifier = model?.Username?.Trim() ?? "";
+            if (string.IsNullOrEmpty(identifier))
+                return BadRequest(new { success = false, message = "Username or Mobile Number is required." });
+
+            // 1. Find Identity User by username
+            var identityUser = await _context.Set<ApplicationUser>()
+                .FirstOrDefaultAsync(u => u.UserName == identifier);
+
+            HemFoundation.Models.Entities.Users? businessUser = null;
+
+            if (identityUser != null)
+            {
+                // Find matching record in business users table using AspNetUserID
+                businessUser = await _context.Users
+                    .FirstOrDefaultAsync(b => b.AspNetUserID == identityUser.Id);
+            }
+            else
+            {
+                // If not found by username, try searching directly by MobileNo in users table
+                businessUser = await _context.Users
+                    .FirstOrDefaultAsync(b => b.MobileNo == identifier);
+
+                if (businessUser != null && !string.IsNullOrEmpty(businessUser.AspNetUserID))
+                {
+                    identityUser = await _context.Set<ApplicationUser>()
+                        .FirstOrDefaultAsync(u => u.Id == businessUser.AspNetUserID);
+                }
+            }
+
+            if (identityUser == null || businessUser == null)
+            {
+                return NotFound(new { success = false, message = "User not found with the provided username or mobile number." });
+            }
+
+            string username = identityUser.UserName ?? "";
+            string password = businessUser.Password_ ?? "";
+            string mobileNumber = businessUser.MobileNo ?? "";
+            string name = businessUser.FirstName ?? "";
+
+            if (!string.IsNullOrEmpty(mobileNumber) && !string.IsNullOrEmpty(username))
+            {
+                // Trigger SMS Manager service to send credentials
+                var smsManager = new SMSManager(_configuration);
+                smsManager.StudentRegistration(mobileNumber, name, username, password);
+
+                return Ok(new { success = true, message = "Login credentials have been successfully sent to your mobile number." });
+            }
+
+            return BadRequest(new { success = false, message = "Mobile number or username is missing for this account." });
+        }
+
+    }
+
+    public class ForgotPasswordDto
+    {
+        public string? Username { get; set; }
     }
 }
