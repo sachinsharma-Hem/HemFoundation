@@ -56,8 +56,8 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 ws.Cell(1, 3).Value = "Last Name";
                 ws.Cell(1, 4).Value = "Standard";
                 ws.Cell(1, 5).Value = "School Name";
-                ws.Cell(1, 6).Value = "Topic";
-               // ws.Cell(1, 7).Value = "PBL Type";
+                ws.Cell(1, 6).Value = "CourseName";
+               ws.Cell(1, 7).Value = "PBL Type";
                 ws.Cell(1, 8).Value = "File Name";
                 ws.Cell(1, 9).Value = "Extension";
                 ws.Cell(1, 10).Value = "File URL";
@@ -77,7 +77,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     ws.Cell(rowIdx, 3).Value = item.LastName;
                     ws.Cell(rowIdx, 4).Value = item.Standard;
                     ws.Cell(rowIdx, 5).Value = item.InstituteName;
-                    ws.Cell(rowIdx, 6).Value = item.Title;
+                    ws.Cell(rowIdx, 6).Value = item.CourseName;
                     ws.Cell(rowIdx, 7).Value = item.Title;
                     ws.Cell(rowIdx, 8).Value = item.FileName;
                     ws.Cell(rowIdx, 9).Value = item.FileExtension;

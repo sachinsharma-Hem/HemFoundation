@@ -154,6 +154,22 @@
     <script src="https://kit.fontawesome.com/f3d5793761.js" crossorigin="anonymous"></script>
 
     <script>
+
+            $.ajaxSetup({
+                statusCode: {
+                    401: function() {
+                        Swal.fire({
+                            title: 'Session Expired',
+                            text: 'Your session has expired. Please log in again.',
+                            icon: 'warning',
+                            confirmButtonColor: '#0284c7',
+                            allowOutsideClick: false
+                        }).then(() => {
+                            performCleanupAndRedirect();
+                        });
+                    }
+                }
+            });
             $(document).ready(function() {
                 // 1. Retrieve session & profile info safely
                 let userSession = null;
@@ -166,8 +182,8 @@
                     $('#profile-email').text(userSession.email || '');
                     if (userSession.roles && userSession.roles.length > 0) {
                         $('#profile-role-badge').text(userSession.roles[0]);
-                    } else if (userSession.Roles && userSession.Roles.length > 0) {
-                        $('#profile-role-badge').text(userSession.Roles[0]);
+                    // } else if (userSession.Roles && userSession.Roles.length > 0) {
+                    //     $('#profile-role-badge').text(userSession.Roles[0]);
                     }
                 }
 

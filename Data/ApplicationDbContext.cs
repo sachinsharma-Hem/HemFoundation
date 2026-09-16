@@ -699,6 +699,20 @@ namespace HemFoundation.Data
             });
             builder.Entity<StudentActivityLog>().HasNoKey();
 
+            builder.Entity<WJ_Institutes>()
+                .Property(e => e.IsActive)
+                .HasConversion(
+                    v => new BitArray(new[] { v }),       // C# bool -> DB BitArray
+                    v => v != null && v.Count > 0 && v[0] // DB BitArray -> C# bool
+                );
+
+            builder.Entity<WJ_Institutes>()
+                .Property(e => e.IsVerify)
+                .HasConversion(
+                    v => new BitArray(new[] { v }),       // C# bool -> DB BitArray
+                    v => v != null && v.Count > 0 && v[0] // DB BitArray -> C# bool
+                );
+
         }
 
 
