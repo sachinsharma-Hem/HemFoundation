@@ -102,7 +102,7 @@ namespace HemFoundation.Controllers.Api
 
             var menuIds = menuRights.Select(rm => rm.MenuId).Distinct().ToList();
 
-            string primaryRole = roles.FirstOrDefault() ?? "User";
+            string primaryRole = roles.FirstOrDefault() ?? "WJ_Admin";
 
             // 1. Check RoleDashboardMappings in Database
             var dashboardMapping = await _context.RoleDashboardMappings

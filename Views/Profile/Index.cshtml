@@ -9,7 +9,7 @@
 
 <div class="container-fluid py-4">
     <div class="row g-4">
-        <!-- Left Sidebar: Avatar & Password -->
+        <!-- Left Sidebar: Avatar & Password Toggle -->
         <div class="col-xl-4">
             <div class="card border-0 shadow-sm rounded-4 text-center p-4 mb-4" style="background-color: var(--card-bg);">
                 <div class="position-relative d-inline-block mx-auto mb-3">
@@ -24,71 +24,43 @@
                 <span id="lbl-role" class="badge bg-success-subtle text-success rounded-pill px-3 py-1 fw-medium mx-auto" style="font-size: 0.8rem;">Role</span>
             </div>
 
+            <!-- Security / Password Change Section with Toggle Button -->
             <div class="card border-0 shadow-sm rounded-4 p-4" style="background-color: var(--card-bg);">
-                <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-shield-lock-fill text-success me-2"></i> Security</h5>
-                <form id="formChangePassword">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Current Password</label>
-                        <input type="password" id="txtCurrentPassword" class="form-control rounded-3 shadow-none" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">New Password</label>
-                        <input type="password" id="txtNewPassword" class="form-control rounded-3 shadow-none" required />
-                    </div>
-                    <button type="submit" class="btn btn-outline-success w-100 rounded-3 fw-semibold">Update Password</button>
-                </form>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold m-0 text-dark"><i class="bi bi-shield-lock-fill text-success me-2"></i> Security</h5>
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#passwordCollapse" aria-expanded="false" aria-controls="passwordCollapse">
+                        <i class="bi bi-key-fill me-1"></i> Change Password
+                    </button>
+                </div>
+
+                <!-- Collapsible Password Form -->
+                <div class="collapse mt-3" id="passwordCollapse">
+                    <form id="formChangePassword">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Current Password</label>
+                            <input type="password" id="txtCurrentPassword" class="form-control rounded-3 shadow-none" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">New Password</label>
+                            <input type="password" id="txtNewPassword" class="form-control rounded-3 shadow-none" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Confirm New Password</label>
+                            <input type="password" id="txtConfirmPassword" class="form-control rounded-3 shadow-none" required />
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 rounded-3 fw-semibold shadow-sm">Update Password</button>
+                    </form>
+                </div>
             </div>
         </div>
 
         <!-- Right Main Content -->
         <div class="col-xl-8">
+            <form id="formUpdateProfile" enctype="multipart/form-data">
 
-            <!-- Student Specific Information Card -->
-            <div id="studentInfoCard" class="card border-0 shadow-sm rounded-4 p-4 mb-4 d-none" style="background-color: var(--card-bg);">
-                <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-mortarboard-fill text-success me-2"></i> Academic & Guardian Details</h5>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Standard</label>
-                        <input type="text" id="txtStandard" class="form-control rounded-3 shadow-none" />
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Division</label>
-                        <input type="text" id="txtDivision" class="form-control rounded-3 shadow-none" />
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Gender</label>
-                        <select id="txtGender" class="form-select rounded-3 shadow-none">
-                            <option value="">Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-semibold">Institute / School Name (Search & Update)</label>
-                        <select id="ddlInstitute" class="form-select rounded-3 shadow-none" style="width: 100%;">
-                            <option value="">Select or Search School...</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Guardian Name</label>
-                        <input type="text" id="txtGuardianName" class="form-control rounded-3 shadow-none" />
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Guardian Email ID</label>
-                        <input type="email" id="txtGuardianEmail" class="form-control rounded-3 shadow-none" />
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Guardian Mobile No</label>
-                        <input type="text" id="txtGuardianMobile" class="form-control rounded-3 shadow-none" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Profile Information Form -->
-            <div class="card border-0 shadow-sm rounded-4 p-4" style="background-color: var(--card-bg);">
-                <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-person-lines-fill text-success me-2"></i> Profile Information</h5>
-                <form id="formUpdateProfile" enctype="multipart/form-data">
+                <!-- 1. Profile Information Form (Upper Card) -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background-color: var(--card-bg);">
+                    <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-person-lines-fill text-success me-2"></i> Profile Information</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">First Name</label>
@@ -103,8 +75,17 @@
                             <input type="text" id="txtMobileNo" class="form-control rounded-3 shadow-none" />
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Gender</label>
+                            <select id="ddlGender" class="form-select rounded-3 shadow-none">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label small fw-semibold">Email ID</label>
-                            <input type="email" id="txtEmail" class="form-control rounded-3 shadow-none" disabled />
+                            <input type="email" id="txtEmail" class="form-control rounded-3 shadow-none" />
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Pincode (Auto-fills City & State)</label>
@@ -114,21 +95,88 @@
                             <label class="form-label small fw-semibold">Address</label>
                             <input type="text" id="txtAddress" class="form-control rounded-3 shadow-none" />
                         </div>
+
+                        <!-- City & State with Manual Edit Checkbox -->
+                        <div class="col-12 d-flex justify-content-between align-items-center mt-2">
+                            <label class="form-label small fw-semibold m-0">Location Details</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="chkManualCityState" role="switch">
+                                <label class="form-check-label small text-muted" for="chkManualCityState">Edit City & State Manually</label>
+                            </div>
+                        </div>
+
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">City</label>
+                            <label class="form-label small fw-semibold text-muted">City</label>
                             <input type="text" id="txtCity" class="form-control rounded-3 shadow-none bg-light" readonly />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">State</label>
+                            <label class="form-label small fw-semibold text-muted">State</label>
                             <input type="text" id="txtState" class="form-control rounded-3 shadow-none bg-light" readonly />
                         </div>
-                        <div class="col-12 mt-4 pt-2 border-top d-flex justify-content-end align-items-center gap-2">
-                            <button type="submit" class="btn btn-success px-4 py-2 rounded-3 fw-semibold shadow-sm">
-                                <i class="bi bi-check-circle me-1"></i> Save Changes
-                            </button>
+                    </div>
+                </div>
+
+                <!-- 2. Academic & Guardian Details (Lower Card for Students) -->
+                <div id="studentInfoCard" class="card border-0 shadow-sm rounded-4 p-4 mb-4 d-none" style="background-color: var(--card-bg);">
+                    <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-mortarboard-fill text-success me-2"></i> Academic & Guardian Details</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Standard</label>
+                            <input type="text" id="txtStandard" class="form-control rounded-3 shadow-none" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Division</label>
+                            <input type="text" id="txtDivision" class="form-control rounded-3 shadow-none" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Institute / School Name</label>
+                            <select id="ddlInstitute" class="form-select rounded-3 shadow-none" style="width: 100%;">
+                                <option value="">Select or Search School...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Guardian Name</label>
+                            <input type="text" id="txtGuardianName" class="form-control rounded-3 shadow-none" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Guardian Email ID</label>
+                            <input type="email" id="txtGuardianEmail" class="form-control rounded-3 shadow-none" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Guardian Mobile No</label>
+                            <input type="text" id="txtGuardianMobile" class="form-control rounded-3 shadow-none" />
                         </div>
                     </div>
-                </form>
+                </div>
+
+                <!-- Single Global Save Button at the Bottom -->
+                <div class="card border-0 shadow-sm rounded-4 p-3 mb-4" style="background-color: var(--card-bg);">
+                    <div class="d-flex justify-content-end align-items-center">
+                        <button type="submit" class="btn btn-success px-5 py-2.5 rounded-3 fw-semibold shadow-sm">
+                            <i class="bi bi-check-circle me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modern Bootstrap Modal Popup for Messages -->
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div id="modalHeaderBg" class="modal-header text-white px-4 py-3">
+                <h5 class="modal-title fw-bold" id="messageModalLabel">Notification</h5>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div id="modalIcon" class="mb-3 fs-1"></div>
+                <p id="modalMessageBody" class="fs-6 text-dark mb-0 fw-medium"></p>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-0 justify-content-center">
+                <button type="button" class="btn btn-success px-4 rounded-pill fw-semibold" id="modalOkBtn" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
@@ -138,6 +186,34 @@
     <!-- Select2 JS for Searchable Dropdown -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        // Custom Popup Function
+        function showPopup(message, isSuccess = true, callback = null) {
+            const $headerBg = $('#modalHeaderBg');
+            const $icon = $('#modalIcon');
+            const $title = $('#messageModalLabel');
+
+            if (isSuccess) {
+                $headerBg.removeClass('bg-danger').addClass('bg-success');
+                $title.text('Success');
+                $icon.html('<i class="bi bi-check-circle-fill text-success"></i>');
+            } else {
+                $headerBg.removeClass('bg-success').addClass('bg-danger');
+                $title.text('Error');
+                $icon.html('<i class="bi bi-exclamation-triangle-fill text-danger"></i>');
+            }
+
+            $('#modalMessageBody').text(message);
+
+            const myModal = new bootstrap.Modal(document.getElementById('messageModal'));
+            myModal.show();
+
+            if (callback) {
+                $('#modalOkBtn').off('click').on('click', callback);
+            } else {
+                $('#modalOkBtn').off('click');
+            }
+        }
+
         $(document).ready(function() {
             const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
             let currentUserRole = '';
@@ -152,13 +228,22 @@
                     dataType: 'json',
                     delay: 250,
                     headers: { 'Authorization': 'Bearer ' + token },
-                    data: function (params) {
+                    data: function(params) {
                         return { term: params.term };
                     },
-                    processResults: function (data) {
+                    processResults: function(data) {
                         return { results: data };
                     },
                     cache: true
+                }
+            });
+
+            // Toggle manual editing for City and State
+            $('#chkManualCityState').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#txtCity, #txtState').removeAttr('readonly').removeClass('bg-light').css('background-color', '#fff');
+                } else {
+                    $('#txtCity, #txtState').attr('readonly', true).addClass('bg-light').css('background-color', '#f8f9fa');
                 }
             });
 
@@ -182,7 +267,7 @@
                         $('#txtCity').val(res.profile.city || '');
                         $('#txtState').val(res.profile.state || '');
                         $('#txtPincode').val(res.profile.pincode || '');
-                        $('#txtGender').val(res.profile.gender || '');
+                        $('#ddlGender').val(res.profile.gender || '');
 
                         const photo = res.profile.photoUrl;
                         if (photo) {
@@ -197,10 +282,10 @@
                             $('#txtGuardianEmail').val(res.profile.guardianEmail === 'Not Updated' ? '' : res.profile.guardianEmail);
                             $('#txtGuardianMobile').val(res.profile.guardianMobile === 'Not Updated' ? '' : res.profile.guardianMobile);
 
-                            // Pre-fill existing institute in searchable dropdown if available
                             if (res.profile.studentInstituteId && res.profile.studentInstituteName) {
                                 let newOption = new Option(res.profile.studentInstituteName, res.profile.studentInstituteId, true, true);
                                 $('#ddlInstitute').append(newOption).trigger('change');
+                                $('#ddlInstitute').prop('disabled', true);
                             }
                         }
                     }
@@ -209,6 +294,8 @@
 
             // Pincode Auto-fill
             $('#txtPincode').on('keyup', function() {
+                if ($('#chkManualCityState').is(':checked')) return;
+
                 let pincode = $(this).val().trim();
                 if (pincode.length === 6) {
                     $.get(`https://api.postalpincode.in/pincode/${pincode}`, function(data) {
@@ -235,26 +322,29 @@
                 }
             });
 
-            // Save Form Submission
+            // Save Form Submission with Popup
             $('#formUpdateProfile').on('submit', function(e) {
                 e.preventDefault();
                 let formData = new FormData();
                 formData.append('firstName', $('#txtFirstName').val());
                 formData.append('lastName', $('#txtLastName').val());
                 formData.append('phoneNumber', $('#txtMobileNo').val());
+                formData.append('email', $('#txtEmail').val());
                 formData.append('address', $('#txtAddress').val());
                 formData.append('city', $('#txtCity').val());
                 formData.append('state', $('#txtState').val());
                 formData.append('pincode', $('#txtPincode').val());
+                formData.append('gender', $('#ddlGender').val());
 
                 if (currentUserRole && currentUserRole.toLowerCase() === 'wj_students') {
                     formData.append('standard', $('#txtStandard').val());
                     formData.append('division', $('#txtDivision').val());
-                    formData.append('gender', $('#txtGender').val());
                     formData.append('guardianName', $('#txtGuardianName').val());
                     formData.append('guardianEmail', $('#txtGuardianEmail').val());
                     formData.append('guardianMobile', $('#txtGuardianMobile').val());
-                    formData.append('instituteID', $('#ddlInstitute').val() || '');
+                    if (!$('#ddlInstitute').is(':disabled')) {
+                        formData.append('instituteID', $('#ddlInstitute').val() || '');
+                    }
                 }
 
                 if (selectedPhotoFile) {
@@ -269,21 +359,30 @@
                     contentType: false,
                     headers: { 'Authorization': 'Bearer ' + token },
                     success: function(res) {
-                        alert(res.message);
-                        location.reload();
+                        showPopup(res.message, true, function() {
+                            location.reload();
+                        });
                     },
                     error: function(err) {
-                        alert(err.responseJSON?.message || 'Update failed');
+                        showPopup(err.responseJSON?.message || 'Update failed', false);
                     }
                 });
             });
 
-            // Change Password Form
+            // Change Password Form with Popup
             $('#formChangePassword').on('submit', function(e) {
                 e.preventDefault();
+                const newPass = $('#txtNewPassword').val();
+                const confirmPass = $('#txtConfirmPassword').val();
+
+                if (newPass !== confirmPass) {
+                    showPopup('New Password and Confirm Password do not match.', false);
+                    return;
+                }
+
                 const payload = {
                     currentPassword: $('#txtCurrentPassword').val(),
-                    newPassword: $('#txtNewPassword').val()
+                    newPassword: newPass
                 };
 
                 $.ajax({
@@ -293,11 +392,12 @@
                     headers: { 'Authorization': 'Bearer ' + token },
                     data: JSON.stringify(payload),
                     success: function(res) {
-                        alert(res.message);
+                        showPopup(res.message, true);
                         $('#formChangePassword')[0].reset();
+                        $('#passwordCollapse').collapse('hide');
                     },
                     error: function(err) {
-                        alert(err.responseJSON?.message || 'Password change failed');
+                        showPopup(err.responseJSON?.message || 'Password change failed', false);
                     }
                 });
             });
