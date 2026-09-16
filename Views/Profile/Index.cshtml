@@ -148,6 +148,20 @@
                         </div> *@
                     </div>
                 </div>
+                <div id="teacherInfoCard" class="card border-0 shadow-sm rounded-4 p-4 mb-4 d-none" style="background-color: var(--card-bg);">
+                    <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-mortarboard-fill text-success me-2"></i> Institute Details</h5>
+                    <div class="row g-3">
+                        
+                       
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Institute / School Name</label>
+                            <select id="ddlInstituteteacher" class="form-select rounded-3 shadow-none" style="width: 100%;">
+                                <option value="">Select or Search School...</option>
+                            </select>
+                        </div>
+                        
+                    </div>
+                </div>
 
                 <!-- Single Global Save Button at the Bottom -->
                 <div class="card border-0 shadow-sm rounded-4 p-3 mb-4" style="background-color: var(--card-bg);">
@@ -237,7 +251,25 @@
                     cache: true
                 }
             });
-
+            $('#ddlInstituteteacher').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Search and select school...',
+                allowClear: true,
+                ajax: {
+                    url: '/api/profile/institutes',
+                    dataType: 'json',
+                    delay: 250,
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    data: function(params) {
+                        return { term: params.term };
+                    },
+                    processResults: function(data) {
+                        return { results: data };
+                    },
+                    cache: true
+                }
+            });
+            
             // Toggle manual editing for City and State
             $('#chkManualCityState').on('change', function() {
                 if ($(this).is(':checked')) {
@@ -296,6 +328,15 @@
                                 $('#txtDivision').prop('disabled', true);
                             }
                         }
+                        if (res.role && res.role.toLowerCase() === 'wj_teacher') {
+                            $('#teacherInfoCard').removeClass('d-none');
+
+                            if (res.profile.studentInstituteId && res.profile.studentInstituteName) {
+                                let newOption = new Option(res.profile.studentInstituteName, res.profile.studentInstituteId, true, true);
+                                $('#ddlInstituteteacher').append(newOption).trigger('change');
+                                $('#ddlInstituteteacher').prop('disabled', true);
+                            }
+                        }
                     }
                 }
             });
@@ -352,6 +393,11 @@
                     // formData.append('guardianMobile', $('#txtGuardianMobile').val());
                     if (!$('#ddlInstitute').is(':disabled')) {
                         formData.append('instituteID', $('#ddlInstitute').val() || '');
+                    }
+                }
+                if (currentUserRole && currentUserRole.toLowerCase() === 'wj_teacher') {
+                     if (!$('#ddlInstituteteacher').is(':disabled')) {
+                        formData.append('instituteID', $('#ddlInstituteteacher').val() || '');
                     }
                 }
 

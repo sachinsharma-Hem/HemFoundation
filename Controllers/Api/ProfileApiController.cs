@@ -71,7 +71,8 @@ namespace HemFoundation.Controllers.Api
                 {
                     var studentInfo = await _context.WJ_Students
                         .Where(s => s.StudentID == customUser.UserID)
-                        .Select(s => new {
+                        .Select(s => new
+                        {
                             Standard = s.Standard ?? "Not Updated",
                             Division = s.Division ?? "Not Updated",
                             GardianName = s.GardianName ?? "Not Updated",
@@ -104,9 +105,29 @@ namespace HemFoundation.Controllers.Api
                     }
                 }
             }
+            else if (primaryRole.Contains("Teacher", StringComparison.OrdinalIgnoreCase))
+            {
+                if (customUser != null)
+                {
 
-            // Proper Gender Mapping for UI Dropdown selection
-            string rawGender = customUser?.Gender?.Trim().ToUpper() ?? "";
+                    var studentAssociate = await _context.WJ_TeacherAssociates
+                       .Where(sa => sa.TeacherID == customUser.UserID)
+                       .FirstOrDefaultAsync();
+
+                    if (studentAssociate != null)
+                    {
+                        studentInstituteId = studentAssociate.InstituteID;
+                        var institute = await _context.WJ_Institutes
+                            .Where(i => i.InstituteID == studentAssociate.InstituteID)
+                            .FirstOrDefaultAsync();
+
+                        studentInstituteName = institute?.Name ?? "Not Updated";
+                    }
+                }
+            }
+
+                    // Proper Gender Mapping for UI Dropdown selection
+                    string rawGender = customUser?.Gender?.Trim().ToUpper() ?? "";
             string mappedGender = "";
             if (rawGender == "M") mappedGender = "Male";
             else if (rawGender == "F") mappedGender = "Female";
@@ -291,6 +312,10 @@ namespace HemFoundation.Controllers.Api
                 {
                     await UpsertStudentDetailsAsync(customUser.UserID, model);
                 }
+                if (primaryRole.Contains("Teacher", StringComparison.OrdinalIgnoreCase))
+                {
+                    await UpsertTeacherDetailsAsync(customUser.UserID, model);
+                }
 
                 return Ok(new
                 {
@@ -358,7 +383,35 @@ namespace HemFoundation.Controllers.Api
 
             await _context.SaveChangesAsync();
         }
+        private async Task UpsertTeacherDetailsAsync(int teacherId, ProfileUpdateDto model)
+        {
+            
+            
 
+            if (model.InstituteID.HasValue && model.InstituteID.Value > 0)
+            {
+                var associate = await _context.WJ_TeacherAssociates
+                    .FirstOrDefaultAsync(sa => sa.TeacherID == teacherId);
+
+                if (associate != null)
+                {
+                    associate.InstituteID = model.InstituteID.Value;
+                    associate.IsPrimaryAssociate = true;
+                    _context.WJ_TeacherAssociates.Update(associate);
+                }
+                else
+                {
+                    _context.WJ_TeacherAssociates.Add(new WJ_TeacherAssociates
+                    {
+                        TeacherID = teacherId,
+                        InstituteID = model.InstituteID.Value,
+                        IsPrimaryAssociate = true
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
         {

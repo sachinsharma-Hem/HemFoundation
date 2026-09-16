@@ -1,7 +1,9 @@
 ﻿using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Spreadsheet;
 using HemFoundation.Data;
 using HemFoundation.Models;
 using HemFoundation.Models.Entities;
+using HemFoundation.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +17,7 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
+using WebDriverBiDi.Protocol;
 
 
 namespace HemFoundation.Controllers
@@ -26,15 +29,17 @@ namespace HemFoundation.Controllers
         private readonly string _connectionString;
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _context;
+        private readonly IGroupProjectService _groupProjectService;
         // Replace ApplicationDbContext with your actual EF Core context class name
         // private readonly ApplicationDbContext _context;
         private readonly ExamBAL _examBAL;
-        public ExamController(IConfiguration configuration, ExamBAL examBAL, ApplicationDbContext context)
+        public ExamController(IConfiguration configuration, ExamBAL examBAL, ApplicationDbContext context, IGroupProjectService groupProjectService)
         {
             _configuration = configuration;
             _connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
             _examBAL = examBAL;
             _context = context;
+            _groupProjectService = groupProjectService;
         }
 
         [HttpGet]
@@ -545,27 +550,46 @@ namespace HemFoundation.Controllers
                     }
                     else if (status == 3)
                     {
-                        GroupProjectController groupProjectController = HttpContext.RequestServices.GetService(typeof(GroupProjectController)) as GroupProjectController;
-                        if (groupProjectController != null)
+                        var result = await _groupProjectService.RaiseRequestAsync(courseID, studentID);
+
+
+                        try
                         {
-                            // 1. Await the asynchronous controller action
-                            var result = await groupProjectController.RaiseRequest(courseID);
+                            string message = await _groupProjectService.RaiseRequestAsync(courseID, studentID);
+                            TempData["UseSweetAlert2SP"] = true;
+                            TempData["SweetAlertTitle"] = "Request Sent";
+                            TempData["SweetAlertMessage"] = message;
+                            TempData["SweetAlertType"] = "success";
 
-                            // 2. Extract the message from the JsonResult returned by RaiseRequest in ASP.NET Core
-                            if (result is JsonResult jsonResult && jsonResult.Value != null)
-                            {
-                                var data = jsonResult.Value;
-                                string message = data.GetType().GetProperty("message")?.GetValue(data, null)?.ToString() ?? "Request sent successfully.";
-
-                                // 3. Set SweetAlert for user feedback
-                                TempData["UseSweetAlert2SP"] = true;
-                                TempData["SweetAlertTitle"] = "Request Sent";
-                                TempData["SweetAlertMessage"] = message;
-                                TempData["SweetAlertType"] = "success";
-
-                                return RedirectToAction("Showalert", "Exam", new { courseName = courseName });
-                            }
+                            return RedirectToAction("Showalert", "Exam", new { courseName = courseName });
                         }
+                        catch (Exception ex)
+                        {
+                            TempData["UseSweetAlert2SP"] = true;
+                            TempData["SweetAlertTitle"] = "Request Sent";
+                            TempData["SweetAlertMessage"] = "An error occurred.";
+                            TempData["SweetAlertType"] = "info";
+
+                            return RedirectToAction("Showalert", "Exam", new { courseName = courseName });
+                            // Log exception
+                            //return Json(new { success = false, message = "An error occurred." });
+                        }
+
+                        // 2. Extract the message from the JsonResult returned by RaiseRequest in ASP.NET Core
+                        //if (result is JsonResult jsonResult && jsonResult.Value != null)
+                        //{
+                        //    var data = jsonResult.Value;
+                        //    string message = data.GetType().GetProperty("message")?.GetValue(data, null)?.ToString() ?? "Request sent successfully.";
+
+                        //    // 3. Set SweetAlert for user feedback
+                        //    TempData["UseSweetAlert2SP"] = true;
+                        //    TempData["SweetAlertTitle"] = "Request Sent";
+                        //    TempData["SweetAlertMessage"] = message;
+                        //    TempData["SweetAlertType"] = "success";
+
+                        //    return RedirectToAction("Showalert", "Exam", new { courseName = courseName });
+                        //}
+
                     }
                 }
             }
