@@ -252,7 +252,7 @@ namespace HemFoundation.Controllers.Api
             // ROLE = Volunteer
             // =====================================================
 
-            var role = await _context.AspNetRoles.FirstOrDefaultAsync(x => x.Name == "Volunteer");
+            var role = await _context.AspNetRoles.FirstOrDefaultAsync(x => x.Name == "HF_Volunteers");
             if (role == null)
             {
                 return BadRequest(new { success = false, message = "Role 'Volunteer' not found in aspnetroles." });
@@ -482,7 +482,7 @@ namespace HemFoundation.Controllers.Api
                 // Same role used in manual registration
                 // ---------------------------------------------------------
                 var role = await _context.AspNetRoles
-                    .FirstOrDefaultAsync(x => x.Name == "Volunteer");
+                    .FirstOrDefaultAsync(x => x.Name == "HF_Volunteers");
 
                 if (role == null)
                 {

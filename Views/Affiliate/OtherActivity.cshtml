@@ -4,675 +4,265 @@
 }
 <div class="container-fluid py-4">
 
-    <!-- ================= PAGE HEADER ================= -->
+    <!-- PAGE HEADER -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
-
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-
                 <div>
                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 mb-2">
-                        <i class="bi bi-activity me-1"></i>
-                        Other Activities
+                        <i class="bi bi-activity me-1"></i> Other Activities
                     </span>
-
-                    <h4 class="fw-bold text-dark mb-1">
-                        Activity & Expense Management
-                    </h4>
-
-                    <p class="text-muted small mb-0">
-                        Manage your activities, visits, progress updates and expenses.
-                    </p>
+                    <h4 class="fw-bold text-dark mb-1">Activity & Expense Management</h4>
+                    <p class="text-muted small mb-0">Manage your activities, visits, progress updates and expenses.</p>
                 </div>
-
                 <div class="d-flex gap-2">
-
-                    <button type="button"
-                            class="btn btn-primary rounded-pill px-4 fw-semibold"
-                            id="btnNewActivity">
-                        <i class="bi bi-plus-lg me-1"></i>
-                        New Activity
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" id="btnNewActivity">
+                        <i class="bi bi-plus-lg me-1"></i> New Activity
                     </button>
-
-                    <button type="button"
-                            class="btn btn-success rounded-pill px-4 fw-semibold"
-                            id="btnNewExpense">
-                        <i class="bi bi-receipt me-1"></i>
-                        New Expense
+                    <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold" id="btnNewExpense">
+                        <i class="bi bi-receipt me-1"></i> New Expense
                     </button>
-
                 </div>
-
             </div>
-
         </div>
     </div>
 
-
-    <!-- ================= TABS ================= -->
-
+    <!-- TABS -->
     <div class="card border-0 shadow-sm rounded-4">
-
         <div class="card-body p-4">
-
             <ul class="nav nav-pills gap-2 mb-4" id="activityTabs">
-
                 <li class="nav-item">
-
-                    <button type="button"
-                            class="nav-link active rounded-pill px-4 fw-semibold"
-                            id="activitiesTabBtn">
-
-                        <i class="bi bi-building me-1"></i>
-                        My Activities
-
+                    <button type="button" class="nav-link active rounded-pill px-4 fw-semibold" id="activitiesTabBtn">
+                        <i class="bi bi-building me-1"></i> My Activities
                     </button>
-
                 </li>
-
                 <li class="nav-item">
-
-                    <button type="button"
-                            class="nav-link rounded-pill px-4 fw-semibold"
-                            id="expensesTabBtn">
-
-                        <i class="bi bi-wallet2 me-1"></i>
-                        My Expenses
-
+                    <button type="button" class="nav-link rounded-pill px-4 fw-semibold" id="expensesTabBtn">
+                        <i class="bi bi-wallet2 me-1"></i> My Expenses
                     </button>
-
                 </li>
-
             </ul>
 
-
-            <!-- ================= ACTIVITIES ================= -->
-
+            <!-- ACTIVITIES SECTION -->
             <div id="activitiesSection">
-
                 <div class="d-flex justify-content-between align-items-center mb-3">
-
                     <div>
-                        <h5 class="fw-bold mb-1">
-                            Activity List
-                        </h5>
-
-                        <p class="text-muted small mb-0">
-                            Your submitted activities and their current status.
-                        </p>
+                        <h5 class="fw-bold mb-1">Activity List</h5>
+                        <p class="text-muted small mb-0">Your submitted activities and their current status.</p>
                     </div>
-
-                    <button type="button"
-                            class="btn btn-outline-primary btn-sm rounded-pill px-3"
-                            id="btnRefreshActivities">
-
-                        <i class="bi bi-arrow-clockwise me-1"></i>
-                        Refresh
-
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" id="btnRefreshActivities">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                     </button>
-
                 </div>
-
-
                 <div class="table-responsive border rounded-3">
-
                     <table class="table table-hover align-middle mb-0">
-
                         <thead class="table-light">
-
                             <tr>
-
                                 <th class="px-3 py-3">Activity</th>
-
                                 <th>School</th>
-
                                 <th>Location</th>
-
                                 <th>Visit Reason</th>
-
                                 <th>Initial Remark</th>
-
                                 <th>Update Remark</th>
-
                                 <th>Status</th>
-
                                 <th>Image</th>
-
                                 <th class="text-end px-3">Action</th>
-
                             </tr>
-
                         </thead>
-
                         <tbody id="activityTableBody">
-
-                            <tr>
-
-                                <td colspan="9"
-                                    class="text-center text-muted py-5">
-
-                                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-
-                                    Loading activities...
-
-                                </td>
-
-                            </tr>
-
+                            <tr><td colspan="9" class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading activities...</td></tr>
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
 
-
-            <!-- ================= EXPENSES ================= -->
-
+            <!-- EXPENSES SECTION -->
             <div id="expensesSection" class="d-none">
-
                 <div class="d-flex justify-content-between align-items-center mb-3">
-
                     <div>
-                        <h5 class="fw-bold mb-1">
-                            Expense List
-                        </h5>
-
-                        <p class="text-muted small mb-0">
-                            Track your submitted expenses.
-                        </p>
+                        <h5 class="fw-bold mb-1">Expense List</h5>
+                        <p class="text-muted small mb-0">Track your submitted expenses.</p>
                     </div>
-
-                    <button type="button"
-                            class="btn btn-outline-success btn-sm rounded-pill px-3"
-                            id="btnRefreshExpenses">
-
-                        <i class="bi bi-arrow-clockwise me-1"></i>
-                        Refresh
-
+                    <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3" id="btnRefreshExpenses">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                     </button>
-
                 </div>
-
-
                 <div class="table-responsive border rounded-3">
-
                     <table class="table table-hover align-middle mb-0">
-
                         <thead class="table-light">
-
                             <tr>
-
                                 <th class="px-3">Date</th>
-
                                 <th>Expense Detail</th>
-
                                 <th>Amount</th>
-
                                 <th>Status</th>
-
                             </tr>
-
                         </thead>
-
                         <tbody id="expenseTableBody">
-
-                            <tr>
-
-                                <td colspan="4"
-                                    class="text-center text-muted py-5">
-
-                                    Loading expenses...
-
-                                </td>
-
-                            </tr>
-
+                            <tr><td colspan="4" class="text-center text-muted py-5">Loading expenses...</td></tr>
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
-
         </div>
-
     </div>
-
 </div>
 
-
-<!-- ========================================================= -->
-<!-- NEW ACTIVITY MODAL -->
-<!-- ========================================================= -->
-
-<div class="modal fade"
-     id="activityModal"
-     tabindex="-1"
-     aria-hidden="true">
-
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-
+<!-- ================= MODAL: NEW ACTIVITY ================= -->
+<div class="modal fade" id="activityModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow-lg">
-
             <div class="modal-header">
-
-                <h5 class="modal-title fw-bold text-primary">
-
-                    <i class="bi bi-plus-circle me-2"></i>
-                    Create New Activity
-
-                </h5>
-
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal">
-                </button>
-
+                <h5 class="modal-title fw-bold text-primary"><i class="bi bi-plus-circle me-2"></i> Create New Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
-
             <form id="activityForm">
-
                 <div class="modal-body">
-
                     <div class="row g-3">
-
                         <div class="col-md-6">
-
-                            <label class="form-label fw-semibold small">
-                                Activity Name <span class="text-danger">*</span>
-                            </label>
-
-                            <input type="text"
-                                   id="activityName"
-                                   class="form-control rounded-3"
-                                   required>
-
+                            <label class="form-label fw-semibold small">Activity Name <span class="text-danger">*</span></label>
+                            <input type="text" id="activityName" class="form-control rounded-3" required>
                         </div>
-
-
                         <div class="col-md-6">
-
-                            <label class="form-label fw-semibold small">
-                                School Name <span class="text-danger">*</span>
-                            </label>
-
-                            <input type="text"
-                                   id="schoolName"
-                                   class="form-control rounded-3"
-                                   required>
-
+                            <label class="form-label fw-semibold small">School Name <span class="text-danger">*</span></label>
+                            <input type="text" id="schoolName" class="form-control rounded-3" required>
                         </div>
-
-
                         <div class="col-md-12">
-
-                            <label class="form-label fw-semibold small">
-                                Address <span class="text-danger">*</span>
-                            </label>
-
-                            <textarea id="activityAddress"
-                                      class="form-control rounded-3"
-                                      rows="2"
-                                      required></textarea>
-
+                            <label class="form-label fw-semibold small">Address <span class="text-danger">*</span></label>
+                            <textarea id="activityAddress" class="form-control rounded-3" rows="2" required></textarea>
                         </div>
-
-
                         <div class="col-md-4">
-
-                            <label class="form-label fw-semibold small">
-                                Pincode
-                            </label>
-
-                            <input type="text"
-                                   id="activityPincode"
-                                   maxlength="6"
-                                   class="form-control rounded-3">
-
+                            <label class="form-label fw-semibold small">Pincode</label>
+                            <input type="text" id="activityPincode" maxlength="6" class="form-control rounded-3" placeholder="Enter 6-digit pincode">
                         </div>
-
-
                         <div class="col-md-4">
-
-                            <label class="form-label fw-semibold small">
-                                City
-                            </label>
-
-                            <input type="text"
-                                   id="activityCity"
-                                   class="form-control rounded-3">
-
+                            <label class="form-label fw-semibold small">City</label>
+                            <input type="text" id="activityCity" class="form-control rounded-3">
                         </div>
-
-
                         <div class="col-md-4">
-
-                            <label class="form-label fw-semibold small">
-                                State
-                            </label>
-
-                            <input type="text"
-                                   id="activityState"
-                                   class="form-control rounded-3">
-
+                            <label class="form-label fw-semibold small">State</label>
+                            <input type="text" id="activityState" class="form-control rounded-3">
                         </div>
-
-
                         <div class="col-md-12">
-
-                            <label class="form-label fw-semibold small">
-                                Visit Reason <span class="text-danger">*</span>
-                            </label>
-
-                            <textarea id="visitReason"
-                                      class="form-control rounded-3"
-                                      rows="2"
-                                      required></textarea>
-
+                            <label class="form-label fw-semibold small">Visit Reason <span class="text-danger">*</span></label>
+                            <textarea id="visitReason" class="form-control rounded-3" rows="2" required></textarea>
                         </div>
-
-
                         <div class="col-md-12">
-
-                            <label class="form-label fw-semibold small">
-                                Initial Remark
-                            </label>
-
-                            <textarea id="initialRemark"
-                                      class="form-control rounded-3"
-                                      rows="2"></textarea>
-
+                            <label class="form-label fw-semibold small">Initial Remark</label>
+                            <textarea id="initialRemark" class="form-control rounded-3" rows="2"></textarea>
                         </div>
-
                     </div>
-
                 </div>
-
-
                 <div class="modal-footer">
-
-                    <button type="button"
-                            class="btn btn-light border rounded-pill px-4"
-                            data-bs-dismiss="modal">
-
-                        Cancel
-
+                    <button type="button" class="btn btn-light border rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="btnCreateActivity" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                        <i class="bi bi-check-lg me-1"></i> Create Activity
                     </button>
-
-                    <button type="submit"
-                            id="btnCreateActivity"
-                            class="btn btn-primary rounded-pill px-4 fw-semibold">
-
-                        <i class="bi bi-check-lg me-1"></i>
-                        Create Activity
-
-                    </button>
-
                 </div>
-
             </form>
-
         </div>
-
     </div>
-
 </div>
 
-
-<!-- ========================================================= -->
-<!-- UPDATE ACTIVITY MODAL -->
-<!-- ========================================================= -->
-
-<div class="modal fade"
-     id="updateActivityModal"
-     tabindex="-1"
-     aria-hidden="true">
-
+<!-- ================= MODAL: UPDATE ACTIVITY ================= -->
+<div class="modal fade" id="updateActivityModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-
         <div class="modal-content border-0 rounded-4 shadow-lg">
-
             <div class="modal-header">
-
-                <h5 class="modal-title fw-bold text-primary">
-
-                    <i class="bi bi-pencil-square me-2"></i>
-                    Update Activity
-
-                </h5>
-
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal">
-                </button>
-
+                <h5 class="modal-title fw-bold text-primary"><i class="bi bi-pencil-square me-2"></i> Update Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
-
             <form id="updateActivityForm">
-
                 <div class="modal-body">
-
-                    <input type="hidden"
-                           id="updateActivityId">
-
-
+                    <input type="hidden" id="updateActivityId">
                     <div class="mb-3">
-
-                        <label class="form-label fw-semibold small">
-                            Status <span class="text-danger">*</span>
-                        </label>
-
-                        <select id="updateStatus"
-                                class="form-select rounded-3"
-                                required>
-
-                            <option value="Pending">
-                                Pending
-                            </option>
-
-                            <option value="InProgress">
-                                In Progress
-                            </option>
-
-                            <option value="Completed">
-                                Completed
-                            </option>
-
+                        <label class="form-label fw-semibold small">Status <span class="text-danger">*</span></label>
+                        <select id="updateStatus" class="form-select rounded-3" required>
+                            <option value="Pending">Pending</option>
+                            <option value="InProgress">In Progress</option>
+                            <option value="Completed">Completed</option>
                         </select>
-
                     </div>
-
-
                     <div class="mb-3">
-
-                        <label class="form-label fw-semibold small">
-                            Update Remark
-                        </label>
-
-                        <textarea id="updateRemark"
-                                  class="form-control rounded-3"
-                                  rows="4"
-                                  placeholder="Enter progress/update remark..."></textarea>
-
+                        <label class="form-label fw-semibold small">Update Remark</label>
+                        <textarea id="updateRemark" class="form-control rounded-3" rows="4" placeholder="Enter progress/update remark..."></textarea>
                     </div>
-
-
                     <div class="mb-2">
-
-                        <label class="form-label fw-semibold small">
-                            Activity Image
-                        </label>
-
-                        <input type="file"
-                               id="activityImage"
-                               class="form-control rounded-3"
-                               accept="image/*">
-
-                        <div class="form-text">
-                            JPG, JPEG, PNG etc.
-                        </div>
-
+                        <label class="form-label fw-semibold small">Activity Image</label>
+                        <input type="file" id="activityImage" class="form-control rounded-3" accept="image/*">
                     </div>
-
                 </div>
-
-
                 <div class="modal-footer">
-
-                    <button type="button"
-                            class="btn btn-light border rounded-pill px-4"
-                            data-bs-dismiss="modal">
-
-                        Cancel
-
+                    <button type="button" class="btn btn-light border rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="btnUpdateActivity" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                        <i class="bi bi-save me-1"></i> Save Update
                     </button>
-
-                    <button type="submit"
-                            id="btnUpdateActivity"
-                            class="btn btn-primary rounded-pill px-4 fw-semibold">
-
-                        <i class="bi bi-save me-1"></i>
-                        Save Update
-
-                    </button>
-
                 </div>
-
             </form>
-
         </div>
-
     </div>
-
 </div>
 
-
-<!-- ========================================================= -->
-<!-- EXPENSE MODAL -->
-<!-- ========================================================= -->
-
-<div class="modal fade"
-     id="expenseModal"
-     tabindex="-1"
-     aria-hidden="true">
-
-    <div class="modal-dialog modal-dialog-centered">
-
+<!-- ================= MODAL: SUBMIT EXPENSE ================= -->
+<div class="modal fade" id="expenseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog  modal-xl modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow-lg">
-
             <div class="modal-header">
-
-                <h5 class="modal-title fw-bold text-success">
-
-                    <i class="bi bi-receipt me-2"></i>
-                    Submit Expense
-
-                </h5>
-
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal">
-                </button>
-
+                <h5 class="modal-title fw-bold text-success"><i class="bi bi-receipt me-2"></i> Submit Expense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
-
             <form id="expenseForm">
-
                 <div class="modal-body">
-
+                    <!-- Expense Relation Radio Options -->
                     <div class="mb-3">
-
-                        <label class="form-label fw-semibold small">
-                            Expense Date <span class="text-danger">*</span>
-                        </label>
-
-                        <input type="date"
-                               id="expenseDate"
-                               class="form-control rounded-3"
-                               required>
-
-                    </div>
-
-
-                    <div class="mb-3">
-
-                        <label class="form-label fw-semibold small">
-                            Expense Detail <span class="text-danger">*</span>
-                        </label>
-
-                        <textarea id="expenseDetail"
-                                  class="form-control rounded-3"
-                                  rows="4"
-                                  required
-                                  placeholder="Enter expense details..."></textarea>
-
-                    </div>
-
-
-                    <div class="mb-3">
-
-                        <label class="form-label fw-semibold small">
-                            Amount <span class="text-danger">*</span>
-                        </label>
-
-                        <div class="input-group">
-
-                            <span class="input-group-text">
-                                ₹
-                            </span>
-
-                            <input type="number"
-                                   id="expenseAmount"
-                                   class="form-control rounded-end-3"
-                                   min="0"
-                                   step="0.01"
-                                   required>
-
+                        <label class="form-label fw-semibold small">Expense Related To <span class="text-danger">*</span></label>
+                        <div class="d-flex gap-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="expenseRelation" id="radioSchoolVisit" value="SchoolVisit" checked onchange="toggleExpenseRelation()">
+                                <label class="form-check-label small fw-semibold" for="radioSchoolVisit">Existing School Visit</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="expenseRelation" id="radioOtherActivity" value="OtherActivity" onchange="toggleExpenseRelation()">
+                                <label class="form-check-label small fw-semibold" for="radioOtherActivity">Other Activity</label>
+                            </div>
                         </div>
-
                     </div>
 
+                    <!-- Dynamic Dropdown -->
+                    <div class="mb-3" id="divExpenseDropdown">
+                        <label class="form-label fw-semibold small" id="lblExpenseDropdown">Select School Visit <span class="text-danger">*</span></label>
+                        <select id="ddlRelatedItem" class="form-select rounded-3 shadow-none" required>
+                            <option value="">-- Loading --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Expense Date <span class="text-danger">*</span></label>
+                        <input type="date" id="expenseDate" class="form-control rounded-3" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Expense Detail <span class="text-danger">*</span></label>
+                        <textarea id="expenseDetail" class="form-control rounded-3" rows="3" required placeholder="Enter expense details..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Amount <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" id="expenseAmount" class="form-control rounded-end-3" min="0" step="0.01" required>
+                        </div>
+                    </div>
                 </div>
-
-
                 <div class="modal-footer">
-
-                    <button type="button"
-                            class="btn btn-light border rounded-pill px-4"
-                            data-bs-dismiss="modal">
-
-                        Cancel
-
+                    <button type="button" class="btn btn-light border rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="btnCreateExpense" class="btn btn-success rounded-pill px-4 fw-semibold">
+                        <i class="bi bi-check-lg me-1"></i> Submit Expense
                     </button>
-
-                    <button type="submit"
-                            id="btnCreateExpense"
-                            class="btn btn-success rounded-pill px-4 fw-semibold">
-
-                        <i class="bi bi-check-lg me-1"></i>
-                        Submit Expense
-
-                    </button>
-
                 </div>
-
             </form>
-
         </div>
-
     </div>
-
 </div>
-
 
 <style>
-
     .table > :not(caption) > * > * {
         vertical-align: middle;
     }
@@ -682,1306 +272,363 @@
         padding: .4rem .7rem;
         border-radius: 50rem;
     }
-
 </style>
 
-
 <script>
+    (function() {
+        "use strict";
 
-(function () {
-
-    "use strict";
-
-
-    /* =========================================================
-       AUTH
-    ========================================================= */
-
-    function getAuthToken() {
-
-        return localStorage.getItem("jwt_token")
-            || sessionStorage.getItem("jwt_token")
-            || "";
-
-    }
-
-
-    /* =========================================================
-       API REQUEST
-    ========================================================= */
-
-    async function apiRequest(url, options = {}) {
-
-        const token = getAuthToken();
-
-        const headers = {
-            "Authorization": "Bearer " + token
-        };
-
-
-        /*
-         * IMPORTANT:
-         *
-         * FormData ke saath Content-Type manually mat lagana.
-         * Browser khud multipart/form-data boundary set karega.
-         */
-
-        if (!(options.body instanceof FormData)) {
-
-            headers["Content-Type"] = "application/json";
-
+        function getAuthToken() {
+            return localStorage.getItem("jwt_token") || sessionStorage.getItem("jwt_token") || "";
         }
 
-
-        const response = await fetch(url, {
-
-            ...options,
-
-            headers: {
-                ...headers,
-                ...(options.headers || {})
+        async function apiRequest(url, options = {}) {
+            const token = getAuthToken();
+            const headers = { "Authorization": "Bearer " + token };
+            if (!(options.body instanceof FormData)) {
+                headers["Content-Type"] = "application/json";
             }
-
-        });
-
-
-        let data = null;
-
-        try {
-
-            data = await response.json();
-
-        }
-        catch {
-
-            data = null;
-
+            const response = await fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } });
+            let data = null;
+            try { data = await response.json(); } catch { data = null; }
+            if (!response.ok) { throw { status: response.status, data: data }; }
+            return data;
         }
 
+        function showModal(id) {
+            const element = document.getElementById(id);
+            if (!element) return;
+            bootstrap.Modal.getOrCreateInstance(element).show();
+        }
 
-        if (!response.ok) {
+        function hideModal(id) {
+            const element = document.getElementById(id);
+            if (!element) return;
+            bootstrap.Modal.getOrCreateInstance(element).hide();
+        }
 
-            throw {
+        function formatDate(value) {
+            if (!value) return "-";
+            const date = new Date(value);
+            if (isNaN(date.getTime())) return "-";
+            return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+        }
 
-                status: response.status,
+        function escapeHtml(value) {
+            if (value === null || value === undefined) return "";
+            return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+        }
 
-                data: data
+        function getStatusBadge(status) {
+            const value = (status || "Pending").toLowerCase();
+            if (value === "completed" || value === "approved") {
+                return `<span class="badge bg-success-subtle text-success border border-success-subtle status-badge">Completed</span>`;
+            }
+            if (value === "inprogress") {
+                return `<span class="badge bg-primary-subtle text-primary border border-primary-subtle status-badge">In Progress</span>`;
+            }
+            if (value === "rejected") {
+                return `<span class="badge bg-danger-subtle text-danger border border-danger-subtle status-badge">Rejected</span>`;
+            }
+            return `<span class="badge bg-warning-subtle text-dark border border-warning-subtle status-badge">Pending</span>`;
+        }
 
+        // 1. Pincode Auto-detect City & State via Postalpincode API
+        async function setupPincodeLookup() {
+            const pincodeInput = document.getElementById("activityPincode");
+            if (!pincodeInput) return;
+
+            pincodeInput.addEventListener("blur", async function() {
+                const pin = this.value.trim();
+                if (pin.length === 6 && /^\d+$/.test(pin)) {
+                    try {
+                        const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+                        const data = await res.json();
+                        if (data && data[0].Status === "Success") {
+                            const postOffice = data[0].PostOffice[0];
+                            document.getElementById("activityCity").value = postOffice.District || postOffice.Region || "";
+                            document.getElementById("activityState").value = postOffice.State || "";
+                        }
+                    } catch (e) {
+                        console.error("Pincode fetch error:", e);
+                    }
+                }
+            });
+        }
+
+        // 2. Restrict Schedule Date to prevent backdates
+        function setMinDateTime() {
+            const today = new Date().toISOString().split("T")[0];
+            const dateInput = document.getElementById("expenseDate");
+            if (dateInput) dateInput.setAttribute("min", today);
+        }
+
+        // Load Activities
+        async function loadActivities() {
+            const tbody = document.getElementById("activityTableBody");
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading activities...</td></tr>`;
+
+            try {
+                const res = await apiRequest("/api/other-activity/list");
+                if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-5">No activities found.</td></tr>`;
+                    return;
+                }
+
+                let html = "";
+                res.data.forEach(item => {
+                    const location = [item.address, item.city, item.state, item.pincode].filter(Boolean).join(", ");
+                    let imageHtml = item.imagePath ? `<a href="${escapeHtml(item.imagePath)}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill"><i class="bi bi-image me-1"></i> View</a>` : "-";
+
+                    // 3. If status is Completed, hide or disable the update action
+                    let isCompleted = (item.status || "").toLowerCase() === "completed";
+                    let actionBtn = isCompleted
+                        ? `<span class="badge bg-success-subtle text-success">Locked (Completed)</span>`
+                        : `<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 btn-update-activity" data-id="${item.id}" data-status="${escapeHtml(item.status || "Pending")}" data-remark="${escapeHtml(item.updateRemark || "")}"><i class="bi bi-pencil-square me-1"></i> Update</button>`;
+
+                    html += `
+                        <tr>
+                            <td class="px-3"><div class="fw-semibold text-dark">${escapeHtml(item.activityName)}</div></td>
+                            <td>${escapeHtml(item.schoolName)}</td>
+                            <td><span class="small text-muted">${escapeHtml(location || "-")}</span></td>
+                            <td>${escapeHtml(item.visitReason || "-")}</td>
+                            <td>${escapeHtml(item.initialRemark || "-")}</td>
+                            <td>${escapeHtml(item.updateRemark || "-")}</td>
+                            <td>${getStatusBadge(item.status)}</td>
+                            <td>${imageHtml}</td>
+                            <td class="text-end px-3">${actionBtn}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger py-5">Failed to load activities.</td></tr>`;
+            }
+        }
+
+        async function createActivity(event) {
+            event.preventDefault();
+            const button = document.getElementById("btnCreateActivity");
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Creating...`;
+
+            const payload = {
+                ActivityName: document.getElementById("activityName").value.trim(),
+                SchoolName: document.getElementById("schoolName").value.trim(),
+                Address: document.getElementById("activityAddress").value.trim(),
+                Pincode: document.getElementById("activityPincode").value.trim(),
+                City: document.getElementById("activityCity").value.trim(),
+                State: document.getElementById("activityState").value.trim(),
+                VisitReason: document.getElementById("visitReason").value.trim(),
+                InitialRemark: document.getElementById("initialRemark").value.trim()
             };
 
+            try {
+                const res = await apiRequest("/api/other-activity/create", { method: "POST", body: JSON.stringify(payload) });
+                if (res.success) {
+                    alert(res.message || "Activity created successfully.");
+                    document.getElementById("activityForm").reset();
+                    hideModal("activityModal");
+                    await loadActivities();
+                } else {
+                    alert(res.message || "Unable to create activity.");
+                }
+            } catch (error) {
+                alert(error.data?.message || "Error creating activity.");
+            } finally {
+                button.disabled = false;
+                button.innerHTML = `<i class="bi bi-check-lg me-1"></i> Create Activity`;
+            }
         }
 
+        function openUpdateModal(button) {
+            const id = button.getAttribute("data-id");
+            const status = button.getAttribute("data-status") || "Pending";
+            const remark = button.getAttribute("data-remark") || "";
 
-        return data;
+            document.getElementById("updateActivityId").value = id;
+            document.getElementById("updateStatus").value = status;
+            document.getElementById("updateRemark").value = remark;
+            document.getElementById("activityImage").value = "";
 
-    }
-
-
-    /* =========================================================
-       BOOTSTRAP MODAL HELPER
-    ========================================================= */
-
-    function showModal(id) {
-
-        const element = document.getElementById(id);
-
-        if (!element) return;
-
-        const modal = bootstrap.Modal.getOrCreateInstance(element);
-
-        modal.show();
-
-    }
-
-
-    function hideModal(id) {
-
-        const element = document.getElementById(id);
-
-        if (!element) return;
-
-        const modal = bootstrap.Modal.getOrCreateInstance(element);
-
-        modal.hide();
-
-    }
-
-
-    /* =========================================================
-       DATE FORMAT
-    ========================================================= */
-
-    function formatDate(value) {
-
-        if (!value) return "-";
-
-        const date = new Date(value);
-
-        if (isNaN(date.getTime())) return "-";
-
-        const day = String(date.getDate()).padStart(2, "0");
-
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-
-        const year = date.getFullYear();
-
-        return `${day}/${month}/${year}`;
-
-    }
-
-
-    /* =========================================================
-       HTML ESCAPE
-    ========================================================= */
-
-    function escapeHtml(value) {
-
-        if (value === null || value === undefined) {
-
-            return "";
-
+            showModal("updateActivityModal");
         }
 
-        return String(value)
+        async function updateActivity(event) {
+            event.preventDefault();
+            const id = document.getElementById("updateActivityId").value;
+            const updateRemark = document.getElementById("updateRemark").value.trim();
+            const status = document.getElementById("updateStatus").value;
+            const imageInput = document.getElementById("activityImage");
 
-            .replaceAll("&", "&amp;")
+            const button = document.getElementById("btnUpdateActivity");
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Saving...`;
 
-            .replaceAll("<", "&lt;")
-
-            .replaceAll(">", "&gt;")
-
-            .replaceAll('"', "&quot;")
-
-            .replaceAll("'", "&#039;");
-
-    }
-
-
-    /* =========================================================
-       STATUS BADGE
-    ========================================================= */
-
-    function getStatusBadge(status) {
-
-        const value = (status || "Pending").toLowerCase();
-
-
-        if (value === "completed") {
-
-            return `
-                <span class="badge bg-success-subtle text-success
-                             border border-success-subtle status-badge">
-                    Completed
-                </span>
-            `;
-
-        }
-
-
-        if (value === "inprogress") {
-
-            return `
-                <span class="badge bg-primary-subtle text-primary
-                             border border-primary-subtle status-badge">
-                    In Progress
-                </span>
-            `;
-
-        }
-
-
-        if (value === "approved") {
-
-            return `
-                <span class="badge bg-success-subtle text-success
-                             border border-success-subtle status-badge">
-                    Approved
-                </span>
-            `;
-
-        }
-
-
-        if (value === "rejected") {
-
-            return `
-                <span class="badge bg-danger-subtle text-danger
-                             border border-danger-subtle status-badge">
-                    Rejected
-                </span>
-            `;
-
-        }
-
-
-        return `
-            <span class="badge bg-warning-subtle text-dark
-                         border border-warning-subtle status-badge">
-                Pending
-            </span>
-        `;
-
-    }
-
-
-    /* =========================================================
-       LOAD ACTIVITIES
-    ========================================================= */
-
-    async function loadActivities() {
-
-        const tbody = document.getElementById("activityTableBody");
-
-        tbody.innerHTML = `
-
-            <tr>
-
-                <td colspan="9"
-                    class="text-center text-muted py-5">
-
-                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-
-                    Loading activities...
-
-                </td>
-
-            </tr>
-
-        `;
-
-
-        try {
-
-            const res = await apiRequest(
-                "/api/other-activity/list"
-            );
-
-
-            if (!res.success || !Array.isArray(res.data)) {
-
-                tbody.innerHTML = `
-
-                    <tr>
-
-                        <td colspan="9"
-                            class="text-center text-muted py-5">
-
-                            No activities found.
-
-                        </td>
-
-                    </tr>
-
-                `;
-
-                return;
-
+            const formData = new FormData();
+            formData.append("id", String(id));
+            formData.append("updateRemark", updateRemark);
+            formData.append("status", status);
+            if (imageInput.files && imageInput.files.length > 0) {
+                formData.append("activityImage", imageInput.files[0]);
             }
 
-
-            if (res.data.length === 0) {
-
-                tbody.innerHTML = `
-
-                    <tr>
-
-                        <td colspan="9"
-                            class="text-center text-muted py-5">
-
-                            <i class="bi bi-info-circle me-1"></i>
-
-                            No activities found.
-
-                        </td>
-
-                    </tr>
-
-                `;
-
-                return;
-
+            try {
+                const res = await apiRequest("/api/other-activity/update-progress", { method: "POST", body: formData });
+                if (res.success) {
+                    alert(res.message || "Activity updated successfully.");
+                    hideModal("updateActivityModal");
+                    document.getElementById("updateActivityForm").reset();
+                    await loadActivities();
+                } else {
+                    alert(res.message || "Unable to update activity.");
+                }
+            } catch (error) {
+                alert(error.data?.message || "Error updating activity.");
+            } finally {
+                button.disabled = false;
+                button.innerHTML = `<i class="bi bi-save me-1"></i> Save Update`;
             }
+        }
 
+        // 4. Expense Modal Dynamic Dropdown for Radio Buttons
+        window.toggleExpenseRelation = async function() {
+            const type = document.querySelector('input[name="expenseRelation"]:checked').value;
+            const lbl = document.getElementById("lblExpenseDropdown");
+            const select = document.getElementById("ddlRelatedItem");
 
-            let html = "";
+            select.innerHTML = `<option value="">Loading...</option>`;
+            if (type === "SchoolVisit") {
+                lbl.innerHTML = `Select School Visit <span class="text-danger">*</span>`;
+                try {
+                    const res = await apiRequest("/api/other-activity/expense/school-visits");
+                    let opts = `<option value="">-- Choose School Visit --</option>`;
+                    if (res.success && res.data) {
+                        res.data.forEach(v => opts += `<option value="${v.id}">${v.name}</option>`);
+                    }
+                    select.innerHTML = opts;
+                } catch { select.innerHTML = `<option value="">Failed to load</option>`; }
+            } else {
+                lbl.innerHTML = `Select Other Activity <span class="text-danger">*</span>`;
+                try {
+                    const res = await apiRequest("/api/other-activity/expense/activities-list");
+                    let opts = `<option value="">-- Choose Activity --</option>`;
+                    if (res.success && res.data) {
+                        res.data.forEach(a => opts += `<option value="${a.id}">${a.name}</option>`);
+                    }
+                    select.innerHTML = opts;
+                } catch { select.innerHTML = `<option value="">Failed to load</option>`; }
+            }
+        };
 
-
-            res.data.forEach(item => {
-
-                const location = [
-
-                    item.address,
-
-                    item.city,
-
-                    item.state,
-
-                    item.pincode
-
-                ]
-
-                .filter(Boolean)
-
-                .join(", ");
-
-
-                let imageHtml = "-";
-
-
-                if (item.imagePath) {
-
-                    imageHtml = `
-
-                        <a href="${escapeHtml(item.imagePath)}"
-                           target="_blank"
-                           class="btn btn-outline-primary btn-sm rounded-pill">
-
-                            <i class="bi bi-image me-1"></i>
-                            View
-
-                        </a>
-
+        async function loadExpenses() {
+            const tbody = document.getElementById("expenseTableBody");
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-success me-2"></div> Loading expenses...</td></tr>`;
+            try {
+                const res = await apiRequest("/api/other-activity/expense/list");
+                if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-5">No expenses found.</td></tr>`;
+                    return;
+                }
+                let html = "";
+                res.data.forEach(item => {
+                    html += `
+                        <tr>
+                            <td class="px-3 fw-semibold">${formatDate(item.expenseDate)}</td>
+                            <td>${escapeHtml(item.expenseDetail || "-")}</td>
+                            <td class="fw-bold text-success">₹ ${Number(item.amount || 0).toFixed(2)}</td>
+                            <td>${getStatusBadge(item.status)}</td>
+                        </tr>
                     `;
+                });
+                tbody.innerHTML = html;
+            } catch {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-5">Failed to load expenses.</td></tr>`;
+            }
+        }
 
+        async function createExpense(event) {
+            event.preventDefault();
+            const button = document.getElementById("btnCreateExpense");
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Submitting...`;
+
+            const relationType = document.querySelector('input[name="expenseRelation"]:checked').value;
+            const selectedId = document.getElementById("ddlRelatedItem").value;
+
+            const payload = {
+                ExpenseDate: document.getElementById("expenseDate").value,
+                ExpenseDetail: document.getElementById("expenseDetail").value.trim(),
+                Amount: Number(document.getElementById("expenseAmount").value),
+                RelatedType: relationType,
+                RelatedId: selectedId ? Number(selectedId) : null
+            };
+
+            try {
+                const res = await apiRequest("/api/other-activity/expense/create", { method: "POST", body: JSON.stringify(payload) });
+                if (res.success) {
+                    alert(res.message || "Expense submitted successfully.");
+                    document.getElementById("expenseForm").reset();
+                    hideModal("expenseModal");
+                    await loadExpenses();
+                } else {
+                    alert(res.message || "Unable to submit expense.");
                 }
+            } catch (error) {
+                alert(error.data?.message || "Error submitting expense.");
+            } finally {
+                button.disabled = false;
+                button.innerHTML = `<i class="bi bi-check-lg me-1"></i> Submit Expense`;
+            }
+        }
 
+        function showActivities() {
+            document.getElementById("activitiesSection").classList.remove("d-none");
+            document.getElementById("expensesSection").classList.add("d-none");
+            document.getElementById("activitiesTabBtn").classList.add("active");
+            document.getElementById("expensesTabBtn").classList.remove("active");
+        }
 
-                html += `
+        function showExpenses() {
+            document.getElementById("activitiesSection").classList.add("d-none");
+            document.getElementById("expensesSection").classList.remove("d-none");
+            document.getElementById("activitiesTabBtn").classList.remove("active");
+            document.getElementById("expensesTabBtn").classList.add("active");
+            loadExpenses();
+        }
 
-                    <tr>
-
-                        <td class="px-3">
-
-                            <div class="fw-semibold text-dark">
-
-                                ${escapeHtml(item.activityName)}
-
-                            </div>
-
-                        </td>
-
-
-                        <td>
-
-                            ${escapeHtml(item.schoolName)}
-
-                        </td>
-
-
-                        <td>
-
-                            <span class="small text-muted">
-
-                                ${escapeHtml(location || "-")}
-
-                            </span>
-
-                        </td>
-
-
-                        <td>
-
-                            ${escapeHtml(item.visitReason || "-")}
-
-                        </td>
-
-
-                        <td>
-
-                            ${escapeHtml(item.initialRemark || "-")}
-
-                        </td>
-
-
-                        <td>
-
-                            ${escapeHtml(item.updateRemark || "-")}
-
-                        </td>
-
-
-                        <td>
-
-                            ${getStatusBadge(item.status)}
-
-                        </td>
-
-
-                        <td>
-
-                            ${imageHtml}
-
-                        </td>
-
-
-                        <td class="text-end px-3">
-
-                            <button type="button"
-                                    class="btn btn-primary btn-sm rounded-pill px-3 btn-update-activity"
-                                    data-id="${item.id}"
-                                    data-status="${escapeHtml(item.status || "Pending")}"
-                                    data-remark="${escapeHtml(item.updateRemark || "")}">
-
-                                <i class="bi bi-pencil-square me-1"></i>
-
-                                Update
-
-                            </button>
-
-                        </td>
-
-                    </tr>
-
-                `;
-
+        function bindEvents() {
+            document.getElementById("btnNewActivity").addEventListener("click", () => showModal("activityModal"));
+            document.getElementById("btnNewExpense").addEventListener("click", () => {
+                showModal("expenseModal");
+                setMinDateTime();
+                toggleExpenseRelation();
             });
-
-
-            tbody.innerHTML = html;
-
-
-        }
-        catch (error) {
-
-            console.error("Activity load error:", error);
-
-
-            tbody.innerHTML = `
-
-                <tr>
-
-                    <td colspan="9"
-                        class="text-center text-danger py-5">
-
-                        <i class="bi bi-exclamation-triangle me-1"></i>
-
-                        Failed to load activities.
-
-                    </td>
-
-                </tr>
-
-            `;
-
-        }
-
-    }
-
-
-    /* =========================================================
-       CREATE ACTIVITY
-    ========================================================= */
-
-    async function createActivity(event) {
-
-        event.preventDefault();
-
-
-        const button =
-            document.getElementById("btnCreateActivity");
-
-
-        button.disabled = true;
-
-        button.innerHTML = `
-
-            <span class="spinner-border spinner-border-sm me-1"></span>
-
-            Creating...
-
-        `;
-
-
-        const payload = {
-
-            ActivityName:
-                document.getElementById("activityName").value.trim(),
-
-            SchoolName:
-                document.getElementById("schoolName").value.trim(),
-
-            Address:
-                document.getElementById("activityAddress").value.trim(),
-
-            Pincode:
-                document.getElementById("activityPincode").value.trim(),
-
-            City:
-                document.getElementById("activityCity").value.trim(),
-
-            State:
-                document.getElementById("activityState").value.trim(),
-
-            VisitReason:
-                document.getElementById("visitReason").value.trim(),
-
-            InitialRemark:
-                document.getElementById("initialRemark").value.trim()
-
-        };
-
-
-        try {
-
-            const res = await apiRequest(
-                "/api/other-activity/create",
-                {
-
-                    method: "POST",
-
-                    body: JSON.stringify(payload)
-
-                }
-            );
-
-
-            if (res.success) {
-
-                alert(
-                    res.message ||
-                    "Activity created successfully."
-                );
-
-
-                document.getElementById("activityForm").reset();
-
-                hideModal("activityModal");
-
-                await loadActivities();
-
-            }
-            else {
-
-                alert(
-                    res.message ||
-                    "Unable to create activity."
-                );
-
-            }
-
-        }
-        catch (error) {
-
-            console.error("Create activity error:", error);
-
-            alert(
-                error.data?.message ||
-                "Error creating activity."
-            );
-
-        }
-        finally {
-
-            button.disabled = false;
-
-            button.innerHTML = `
-
-                <i class="bi bi-check-lg me-1"></i>
-
-                Create Activity
-
-            `;
-
-        }
-
-    }
-
-
-    /* =========================================================
-       OPEN UPDATE MODAL
-    ========================================================= */
-
-    function openUpdateModal(button) {
-
-        const id = button.getAttribute("data-id");
-
-        const status =
-            button.getAttribute("data-status") || "Pending";
-
-        const remark =
-            button.getAttribute("data-remark") || "";
-
-
-        document.getElementById("updateActivityId").value = id;
-
-        document.getElementById("updateStatus").value = status;
-
-        document.getElementById("updateRemark").value = remark;
-
-        document.getElementById("activityImage").value = "";
-
-
-        showModal("updateActivityModal");
-
-    }
-
-
-    /* =========================================================
-       UPDATE ACTIVITY
-    ========================================================= */
-
-    async function updateActivity(event) {
-
-        event.preventDefault();
-
-
-        const id =
-            document.getElementById("updateActivityId").value;
-
-
-        const updateRemark =
-            document.getElementById("updateRemark").value.trim();
-
-
-        const status =
-            document.getElementById("updateStatus").value;
-
-
-        const imageInput =
-            document.getElementById("activityImage");
-
-
-        if (!id || Number(id) <= 0) {
-
-            alert("Invalid activity ID.");
-
-            return;
-
-        }
-
-
-        const button =
-            document.getElementById("btnUpdateActivity");
-
-
-        button.disabled = true;
-
-        button.innerHTML = `
-
-            <span class="spinner-border spinner-border-sm me-1"></span>
-
-            Saving...
-
-        `;
-
-
-        /*
-         * =====================================================
-         * VERY IMPORTANT
-         *
-         * Backend:
-         *
-         * [FromForm] long id
-         * [FromForm] string updateRemark
-         * [FromForm] string status
-         * IFormFile? activityImage
-         *
-         * So we MUST send multipart/form-data.
-         * =====================================================
-         */
-
-        const formData = new FormData();
-
-
-        formData.append("id", String(id));
-
-        formData.append(
-            "updateRemark",
-            updateRemark
-        );
-
-        formData.append(
-            "status",
-            status
-        );
-
-
-        if (
-            imageInput.files &&
-            imageInput.files.length > 0
-        ) {
-
-            formData.append(
-                "activityImage",
-                imageInput.files[0]
-            );
-
-        }
-
-
-        try {
-
-            const res = await apiRequest(
-
-                "/api/other-activity/update-progress",
-
-                {
-
-                    method: "POST",
-
-                    body: formData
-
-                }
-
-            );
-
-
-            if (res.success) {
-
-                alert(
-                    res.message ||
-                    "Activity updated successfully."
-                );
-
-
-                hideModal("updateActivityModal");
-
-
-                document
-                    .getElementById("updateActivityForm")
-                    .reset();
-
-
-                await loadActivities();
-
-            }
-            else {
-
-                alert(
-                    res.message ||
-                    "Unable to update activity."
-                );
-
-            }
-
-        }
-        catch (error) {
-
-            console.error(
-                "Update activity error:",
-                error
-            );
-
-
-            let message =
-                error.data?.message
-                || error.data?.title
-                || "Error updating activity.";
-
-
-            if (error.status === 400) {
-
-                message =
-                    error.data?.message
-                    || "Invalid update request. Please check Activity ID, Status and Remark.";
-
-            }
-
-
-            alert(message);
-
-        }
-        finally {
-
-            button.disabled = false;
-
-            button.innerHTML = `
-
-                <i class="bi bi-save me-1"></i>
-
-                Save Update
-
-            `;
-
-        }
-
-    }
-
-
-    /* =========================================================
-       LOAD EXPENSES
-    ========================================================= */
-
-    async function loadExpenses() {
-
-        const tbody =
-            document.getElementById("expenseTableBody");
-
-
-        tbody.innerHTML = `
-
-            <tr>
-
-                <td colspan="4"
-                    class="text-center text-muted py-5">
-
-                    <div class="spinner-border spinner-border-sm text-success me-2"></div>
-
-                    Loading expenses...
-
-                </td>
-
-            </tr>
-
-        `;
-
-
-        try {
-
-            const res = await apiRequest(
-                "/api/other-activity/expense/list"
-            );
-
-
-            if (!res.success || !Array.isArray(res.data)) {
-
-                tbody.innerHTML = `
-
-                    <tr>
-
-                        <td colspan="4"
-                            class="text-center text-muted py-5">
-
-                            No expenses found.
-
-                        </td>
-
-                    </tr>
-
-                `;
-
-                return;
-
-            }
-
-
-            if (res.data.length === 0) {
-
-                tbody.innerHTML = `
-
-                    <tr>
-
-                        <td colspan="4"
-                            class="text-center text-muted py-5">
-
-                            <i class="bi bi-info-circle me-1"></i>
-
-                            No expenses found.
-
-                        </td>
-
-                    </tr>
-
-                `;
-
-                return;
-
-            }
-
-
-            let html = "";
-
-
-            res.data.forEach(item => {
-
-                html += `
-
-                    <tr>
-
-                        <td class="px-3 fw-semibold">
-
-                            ${formatDate(item.expenseDate)}
-
-                        </td>
-
-
-                        <td>
-
-                            ${escapeHtml(
-                                item.expenseDetail || "-"
-                            )}
-
-                        </td>
-
-
-                        <td class="fw-bold text-success">
-
-                            ₹ ${Number(
-                                item.amount || 0
-                            ).toFixed(2)}
-
-                        </td>
-
-
-                        <td>
-
-                            ${getStatusBadge(item.status)}
-
-                        </td>
-
-                    </tr>
-
-                `;
-
+            document.getElementById("btnRefreshActivities").addEventListener("click", loadActivities);
+            document.getElementById("btnRefreshExpenses").addEventListener("click", loadExpenses);
+            document.getElementById("activitiesTabBtn").addEventListener("click", showActivities);
+            document.getElementById("expensesTabBtn").addEventListener("click", showExpenses);
+            document.getElementById("activityForm").addEventListener("submit", createActivity);
+            document.getElementById("updateActivityForm").addEventListener("submit", updateActivity);
+            document.getElementById("expenseForm").addEventListener("submit", createExpense);
+
+            document.getElementById("activityTableBody").addEventListener("click", function(event) {
+                const button = event.target.closest(".btn-update-activity");
+                if (!button) return;
+                openUpdateModal(button);
             });
-
-
-            tbody.innerHTML = html;
-
-
-        }
-        catch (error) {
-
-            console.error(
-                "Expense load error:",
-                error
-            );
-
-
-            tbody.innerHTML = `
-
-                <tr>
-
-                    <td colspan="4"
-                        class="text-center text-danger py-5">
-
-                        Failed to load expenses.
-
-                    </td>
-
-                </tr>
-
-            `;
-
         }
 
-    }
-
-
-    /* =========================================================
-       CREATE EXPENSE
-    ========================================================= */
-
-    async function createExpense(event) {
-
-        event.preventDefault();
-
-
-        const button =
-            document.getElementById("btnCreateExpense");
-
-
-        button.disabled = true;
-
-        button.innerHTML = `
-
-            <span class="spinner-border spinner-border-sm me-1"></span>
-
-            Submitting...
-
-        `;
-
-
-        const payload = {
-
-            ExpenseDate:
-                document.getElementById("expenseDate").value,
-
-            ExpenseDetail:
-                document.getElementById("expenseDetail").value.trim(),
-
-            Amount:
-                Number(
-                    document.getElementById("expenseAmount").value
-                )
-
-        };
-
-
-        try {
-
-            const res = await apiRequest(
-
-                "/api/other-activity/expense/create",
-
-                {
-
-                    method: "POST",
-
-                    body: JSON.stringify(payload)
-
-                }
-
-            );
-
-
-            if (res.success) {
-
-                alert(
-                    res.message ||
-                    "Expense submitted successfully."
-                );
-
-
-                document
-                    .getElementById("expenseForm")
-                    .reset();
-
-
-                hideModal("expenseModal");
-
-
-                await loadExpenses();
-
-            }
-            else {
-
-                alert(
-                    res.message ||
-                    "Unable to submit expense."
-                );
-
-            }
-
-        }
-        catch (error) {
-
-            console.error(
-                "Create expense error:",
-                error
-            );
-
-
-            alert(
-                error.data?.message ||
-                "Error submitting expense."
-            );
-
-        }
-        finally {
-
-            button.disabled = false;
-
-            button.innerHTML = `
-
-                <i class="bi bi-check-lg me-1"></i>
-
-                Submit Expense
-
-            `;
-
+        function initializePage() {
+            bindEvents();
+            loadActivities();
+            setupPincodeLookup();
         }
 
-    }
-
-
-    /* =========================================================
-       TAB SWITCHING
-    ========================================================= */
-
-    function showActivities() {
-
-        document
-            .getElementById("activitiesSection")
-            .classList.remove("d-none");
-
-
-        document
-            .getElementById("expensesSection")
-            .classList.add("d-none");
-
-
-        document
-            .getElementById("activitiesTabBtn")
-            .classList.add("active");
-
-
-        document
-            .getElementById("expensesTabBtn")
-            .classList.remove("active");
-
-    }
-
-
-    function showExpenses() {
-
-        document
-            .getElementById("activitiesSection")
-            .classList.add("d-none");
-
-
-        document
-            .getElementById("expensesSection")
-            .classList.remove("d-none");
-
-
-        document
-            .getElementById("activitiesTabBtn")
-            .classList.remove("active");
-
-
-        document
-            .getElementById("expensesTabBtn")
-            .classList.add("active");
-
-
-        loadExpenses();
-
-    }
-
-
-    /* =========================================================
-       EVENT HANDLERS
-    ========================================================= */
-
-    function bindEvents() {
-
-
-        document
-            .getElementById("btnNewActivity")
-            .addEventListener(
-                "click",
-                function () {
-
-                    showModal("activityModal");
-
-                }
-            );
-
-
-        document
-            .getElementById("btnNewExpense")
-            .addEventListener(
-                "click",
-                function () {
-
-                    showModal("expenseModal");
-
-                }
-            );
-
-
-        document
-            .getElementById("btnRefreshActivities")
-            .addEventListener(
-                "click",
-                loadActivities
-            );
-
-
-        document
-            .getElementById("btnRefreshExpenses")
-            .addEventListener(
-                "click",
-                loadExpenses
-            );
-
-
-        document
-            .getElementById("activitiesTabBtn")
-            .addEventListener(
-                "click",
-                showActivities
-            );
-
-
-        document
-            .getElementById("expensesTabBtn")
-            .addEventListener(
-                "click",
-                showExpenses
-            );
-
-
-        document
-            .getElementById("activityForm")
-            .addEventListener(
-                "submit",
-                createActivity
-            );
-
-
-        document
-            .getElementById("updateActivityForm")
-            .addEventListener(
-                "submit",
-                updateActivity
-            );
-
-
-        document
-            .getElementById("expenseForm")
-            .addEventListener(
-                "submit",
-                createExpense
-            );
-
-
-        /*
-         * Event delegation:
-         *
-         * Update buttons dynamically table ke andar create hote hain.
-         */
-
-        document
-            .getElementById("activityTableBody")
-            .addEventListener(
-                "click",
-                function (event) {
-
-                    const button =
-                        event.target.closest(
-                            ".btn-update-activity"
-                        );
-
-
-                    if (!button) return;
-
-
-                    openUpdateModal(button);
-
-                }
-            );
-
-    }
-
-
-    /* =========================================================
-       INITIALIZE
-    ========================================================= */
-
-    function initializePage() {
-
-        bindEvents();
-
-        loadActivities();
-
-    }
-
-
-    /*
-     * DOM already loaded case handle kar rahe hain.
-     *
-     * Isliye jQuery ki dependency nahi hai.
-     */
-
-    if (
-        document.readyState === "loading"
-    ) {
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            initializePage
-        );
-
-    }
-    else {
-
-        initializePage();
-
-    }
-
-
-})();
-
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initializePage);
+        } else {
+            initializePage();
+        }
+    })();
 </script>

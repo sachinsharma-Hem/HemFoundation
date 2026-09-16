@@ -89,7 +89,7 @@
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Schedule Date & Time <span class="text-danger">*</span></label>
-                            <!-- Yahan min attribute add kar diya gaya hai -->
+                            <!-- Restricted via script min attribute -->
                             <input type="datetime-local" id="txtScheduleDate" class="form-control rounded-3 shadow-none" required>
                         </div>
                         <div class="col-12">
@@ -147,7 +147,16 @@
         $(function() {
             loadPlans();
             loadAssignedSchoolsDropdown();
+            setMinDateTime(); // Set min date time on load
         });
+
+        // Function to prevent backdate selection
+        function setMinDateTime() {
+            let now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            let minDateTime = now.toISOString().slice(0, 16);
+            $('#txtScheduleDate').attr('min', minDateTime);
+        }
 
         function captureLocation(callback) {
             if (navigator.geolocation) {
@@ -222,16 +231,7 @@
             $('#frmPlan')[0].reset();
             $('#chkOtherActivity').prop('checked', false);
             toggleActivityType();
-
-            let now = new Date();
-            let year = now.getFullYear();
-            let month = String(now.getMonth() + 1).padStart(2, '0');
-            let day = String(now.getDate()).padStart(2, '0');
-            let hours = String(now.getHours()).padStart(2, '0');
-            let minutes = String(now.getMinutes()).padStart(2, '0');
-            let minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-
-            $('#txtScheduleDate').attr('min', minDateTime);
+            setMinDateTime(); // Re-verify min date time when modal opens
 
             captureLocation(function(lat, lng) {
                 $('#txtLat').val(lat);

@@ -19,7 +19,8 @@
     </ul>
 
     <div class="tab-content" id="visitTabsContent">
-        
+
+        <!-- Pending Pane -->
         <div class="tab-pane fade show active" id="pendingPane" role="tabpanel">
             <div class="table-responsive">
                 <table class="table table-hover align-middle small">
@@ -39,6 +40,7 @@
             </div>
         </div>
 
+        <!-- Completed Pane -->
         <div class="tab-pane fade" id="completedPane" role="tabpanel">
             <div class="table-responsive">
                 <table class="table table-hover align-middle small">
@@ -47,8 +49,10 @@
                             <th>Date</th>
                             <th>School Name</th>
                             <th>Purpose</th>
-                            <th>Status</th>
-                            <th class="text-center">Action</th>
+                            <th>Remarks Details</th>
+                            <th class="text-center">Location</th>
+                            <th class="text-center">Photo</th>
+                            <th class="text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody id="tblCompleted"></tbody>
@@ -56,6 +60,7 @@
             </div>
         </div>
 
+        <!-- Cancelled Pane -->
         <div class="tab-pane fade" id="cancelledPane" role="tabpanel">
             <div class="table-responsive">
                 <table class="table table-hover align-middle small">
@@ -74,6 +79,7 @@
     </div>
 </div>
 
+<!-- Report Visit Modal -->
 <div class="modal fade" id="reportVisitModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg p-3 bg-white">
@@ -86,7 +92,7 @@
                     <input type="hidden" id="hdnReportVisitId">
                     <input type="hidden" id="hdnLat">
                     <input type="hidden" id="hdnLng">
-                    
+
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Activity Type <span class="text-danger">*</span></label>
                         <select id="ddlActivityType" class="form-select rounded-3 shadow-none" required>
@@ -122,15 +128,29 @@
     </div>
 </div>
 
-<script>
-    $(function () {
-        loadActivityTypes();
-        loadVisits('Pending'); // Default load
+<!-- Photo Preview Modal -->
+<div class="modal fade" id="photoPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3 bg-white text-center">
+            <div class="modal-header border-bottom pb-2">
+                <h5 class="fw-bold text-dark m-0"><i class="bi bi-image text-primary me-2"></i> Visit Photo</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-3">
+                <img id="imgPreview" src="" class="img-fluid rounded-3 shadow" alt="Visit Photo" style="max-height: 400px; width: auto;" />
+            </div>
+        </div>
+    </div>
+</div>
 
-        // Handle Report Form Submit
-        $('#frmReportVisit').on('submit', function (e) {
+<script>
+    $(function() {
+        loadActivityTypes();
+        loadVisits('Pending');
+
+        $('#frmReportVisit').on('submit', function(e) {
             e.preventDefault();
-            
+
             let formData = new FormData();
             formData.append("VisitPlanId", $('#hdnReportVisitId').val());
             formData.append("ActivityTypeId", $('#ddlActivityType').val());
@@ -149,14 +169,14 @@
                 contentType: false,
                 processData: false,
                 headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '') },
-                success: function (res) {
+                success: function(res) {
                     if (res.success) {
                         $('#reportVisitModal').modal('hide');
                         alert(res.message);
-                        loadVisits('Pending'); // Refresh list
+                        loadVisits('Pending');
                     }
                 },
-                error: function (err) {
+                error: function(err) {
                     alert('Error submitting report.');
                     $btn.html('Submit & Complete Visit').prop('disabled', false);
                 }
@@ -169,7 +189,7 @@
             url: '/api/visit-reporting/activity-types',
             type: 'GET',
             headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '') },
-            success: function (res) {
+            success: function(res) {
                 if (res.success && res.data) {
                     let opts = '<option value="">-- Select Activity --</option>';
                     res.data.forEach(a => { opts += `<option value="${a.id}">${a.activityName}</option>`; });
@@ -181,44 +201,75 @@
 
     function loadVisits(statusTab) {
         let tableId = `#tbl${statusTab}`;
-        $(tableId).html('<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>');
+        let colSpanCount = statusTab === 'Completed' ? 7 : 5;
+        $(tableId).html(`<tr><td colspan="${colSpanCount}" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>`);
 
         $.ajax({
             url: `/api/visit-reporting/list/${statusTab}`,
             type: 'GET',
             headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '') },
-            success: function (res) {
+            success: function(res) {
                 if (res.success && res.data.length > 0) {
                     let html = '';
                     res.data.forEach(v => {
                         let d = new Date(v.scheduleDate);
                         let dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} <br/> <small class="text-muted">${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>`;
-                        
-                        let badge = v.status == 'Completed' ? '<span class="badge bg-success-subtle text-success">Completed</span>' : 
-                                   (v.status == 'Cancelled' ? '<span class="badge bg-danger-subtle text-danger">Cancelled</span>' : 
-                                   '<span class="badge bg-warning-subtle text-warning">Pending</span>');
 
-                        let actionBtn = '';
+                        let badge = v.status == 'Completed' ? '<span class="badge bg-success-subtle text-success">Completed</span>' :
+                            (v.status == 'Cancelled' ? '<span class="badge bg-danger-subtle text-danger">Cancelled</span>' :
+                                '<span class="badge bg-warning-subtle text-warning">Pending</span>');
+
                         if (statusTab === 'Pending') {
-                            actionBtn = `<button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="openReportModal(${v.id})"><i class="bi bi-camera me-1"></i> Report Visit</button>`;
-                        } else if (statusTab === 'Completed') {
-                            actionBtn = `<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill"></i> Executed</span>`;
+                            let actionBtn = `<button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="openReportModal(${v.id})"><i class="bi bi-camera me-1"></i> Report Visit</button>`;
+                            html += `<tr>
+                                    <td class="fw-semibold">${dateStr}</td>
+                                    <td><b>${v.schoolName}</b><br><small class="text-muted">${v.schoolCity || ''}</small></td>
+                                    <td>${v.purpose}</td>
+                                    <td>${badge}</td>
+                                    <td class="text-center">${actionBtn}</td>
+                                </tr>`;
                         }
+                        else if (statusTab === 'Completed') {
+                            let descText = v.description ? `<span class="d-block text-dark">${v.description}</span>` : `<span class="text-muted italic">No description</span>`;
 
-                        html += `<tr>
-                            <td class="fw-semibold">${dateStr}</td>
-                            <td><b>${v.schoolName}</b><br><small class="text-muted">${v.schoolCity || ''}</small></td>
-                            <td>${v.purpose}</td>
-                            <td>${badge}</td>
-                            ${statusTab !== 'Cancelled' ? `<td class="text-center">${actionBtn}</td>` : ''}
-                        </tr>`;
+                            // Google Maps Navigation Link Button
+                            let mapBtn = (v.latitude && v.longitude)
+                                ? `<a href="https://www.google.com/maps?q=${v.latitude},${v.longitude}" target="_blank" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold shadow-sm text-nowrap"><i class="bi bi-map-fill me-1"></i> View on Map</a>`
+                                : `<span class="text-muted small">N/A</span>`;
+
+                            let photoBtn = v.photoUrl ? `<button class="btn btn-outline-primary btn-sm rounded-circle p-2 shadow-sm" onclick="viewPhoto('${v.photoUrl}')" title="View Captured Photo"><i class="bi bi-image fs-6"></i></button>` : `<span class="text-muted small">No Photo</span>`;
+
+                            html += `<tr>
+                                    <td class="fw-semibold">${dateStr}</td>
+                                    <td><b>${v.schoolName}</b><br><small class="text-muted">${v.schoolCity || ''}</small></td>
+                                    <td>${v.purpose}</td>
+                                    <td>${descText}</td>
+                                    <td class="text-center">${mapBtn}</td>
+                                    <td class="text-center">${photoBtn}</td>
+                                    <td class="text-center">${badge}</td>
+                                </tr>`;
+                        }
+                        else if (statusTab === 'Cancelled') {
+                            html += `<tr>
+                                    <td class="fw-semibold">${dateStr}</td>
+                                    <td><b>${v.schoolName}</b><br><small class="text-muted">${v.schoolCity || ''}</small></td>
+                                    <td>${v.purpose}</td>
+                                    <td>${badge}</td>
+                                </tr>`;
+                        }
                     });
                     $(tableId).html(html);
                 } else {
-                    $(tableId).html(`<tr><td colspan="5" class="text-center py-5 text-muted">No ${statusTab.toLowerCase()} visits found.</td></tr>`);
+                    let colSpan = statusTab === 'Completed' ? 7 : 5;
+                    $(tableId).html(`<tr><td colspan="${colSpan}" class="text-center py-5 text-muted">No ${statusTab.toLowerCase()} visits found.</td></tr>`);
                 }
             }
         });
+    }
+
+    function viewPhoto(photoUrl) {
+        $('#imgPreview').attr('src', photoUrl);
+        $('#photoPreviewModal').modal('show');
     }
 
     function openReportModal(visitId) {
@@ -228,16 +279,15 @@
         $('#locationStatus').removeClass('text-success text-danger').addClass('text-warning fw-bold').text('Fetching live location...');
         $('#reportVisitModal').modal('show');
 
-        // Automatically fetch GeoLocation
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                function (position) {
+                function(position) {
                     $('#hdnLat').val(position.coords.latitude);
                     $('#hdnLng').val(position.coords.longitude);
-                    $('#locationStatus').removeClass('text-warning').addClass('text-success').text(`Captured: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
-                    $('#btnSubmitReport').prop('disabled', false); // Enable submit button only if GPS is found
+                    $('#locationStatus').removeClass('text-warning').addClass('text-success').text(`Captured successfully!`);
+                    $('#btnSubmitReport').prop('disabled', false);
                 },
-                function (error) {
+                function(error) {
                     $('#locationStatus').removeClass('text-warning').addClass('text-danger').text('Location Access Denied. Please enable GPS.');
                     alert('You must enable location/GPS to submit this report.');
                 },

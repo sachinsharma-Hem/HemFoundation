@@ -294,11 +294,20 @@ namespace HemFoundation.Controllers.Api
         [HttpPost("generate-monthly-bill")]
         public async Task<IActionResult> GenerateMonthlyBill([FromBody] BillPayloadDto model)
         {
-            long affId = await GetAffiliateId();
-            var affiliate = await _context.Affiliates.FirstOrDefaultAsync(a => a.UserID == affId);
+            // 1. Current logged-in user ki AspNetUserID nikalein
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // 2. Users table se affiliate/user ki details fetch karein
+            var affiliate = await _context.Users
+                .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
+
             var org = await _context.OrganizationMasters.FindAsync(model.OrganizationId);
 
-            if (affiliate == null || org == null) return BadRequest(new { success = false, message = "Invalid Affiliate or Organization" });
+            if (affiliate == null || org == null)
+                return BadRequest(new { success = false, message = "Invalid Affiliate/User or Organization" });
+
+            // Note: Yahan aapke AffiliateId ke taur par affiliate.UserID use hoga
+            long affId = affiliate.UserID;
 
             // Bank Details Update / Save
             var bankDetail = await _context.AffiliateBankDetails.FirstOrDefaultAsync(b => b.AffiliateId == affId);
@@ -319,7 +328,8 @@ namespace HemFoundation.Controllers.Api
             if (model.BillId.HasValue && model.BillId > 0)
             {
                 bill = await _context.MonthlyBills.FindAsync(model.BillId.Value);
-                if (bill == null || bill.Status != "Generated") return BadRequest(new { success = false, message = "Cannot edit this bill." });
+                if (bill == null || bill.Status != "Generated")
+                    return BadRequest(new { success = false, message = "Cannot edit this bill." });
 
                 bill.OrganizationId = model.OrganizationId;
                 bill.BillDate = model.BillDate;
@@ -336,7 +346,7 @@ namespace HemFoundation.Controllers.Api
             {
                 // NAYA BILL BAN RAHA HAI
                 var lastBill = await _context.MonthlyBills.OrderByDescending(b => b.Id).FirstOrDefaultAsync();
-                int nextNumber = lastBill != null ? int.Parse(lastBill.BillNumber) + 1 : 1;
+                int nextNumber = lastBill != null && int.TryParse(lastBill.BillNumber, out var parsedNum) ? parsedNum + 1 : 1;
 
                 bill = new MonthlyBill
                 {
@@ -367,7 +377,7 @@ namespace HemFoundation.Controllers.Api
             }
             await _context.SaveChangesAsync();
 
-            // PDF Generation
+            // PDF Generation (Yahan agar GeneratePdfAsync mein 'Users' type expected hai toh affiliate pass hoga)
             string pdfUrl = await GeneratePdfAsync(bill, affiliate, org, bankDetail, model.Items);
             bill.GeneratedPdfUrl = pdfUrl;
             await _context.SaveChangesAsync();
@@ -413,7 +423,7 @@ namespace HemFoundation.Controllers.Api
         // =========================================================================
         // HELPER: PROFESSIONAL PDF GENERATION METHOD
         // =========================================================================
-        private async Task<string> GeneratePdfAsync(MonthlyBill bill, Affiliate aff, OrganizationMaster org, AffiliateBankDetail bank, List<BillItemDto> items)
+        private async Task<string> GeneratePdfAsync(MonthlyBill bill, Users aff, OrganizationMaster org, AffiliateBankDetail bank, List<BillItemDto> items)
         {
             string itemRows = "";
             for (int i = 0; i < items.Count; i++)

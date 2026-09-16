@@ -1,16 +1,17 @@
 ﻿@{
     ViewData["Title"] = "Training & PBL Guides";
-    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml"; 
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
 }
 
 <div class="container-fluid py-4">
-    <div class="custom-page-header mb-4 p-4 rounded-4 shadow-sm text-white position-relative overflow-hidden">
-        <div class="header-decoration position-absolute opacity-25">
-            <i class="bi bi-play-btn-fill" style="font-size: 15rem; top: -50px; right: -20px; position: absolute;"></i>
+    <!-- 1. Updated Glass Header (Light Theme Compatible) -->
+    <div class="custom-page-header mb-4 p-4 rounded-4 shadow-sm text-dark position-relative overflow-hidden">
+        <div class="header-decoration position-absolute opacity-10">
+            <i class="bi bi-play-btn-fill" style="font-size: 15rem; top: -50px; right: -20px; position: absolute; color: #0d6efd;"></i>
         </div>
         <div class="position-relative z-1">
-            <h2 class="fw-bolder mb-1"><i class="bi bi-book-half me-2 fs-2"></i> Training & PBL Resource Center</h2>
-            <p class="mb-0 opacity-75 small fs-6">Access official demo videos, presentations, and Project-Based Learning (PBL) materials.</p>
+            <h2 class="fw-bolder mb-1 text-dark"><i class="bi bi-book-half me-2 fs-2 text-primary"></i> Training & PBL Resource Center</h2>
+            <p class="mb-0 text-muted small fs-6">Access official demo videos, presentations, and Project-Based Learning (PBL) materials.</p>
         </div>
     </div>
 
@@ -42,49 +43,97 @@
     </div>
 </div>
 
-<!-- LOCAL VIDEO PLAYER MODAL -->
+<!-- 2. Updated Video Player Modal -->
 <div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg bg-dark text-white">
             <div class="modal-header border-bottom-0 pb-0">
                 <h5 class="fw-bold mb-0" id="videoModalTitle">Video Title</h5>
                 <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 text-center">
-                <video id="guideVideoPlayer" controls class="w-100 rounded-3 shadow" style="max-height: 500px; background: #000;">
-                    <source src="" type="video/mp4">
+                <!-- Local Video Player -->
+                <video id="guideVideoPlayer" controls class="w-100 rounded-3 shadow d-none" style="max-height: 500px; background: #000;">
                     Your browser does not support the video tag.
                 </video>
+                <!-- YouTube Embedded Iframe Player -->
+                <div id="youtubeContainer" class="ratio ratio-16x9 rounded-3 overflow-hidden shadow d-none">
+                    <iframe id="guideYouTubePlayer" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .custom-page-header { background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%); }
-    .glass-nav-pills { background: rgba(240, 242, 245, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.05); }
-    .glass-nav-pills .nav-link { color: #6c757d; transition: all 0.3s; }
-    .glass-nav-pills .nav-link.active { background: #0d6efd; color: #fff !important; box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3); }
-    
-    .resource-card { transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); border: 1px solid #dee2e6; border-radius: 1rem; }
-    .resource-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; border-color: #0d6efd; }
-    .icon-box { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 1rem; font-size: 1.8rem; }
+    /* Light Glass Header Style */
+    .custom-page-header {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .glass-nav-pills {
+        background: rgba(240, 242, 245, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+        .glass-nav-pills .nav-link {
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+            .glass-nav-pills .nav-link.active {
+                background: #0d6efd;
+                color: #fff !important;
+                box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+            }
+
+    .resource-card {
+        transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        border: 1px solid #dee2e6;
+        border-radius: 1rem;
+    }
+
+        .resource-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.08) !important;
+            border-color: #0d6efd;
+        }
+
+    .icon-box {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.75rem;
+        font-size: 1.5rem;
+    }
 </style>
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             loadGuides();
 
-            $('#videoModal').on('hidden.bs.modal', function () {
-                let player = document.getElementById('guideVideoPlayer');
-                player.pause();
-                player.src = "";
+            // Clear players cleanly when modal is closed
+            $('#videoModal').on('hidden.bs.modal', function() {
+                let localPlayer = document.getElementById('guideVideoPlayer');
+                localPlayer.pause();
+                localPlayer.removeAttribute('src');
+                localPlayer.load();
+                $(localPlayer).addClass('d-none');
+
+                let ytPlayer = document.getElementById('guideYouTubePlayer');
+                ytPlayer.src = "";
+                $('#youtubeContainer').addClass('d-none');
             });
         });
 
         function loadGuides() {
-            $.get('/api/guide/list', function (res) {
+            $.get('/api/guide/list', function(res) {
                 if (res.success) {
                     let demoGuides = res.data.filter(g => g.mainCategory === 'Demo');
                     let pblGuides = res.data.filter(g => g.mainCategory === 'PBL');
@@ -106,66 +155,105 @@
 
         function renderSections(containerId, groupedData, themeColor) {
             let html = '';
-            
+
             if (Object.keys(groupedData).length === 0) {
                 $(containerId).html(`<div class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1"></i><h5 class="fw-bold mt-2">No resources available</h5></div>`);
                 return;
             }
 
+            html += `<div class="row g-4">`;
+
             for (const [subCategory, items] of Object.entries(groupedData)) {
-                html += `<div class="mb-5">
-                            <h4 class="fw-bolder text-${themeColor} mb-3 border-bottom border-${themeColor} pb-2 d-inline-block border-3">
-                                ${subCategory}
-                            </h4>
-                            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 mt-1">`;
-                
+                html += `
+                                    <div class="col-xl-6 col-lg-6 col-md-12">
+                                        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                                            <h4 class="fw-bolder text-${themeColor} mb-3 border-bottom border-${themeColor} pb-2 d-inline-block border-3">
+                                                ${subCategory}
+                                            </h4>
+                                            <div class="d-flex flex-column gap-3 mt-1">`;
+
                 items.forEach(item => {
                     let isVideoType = item.fileType === 'Video' || item.fileType === 'VideoLink';
                     let iconBg = isVideoType ? `bg-${themeColor}-subtle text-${themeColor}` : 'bg-danger-subtle text-danger';
-                    let iconClass = isVideoType ? 'bi-play-circle-fill' : (item.fileUrl.includes('.ppt') ? 'bi-file-earmark-slides-fill' : 'bi-file-earmark-pdf-fill');
-                    
+                    let iconClass = isVideoType ? 'bi-play-circle-fill' : (item.fileUrl && item.fileUrl.includes('.ppt') ? 'bi-file-earmark-slides-fill' : 'bi-file-earmark-pdf-fill');
+
                     let actionBtn = '';
-                    // Dynamic button rendering based on FileType
                     if (item.fileType === 'Video') {
-                        actionBtn = `<button class="btn btn-${themeColor} w-100 rounded-pill fw-bold shadow-sm" onclick="playVideo('${item.title}', '${item.fileUrl}')"><i class="bi bi-play-fill me-1"></i> Watch Locally</button>`;
+                        actionBtn = `<button class="btn btn-${themeColor} btn-sm rounded-pill fw-bold shadow-sm px-3 text-nowrap" onclick="playLocalVideo('${item.title.replace(/'/g, "\\'")}', '${item.fileUrl}')"><i class="bi bi-play-fill me-1"></i> Watch</button>`;
                     } else if (item.fileType === 'VideoLink') {
-                        // Agar YouTube link ya url hai toh naye tab me open karega
-                        actionBtn = `<a href="${item.fileUrl}" target="_blank" class="btn btn-outline-${themeColor} border-2 w-100 rounded-pill fw-bold shadow-sm"><i class="bi bi-youtube me-1 text-danger"></i> Watch Externally</a>`;
+                        actionBtn = `<button class="btn btn-outline-${themeColor} btn-sm border-2 rounded-pill fw-bold shadow-sm px-3 text-nowrap" onclick="playYouTubeVideo('${item.title.replace(/'/g, "\\'")}', '${item.fileUrl}')"><i class="bi bi-youtube me-1 text-danger"></i> Watch</button>`;
                     } else {
-                        actionBtn = `<a href="${item.fileUrl}" target="_blank" class="btn btn-danger w-100 rounded-pill fw-bold shadow-sm"><i class="bi bi-download me-1"></i> Download / View</a>`;
+                        actionBtn = `<a href="${item.fileUrl}" target="_blank" class="btn btn-danger btn-sm rounded-pill fw-bold shadow-sm px-3 text-nowrap"><i class="bi bi-download me-1"></i> Download</a>`;
                     }
 
                     html += `
-                        <div class="col">
-                            <div class="card resource-card h-100 bg-white p-3">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="icon-box ${iconBg} me-3 shadow-sm">
-                                        <i class="bi ${iconClass}"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="fw-bolder text-dark mb-1 text-break">${item.title}</h6>
-                                        <span class="badge bg-light text-secondary border">${item.fileType}</span>
-                                    </div>
-                                </div>
-                                <div class="mt-auto pt-2">
-                                    ${actionBtn}
-                                </div>
-                            </div>
-                        </div>`;
+                                                <div class="card resource-card bg-light p-3 d-flex flex-row align-items-center justify-content-between gap-3">
+                                                    <div class="d-flex align-items-center overflow-hidden">
+                                                        <div class="icon-box ${iconBg} me-3 shadow-sm flex-shrink-0">
+                                                            <i class="bi ${iconClass}"></i>
+                                                        </div>
+                                                        <div class="text-truncate">
+                                                            <h6 class="fw-bolder text-dark mb-1 text-truncate" title="${item.title}">${item.title}</h6>
+                                                            <span class="badge bg-white text-secondary border">${item.fileType}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-shrink-0">
+                                                        ${actionBtn}
+                                                    </div>
+                                                </div>`;
                 });
 
-                html += `</div></div>`;
+                html += `</div></div></div>`;
             }
+
+            html += `</div>`;
             $(containerId).html(html);
         }
 
-        // Open Video Modal dynamically (Only for local video files)
-        function playVideo(title, url) {
+        // Fixed Local Video Player function
+        function playLocalVideo(title, url) {
             $('#videoModalTitle').text(title);
             let player = document.getElementById('guideVideoPlayer');
+
+            $(player).removeClass('d-none');
+            $('#youtubeContainer').addClass('d-none');
+
             player.src = url;
+            player.load();
+
             $('#videoModal').modal('show');
-            player.play();
+            player.play().catch(e => console.log("Auto-play prevented:", e));
+        }
+
+        // Fixed YouTube Video Player function with robust ID extraction
+        function playYouTubeVideo(title, url) {
+            $('#videoModalTitle').text(title);
+            let embedUrl = convertToYouTubeEmbedUrl(url);
+
+            let ytPlayer = document.getElementById('guideYouTubePlayer');
+            ytPlayer.src = embedUrl;
+
+            $('#youtubeContainer').removeClass('d-none');
+            $('#guideVideoPlayer').addClass('d-none');
+            $('#videoModal').modal('show');
+        }
+
+        // Improved Robust YouTube Embed URL Converter
+        function convertToYouTubeEmbedUrl(url) {
+            if (!url) return '';
+            let videoId = '';
+
+            if (url.includes('embed/')) {
+                return url.includes('?') ? url + '&autoplay=1' : url + '?autoplay=1';
+            } else if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split('?')[0];
+            } else if (url.includes('watch?v=')) {
+                videoId = url.split('watch?v=')[1].split('&')[0];
+            } else {
+                videoId = url; // Fallback if direct ID is passed
+            }
+
+            return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
         }
     </script>
 }
