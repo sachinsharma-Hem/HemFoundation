@@ -58,7 +58,7 @@ namespace HemFoundation.Controllers.Api
 
                 return BadRequest(new { success = false, message = errorMessages });
             }
-
+            string messagerolename = "";
             var portal = await _context.PortalMasters
                 .FirstOrDefaultAsync(p => p.Id == model.PortalId && p.IsActive);
 
@@ -116,7 +116,7 @@ namespace HemFoundation.Controllers.Api
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                Gender = genderCode,
+                Gender = gender?.Trim().ToUpper(),
                 MobileNo = baseMobile,
                 EmailID = model.EmailID,
                 IsActive = true,
@@ -128,7 +128,8 @@ namespace HemFoundation.Controllers.Api
                 CityName = model.City,
                 Pincode = model.Pincode,
                 AddressLine1 = model.Address,
-                AddressLine3 = model.Address
+                AddressLine3 = model.State,
+                PhotoUrl=photoUrl
             };
             _context.Users.Add(coreUser);
             await _context.SaveChangesAsync();
@@ -155,6 +156,7 @@ namespace HemFoundation.Controllers.Api
 
             if (roleName == "WJ_School")
             {
+                messagerolename = "School";
                 var institute = new WJ_Institutes
                 {
                     InstituteID = generatedUserId,
@@ -167,7 +169,7 @@ namespace HemFoundation.Controllers.Api
 
                     TypeOfOrganisation = model.TypeOfOrganisation ?? "N/A",
 
-                    ProfileUrl = photoUrl,
+                    ProfileUrl = uniqueUsername,
 
                     IsActive = true,
 
@@ -183,6 +185,7 @@ namespace HemFoundation.Controllers.Api
             }
             else if (roleName == "WJ_Students")
             {
+                messagerolename = "Student";
                 var student = new WJ_Students
                 {
                     StudentID = generatedUserId,
@@ -191,7 +194,7 @@ namespace HemFoundation.Controllers.Api
                     GardianName = guardianName,
                     ReferralCode = referredBy,
                     RegistrationAmount = 1000,
-                    ProfileUrl = photoUrl,
+                    ProfileUrl = uniqueUsername,
                     IsActive = true,
                     IsPaid = false,
                     SharingPermission = false
@@ -240,12 +243,13 @@ namespace HemFoundation.Controllers.Api
             }
             else if (roleName == "WJ_Teacher")
             {
+                messagerolename = "Teacher";
                 var teacher = new WJ_Teacher
                 {
                     TeacherID = generatedUserId,
                     Standard = standard,
                     Division = division,
-                    ProfileUrl = photoUrl
+                    ProfileUrl = uniqueUsername
                 };
 
                 _context.WJ_Teachers.Add(teacher);
@@ -264,6 +268,7 @@ namespace HemFoundation.Controllers.Api
             }
             else if (roleName == "WJ_Affiliate")
             {
+                messagerolename = "Affiliate";
                 var affiliate = new WJ_Institutes
                 {
                     InstituteID = generatedUserId,
@@ -272,7 +277,7 @@ namespace HemFoundation.Controllers.Api
 
                     TypeOfOrganisation = model.TypeOfOrganisation ?? "N/A",
 
-                    ProfileUrl = photoUrl,
+                    ProfileUrl = uniqueUsername,
 
                     InstituteType = "Affiliate",
 
@@ -285,7 +290,7 @@ namespace HemFoundation.Controllers.Api
             }
             else if (roleName == "HF_Volunteers")
             {
-
+                messagerolename = "Volunteer";
                 Int32 associateintid = 0;Int32 associateaffiliate = 0;
                
                 if(roleNAME == "WJ_School")
@@ -362,7 +367,7 @@ namespace HemFoundation.Controllers.Api
                 System.Diagnostics.Debug.WriteLine("Notification dispatch failed: " + ex.ToString());
             }
 
-            return Ok(new { success = true, message = $"{roleName} registered successfully!" });
+            return Ok(new { success = true, message = $"{messagerolename} registered successfully!" });
         }
         public async Task<IActionResult> Registerold(
             [FromForm] UniversalRegisterDto model,
