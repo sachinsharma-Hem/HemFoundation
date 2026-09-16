@@ -41,11 +41,9 @@ namespace HemFoundation.Controllers.Api
             var roles = await _userManager.GetRolesAsync(user);
             string primaryRole = roles.FirstOrDefault() ?? "User";
 
-            // Fetch custom profile details from 'users' table using AspNetUserID
             var customUser = await _context.Users.FirstOrDefaultAsync(u => u.AspNetUserID == userId);
             string orgName = "";
 
-            // Student specific variables
             string standard = "";
             string division = "";
             string guardianName = "";
@@ -71,7 +69,6 @@ namespace HemFoundation.Controllers.Api
             {
                 if (customUser != null)
                 {
-                    // Use Projection (.Select) to safely handle NULL values from database
                     var studentInfo = await _context.WJ_Students
                         .Where(s => s.StudentID == customUser.UserID)
                         .Select(s => new {
@@ -92,7 +89,6 @@ namespace HemFoundation.Controllers.Api
                         guardianMobile = studentInfo.GuardianMobileNo;
                     }
 
-                    // Fetch InstituteID from WJ_StudentAssociates safely
                     var studentAssociate = await _context.WJ_StudentAssociates
                         .Where(sa => sa.StudentID == customUser.UserID)
                         .FirstOrDefaultAsync();
@@ -109,12 +105,13 @@ namespace HemFoundation.Controllers.Api
                 }
             }
 
-            // Map Single Character Gender (M/F/O) to Full Text for UI Dropdown selection
+            // Proper Gender Mapping for UI Dropdown selection
             string rawGender = customUser?.Gender?.Trim().ToUpper() ?? "";
             string mappedGender = "";
             if (rawGender == "M") mappedGender = "Male";
             else if (rawGender == "F") mappedGender = "Female";
             else if (rawGender == "O") mappedGender = "Other";
+            else mappedGender = customUser?.Gender ?? "";
 
             var profileData = new
             {
@@ -124,12 +121,11 @@ namespace HemFoundation.Controllers.Api
                 organisationName = orgName,
                 address = customUser?.AddressLine1 ?? "",
                 city = customUser?.CityName ?? "",
-                state = customUser?.AddressLine3 ?? "", // State is stored in AddressLine3
+                state = customUser?.AddressLine3 ?? "",
                 pincode = customUser?.Pincode ?? "",
                 mobileNo = customUser?.MobileNo ?? user.PhoneNumber ?? "",
                 photoUrl = string.IsNullOrEmpty(customUser?.PhotoUrl) ? "/uploads/profiles/default-avatar.png" : customUser.PhotoUrl,
 
-                // Student Info Fields
                 standard = standard,
                 division = division,
                 guardianName = guardianName,
@@ -154,9 +150,6 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
-        // =========================================================
-        // INSTITUTES SEARCH ENDPOINT (For Searchable Dropdown)
-        // =========================================================
         [HttpGet("institutes")]
         public async Task<IActionResult> GetInstitutes([FromQuery] string? term)
         {
@@ -184,59 +177,34 @@ namespace HemFoundation.Controllers.Api
 
                 if (string.IsNullOrWhiteSpace(userId))
                 {
-                    return Unauthorized(new
-                    {
-                        success = false,
-                        message = "User not authenticated."
-                    });
+                    return Unauthorized(new { success = false, message = "User not authenticated." });
                 }
 
                 var user = await _userManager.FindByIdAsync(userId);
 
                 if (user == null)
                 {
-                    return NotFound(new
-                    {
-                        success = false,
-                        message = "User not found."
-                    });
+                    return NotFound(new { success = false, message = "User not found." });
                 }
 
                 var roles = await _userManager.GetRolesAsync(user);
                 string primaryRole = roles.FirstOrDefault() ?? "User";
 
-                // =========================================================
-                // 2. Handle Profile Photo
-                // =========================================================
                 string? photoUrl = null;
 
                 if (model.ProfilePhoto != null && model.ProfilePhoto.Length > 0)
                 {
-                    string uploadsFolder = Path.Combine(
-                        _env.WebRootPath,
-                        "uploads",
-                        "profiles",
-                        "Updates"
-                    );
+                    string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles", "Updates");
 
                     if (!Directory.Exists(uploadsFolder))
                     {
                         Directory.CreateDirectory(uploadsFolder);
                     }
 
-                    string uniqueFileName =
-                        $"{Guid.NewGuid()}_{Path.GetFileName(model.ProfilePhoto.FileName)}";
+                    string uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(model.ProfilePhoto.FileName)}";
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-                    string filePath = Path.Combine(
-                        uploadsFolder,
-                        uniqueFileName
-                    );
-
-                    await using (var fileStream = new FileStream(
-                        filePath,
-                        FileMode.Create,
-                        FileAccess.Write,
-                        FileShare.None))
+                    await using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
                     {
                         await model.ProfilePhoto.CopyToAsync(fileStream);
                     }
@@ -244,47 +212,30 @@ namespace HemFoundation.Controllers.Api
                     photoUrl = $"/uploads/profiles/Updates/{uniqueFileName}";
                 }
 
-                // =========================================================
-                // 3. Update AspNetUsers directly
-                // =========================================================
                 if (!string.IsNullOrWhiteSpace(model.PhoneNumber))
                 {
                     int identityRows = await _context.Set<ApplicationUser>()
                         .Where(u => u.Id == userId)
                         .ExecuteUpdateAsync(setters => setters
-                            .SetProperty(
-                                u => u.PhoneNumber,
-                                model.PhoneNumber.Trim()
-                            )
+                            .SetProperty(u => u.PhoneNumber, model.PhoneNumber.Trim())
                         );
 
                     if (identityRows == 0)
                     {
-                        return StatusCode(500, new
-                        {
-                            success = false,
-                            message = "Phone number could not be updated in AspNetUsers."
-                        });
+                        return StatusCode(500, new { success = false, message = "Phone number could not be updated in AspNetUsers." });
                     }
                 }
 
-                // =========================================================
-                // 4. Find custom Users record
-                // =========================================================
                 var customUser = await _context.Users
                     .AsNoTracking()
                     .FirstOrDefaultAsync(u => u.AspNetUserID == userId);
 
-                // Safely format Gender to fit single character (M, F, O)
                 string? formattedGender = null;
                 if (!string.IsNullOrWhiteSpace(model.Gender))
                 {
                     formattedGender = model.Gender.Trim().Substring(0, 1).ToUpper();
                 }
 
-                // =========================================================
-                // 5. If custom Users record does not exist
-                // =========================================================
                 if (customUser == null)
                 {
                     var newCustomUser = new Users
@@ -313,104 +264,47 @@ namespace HemFoundation.Controllers.Api
                         await UpsertStudentDetailsAsync(newCustomUser.UserID, model);
                     }
 
-                    return Ok(new
-                    {
-                        success = true,
-                        message = "Profile updated successfully!",
-                        photoUrl = newCustomUser.PhotoUrl
-                    });
+                    return Ok(new { success = true, message = "Profile updated successfully!", photoUrl = newCustomUser.PhotoUrl });
                 }
 
-                // =========================================================
-                // 6. Update existing Users record directly (ExecuteUpdateAsync)
-                // =========================================================
                 int affectedRows = await _context.Users
                     .Where(u => u.UserID == customUser.UserID)
                     .ExecuteUpdateAsync(setters => setters
-                        .SetProperty(
-                            u => u.FirstName,
-                            string.IsNullOrWhiteSpace(model.FirstName) ? customUser.FirstName : model.FirstName.Trim()
-                        )
-                        .SetProperty(
-                            u => u.LastName,
-                            string.IsNullOrWhiteSpace(model.LastName) ? customUser.LastName : model.LastName.Trim()
-                        )
-                        .SetProperty(
-                            u => u.Gender,
-                            formattedGender ?? customUser.Gender
-                        )
-                        .SetProperty(
-                            u => u.MobileNo,
-                            string.IsNullOrWhiteSpace(model.PhoneNumber) ? customUser.MobileNo : model.PhoneNumber.Trim()
-                        )
-                        .SetProperty(
-                            u => u.AddressLine1,
-                            string.IsNullOrWhiteSpace(model.Address) ? customUser.AddressLine1 : model.Address.Trim()
-                        )
-                        .SetProperty(
-                            u => u.AddressLine3,
-                            string.IsNullOrWhiteSpace(model.State) ? customUser.AddressLine3 : model.State.Trim()
-                        )
-                        .SetProperty(
-                            u => u.CityName,
-                            string.IsNullOrWhiteSpace(model.City) ? customUser.CityName : model.City.Trim()
-                        )
-                        .SetProperty(
-                            u => u.Pincode,
-                            string.IsNullOrWhiteSpace(model.Pincode) ? customUser.Pincode : model.Pincode.Trim()
-                        )
-                        .SetProperty(
-                            u => u.PhotoUrl,
-                            string.IsNullOrWhiteSpace(photoUrl) ? customUser.PhotoUrl : photoUrl
-                        )
-                        .SetProperty(
-                            u => u.ModifiedDate,
-                            DateTime.UtcNow
-                        )
+                        .SetProperty(u => u.FirstName, string.IsNullOrWhiteSpace(model.FirstName) ? customUser.FirstName : model.FirstName.Trim())
+                        .SetProperty(u => u.LastName, string.IsNullOrWhiteSpace(model.LastName) ? customUser.LastName : model.LastName.Trim())
+                        .SetProperty(u => u.Gender, formattedGender ?? customUser.Gender)
+                        .SetProperty(u => u.MobileNo, string.IsNullOrWhiteSpace(model.PhoneNumber) ? customUser.MobileNo : model.PhoneNumber.Trim())
+                        .SetProperty(u => u.AddressLine1, string.IsNullOrWhiteSpace(model.Address) ? customUser.AddressLine1 : model.Address.Trim())
+                        .SetProperty(u => u.AddressLine3, string.IsNullOrWhiteSpace(model.State) ? customUser.AddressLine3 : model.State.Trim())
+                        .SetProperty(u => u.CityName, string.IsNullOrWhiteSpace(model.City) ? customUser.CityName : model.City.Trim())
+                        .SetProperty(u => u.Pincode, string.IsNullOrWhiteSpace(model.Pincode) ? customUser.Pincode : model.Pincode.Trim())
+                        .SetProperty(u => u.PhotoUrl, string.IsNullOrWhiteSpace(photoUrl) ? customUser.PhotoUrl : photoUrl)
+                        .SetProperty(u => u.ModifiedDate, DateTime.UtcNow)
                     );
 
                 if (affectedRows == 0)
                 {
-                    return StatusCode(500, new
-                    {
-                        success = false,
-                        message = "Profile record could not be updated.",
-                        userId = customUser.UserID
-                    });
+                    return StatusCode(500, new { success = false, message = "Profile record could not be updated.", userId = customUser.UserID });
                 }
 
-                // =========================================================
-                // 7. Update WJ_Students if role is Student
-                // =========================================================
                 if (primaryRole.Contains("Student", StringComparison.OrdinalIgnoreCase))
                 {
                     await UpsertStudentDetailsAsync(customUser.UserID, model);
                 }
 
-                // =========================================================
-                // 8. Success
-                // =========================================================
                 return Ok(new
                 {
                     success = true,
                     message = "Profile updated successfully!",
-                    photoUrl = string.IsNullOrWhiteSpace(photoUrl)
-                        ? customUser.PhotoUrl
-                        : photoUrl
+                    photoUrl = string.IsNullOrWhiteSpace(photoUrl) ? customUser.PhotoUrl : photoUrl
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "Internal Server Error: " + ex.Message,
-                    details = ex.InnerException?.Message
-                });
+                return StatusCode(500, new { success = false, message = "Internal Server Error: " + ex.Message, details = ex.InnerException?.Message });
             }
         }
 
-        // Helper method to insert or update WJ_Students table data safely + Institute Association
         private async Task UpsertStudentDetailsAsync(int studentId, ProfileUpdateDto model)
         {
             var studentRecord = await _context.WJ_Students
@@ -440,7 +334,6 @@ namespace HemFoundation.Controllers.Api
                 _context.WJ_Students.Add(newStudent);
             }
 
-            // Update Institute association if selected from searchable dropdown
             if (model.InstituteID.HasValue && model.InstituteID.Value > 0)
             {
                 var associate = await _context.WJ_StudentAssociates
@@ -449,6 +342,7 @@ namespace HemFoundation.Controllers.Api
                 if (associate != null)
                 {
                     associate.InstituteID = model.InstituteID.Value;
+                    associate.IsPrimaryAssociate = true;
                     _context.WJ_StudentAssociates.Update(associate);
                 }
                 else
@@ -457,7 +351,7 @@ namespace HemFoundation.Controllers.Api
                     {
                         StudentID = studentId,
                         InstituteID = model.InstituteID.Value,
-                        IsPrimaryAssociate = true // Assuming "1" indicates primary association
+                        IsPrimaryAssociate = true
                     });
                 }
             }
@@ -468,146 +362,47 @@ namespace HemFoundation.Controllers.Api
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
         {
-            if (model == null ||
-                string.IsNullOrWhiteSpace(model.CurrentPassword) ||
-                string.IsNullOrWhiteSpace(model.NewPassword))
+            if (model == null || string.IsNullOrWhiteSpace(model.CurrentPassword) || string.IsNullOrWhiteSpace(model.NewPassword))
             {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "Current password and new password are required."
-                });
+                return BadRequest(new { success = false, message = "Current password and new password are required." });
             }
 
             if (model.NewPassword.Length < 6)
             {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "New password must be at least 6 characters long."
-                });
-            }
-
-            if (model.CurrentPassword == model.NewPassword)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "New password must be different from current password."
-                });
+                return BadRequest(new { success = false, message = "New password must be at least 6 characters long." });
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             if (string.IsNullOrWhiteSpace(userId))
             {
-                return Unauthorized(new
-                {
-                    success = false,
-                    message = "User not authenticated."
-                });
+                return Unauthorized(new { success = false, message = "User not authenticated." });
             }
 
-            var user = await _context
-                .Set<ApplicationUser>()
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Id == userId);
-
+            var user = await _context.Set<ApplicationUser>().AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
-                return NotFound(new
-                {
-                    success = false,
-                    message = "User not found."
-                });
-            }
-
-            if (string.IsNullOrWhiteSpace(user.PasswordHash))
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "Current password is not configured."
-                });
+                return NotFound(new { success = false, message = "User not found." });
             }
 
             var passwordHasher = new PasswordHasher<ApplicationUser>();
-
-            var verificationResult =
-                passwordHasher.VerifyHashedPassword(
-                    user,
-                    user.PasswordHash,
-                    model.CurrentPassword
-                );
+            var verificationResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.CurrentPassword);
 
             if (verificationResult == PasswordVerificationResult.Failed)
             {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "Current password is incorrect."
-                });
+                return BadRequest(new { success = false, message = "Current password is incorrect." });
             }
 
-            var newPasswordHash =
-                passwordHasher.HashPassword(
-                    user,
-                    model.NewPassword
-                );
+            var newPasswordHash = passwordHasher.HashPassword(user, model.NewPassword);
 
-            var identityRows = await _context
-                .Set<ApplicationUser>()
+            await _context.Set<ApplicationUser>()
                 .Where(u => u.Id == userId)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(
-                        u => u.PasswordHash,
-                        newPasswordHash
-                    )
-                );
+                .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.PasswordHash, newPasswordHash));
 
-            if (identityRows == 0)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "Password update failed. User record was not found."
-                });
-            }
-
-            var customUserRows = await _context
-                .Users
+            await _context.Users
                 .Where(u => u.AspNetUserID == userId)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(
-                        u => u.Password_,
-                        model.NewPassword
-                    )
-                );
+                .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.Password_, model.NewPassword));
 
-            if (customUserRows == 0)
-            {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "Password hash was updated, but users password could not be updated."
-                });
-            }
-
-            await _context
-                .Volunteers
-                .Where(v => v.AspNetUserId == userId)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(
-                        v => v.Password_,
-                        model.NewPassword
-                    )
-                );
-
-            return Ok(new
-            {
-                success = true,
-                message = "Password changed successfully!"
-            });
+            return Ok(new { success = true, message = "Password changed successfully!" });
         }
     }
 
@@ -622,14 +417,13 @@ namespace HemFoundation.Controllers.Api
         public string? Pincode { get; set; }
         public IFormFile? ProfilePhoto { get; set; }
 
-        // Student specific properties
         public string? Gender { get; set; }
         public string? Standard { get; set; }
         public string? Division { get; set; }
         public string? GuardianName { get; set; }
         public string? GuardianEmail { get; set; }
         public string? GuardianMobile { get; set; }
-        public int? InstituteID { get; set; } // Added for school dropdown mapping
+        public int? InstituteID { get; set; }
     }
 
     public class ChangePasswordDto
