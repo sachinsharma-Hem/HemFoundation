@@ -272,7 +272,7 @@ namespace HemFoundation.Controllers.Api
                     TRIM(COALESCE(st.firstname, '') || ' ' || COALESCE(st.lastname, '')) AS studentname,
                     st.mobileno AS studentmobile,
                     st.emailid AS studentemail,
-                    ins.name AS schoolname,
+                    ins.""Name"" AS schoolname,
                     iu.emailid AS schoolemail,
                     iu.mobileno AS schoolmobileno 
                 FROM users st             

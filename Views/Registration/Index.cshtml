@@ -525,11 +525,24 @@
             }
 
             // AJAX Handlers for Modals using Universal API
+            // AJAX Handlers for Modals using Universal API with Double-Click Prevention
             $('#frmAddStudent, #frmAddTeacher, #frmAddVolunteer').on('submit', function(e) {
                 e.preventDefault();
                 let $form = $(this);
+                let $submitBtn = $form.find('button[type="submit"]');
+
+                // Prevent double submission if already processing
+                if ($submitBtn.prop('disabled')) {
+                    return;
+                }
+
                 let formData = new FormData(this);
                 let isStudent = $form.attr('id') === 'frmAddStudent';
+
+                // Disable button and add a loading indicator
+                $submitBtn.prop('disabled', true);
+                let originalBtnText = $submitBtn.html();
+                $submitBtn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...');
 
                 $.ajax({
                     url: '/api/universal/register',
@@ -542,11 +555,19 @@
                             alert(res.message);
                             $form[0].reset();
                             if (isStudent) $('#modalAddStudent').modal('hide');
-                            else $('#modalAddTeacher').modal('hide');
+                            else if ($form.attr('id') === 'frmAddTeacher') $('#modalAddTeacher').modal('hide');
+                            else $('#modalAddVolunteer').modal('hide');
                             loadSchoolHubData();
+                        } else {
+                            // Re-enable button if server returned a logical failure
+                            $submitBtn.prop('disabled', false);
+                            $submitBtn.html(originalBtnText);
                         }
                     },
                     error: function(xhr) {
+                        // Re-enable button on error so the user can try again
+                        $submitBtn.prop('disabled', false);
+                        $submitBtn.html(originalBtnText);
                         alert(xhr.responseJSON?.message || "Registration failed.");
                     }
                 });
@@ -895,10 +916,10 @@
                         dataType: 'json',
                         data: { StudentId: StudentId },
                         success: function(response) {
-                            if (response.Success) {
-                                Swal.fire("Removed!", response.Data, "success").then(() => { location.reload(); });
+                            if (response.success) {
+                                Swal.fire("Removed!", response.message, "success").then(() => { location.reload(); });
                             } else {
-                                Swal.fire("Info", response.Message, "error");
+                                Swal.fire("Info", response.message, "error");
                             }
                         }
                     });

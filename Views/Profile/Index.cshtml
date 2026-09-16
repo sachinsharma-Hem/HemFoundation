@@ -21,7 +21,7 @@
                 </div>
                 <h4 id="lbl-fullname" class="fw-bold mb-1 text-dark">Loading...</h4>
                 <p id="lbl-email" class="text-muted small mb-2">loading@hemfoundation.org</p>
-                <span id="lbl-role" class="badge bg-success-subtle text-success rounded-pill px-3 py-1 fw-medium mx-auto" style="font-size: 0.8rem;">Role</span>
+                <span id="lbl-role" class="badge bg-success-subtle text-success rounded-pill px-3 py-1 fw-medium mx-auto" style="font-size: 0.8rem;" hidden="">Role</span>
             </div>
 
             <!-- Security / Password Change Section with Toggle Button -->
@@ -138,14 +138,14 @@
                             <label class="form-label small fw-semibold">Guardian Name</label>
                             <input type="text" id="txtGuardianName" class="form-control rounded-3 shadow-none" />
                         </div>
-                        <div class="col-md-4">
+                        @* <div class="col-md-4">
                             <label class="form-label small fw-semibold">Guardian Email ID</label>
                             <input type="email" id="txtGuardianEmail" class="form-control rounded-3 shadow-none" />
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold">Guardian Mobile No</label>
                             <input type="text" id="txtGuardianMobile" class="form-control rounded-3 shadow-none" />
-                        </div>
+                        </div> *@
                     </div>
                 </div>
 
@@ -279,13 +279,21 @@
                             $('#txtStandard').val(res.profile.standard === 'Not Updated' ? '' : res.profile.standard);
                             $('#txtDivision').val(res.profile.division === 'Not Updated' ? '' : res.profile.division);
                             $('#txtGuardianName').val(res.profile.guardianName === 'Not Updated' ? '' : res.profile.guardianName);
-                            $('#txtGuardianEmail').val(res.profile.guardianEmail === 'Not Updated' ? '' : res.profile.guardianEmail);
-                            $('#txtGuardianMobile').val(res.profile.guardianMobile === 'Not Updated' ? '' : res.profile.guardianMobile);
+                            //$('#txtGuardianEmail').val(res.profile.guardianEmail === 'Not Updated' ? '' : res.profile.guardianEmail);
+                           // $('#txtGuardianMobile').val(res.profile.guardianMobile === 'Not Updated' ? '' : res.profile.guardianMobile);
 
                             if (res.profile.studentInstituteId && res.profile.studentInstituteName) {
                                 let newOption = new Option(res.profile.studentInstituteName, res.profile.studentInstituteId, true, true);
                                 $('#ddlInstitute').append(newOption).trigger('change');
                                 $('#ddlInstitute').prop('disabled', true);
+                            }
+                            if (res.profile.standard && res.profile.standard) {
+                               
+                                $('#txtStandard').prop('disabled', true);
+                            }
+                            if (res.profile.standard && res.profile.standard) {
+                               
+                                $('#txtDivision').prop('disabled', true);
                             }
                         }
                     }
@@ -340,8 +348,8 @@
                     formData.append('standard', $('#txtStandard').val());
                     formData.append('division', $('#txtDivision').val());
                     formData.append('guardianName', $('#txtGuardianName').val());
-                    formData.append('guardianEmail', $('#txtGuardianEmail').val());
-                    formData.append('guardianMobile', $('#txtGuardianMobile').val());
+                    // formData.append('guardianEmail', $('#txtGuardianEmail').val());
+                    // formData.append('guardianMobile', $('#txtGuardianMobile').val());
                     if (!$('#ddlInstitute').is(':disabled')) {
                         formData.append('instituteID', $('#ddlInstitute').val() || '');
                     }
