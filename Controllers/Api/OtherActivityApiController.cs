@@ -269,12 +269,18 @@ namespace HemFoundation.Controllers.Api
             long affId = await GetCurrentAffiliateIdAsync();
             if (affId == 0) return Unauthorized(new { success = false, message = "Unauthorized" });
 
+            // Auto-prepend related information to ExpenseDetail for clarity
+            string prefix = model.RelatedType == "SchoolVisit" ? "[School Visit] " : (model.RelatedType == "OtherActivity" ? "[Other Activity] " : "");
+            string finalDetail = prefix + model.ExpenseDetail;
+
             var expense = new AffiliateExpense
             {
                 AffiliateId = affId,
                 ExpenseDate = model.ExpenseDate.Date,
-                ExpenseDetail = model.ExpenseDetail,
+                ExpenseDetail = finalDetail,
                 Amount = model.Amount,
+                RelatedType = model.RelatedType,
+                RelatedId = model.RelatedId,
                 Status = "Pending",
                 CreatedDate = DateTime.UtcNow
             };
@@ -284,7 +290,46 @@ namespace HemFoundation.Controllers.Api
 
             return Ok(new { success = true, message = "Expense submitted successfully." });
         }
+
+        // Get list of completed/active school visits for dropdown
+        [HttpGet("expense/school-visits")]
+        public async Task<IActionResult> GetSchoolVisitsForExpense()
+        {
+            long affId = await GetCurrentAffiliateIdAsync();
+            if (affId == 0) return Unauthorized(new { success = false, message = "Unauthorized" });
+
+            var visits = await _context.AffiliateVisitPlans
+                .Where(v => v.AffiliateId == affId && !v.IsDeleted)
+                .Join(_context.SchoolProfileDetails, v => v.InstituteID, s => s.instituteid, (v, s) => new
+                {
+                    id = v.Id,
+                    name = s.institute_name + (!string.IsNullOrEmpty(s.cityname) ? $" ({s.cityname})" : "")
+                })
+                .ToListAsync();
+
+            return Ok(new { success = true, data = visits });
+        }
+
+        // Get list of activities for dropdown
+        [HttpGet("expense/activities-list")]
+        public async Task<IActionResult> GetActivitiesForExpense()
+        {
+            long affId = await GetCurrentAffiliateIdAsync();
+            if (affId == 0) return Unauthorized(new { success = false, message = "Unauthorized" });
+
+            var activities = await _context.AffiliateOtherActivities
+                .Where(x => x.AffiliateId == affId && !x.IsDeleted)
+                .Select(x => new
+                {
+                    id = x.Id,
+                    name = x.ActivityName + " - " + x.SchoolName
+                })
+                .ToListAsync();
+
+            return Ok(new { success = true, data = activities });
+        }
     }
+
 
     public class ActivityCreateModel
     {
@@ -310,5 +355,7 @@ namespace HemFoundation.Controllers.Api
         public DateTime ExpenseDate { get; set; }
         public string ExpenseDetail { get; set; } = string.Empty;
         public decimal Amount { get; set; }
+        public string? RelatedType { get; set; }
+        public long? RelatedId { get; set; }
     }
 }

@@ -17,5 +17,11 @@ namespace HemFoundation.Models.Entities
 
         [StringLength(30)]
         public string Status { get; set; } = "Pending"; // "Pending", "Approved", "Rejected"
+
+        // New fields to link with Visit or Activity
+        [StringLength(50)]
+        public string? RelatedType { get; set; } // "SchoolVisit" or "OtherActivity"
+
+        public long? RelatedId { get; set; }
     }
 }

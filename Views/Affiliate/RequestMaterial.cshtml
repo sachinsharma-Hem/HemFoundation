@@ -59,7 +59,8 @@
                             <input type="number" id="txtQty" class="form-control rounded-3 shadow-none" min="1" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Needed By Date <span class="text-danger">*</span></label>
+                            <label class="form-label small fw-bold">Expected By Date <span class="text-danger">*</span></label>
+                            <!-- Restricted via script min attribute -->
                             <input type="date" id="txtNeedDate" class="form-control rounded-3 shadow-none" required>
                         </div>
                         <div class="col-md-6">
@@ -88,12 +89,13 @@
 
 @section Scripts {
     <script>
-        $(function () {
+        $(function() {
             loadItems();
             loadMyRequests();
+            setMinDate(); // Set min date on page load
 
             // Submit Handler
-            $('#frmMaterial').on('submit', function (e) {
+            $('#frmMaterial').on('submit', function(e) {
                 e.preventDefault();
                 let payload = {
                     RequisitionItemId: parseInt($('#ddlItem').val()),
@@ -114,10 +116,11 @@
                     contentType: 'application/json',
                     headers: { 'Authorization': 'Bearer ' + getAuthToken() },
                     data: JSON.stringify(payload),
-                    success: function (res) {
+                    success: function(res) {
                         if (res.success) {
                             $('#materialRequestModal').modal('hide');
                             $('#frmMaterial')[0].reset();
+                            setMinDate(); // Reset min date after form reset
                             loadMyRequests();
                         }
                     },
@@ -128,8 +131,14 @@
             });
         });
 
-        function getAuthToken() { 
-            return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || ''; 
+        // Function to set min attribute to today's date
+        function setMinDate() {
+            let today = new Date().toISOString().split('T')[0];
+            $('#txtNeedDate').attr('min', today);
+        }
+
+        function getAuthToken() {
+            return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '';
         }
 
         function formatDateOnly(dateStr) {
@@ -148,7 +157,7 @@
                 type: 'GET',
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
                 success: function(res) {
-                    if(res.success && res.data) {
+                    if (res.success && res.data) {
                         let html = '<option value="">-- Choose Item --</option>';
                         res.data.forEach(i => html += `<option value="${i.id}">${i.itemName}</option>`);
                         $('#ddlItem').html(html);
@@ -165,24 +174,24 @@
                 type: 'GET',
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
                 success: function(res) {
-                    if(res.success && res.data.length > 0) {
+                    if (res.success && res.data.length > 0) {
                         let html = '';
                         res.data.forEach(r => {
                             let badge = r.status == 'Approved' || r.status == 'Dispatched' ? 'success' : (r.status == 'Rejected' ? 'danger' : 'warning');
                             let qtyDisplay = r.approvedQuantity != null ? `<br><span class="text-success small fw-bold">Approved Qty: ${r.approvedQuantity}</span>` : '';
-                            
+
                             html += `<tr>
-                                <td class="fw-semibold text-muted">${formatDateOnly(r.createdDate)}</td>
-                                <td><b class="text-dark">${r.itemName}</b><br><small class="text-muted">Req Qty: ${r.requestedQuantity}</small>${qtyDisplay}</td>
-                                <td>${formatDateOnly(r.needDate)} <br><span class="badge bg-light text-dark border">${r.priority} Priority</span></td>
-                                <td class="text-center"><span class="badge bg-${badge}-subtle text-${badge} border border-${badge}-subtle px-3 py-2 rounded-pill">${r.status}</span></td>
-                                <td>
-                                    <div class="bg-light p-2 rounded-3 border">
-                                        <small class="d-block fw-bold text-dark mb-1">Expected: <span class="text-primary">${formatDateOnly(r.expectedDate)}</span></small>
-                                        <small class="text-muted" style="font-size:0.75rem;">${r.adminRemarks || 'Awaiting update from Admin.'}</small>
-                                    </div>
-                                </td>
-                            </tr>`;
+                                        <td class="fw-semibold text-muted">${formatDateOnly(r.createdDate)}</td>
+                                        <td><b class="text-dark">${r.itemName}</b><br><small class="text-muted">Req Qty: ${r.requestedQuantity}</small>${qtyDisplay}</td>
+                                        <td>${formatDateOnly(r.needDate)} <br><span class="badge bg-light text-dark border">${r.priority} Priority</span></td>
+                                        <td class="text-center"><span class="badge bg-${badge}-subtle text-${badge} border border-${badge}-subtle px-3 py-2 rounded-pill">${r.status}</span></td>
+                                        <td>
+                                            <div class="bg-light p-2 rounded-3 border">
+                                                <small class="d-block fw-bold text-dark mb-1">Expected: <span class="text-primary">${formatDateOnly(r.expectedDate)}</span></small>
+                                                <small class="text-muted" style="font-size:0.75rem;">${r.adminRemarks || 'Awaiting update from Admin.'}</small>
+                                            </div>
+                                        </td>
+                                    </tr>`;
                         });
                         $('#materialTableBody').html(html);
                     } else {
@@ -193,6 +202,7 @@
         }
 
         function openMaterialModal() {
+            setMinDate(); // Ensure min date is fresh when opening modal
             $('#materialRequestModal').modal('show');
         }
     </script>

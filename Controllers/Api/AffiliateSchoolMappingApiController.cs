@@ -30,14 +30,16 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("affiliates-list")]
         public async Task<IActionResult> GetAffiliatesList()
         {
-            var list = await _context.Affiliates
-                .Where(a => a.IsActive)
-                .Select(a => new
+            var list = await _context.View_HF_Affiliate
+                .AsNoTracking()
+                .Where(x => x.SchoolCount >= 5)
+                .Select(x => new
                 {
-                    a.UserID,
-                    Name = a.FirstName + " " + a.LastName + " (" + (a.UserCode ?? "N/A") + ")"
+                    id = x.InstituteID,
+                    name = (x.FirstName ?? "") + " " + (x.LastName ?? "")
                 })
-                .OrderBy(a => a.Name)
+                .Distinct()
+                .OrderBy(x => x.name)
                 .ToListAsync();
 
             return Ok(new { success = true, data = list });

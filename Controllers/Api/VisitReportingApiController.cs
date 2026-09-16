@@ -50,6 +50,7 @@ namespace HemFoundation.Controllers.Api
                 data = types
             });
         }
+
         [HttpGet("list/{statusType}")]
         public async Task<IActionResult> GetVisits(string statusType)
         {
@@ -63,21 +64,32 @@ namespace HemFoundation.Controllers.Api
             else
                 query = query.Where(v => v.Status == statusType);
 
+            // Left join with SchoolProfileDetails & AffiliateVisitReports to get complete details
             var visits = await query
                 .Join(
                     _context.SchoolProfileDetails,
                     v => v.InstituteID,
                     s => s.instituteid,
-                    (v, s) => new
-                    {
-                        v.Id,
-                        v.InstituteID,
-                        SchoolName = s.institute_name,
-                        SchoolCity = s.cityname,
-                        v.ScheduleDate,
-                        v.Purpose,
-                        v.Status
-                    })
+                    (v, s) => new { v, s })
+                .GroupJoin(
+                    _context.AffiliateVisitReports,
+                    vs => vs.v.Id,
+                    r => r.VisitPlanId,
+                    (vs, reports) => new { vs.v, vs.s, report = reports.FirstOrDefault() })
+                .Select(x => new
+                {
+                    x.v.Id,
+                    x.v.InstituteID,
+                    SchoolName = x.s.institute_name,
+                    SchoolCity = x.s.cityname,
+                    x.v.ScheduleDate,
+                    x.v.Purpose,
+                    x.v.Status,
+                    Description = x.report != null ? x.report.Description : null,
+                    Latitude = x.report != null ? x.report.Latitude : null,
+                    Longitude = x.report != null ? x.report.Longitude : null,
+                    PhotoUrl = x.report != null ? x.report.PhotoUrl : null
+                })
                 .OrderByDescending(v => v.ScheduleDate)
                 .ToListAsync();
 
@@ -130,7 +142,7 @@ namespace HemFoundation.Controllers.Api
             };
             _context.AffiliateVisitReports.Add(report);
 
-            // IMPORTANT: Auto-update the Plan status to Completed
+            // Auto-update the Plan status to Completed
             plan.Status = "Completed";
             plan.ModifiedDate = DateTime.UtcNow;
 
@@ -147,6 +159,6 @@ namespace HemFoundation.Controllers.Api
         public string? Description { get; set; }
         public string? Latitude { get; set; }
         public string? Longitude { get; set; }
-        public IFormFile? PhotoFile { get; set; } // Handles the actual file payload
+        public IFormFile? PhotoFile { get; set; }
     }
 }
