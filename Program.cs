@@ -124,6 +124,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHostedService<AttendanceBackgroundWorker>();
 builder.Services.AddTransient<SMSManager>();
+builder.Services.AddScoped<IGroupProjectService, GroupProjectService>();
 // Build
 var app = builder.Build();
 

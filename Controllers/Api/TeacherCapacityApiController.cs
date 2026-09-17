@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Spreadsheet;
 using HemFoundation.Data;
 using HemFoundation.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -48,8 +49,9 @@ namespace HemFoundation.Controllers.Api
             //    mcqThumbnail = x.TrainerExercise,    // Banner/Image ke liye
             //    numberOfQuestions = x.NoOfQuestion ?? 0,
             //    languageId = x.languageID ?? 1,
-                
+
             //}).ToList();
+           int  userID = HttpContext.Session.GetInt32("UserID") ?? 0;
             var subTopics = subTopicsData.Select(x => new
             {
                 id = x.TopicID,
@@ -61,7 +63,7 @@ namespace HemFoundation.Controllers.Api
 
                 // Fetch examinationid where examtopicid matches the topic and endtime is not null
                 examinationId = _context.Examination
-                .Where(e => e.ExamTopicID == x.TopicID && e.EndTime != null)
+                .Where(e => e.ExamTopicID == x.TopicID && e.EndTime != null && e.UserID ==userID )
                 .Select(e => (int?)e.ExaminationID)
                 .FirstOrDefault() // Or use relevant logic if multiple exist
             }).ToList();
