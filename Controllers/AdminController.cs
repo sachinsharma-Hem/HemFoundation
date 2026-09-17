@@ -113,5 +113,17 @@ namespace HemFoundation.Controllers
 
             return View("~/Views/Admin/StudentCourseSetup.cshtml");
         }
+
+        [HttpGet("AffiliateReport")]
+        public IActionResult AffiliateReport()
+        {
+            var isLoggedIn = HttpContext.Session.GetString("IsAdminLoggedIn");
+            if (string.IsNullOrEmpty(isLoggedIn) || isLoggedIn != "true")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View("~/Views/Admin/AffiliateReport.cshtml");
+        }
     }
 }

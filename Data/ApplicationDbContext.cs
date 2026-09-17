@@ -141,6 +141,7 @@ namespace HemFoundation.Data
 
         public DbSet<View_HF_Affiliate> View_HF_Affiliate { get; set; }
         public DbSet<HfViewUser> HfViewUsers { get; set; }
+        public DbSet<HfTblAffliateFocusedList> HfTblAffliateFocusedLists { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

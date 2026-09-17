@@ -1,0 +1,278 @@
+﻿@{
+    ViewData["Title"] = "Affiliate Reports";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="bi bi-file-earmark-bar-graph-fill text-primary me-2"></i> Affiliate Reports Dashboard</h3>
+            <p class="text-muted small m-0">Select an affiliate to review their focused and overall performance statistics.</p>
+        </div>
+    </div>
+
+    <!-- Filter Card with Dropdown -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4" style="border: 1px solid #d9dfe5 !important;">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <label class="form-label text-dark fw-bold mb-1"><i class="bi bi-person-bounding-box me-1 text-primary"></i> Select Affiliate</label>
+                <select id="ddlAffiliate" class="form-select rounded-3 shadow-none border-secondary-subtle" onchange="onAffiliateChanged()">
+                    <option value="">-- Choose Affiliate --</option>
+                </select>
+            </div>
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <span id="lblSelectedAffiliateStatus" class="badge bg-light text-secondary border px-3 py-2 rounded-pill">Please select an affiliate to load reports</span>
+            </div>
+        </div>
+    </div>
+    <!-- ========================================== -->
+    <!-- 2. PERFORMANCE REPORT SECTION -->
+    <!-- ========================================== -->
+    <div class="card shadow-sm rounded-4 bg-white p-4" style="border: 1px solid #d9dfe5 !important;">
+        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+            <h5 class="fw-bold text-primary m-0"><i class="bi bi-speedometer2 me-2"></i> Performance Report</h5>
+            <span class="badge bg-primary-subtle text-primary">General Metrics</span>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-info border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="p_totalStudents">0</h2>
+                        <p class="card-text small mb-0">Total Students</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-success border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="p_activeStudents">0</h2>
+                        <p class="card-text small mb-0">Active Students</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-dark bg-warning border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="p_totalTeachers">0</h2>
+                        <p class="card-text small mb-0">Total Teachers</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-success border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="p_activeTeachers">0</h2>
+                        <p class="card-text small mb-0">Active Teachers</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-primary border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="p_totalSelProjects">0</h2>
+                        <p class="card-text small mb-0">Total SEL Projects</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-dark border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="p_familyProjects">0</h2>
+                        <p class="card-text small mb-0">Family Projects</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-dark bg-light border border-secondary-subtle shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1 text-dark" id="p_individualProjects">0</h2>
+                        <p class="card-text small mb-0 text-muted">Individual Projects</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-secondary border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="p_groupPbl">0</h2>
+                        <p class="card-text small mb-0">Group PBL</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- ========================================== -->
+    <!-- 1. FOCUSED REPORT SECTION -->
+    <!-- ========================================== -->
+    <div class="card shadow-sm rounded-4 bg-white p-4 mb-4" style="border: 1px solid #d9dfe5 !important;">
+        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+            <h5 class="fw-bold text-success m-0"><i class="bi bi-bullseye me-2"></i> Focused Report</h5>
+            <span class="badge bg-success-subtle text-success">Targeted Metrics</span>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-info border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="f_totalStudents">0</h2>
+                        <p class="card-text small mb-0">Total Students</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-success border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="f_activeStudents">0</h2>
+                        <p class="card-text small mb-0">Active Students</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-dark bg-warning border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="f_totalTeachers">0</h2>
+                        <p class="card-text small mb-0">Total Teachers</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-success border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="f_activeTeachers">0</h2>
+                        <p class="card-text small mb-0">Active Teachers</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-primary border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="f_totalSelProjects">0</h2>
+                        <p class="card-text small mb-0">Total SEL Projects</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-dark border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="f_familyProjects">0</h2>
+                        <p class="card-text small mb-0">Family Projects</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-dark bg-light border border-secondary-subtle shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1 text-dark" id="f_individualProjects">0</h2>
+                        <p class="card-text small mb-0 text-muted">Individual Projects</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="card text-white bg-secondary border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="fw-bold mb-1" id="f_groupPbl">0</h2>
+                        <p class="card-text small mb-0">Group PBL</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            loadAffiliatesDropdown();
+        });
+
+        function getAuthToken() {
+            return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '';
+        }
+
+        // 1. Populate Affiliates Dropdown
+        function loadAffiliatesDropdown() {
+            $.ajax({
+                url: '/api/affiliate-school-mapping/affiliates-list',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if (res.success && res.data) {
+                        let html = '<option value="">-- Choose Affiliate --</option>';
+                        res.data.forEach(a => {
+                            html += `<option value="${a.id}">${a.name}</option>`;
+                        });
+                        $('#ddlAffiliate').html(html);
+                    }
+                }
+            });
+        }
+
+        // 2. Triggered on Dropdown Change
+        function onAffiliateChanged() {
+            let affiliateUserId = $('#ddlAffiliate').val();
+            if (!affiliateUserId) {
+                $('#lblSelectedAffiliateStatus').text('Please select an affiliate to load reports').removeClass('bg-success-subtle text-success').addClass('bg-light text-secondary');
+                clearReports();
+                return;
+            }
+
+            let affiliateName = $('#ddlAffiliate option:selected').text();
+            $('#lblSelectedAffiliateStatus').text('Showing reports for: ' + affiliateName).removeClass('bg-light text-secondary').addClass('bg-success-subtle text-success fw-bold');
+
+            // Load both Focused & Performance Reports data
+            loadFocusedReport(affiliateUserId);
+            loadPerformanceReport(affiliateUserId);
+        }
+
+        function loadFocusedReport(userId) {
+            $.ajax({
+                url: `/api/affiliate-dashboard/dashboard-focused_summary-counts?affiliateUserId=${userId}`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if (res.success && res.data) {
+                        let d = res.data;
+                        $('#f_totalStudents').text(d.totalStudents || 0);
+                        $('#f_activeStudents').text(d.activeStudents || 0);
+                        $('#f_totalTeachers').text(d.totalTeachers || 0);
+                        $('#f_activeTeachers').text(d.activeTeachers || 0);
+                        $('#f_totalSelProjects').text(d.totalSelProjects || 0);
+                        $('#f_familyProjects').text(d.familyProjects || 0);
+                        $('#f_individualProjects').text(d.individualProjects || 0);
+                        $('#f_groupPbl').text(d.groupPbl || 0);
+                    }
+                }
+            });
+        }
+
+        function loadPerformanceReport(userId) {
+            $.ajax({
+                url: `/api/affiliate-dashboard/dashboard-summary-counts?affiliateUserId=${userId}`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if (res.success && res.data) {
+                        let d = res.data;
+                        $('#p_totalStudents').text(d.totalStudents || 0);
+                        $('#p_activeStudents').text(d.activeStudents || 0);
+                        $('#p_totalTeachers').text(d.totalTeachers || 0);
+                        $('#p_activeTeachers').text(d.activeTeachers || 0);
+                        $('#p_totalSelProjects').text(d.totalSelProjects || 0);
+                        $('#p_familyProjects').text(d.familyProjects || 0);
+                        $('#p_individualProjects').text(d.individualProjects || 0);
+                        $('#p_groupPbl').text(d.groupPbl || 0);
+                    }
+                }
+            });
+        }
+
+        function clearReports() {
+            let fields = ['f_totalStudents', 'f_activeStudents', 'f_totalTeachers', 'f_activeTeachers', 'f_totalSelProjects', 'f_familyProjects', 'f_individualProjects', 'f_groupPbl',
+                'p_totalStudents', 'p_activeStudents', 'p_totalTeachers', 'p_activeTeachers', 'p_totalSelProjects', 'p_familyProjects', 'p_individualProjects', 'p_groupPbl'];
+            fields.forEach(id => $(`#${id}`).text('0'));
+        }
+    </script>
+}
