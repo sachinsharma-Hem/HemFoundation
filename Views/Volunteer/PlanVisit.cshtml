@@ -23,7 +23,7 @@
                         <th>School / Location Name</th>
                         <th>Schedule Date</th>
                         <th>Purpose</th>
-                        <th>Locations (Plan / Report)</th>
+                        <th class="text-center">Locations (Plan / Report)</th>
                         <th>Status</th>
                         <th class="text-center">Action</th>
                     </tr>
@@ -147,10 +147,9 @@
             loadPlans();
             loadAssignedSchoolsDropdown();
             setMinDateTime();
-            setupPincodeLookup(); // Initialize pincode auto-fill
+            setupPincodeLookup();
         });
 
-        // Function to prevent backdate selection
         function setMinDateTime() {
             let now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -158,7 +157,6 @@
             $('#txtScheduleDate').attr('min', minDateTime);
         }
 
-        // Pincode Auto-fetch City and State
         function setupPincodeLookup() {
             $('#txtPincode').on('blur', function() {
                 let pin = $(this).val().trim();
@@ -217,22 +215,32 @@
                             let typeBadge = p.isOtherActivity ? '<span class="badge bg-warning-subtle text-warning">Other Activity</span>' : '<span class="badge bg-primary-subtle text-primary">School Visit</span>';
                             let statusBadge = p.status === 'Completed' ? 'bg-success-subtle text-success' : (p.status === 'Cancelled' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning');
 
-                            let planLoc = (p.planLatitude && p.planLongitude) ? `${parseFloat(p.planLatitude).toFixed(4)}, ${parseFloat(p.planLongitude).toFixed(4)}` : 'N/A';
-                            let reportLoc = (p.reportLatitude && p.reportLongitude) ? `${parseFloat(p.reportLatitude).toFixed(4)}, ${parseFloat(p.reportLongitude).toFixed(4)}` : 'Not Reported';
+                            // Map Icon Buttons instead of raw Latitude/Longitude text
+                            let planLocBtn = (p.planLatitude && p.planLongitude)
+                                ? `<a href="https://www.google.com/maps?q=${p.planLatitude},${p.planLongitude}" target="_blank" class="btn btn-outline-primary btn-sm rounded-circle p-1 shadow-none me-2" title="View Plan Location"><i class="bi bi-map-fill"></i></a>`
+                                : `<span class="text-muted me-2" title="Plan Location N/A">-</span>`;
+
+                            let reportLocBtn = (p.reportLatitude && p.reportLongitude)
+                                ? `<a href="https://www.google.com/maps?q=${p.reportLatitude},${p.reportLongitude}" target="_blank" class="btn btn-outline-success btn-sm rounded-circle p-1 shadow-none" title="View Report Location"><i class="bi bi-geo-alt-fill"></i></a>`
+                                : `<span class="text-muted" title="Report Location Not Available">-</span>`;
+
+                            let actionBtn = (p.status === 'Completed' || p.status === 'Cancelled')
+                                ? `<span class="badge bg-light text-muted border">Locked (${p.status})</span>`
+                                : `<button class="btn btn-sm btn-light border text-primary shadow-none" onclick="openUpdateModal(${p.id})"><i class="bi bi-pencil-square me-1"></i> Update</button>`;
 
                             html += `<tr>
                                                 <td>${typeBadge}</td>
                                                 <td><b>${p.schoolName || 'N/A'}</b></td>
                                                 <td>${new Date(p.scheduleDate).toLocaleString('en-GB')}</td>
                                                 <td>${p.purpose}</td>
-                                                <td class="small text-muted">
-                                                    <div><b>Plan:</b> ${planLoc}</div>
-                                                    <div><b>Report:</b> ${reportLoc}</div>
+                                                <td class="text-center">
+                                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                                        <span><b>Plan:</b> ${planLocBtn}</span>
+                                                        <span><b>Report:</b> ${reportLocBtn}</span>
+                                                    </div>
                                                 </td>
                                                 <td><span class="badge ${statusBadge}">${p.status}</span></td>
-                                                <td class="text-center">
-                                                    <button class="btn btn-sm btn-light border text-primary shadow-none" onclick="openUpdateModal(${p.id})"><i class="bi bi-pencil-square me-1"></i> Update</button>
-                                                </td>
+                                                <td class="text-center">${actionBtn}</td>
                                             </tr>`;
                         });
                         $('#planTableBody').html(html);

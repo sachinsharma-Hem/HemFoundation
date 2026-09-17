@@ -63,9 +63,7 @@ namespace HemFoundation.Controllers
                     }
                 }
               
-                // =====================================================
-                // 3. School mil gayi to dashboard counts
-                // =====================================================
+
                 if (institute != null)
                 {
                     var instituteId = institute.instituteid;

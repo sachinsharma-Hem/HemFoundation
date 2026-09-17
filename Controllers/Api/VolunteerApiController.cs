@@ -849,8 +849,7 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = list, totalRecords, totalPages, currentPage = page });
         }
 
-        // 9. GET SCHOOLS MAPPING FOR A SPECIFIC VOLUNTEER
-        // =========================================================
+
         // 9. GET SCHOOLS MAPPING FOR A SPECIFIC VOLUNTEER
         // =========================================================
         [HttpGet("mapping-schools/{volunteerId}")]
