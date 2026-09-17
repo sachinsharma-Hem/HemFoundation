@@ -1,11 +1,12 @@
-﻿using System;
+﻿using HemFoundation.Services;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Npgsql;
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Npgsql;
-using HemFoundation.Services;
 
 namespace HemFoundation.Services
 {
@@ -13,7 +14,7 @@ namespace HemFoundation.Services
     {
         Task<string> RaiseRequestAsync(int courseid, int userid);
         Task<string> RejectRequestAsync(int courseid, int studentsID, int instituteID);
-        Task<string> ApproveRequestAsync(int courseid, int studentsID, int instituteID);
+        Task<(bool Success, string HtmlContent, string Message)> ApproveRequestAsync(int courseid, int studentsID, int instituteID);
     }
 
     public class GroupProjectService : IGroupProjectService
@@ -130,7 +131,208 @@ namespace HemFoundation.Services
         }
 
         // Add corresponding service methods for RejectRequest and ApproveRequest if needed...
-        public async Task<string> RejectRequestAsync(int courseid, int studentsID, int instituteID) { /* implementation */ return ""; }
-        public async Task<string> ApproveRequestAsync(int courseid, int studentsID, int instituteID) { /* implementation */ return ""; }
+        public async Task<string> RejectRequestAsync(int courseid, int studentsID, int instituteID)
+        {
+            string templatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "template", "Approval.html");
+            StringBuilder body = new StringBuilder(File.Exists(templatePath) ? File.ReadAllText(templatePath) : "");
+
+            string firstName = "";
+            string studentEmail = "";
+            string instituteName = "";
+            string instituteEmail = "";
+
+            using (var conn = new NpgsqlConnection(_connectionString))
+            {
+                await conn.OpenAsync();
+
+                // Fetch User Details
+                using (var cmd = new NpgsqlCommand("SELECT firstname, emailid FROM users WHERE userid = @UserID", conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserID", studentsID);
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            firstName = reader["firstname"]?.ToString() ?? "";
+                            studentEmail = reader["emailid"]?.ToString() ?? "";
+                        }
+                    }
+                }
+
+                // Fetch Institute Details
+                using (var cmd = new NpgsqlCommand("SELECT i.\"Name\" ,emailid from users  u\r\nLeft join wj_institutes i on u.userid=i.instituteid\r\nwhere userid = @InstituteID", conn))
+                {
+                    cmd.Parameters.AddWithValue("@InstituteID", instituteID);
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            instituteName = reader["Name"]?.ToString() ?? "";
+                            instituteEmail = reader["emailid"]?.ToString() ?? "";
+                        }
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(instituteName))
+            {
+                return "<html><body><h3>Error: Institute not found</h3></body></html>";
+            }
+
+            body.Replace("<%action%>", "Reject");
+            body.Replace("<%instituteName%>", instituteName);
+
+            EmailManager.SendEmailAws(instituteEmail, "Confirmation For Rejection Of Group Project Submission", body.ToString(), null, "", "");
+
+            string studentTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "template", "ApprovalConfirmationForStudents.html");
+            StringBuilder body1 = new StringBuilder(File.Exists(studentTemplatePath) ? File.ReadAllText(studentTemplatePath) : "");
+
+            body1.Replace("<%action%>", "Rejected");
+            body1.Replace("<%studentsname%>", firstName);
+            if (!string.IsNullOrEmpty(studentEmail) && studentEmail != "null")
+            {
+                EmailManager.SendEmailAws(studentEmail, "Confirmation For Rejection Of Group Project Submission by the school", body1.ToString(), null, "", "");
+            }
+
+            return body.ToString();
+        }
+
+        public async Task<(bool Success, string HtmlContent, string Message)> ApproveRequestAsync(int courseid, int studentsID, int instituteID)
+        {
+            string templatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "template", "Approval.html");
+            StringBuilder body = new StringBuilder(File.Exists(templatePath) ? File.ReadAllText(templatePath) : "");
+
+            string firstName = "";
+            string studentEmail = "";
+            string instituteName = "";
+            string instituteEmail = "";
+
+            using (var conn = new NpgsqlConnection(_connectionString))
+            {
+                await conn.OpenAsync();
+
+                // 1. Fetch User details
+                using (var cmd = new NpgsqlCommand("SELECT firstname, emailid FROM users WHERE userid = @UserID", conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserID", studentsID);
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            firstName = reader["firstname"]?.ToString() ?? "";
+                            studentEmail = reader["emailid"]?.ToString() ?? "";
+                        }
+                    }
+                }
+
+                // 2. Check if already exists
+                bool isAlreadyExists = false;
+                using (var cmd = new NpgsqlCommand("SELECT 1 FROM hf_rel_manage_group_list WHERE isallocatedby = @InstituteID AND maincourseid = @CourseID AND studentid = @StudentID LIMIT 1", conn))
+                {
+                    cmd.Parameters.AddWithValue("@InstituteID", instituteID);
+                    cmd.Parameters.AddWithValue("@CourseID", courseid);
+                    cmd.Parameters.AddWithValue("@StudentID", studentsID);
+                    var res = await cmd.ExecuteScalarAsync();
+                    isAlreadyExists = (res != null);
+                }
+
+                if (isAlreadyExists)
+                {
+                    return (false, "", "Your request for the Approval of students for the group project submission has been already submitted!!.");
+                }
+
+                // 3. Fetch Institute details
+                using (var cmd = new NpgsqlCommand("SELECT i.\"Name\" ,emailid from users  u\r\nLeft join wj_institutes i on u.userid=i.instituteid\r\nwhere userid= @InstituteID", conn))
+                {
+                    cmd.Parameters.AddWithValue("@InstituteID", instituteID);
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            instituteName = reader["Name"]?.ToString() ?? "";
+                            instituteEmail = reader["emailid"]?.ToString() ?? "";
+                        }
+                    }
+                }
+
+                if (string.IsNullOrEmpty(instituteName))
+                {
+                    return (false, "", "Institute not found");
+                }
+
+                // 4. Insert group allocation
+                using (var cmd = new NpgsqlCommand("INSERT INTO hf_rel_manage_group_list(groupname, studentid, isallocated, isallocatedby, maincourseid) VALUES ('G1', @StudentID, B'1', @InstituteID, @CourseID)", conn))
+                {
+                    cmd.Parameters.AddWithValue("@StudentID", studentsID);
+                    cmd.Parameters.AddWithValue("@InstituteID", instituteID);
+                    cmd.Parameters.AddWithValue("@CourseID", courseid);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                body.Replace("<%action%>", "Approval");
+                body.Replace("<%instituteName%>", instituteName);
+
+                EmailManager.SendEmailAws(instituteEmail, "Confirmation For Approval Of Group Project Submission", body.ToString(), null, "", "");
+
+                string studentTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "template", "ApprovalConfirmationForStudents.html");
+                StringBuilder body1 = new StringBuilder(File.Exists(studentTemplatePath) ? File.ReadAllText(studentTemplatePath) : "");
+
+                body1.Replace("<%action%>", "Approved");
+                body1.Replace("<%studentsname%>", firstName);
+                if (!string.IsNullOrEmpty(studentEmail) && studentEmail != "null")
+                {
+                    EmailManager.SendEmailAws(studentEmail, "Confirmation For Approval Of Group Project Submission by the school", body1.ToString(), null, "", "");
+                }
+            }
+
+            return (true, body.ToString(), "");
+        }
     }
+
+    public class GroupProjectController : Controller
+    {
+        private readonly IGroupProjectService _groupProjectService;
+
+        public GroupProjectController(IGroupProjectService groupProjectService)
+        {
+            _groupProjectService = groupProjectService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RaiseRequest(int courseid)
+        {
+            int userid = HttpContext.Session.GetInt32("UserID") ?? 1;
+
+            try
+            {
+                string message = await _groupProjectService.RaiseRequestAsync(courseid, userid);
+                return Json(new { success = true, message });
+            }
+            catch (System.Exception)
+            {
+                return Json(new { success = false, message = "An error occurred while processing your request." });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RejectRequest(int courseid, int StudntsID, int InstituteID)
+        {
+            string htmlResult = await _groupProjectService.RejectRequestAsync(courseid, StudntsID, InstituteID);
+            return Content(htmlResult, "text/html");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ApproveRequest(int courseid, int StudntsID, int InstituteID)
+        {
+            var result = await _groupProjectService.ApproveRequestAsync(courseid, StudntsID, InstituteID);
+
+            if (!result.Success)
+            {
+                return Json(new { success = false, message = result.Message });
+            }
+
+            return Content(result.HtmlContent, "text/html");
+        }
+    }
+
 }
