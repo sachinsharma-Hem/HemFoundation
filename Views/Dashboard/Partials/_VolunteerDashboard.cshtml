@@ -10,26 +10,21 @@
     </div>
 
     <div class="row g-4 mb-5">
-        <!-- 1. Total School (Clickable) -->
+        <!-- 1. Total School -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-blue">
                 <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-building"></i>
-                    </div>
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-building"></i></div>
                     <div>
                         <div class="stat-number" id="lblActiveSchoolCount">
-                            <span class="spinner-border spinner-border-sm text-white" role="status" aria-hidden="true"></span>
+                            <span class="spinner-border spinner-border-sm text-white" role="status"></span>
                         </div>
                         <div class="stat-label">Total School</div>
                     </div>
                 </div>
                 <div class="divider"></div>
                 <div class="text-center">
-                    <!-- YAHAN ID ADD KI GAYI HAI TAAKI MODAL OPEN HO -->
-                    <button type="button" id="btnOpenAssignedSchools" class="btn-more shadow-sm border-0">
-                        More Info <i class="bi bi-arrow-right ms-1"></i>
-                    </button>
+                    <button type="button" id="btnOpenAssignedSchools" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
                 </div>
             </div>
         </div>
@@ -38,17 +33,15 @@
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-green">
                 <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-people-fill"></i></div>
                     <div>
-                        <div class="stat-number">0</div>
+                        <div class="stat-number" id="lblTotalStudentCount">0</div>
                         <div class="stat-label">Total Student</div>
                     </div>
                 </div>
                 <div class="divider"></div>
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+                    <button type="button" id="btnOpenTotalStudents" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
                 </div>
             </div>
         </div>
@@ -57,17 +50,15 @@
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-orange">
                 <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-person-check-fill"></i>
-                    </div>
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-person-check-fill"></i></div>
                     <div>
-                        <div class="stat-number">0</div>
+                        <div class="stat-number" id="lblActiveStudentCount">0</div>
                         <div class="stat-label">Active Student</div>
                     </div>
                 </div>
                 <div class="divider"></div>
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+                    <button type="button" id="btnOpenActiveStudents" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
                 </div>
             </div>
         </div>
@@ -76,17 +67,15 @@
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-teal">
                 <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-display"></i>
-                    </div>
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-display"></i></div>
                     <div>
-                        <div class="stat-number">0</div>
+                        <div class="stat-number" id="lblTotalTeacherCount">0</div>
                         <div class="stat-label">Total Teacher</div>
                     </div>
                 </div>
                 <div class="divider"></div>
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+                    <button type="button" id="btnOpenTotalTeachers" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
                 </div>
             </div>
         </div>
@@ -95,17 +84,15 @@
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-purple">
                 <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-person-badge"></i>
-                    </div>
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-person-badge"></i></div>
                     <div>
-                        <div class="stat-number">0</div>
+                        <div class="stat-number" id="lblActiveTeacherCount">0</div>
                         <div class="stat-label">Active Teacher</div>
                     </div>
                 </div>
                 <div class="divider"></div>
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+                    <button type="button" id="btnOpenActiveTeachers" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
                 </div>
             </div>
         </div>
@@ -114,129 +101,71 @@
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-pink">
                 <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-heart-fill"></i>
-                    </div>
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-heart-fill"></i></div>
                     <div>
-                        <div class="stat-number">0</div>
+                        <div class="stat-number" id="lblTotalSelProjectCount">0</div>
                         <div class="stat-label">Total SEL Project</div>
                     </div>
                 </div>
                 <div class="divider"></div>
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+                    <button type="button" id="btnOpenSelProjects" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
                 </div>
             </div>
         </div>
 
-       
-
-        <!-- 8. No of Family Project -->
+        <!-- 7. No of Family Project -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-yellow">
                 <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-house-door-fill"></i>
-                    </div>
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-house-door-fill"></i></div>
                     <div>
-                        <div class="stat-number">0</div>
+                        <div class="stat-number" id="lblFamilyProjectCount">0</div>
                         <div class="stat-label">No of Family Project</div>
                     </div>
                 </div>
                 <div class="divider"></div>
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+                    <button type="button" id="btnOpenFamilyProjects" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
                 </div>
             </div>
         </div>
 
-        <!-- 9. No of Individual Project -->
+        <!-- 8. No of Individual Project -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-cyan">
                 <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-person-fill"></i></div>
                     <div>
-                        <div class="stat-number">0</div>
+                        <div class="stat-number" id="lblIndividualProjectCount">0</div>
                         <div class="stat-label">No of Individual Project</div>
                     </div>
                 </div>
                 <div class="divider"></div>
                 <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
+                    <button type="button" id="btnOpenIndividualProjects" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. No of Group PBL -->
+        <div class="col-xl-3 col-lg-4 col-sm-6">
+            <div class="premium-card bg-indigo">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-diagram-3-fill"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblGroupPblCount">0</div>
+                        <div class="stat-label">No of Group PBL</div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div class="text-center">
+                    <button type="button" id="btnOpenGroupPbl" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
                 </div>
             </div>
         </div>
     </div>
-    <!-- 7. No of Group PBL -->
-    <div class="col-xl-3 col-lg-4 col-sm-6">
-        <div class="premium-card bg-indigo">
-            <div class="d-flex align-items-center">
-                <div class="icon-circle shadow-sm me-3">
-                    <i class="bi bi-diagram-3-fill"></i>
-                </div>
-                <div>
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">No of Group PBL</div>
-                </div>
-            </div>
-            <div class="divider"></div>
-            <div class="text-center">
-                <button type="button" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- =========================================================
-     2. ACTIVITY DASHBOARD
-========================================================== -->
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
-
-        <h4 class="fw-bolder text-dark m-0 mb-3 mb-md-0">
-            <i class="bi bi-activity text-danger me-2"></i>
-            Activity Dashboard
-        </h4>
-
-        <!-- Date Filters -->
-        <div class="d-flex align-items-center gap-2 bg-white p-2 rounded-3 shadow-sm border">
-
-            <!-- FROM DATE -->
-            <div class="d-flex align-items-center">
-                <span class="small fw-bold text-muted me-2">
-                    From:
-                </span>
-
-                <input type="date"
-                       id="activityFromDate"
-                       class="form-control form-control-sm shadow-none" />
-            </div>
-
-            <!-- TO DATE -->
-            <div class="d-flex align-items-center">
-                <span class="small fw-bold text-muted me-2">
-                    To:
-                </span>
-
-                <input type="date"
-                       id="activityToDate"
-                       class="form-control form-control-sm shadow-none" />
-            </div>
-
-            <!-- SEARCH -->
-            <button type="button"
-                    id="btnActivityDateSearch"
-                    class="btn btn-sm btn-primary fw-bold"
-                    title="Filter Activity">
-
-                <i class="bi bi-search"></i>
-
-            </button>
-
-        </div>
-
-    </div>
-
+</div>
 
   <!-- =========================================================
          ACTIVITY CARDS
@@ -446,7 +375,40 @@
         </div>
     </div>
 </div>
-
+<!-- =============================================================
+     REUSABLE GENERIC DETAIL MODAL (For Students, Teachers, Projects)
+============================================================= -->
+<div class="modal fade" id="genericDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow-lg bg-white">
+            <div class="modal-header border-bottom px-4 py-3">
+                <div>
+                    <h5 class="fw-bold text-dark m-0" id="genericModalTitle">
+                        <i class="bi bi-list-task text-primary me-2"></i> Details List
+                    </h5>
+                    <small class="text-muted" id="genericModalSubtitle">Records associated with your assigned scope</small>
+                </div>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small mb-0">
+                        <thead class="table-light text-muted" id="genericTableHead">
+                            <tr><th>#</th><th>Details</th></tr>
+                        </thead>
+                        <tbody id="genericTableBody">
+                            <tr><td colspan="2" class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3">
+                <span class="text-muted small me-auto">Total Records: <strong id="genericModalCount">0</strong></span>
+                <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- =============================================================
      CSS FOR PREMIUM CARDS
 ============================================================= -->
@@ -1330,4 +1292,113 @@
         }
 
     })();
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    
+    // Helper to get JWT token from storage
+    function getAuthToken() {
+        return localStorage.getItem("jwt_token")
+            || sessionStorage.getItem("jwt_token")
+            || "";
+    }
+
+    async function loadSummaryCounts() {
+        try {
+            var token = getAuthToken();
+            var headers = {
+                "Accept": "application/json"
+            };
+
+            if (token) {
+                headers["Authorization"] = "Bearer " + token;
+            }
+
+            const res = await fetch("/api/volunteer/dashboard-summary-counts", {
+                method: "GET",
+                headers: headers,
+                credentials: "same-origin",
+                cache: "no-store"
+            });
+
+            const json = await res.json();
+            if (json.success && json.data) {
+                document.getElementById("lblTotalStudentCount").textContent = json.data.totalStudents || 0;
+                document.getElementById("lblActiveStudentCount").textContent = json.data.activeStudents || 0;
+                document.getElementById("lblTotalTeacherCount").textContent = json.data.totalTeachers || 0;
+                document.getElementById("lblActiveTeacherCount").textContent = json.data.activeTeachers || 0;
+                document.getElementById("lblTotalSelProjectCount").textContent = json.data.totalSelProjects || 0;
+                document.getElementById("lblFamilyProjectCount").textContent = json.data.familyProjects || 0;
+                document.getElementById("lblIndividualProjectCount").textContent = json.data.individualProjects || 0;
+                document.getElementById("lblGroupPblCount").textContent = json.data.groupPbl || 0;
+            }
+        } catch (err) {
+            console.error("Failed to load summary counts", err);
+        }
+    }
+
+    async function openGenericModal(type, title) {
+        const modalEl = document.getElementById("genericDetailModal");
+        document.getElementById("genericModalTitle").innerHTML = `<i class="bi bi-folder2-open text-primary me-2"></i> ${title}`;
+        document.getElementById("genericModalCount").textContent = "0";
+        
+        const tbody = document.getElementById("genericTableBody");
+        tbody.innerHTML = `<tr><td colspan="2" class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Loading records...</td></tr>`;
+        
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+        try {
+            var token = getAuthToken();
+            var headers = { "Accept": "application/json" };
+            if (token) {
+                headers["Authorization"] = "Bearer " + token;
+            }
+
+            const res = await fetch(`/api/volunteer/details-list/${type}`, {
+                method: "GET",
+                headers: headers,
+                credentials: "same-origin",
+                cache: "no-store"
+            });
+            const json = await res.json();
+            
+            if (json.success && Array.isArray(json.data)) {
+                document.getElementById("genericModalCount").textContent = json.data.length;
+                if (json.data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="2" class="text-center py-4 text-muted">No records found.</td></tr>`;
+                    return;
+                }
+                
+                let rows = "";
+                json.data.forEach((item, index) => {
+                    let displayVal = JSON.stringify(item, null, 2);
+                    rows += `<tr><td class="fw-bold text-muted">${index + 1}</td><td><pre class="m-0 bg-light p-2 rounded small">${escapeHtml(displayVal)}</pre></td></tr>`;
+                });
+                tbody.innerHTML = rows;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-danger py-4">Failed to load details.</td></tr>`;
+            }
+        } catch (ex) {
+            tbody.innerHTML = `<tr><td colspan="2" class="text-center text-danger py-4">Error loading data.</td></tr>`;
+        }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return "";
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // Attach Click Events to Buttons
+    document.getElementById("btnOpenTotalStudents").addEventListener("click", () => openGenericModal("total-students", "Total Students List"));
+    document.getElementById("btnOpenActiveStudents").addEventListener("click", () => openGenericModal("active-students", "Active Students List"));
+    document.getElementById("btnOpenTotalTeachers").addEventListener("click", () => openGenericModal("total-teachers", "Total Teachers List"));
+    document.getElementById("btnOpenActiveTeachers").addEventListener("click", () => openGenericModal("active-teachers", "Active Teachers List"));
+    document.getElementById("btnOpenSelProjects").addEventListener("click", () => openGenericModal("sel-projects", "Total SEL Projects List"));
+    document.getElementById("btnOpenFamilyProjects").addEventListener("click", () => openGenericModal("family-projects", "Family Projects List"));
+    document.getElementById("btnOpenIndividualProjects").addEventListener("click", () => openGenericModal("individual-projects", "Individual Projects List"));
+    document.getElementById("btnOpenGroupPbl").addEventListener("click", () => openGenericModal("group-pbl", "Group PBL List"));
+
+    // Initial Load Call
+    loadSummaryCounts();
+});
 </script>

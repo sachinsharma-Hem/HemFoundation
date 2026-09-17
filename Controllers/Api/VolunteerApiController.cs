@@ -1334,6 +1334,146 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
+
+        [HttpGet("dashboard-summary-counts")]
+        public async Task<IActionResult> GetDashboardSummaryCounts()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var volunteer = await _context.Volunteers.FirstOrDefaultAsync(v => v.AspNetUserId == userId && v.IsActive && !v.IsDeleted);
+
+            if (volunteer == null)
+            {
+                return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
+            }
+
+            // Cast as int? to securely compare against table columns that might be nullable
+            var instituteIds = await _context.VolunteerInstituteMappings
+                .Where(m => m.VolunteerId == volunteer.Id && m.IsActive && !m.IsDeleted)
+                .Select(m => (int?)m.InstituteId)
+                .Distinct()
+                .ToListAsync();
+
+            if (!instituteIds.Any())
+            {
+                return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
+            }
+
+            var totalStudents = await _context.Set<ViewWjStudentsDetailsInfo>()
+                .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
+
+            var activeStudents = await _context.StudentActivityLogs
+                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                .Select(x => x.StudentID)
+                .Distinct()
+                .CountAsync();
+
+            var totalTeachers = await _context.Set<ViewHfTeacherDetails>()
+                .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
+
+            var activeTeachers = await _context.TeacherActivityLogs
+                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                .Select(x => x.TeacherID)
+                .Distinct()
+                .CountAsync();
+
+            var totalSelProjects = await _context.creativityActivitiesSubmission2021s
+                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                .Select(x => x.InstituteID)
+                .Distinct()
+                .CountAsync();
+
+            var familyProjects = await _context.StudentActivityLogs
+                .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Family PBL");
+
+            var individualProjects = await _context.StudentActivityLogs
+                .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Individual PBL");
+
+            var groupPbl = await _context.creativityActivitiesSubmission2021s
+                .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
+
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    totalStudents,
+                    activeStudents,
+                    totalTeachers,
+                    activeTeachers,
+                    totalSelProjects,
+                    familyProjects,
+                    individualProjects,
+                    groupPbl
+                }
+            });
+        }
+
+        [HttpGet("details-list/{type}")]
+        public async Task<IActionResult> GetDetailsList(string type)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var volunteer = await _context.Volunteers.FirstOrDefaultAsync(v => v.AspNetUserId == userId && v.IsActive && !v.IsDeleted);
+
+            if (volunteer == null)
+            {
+                return Ok(new { success = true, data = new List<object>() });
+            }
+
+            var instituteIds = await _context.VolunteerInstituteMappings
+                .Where(m => m.VolunteerId == volunteer.Id && m.IsActive && !m.IsDeleted)
+                .Select(m => (int?)m.InstituteId)
+                .Distinct()
+                .ToListAsync();
+
+            if (!instituteIds.Any())
+            {
+                return Ok(new { success = true, data = new List<object>() });
+            }
+
+            object result = type switch
+            {
+                "total-students" => await _context.Set<ViewWjStudentsDetailsInfo>()
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                    .ToListAsync(),
+
+                "active-students" => await _context.StudentActivityLogs
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                    .Select(x => new { x.StudentID, x.InstituteID })
+                    .Distinct()
+                    .ToListAsync(),
+
+                "total-teachers" => await _context.Set<ViewHfTeacherDetails>()
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                    .ToListAsync(),
+
+                "active-teachers" => await _context.TeacherActivityLogs
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                    .Select(x => new { x.TeacherID, x.InstituteID })
+                    .Distinct()
+                    .ToListAsync(),
+
+                "sel-projects" => await _context.creativityActivitiesSubmission2021s
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                    .ToListAsync(),
+
+                "family-projects" => await _context.StudentActivityLogs
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Family PBL")
+                    .ToListAsync(),
+
+                "individual-projects" => await _context.StudentActivityLogs
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Individual PBL")
+                    .ToListAsync(),
+
+                "group-pbl" => await _context.creativityActivitiesSubmission2021s
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                    .ToListAsync(),
+
+                _ => new List<object>()
+            };
+
+            return Ok(new { success = true, data = result });
+        }
+
     }
 
     public class VolunteerMappingDto
