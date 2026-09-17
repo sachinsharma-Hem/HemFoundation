@@ -42,24 +42,7 @@ builder.Services.AddScoped<ExamBAL>();
 // 3. JWT Authentication Configuration for API Endpoints
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 
-//builder.Services.AddAuthentication(options =>
-//{
-//    options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
-//    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
-//})
-//.AddJwtBearer(options =>
-//{
-//    options.TokenValidationParameters = new TokenValidationParameters
-//    {
-//        ValidateIssuer = true,
-//        ValidateAudience = true,
-//        ValidateLifetime = true,
-//        ValidateIssuerSigningKey = true,
-//        ValidIssuer = jwtSettings["Issuer"] ?? "HemFoundation",
-//        ValidAudience = jwtSettings["Audience"] ?? "HemFoundationUsers",
-//        IssuerSigningKey = new SymmetricSecurityKey(secretKey)
-//    };
-//});
+
 
 var secretKey = Encoding.UTF8.GetBytes(jwtSettings["Secret"]!);
 
