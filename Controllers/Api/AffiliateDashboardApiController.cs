@@ -171,25 +171,118 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
+        //[HttpGet("dashboard-summary-counts")]
+        //public async Task<IActionResult> GetDashboardSummaryCounts()
+        //{
+        //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        //    var affiliate = await _context.Users
+        //        .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
+
+        //    var referralCode = await _context.WJ_ReferralCodes
+        //        .Where(x => x.UserID == affiliate.UserID)
+        //        .Select(x => x.ReferralCode)
+        //        .FirstOrDefaultAsync();
+
+        //    var instituteIds = await _context.SchoolProfileDetails
+        //        .Where(m => m.referralcode == referralCode)
+        //        .Select(m => (int?)m.instituteid)
+        //        .Distinct()
+        //        .ToListAsync();
+
+
+        //    if (!instituteIds.Any())
+        //    {
+        //        return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
+        //    }
+
+        //    var totalStudents = await _context.Set<ViewWjStudentsDetailsInfo>()
+        //        .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
+
+        //    var activeStudents = await _context.StudentActivityLogs
+        //        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+        //        .Select(x => x.StudentID)
+        //        .Distinct()
+        //        .CountAsync();
+
+        //    var totalTeachers = await _context.Set<ViewHfTeacherDetails>()
+        //        .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
+
+        //    var activeTeachers = await _context.TeacherActivityLogs
+        //        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+        //        .Select(x => x.TeacherID)
+        //        .Distinct()
+        //        .CountAsync();
+
+        //    var totalSelProjects = await _context.creativityActivitiesSubmission2021s
+        //        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+        //        .Select(x => x.InstituteID)
+        //        .Distinct()
+        //        .CountAsync();
+
+        //    var familyProjects = await _context.StudentActivityLogs
+        //        .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Family PBL");
+
+        //    var individualProjects = await _context.StudentActivityLogs
+        //        .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Individual PBL");
+
+        //    var groupPbl = await _context.creativityActivitiesSubmission2021s
+        //        .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
+
+        //    return Ok(new
+        //    {
+        //        success = true,
+        //        data = new
+        //        {
+        //            totalStudents,
+        //            activeStudents,
+        //            totalTeachers,
+        //            activeTeachers,
+        //            totalSelProjects,
+        //            familyProjects,
+        //            individualProjects,
+        //            groupPbl
+        //        }
+        //    });
+        //}
+
         [HttpGet("dashboard-summary-counts")]
-        public async Task<IActionResult> GetDashboardSummaryCounts()
+        public async Task<IActionResult> GetDashboardSummaryCounts([FromQuery] string? affiliateUserId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            Int32 reportaffiliateid = Convert.ToInt32(affiliateUserId);
+
+            if(reportaffiliateid==0)
+            {
+              //  var userId = !string.IsNullOrEmpty(affiliateUserId) ? affiliateUserId : User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                int loggedInUserID = HttpContext.Session.GetInt32("UserID") ?? 0;
+                reportaffiliateid = loggedInUserID;
+
+            }
+
+
+
+
 
             var affiliate = await _context.Users
-                .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
+                .FirstOrDefaultAsync(x => x.UserID == reportaffiliateid);
+
+            if (affiliate == null)
+            {
+                return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
+            }
 
             var referralCode = await _context.WJ_ReferralCodes
                 .Where(x => x.UserID == affiliate.UserID)
                 .Select(x => x.ReferralCode)
                 .FirstOrDefaultAsync();
-            
+
             var instituteIds = await _context.SchoolProfileDetails
                 .Where(m => m.referralcode == referralCode)
                 .Select(m => (int?)m.instituteid)
                 .Distinct()
                 .ToListAsync();
-
 
             if (!instituteIds.Any())
             {
@@ -245,8 +338,6 @@ namespace HemFoundation.Controllers.Api
                 }
             });
         }
-
-        
         [HttpGet("details-list/{type}")]
         public async Task<IActionResult> GetDetailsList(string type)
         {
@@ -317,31 +408,32 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = result });
         }
 
-
         [HttpGet("dashboard-focused_summary-counts")]
-        public async Task<IActionResult> GetFocusedDashboardSummaryCounts()
+        public async Task<IActionResult> GetFocusedDashboardSummaryCounts([FromQuery] string? affiliateUserId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            // Agar admin ne dropdown se select kiya hai toh woh use hoga, warna logged-in user
+            Int32 reportaffiliateid = Convert.ToInt32(affiliateUserId);
 
-            var affiliate = await _context.Users
-                .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
-
-            if (affiliate == null)
+            if (reportaffiliateid == 0)
             {
-                return BadRequest(new { success = false, message = "Affiliate user not found." });
+                //  var userId = !string.IsNullOrEmpty(affiliateUserId) ? affiliateUserId : User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                int loggedInUserID = HttpContext.Session.GetInt32("UserID") ?? 0;
+                reportaffiliateid = loggedInUserID;
+
             }
 
-            var referralCode = await _context.WJ_ReferralCodes
-                .Where(x => x.UserID == affiliate.UserID)
-                .Select(x => x.ReferralCode)
-                .FirstOrDefaultAsync();
 
-            if (string.IsNullOrEmpty(referralCode))
+
+
+
+            var affiliate = await _context.Users
+                .FirstOrDefaultAsync(x => x.UserID == reportaffiliateid);
+            if (affiliate == null)
             {
                 return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
             }
 
-            // Match with string type AffliateId
             var instituteIds = await _context.HfTblAffliateFocusedLists
                 .Where(m => m.AffliateId == affiliate.UserID)
                 .Select(m => (int?)m.InstituteId)
@@ -402,6 +494,91 @@ namespace HemFoundation.Controllers.Api
                 }
             });
         }
+
+        //[HttpGet("dashboard-focused_summary-counts")]
+        //public async Task<IActionResult> GetFocusedDashboardSummaryCounts()
+        //{
+        //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        //    var affiliate = await _context.Users
+        //        .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
+
+        //    if (affiliate == null)
+        //    {
+        //        return BadRequest(new { success = false, message = "Affiliate user not found." });
+        //    }
+
+        //    var referralCode = await _context.WJ_ReferralCodes
+        //        .Where(x => x.UserID == affiliate.UserID)
+        //        .Select(x => x.ReferralCode)
+        //        .FirstOrDefaultAsync();
+
+        //    if (string.IsNullOrEmpty(referralCode))
+        //    {
+        //        return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
+        //    }
+
+        //    // Match with string type AffliateId
+        //    var instituteIds = await _context.HfTblAffliateFocusedLists
+        //        .Where(m => m.AffliateId == affiliate.UserID)
+        //        .Select(m => (int?)m.InstituteId)
+        //        .Distinct()
+        //        .ToListAsync();
+
+        //    if (!instituteIds.Any())
+        //    {
+        //        return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
+        //    }
+
+        //    var totalStudents = await _context.Set<ViewWjStudentsDetailsInfo>()
+        //        .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
+
+        //    var activeStudents = await _context.StudentActivityLogs
+        //        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+        //        .Select(x => x.StudentID)
+        //        .Distinct()
+        //        .CountAsync();
+
+        //    var totalTeachers = await _context.Set<ViewHfTeacherDetails>()
+        //        .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
+
+        //    var activeTeachers = await _context.TeacherActivityLogs
+        //        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+        //        .Select(x => x.TeacherID)
+        //        .Distinct()
+        //        .CountAsync();
+
+        //    var totalSelProjects = await _context.creativityActivitiesSubmission2021s
+        //        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+        //        .Select(x => x.InstituteID)
+        //        .Distinct()
+        //        .CountAsync();
+
+        //    var familyProjects = await _context.StudentActivityLogs
+        //        .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Family PBL");
+
+        //    var individualProjects = await _context.StudentActivityLogs
+        //        .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Individual PBL");
+
+        //    var groupPbl = await _context.creativityActivitiesSubmission2021s
+        //        .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
+
+        //    return Ok(new
+        //    {
+        //        success = true,
+        //        data = new
+        //        {
+        //            totalStudents,
+        //            activeStudents,
+        //            totalTeachers,
+        //            activeTeachers,
+        //            totalSelProjects,
+        //            familyProjects,
+        //            individualProjects,
+        //            groupPbl
+        //        }
+        //    });
+        //}
 
         [HttpGet("details-list2/{type}")]
         public async Task<IActionResult> GetDetailsList2(string type)
