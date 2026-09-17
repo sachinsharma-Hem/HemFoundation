@@ -1,0 +1,417 @@
+﻿@model HemFoundation.DTOs.StundetSummaryReportModel
+
+<style>
+    .backgroundImage {
+        background-image: url('../../Content/Teacher/Background.png');
+    }
+
+    .coursetable {
+        width: 100%;
+        margin-bottom: 6px !important;
+        max-width: none !important;
+        clear: both;
+    }
+
+    .coursethead {
+        color: black;
+        font-weight: bold;
+        border-bottom: 1px solid #cec7c7;
+    }
+
+        .coursethead tr th {
+            padding: 5px !important;
+        }
+
+    .coursepercentage {
+        font-size: 20px;
+        width: 80px;
+        margin-top: 10px;
+        background: #00a0e3;
+    }
+
+    .coursemargin {
+        margin-bottom: 17px;
+    }
+
+    .main-form {
+        margin-top: 30px;
+    }
+
+    .panel panel-default {
+        border: 2px solid #ccc;
+        background-color: #eee;
+    }
+</style>
+
+<div id="TeacherReportContainer">
+
+    <div class="panel panel-primary">
+
+        <div class="panel-heading">
+
+            <h4 class="panel-title">
+
+                <i class="fa fa-bar-chart"></i>
+
+                Student Performance Report
+
+            </h4>
+
+        </div>
+
+    </div>
+
+    <div class="container main-form" style="margin: 0 0 0 -15px;">
+        <div class="row">
+            <input type="hidden" value="@Model.InstituteID" id="hddInstituteID" />
+            <input type="hidden" value="@Model.StudentID" id="hddStudentID" />
+
+            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 panel panel-default" style="padding: 0 0 0 -15px;">
+                <div class="panel-body" style="overflow-x:auto;">
+                    <form>
+                        <div class="card shadow-sm border-0 rounded-4">
+                            <div class="card-header bg-primary text-white">
+                                Student Details
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <span>School</span>
+                                    <strong>@Model.SchoolName</strong>
+                                </div>
+
+                                <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <span>Student</span>
+                                    <strong>@Model.StudentName</strong>
+                                </div>
+
+                                <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <span>Standard</span>
+                                    <strong>@Model.Stanadard</strong>
+                                </div>
+
+                                <div class="d-flex justify-content-between py-2">
+                                    <span>Division</span>
+                                    <strong>@Model.Division</strong>
+                                </div>
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 panel panel-default" style="padding: 0 0 0 -15px">
+                <div class="panel-body">
+                    <form>
+                        <table class="table" border="1"></table>
+                        <table class="table" border="1"></table>
+                        <table class="table" border="3">
+                            <tbody>
+                                <tr>
+                                    <td><label class="text-primary">MCQ</label></td>
+                                    <td>
+                                        <input disabled class="form-control text-center" type="text" id="partial_formattedidMCQMax" style="background-color: #fff; color: #000; border: 1px solid #ccc;" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label class="text-primary">Practical</label></td>
+                                    <td>
+                                        <input disabled class="form-control text-center" type="text" id="partial_formattedidPracMax" style="background-color: #fff; color: #000; border: 1px solid #ccc;" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label class="text-primary">PBL</label></td>
+                                    <td>
+                                        <input disabled class="form-control text-center" type="text" id="partial_formatted_MaxPBL" style="background-color: #fff; color: #000; border: 1px solid #ccc;" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label class="text-primary">Grand-Total</label></td>
+                                    <td>
+                                        <input disabled class="form-control text-center" type="text" id="partial_idMCQPRAC_GrandTotal" style="background-color: #fff; color: #000; font-weight: bold; border: 1px solid #ccc;" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <table class="table"></table>
+                        <table class="table"></table>
+                    </form>
+                </div>
+            </div>
+            <div class="row align-items-end mb-4">
+
+                <div class="col-md-8">
+
+                    @Html.DropDownList(
+                        "ddl_reportId",
+                        new SelectList(ViewBag.listCourse, "Value", "Text"),
+                        "-- Please Select Course --",
+                        new
+                        {
+                            @class = "form-control",
+                            onchange = "getVal()"
+                        })
+
+                </div>
+
+                <div class="col-md-4 text-right">
+
+                    <button class="btn btn-primary"
+                            id="btn_DetailedReport">
+
+                        <i class="fa fa-download"></i>
+
+                        Download Report
+
+                    </button>
+
+                </div>
+                <div class="col-12 mt-4">
+
+                    <div class="card shadow-sm border-0 rounded-4">
+
+                        <div class="card-header bg-primary text-white d-flex align-items-center">
+                            <i class="fas fa-book-open me-2"></i>
+                            <h5 class="mb-0">Course Performance</h5>
+                        </div>
+
+                        <div class="card-body p-0">
+
+                            <div class="table-responsive">
+
+                                <table class="table table-hover table-bordered align-middle mb-0" id="tblBind">
+
+                                    <thead class="table-primary text-center">
+
+                                        <tr>
+                                            <th style="width:40%;">Course Name</th>
+                                            <th style="width:20%;">MCQ Max</th>
+                                            <th style="width:20%;">Practical Max</th>
+                                            <th style="width:20%;">PBL Status</th>
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody id="tbodyid" class="text-center"></tbody>
+
+                                    <tfoot>
+
+                                        <tr class="table-light fw-bold text-center" id="fooderid">
+
+                                            <td>
+                                                Grand Total
+                                            </td>
+
+                                            <td>
+                                                <input type="text"
+                                                       class="form-control text-center fw-bold"
+                                                       id="formatted_MaxMCQ"
+                                                       disabled />
+                                            </td>
+
+                                            <td>
+                                                <input type="text"
+                                                       class="form-control text-center fw-bold"
+                                                       id="formatted_MaxPrac"
+                                                       disabled />
+                                            </td>
+
+                                            <td>
+                                                <input type="text"
+                                                       class="form-control text-center fw-bold"
+                                                       id="pblStatusElement"
+                                                       disabled />
+                                            </td>
+
+                                        </tr>
+
+                                    </tfoot>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+           
+           
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    function getVal() {
+        // Scoped to TeacherReportContainer
+        var container = $('#TeacherReportContainer');
+        var selectedVal = container.find("#ddl_reportId").val();
+
+        // Stop if nothing is selected
+        if (!selectedVal || selectedVal === "") {
+            container.find("#tbodyid").empty();
+            return;
+        }
+
+        $.getJSON("/Student/GetCoursesList", {
+            CourseID: selectedVal,
+            StudentID: '@ViewBag.StudentID',
+            InstituteID: '@ViewBag.InstituteID'
+        }, function (response) {
+            if (response.listValues && response.listValues.length !== 0) {
+                container.find("#tbodyid").empty();
+                var GerJsonParse = JSON.parse(response.listValues);
+                var c = [];
+
+                var weekPoints = {
+                    "Week 1": [10, 10],
+                    "Week 2": [15, 10],
+                    "Week 3": [15, 5],
+                    "Week 4": [10, 5]
+                };
+
+                for (var item = 0; item < GerJsonParse.length; item++) {
+                    c.push("<tr><td>" + GerJsonParse[item]["CourseName"] + "</td>");
+
+                    let maxMCQPoints = GerJsonParse[item]["MAXMCQ_Points"] || 0;
+                    let maxPracticalPoints = GerJsonParse[item]["MAXPractical_Points"] || 0;
+                    let weekMatch = GerJsonParse[item]["CourseName"].match(/Week \d/);
+
+                    if (weekMatch) {
+                        let week = weekMatch[0];
+                        let totalMCQ = weekPoints[week][0];
+                        let totalPractical = weekPoints[week][1];
+
+                        c.push("<td>" + maxMCQPoints + "/" + totalMCQ + "</td>");
+                        c.push("<td>" + maxPracticalPoints + "/" + totalPractical + "</td>");
+                    } else {
+                        c.push("<td>" + maxMCQPoints + "/10</td>");
+                        c.push("<td>" + maxPracticalPoints + "/10</td>");
+                    }
+
+                    var pblStatusElement = GerJsonParse[item]["pblStatusElement"];
+                    if (pblStatusElement) {
+                        let formattedStatus = pblStatusElement.replace(/\//g, "<br>");
+                        c.push("<td>" + formattedStatus + "</td></tr>");
+                    } else {
+                        c.push("<td>N/A</td></tr>");
+                    }
+                }
+
+                container.find('#tbodyid').append(c.join("\n"));
+                TotalCount(GerJsonParse);
+            }
+        });
+    }
+
+    function TotalCount(c) {
+        var arrayLength = c.length;
+        var CountMAXMCQ_Points = 0;
+        var MAXPractical_Points = 0;
+        var totalPBLStatusCount = 0;
+        var pblStatusCount = 0;
+
+        var TotalMCQMarks = 0;
+        var TotalPracticalMarks = 0;
+        var TotalPblMarks = 20;
+
+        var weekPoints = {
+            "Week 1": [10, 10],
+            "Week 2": [15, 10],
+            "Week 3": [15, 5],
+            "Week 4": [10, 5]
+        };
+
+        for (var i = 0; i < arrayLength; i++) {
+            CountMAXMCQ_Points += parseInt(c[i]["MAXMCQ_Points"]) || 0;
+            MAXPractical_Points += parseInt(c[i]["MAXPractical_Points"]) || 0;
+
+            var pblStatusElement = c[i]["pblStatusElement"];
+            if (pblStatusElement) {
+                if (pblStatusElement.includes("GroupStatus:- Done / FamilyPBLStatus:- Done")) {
+                    pblStatusCount = 20;
+                }
+                else if (pblStatusElement.includes("GroupStatus:- Pending / FamilyPBLStatus:- Done") ||
+                    pblStatusElement.includes("GroupStatus:- Done / FamilyPBLStatus:- Pending")) {
+                    pblStatusCount = 10;
+                }
+                else {
+                    pblStatusCount = 0;
+                }
+            } else {
+                pblStatusCount = 0;
+            }
+
+            let weekMatch = c[i]["CourseName"].match(/Week \d/);
+            if (weekMatch) {
+                let week = weekMatch[0];
+                TotalMCQMarks += weekPoints[week][0];
+                TotalPracticalMarks += weekPoints[week][1];
+            }
+            else {
+                TotalMCQMarks += 10;
+                TotalPracticalMarks += 10;
+            }
+            totalPBLStatusCount += pblStatusCount;
+        }
+
+        // Scoped to TeacherReportContainer
+        var container = $('#TeacherReportContainer');
+
+        // 1. Update Top Summary Box
+        container.find('#formattedidMCQMax').val(CountMAXMCQ_Points + '/' + TotalMCQMarks);
+        container.find('#formattedidPracMax').val(MAXPractical_Points + '/' + TotalPracticalMarks);
+        container.find('#formatted_MaxPBL').val(totalPBLStatusCount + '/' + TotalPblMarks);
+
+        var GrandTotal = 100;
+        var totalObtained = CountMAXMCQ_Points + MAXPractical_Points + totalPBLStatusCount;
+        container.find('#idMCQPRAC_GrandTotal').val(totalObtained + '/' + GrandTotal);
+
+        // 2. Update Bottom Footer
+        container.find('#formatted_MaxMCQ').val(CountMAXMCQ_Points + '/' + TotalMCQMarks);
+        container.find('#formatted_MaxPrac').val(MAXPractical_Points + '/' + TotalPracticalMarks);
+        container.find('#pblStatusElement').val(totalPBLStatusCount + '/' + TotalPblMarks);
+
+        // Update Top Summary Box using the new unique 'partial_' IDs
+        $('#partial_formattedidMCQMax').val(CountMAXMCQ_Points + '/' + TotalMCQMarks);
+        $('#partial_formattedidPracMax').val(MAXPractical_Points + '/' + TotalPracticalMarks);
+        $('#partial_formatted_MaxPBL').val(totalPBLStatusCount + '/' + TotalPblMarks);
+
+        var GrandTotal = 100;
+        var totalObtained = CountMAXMCQ_Points + MAXPractical_Points + totalPBLStatusCount;
+        $('#partial_idMCQPRAC_GrandTotal').val(totalObtained + '/' + GrandTotal);
+    }
+
+    // Attach Download button event on document ready to ensure DOM is loaded
+    $(document).ready(function () {
+        $("#TeacherReportContainer #btn_DetailedReport").click(function () {
+            var container = $('#TeacherReportContainer');
+            var StudID = container.find("#hddStudentID").val();
+            var InstID = container.find("#hddInstituteID").val();
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ExportStudentSummaryReport", "Student")',
+                data: JSON.stringify({ StudentID: StudID, InstituteID: InstID }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (Rdata) {
+                    var bytes = new Uint8Array(Rdata.FileContents);
+                    var blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = "StudentSummaryReport.xlsx";
+                    link.click();
+                },
+                error: function (err) {
+                    console.log("Error Downloading File:", err);
+                }
+            });
+        });
+    });
+
+</script>

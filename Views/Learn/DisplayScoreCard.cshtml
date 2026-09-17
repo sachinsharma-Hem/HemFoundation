@@ -1,0 +1,49 @@
+﻿@model HemFoundation.DTOs.StudentProfileModel
+@{
+    // Connects seamlessly to your central top horizontal navigation layout
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<div id="profileLoader" style="margin: 0px; padding: 0px; position: fixed; right: 0px;
+    top: 0px; width: 100%; height: 100%; background-color: #1f1f1f; z-index: 30001;
+    opacity: .9; filter: alpha(opacity=70);">
+    <p style="position: relative;top: 40%;margin: 0 auto !important;color: White;text-align: center;">
+        <img src="~/Content/img/tail-spin.svg" class="img-responsive center-block" />
+        <label id="lblLoadingMessage" class="text-center text-md">Loading please wait...</label>
+    </p>
+</div>
+
+<div id="get_studentreport"></div>
+
+@section Scripts {
+    <script>
+        var isprogressShown = false;
+        var isReport = false;
+
+        $(document).ready(function() {
+            LoadStudentSummary_Report();
+        });
+
+        function LoadStudentSummary_Report() {
+            if (isprogressShown == false) {
+                $("#profileLoader").show();
+                var url = '@Url.Action("GetStudent_SummaryReportPartial", "Learn")';
+
+                if (isReport == false) {
+                    $.get(url, {
+                        StudentID: @Model.StudentID,
+                        InstituteID: @Model.InstituteID
+                            }, function(data) {
+                        $("#get_studentreport").html(data);
+                        $("#reportCard").show();
+                        $("#profileLoader").hide();
+                        isReport = true;
+                        isprogressShown = true;
+                    });
+                }
+            } else {
+                $("#divLoading").hide();
+            }
+        }
+    </script>
+}

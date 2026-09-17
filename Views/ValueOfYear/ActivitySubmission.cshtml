@@ -129,7 +129,8 @@
         function loadPageData() {
             $.get('/api/value/activity-page-data/' + VID, function (res) {
                 if (res.success) {
-                    $('#lblActivityTitle').text(res.activity.valueTitleEng + ' (' + res.activity.capacityName + ')');
+                    //$('#lblActivityTitle').text(res.activity.valueTitleEng + ' (' + res.activity.capacityName + ')');
+                    $('#lblActivityTitle').text(res.activity.valueTitleEng);
                     $('#lblGrade').text(res.activity.gradeName);
                     
                     groups = res.groups.map(g => g.groupName);

@@ -1,0 +1,340 @@
+﻿@model HemFoundation.DTOs.StundetSummaryReportModel
+
+<div class="card card-outline card-purple shadow-sm mt-4">
+    <div class="card-header border-0 bg-white">
+        <h3 class="card-title font-weight-bold text-dark">
+            <i class="fas fa-file-alt text-purple-brand mr-2"></i> Student Performance Report
+        </h3>
+    </div>
+    <div class="card-body">
+        <input type="hidden" value="@Model.InstituteID" id="hddInstituteID" />
+        <input type="hidden" value="@Model.StudentID" id="hddStudentID" />
+
+        <div class="row mb-4 bg-light p-3 rounded">
+            <div class="col-md-3"><strong>School:</strong> @Model.SchoolName</div>
+            <div class="col-md-3"><strong>Student:</strong> @Model.StudentName</div>
+            <div class="col-md-3"><strong>Standard:</strong> @Model.Stanadard</div>
+            <div class="col-md-3"><strong>Division:</strong> @Model.Division</div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                @Html.DropDownList("ddl_reportId", new SelectList(ViewBag.listCourse, "Value", "Text"), "-- Please Select Course --", new { @class = "form-control select2bs4", @onchange = "getVal()" })
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-primary" id="btn_DetailedReport">
+                    <i class="fas fa-file-excel mr-2"></i> Download Report
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow-none border bg-light">
+                    <div class="card-body">
+                        <table class="table table-borderless table-sm mb-0">
+                            <tr>
+                                <td><label class="font-weight-bold">MCQ</label></td>
+                                <td><input disabled type="text" class="form-control" id="formattedidMCQMax" /></td>
+                            </tr>
+                            <tr>
+                                <td><label class="font-weight-bold">Practical</label></td>
+                                <td><input disabled type="text" class="form-control" id="formattedidPracMax" /></td>
+                            </tr>
+                            <tr>
+                                <td><label class="font-weight-bold">PBL</label></td>
+                                <td><input disabled type="text" class="form-control" id="formattedidMaxPBL" /></td>
+                            </tr>
+                            <tr>
+                                <td><label class="font-weight-bold text-purple-brand">Grand Total</label></td>
+                                <td><input type="text" disabled class="form-control font-weight-bold" id="idMCQPRAC_GrandTotal" /></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover text-center" id="summaryTable">
+                        <thead class="bg-purple-brand">
+                            <tr>
+                                <th>Course Name</th>
+                                <th>MCQ Marks</th>
+                                <th>Practical Marks</th>
+                                <th>PBL Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyid"></tbody>
+                        <tfoot class="bg-light font-weight-bold">
+                            <tr>
+                                <td>Grand Total</td>
+                                <td><input type="text" id="formatted_MaxMCQ" class="form-control form-control-sm text-center" disabled /></td>
+                                <td><input type="text" id="formatted_MaxPrac" class="form-control form-control-sm text-center" disabled /></td>
+                                <td><input type="text" id="formatted_MaxPBL" class="form-control form-control-sm text-center" disabled /></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+        </div>
+    </div>
+
+<script type="text/javascript">
+    // Ensure getVal uses correct Selectors
+    function getVal() {
+        var selectedVal = $("#ddl_reportId").val();
+        var studentId = $('#hddStudentID').val();
+        var instId = $('#hddInstituteID').val();
+
+        if (!selectedVal || selectedVal === "0") return;
+        $.getJSON("/Student/GetCoursesList", {
+            CourseID: selectedVal,
+            StudentID: studentId,
+            InstituteID: instId
+        }, function (response) {
+            var tbody = $("#tbodyid");
+            tbody.empty();
+
+            if (response.listValues && response.listValues.length !== 0) {
+                var GerJsonParse = typeof response.listValues === 'string' ? JSON.parse(response.listValues) : response.listValues;
+                var weekPoints = { "Week 1": [10, 10], "Week 2": [15, 10], "Week 3": [15, 5], "Week 4": [10, 5] };
+
+                GerJsonParse.forEach(function (item) {
+                    let totalMCQ, totalPractical;
+
+                    // Check if course name contains "Post"
+                    if (item.CourseName.includes("Post") || item.CourseName.includes("Pre")) {
+                        totalMCQ = 0;
+                        totalPractical = 0;
+                    } else {
+                        let weekMatch = item.CourseName.match(/Week \d/);
+                        let points = weekMatch ? weekPoints[weekMatch[0]] : [10, 10];
+                        totalMCQ = points[0];
+                        totalPractical = points[1];
+                    }
+
+                    let pblStatus = item.pblStatusElement ? item.pblStatusElement.replace(/\//g, "<br>") : "N/A";
+
+                    tbody.append(`<tr>
+                <td class="text-left font-weight-bold">${item.CourseName}</td>
+                <td>${item.MAXMCQ_Points}/${totalMCQ}</td>
+                <td>${item.MAXPractical_Points}/${totalPractical}</td>
+                <td>${pblStatus}</td>
+            </tr>`);
+                });
+
+                TotalCount(GerJsonParse);
+            }
+        });
+       
+    }
+
+    // Fixed Download Button Handler
+    $("#btn_DetailedReport").off("click").on("click", function () {
+        var StudID = $("#hddStudentID").val();
+        var InstID = $("#hddInstituteID").val();
+
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("ExportStudentSummaryReport", "Student")',
+            data: JSON.stringify({ StudentID: StudID, InstituteID: InstID }),
+            contentType: "application/json; charset=utf-8",
+           // xhrFields: { responseType: 'blob' }, // Necessary for file downloads via AJAX
+            success: function (Rdata) {
+
+                var bytes = new Uint8Array(Rdata.FileContents);
+                var blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+
+                link.download = "StudentSummaryReport.xlsx";
+                link.click();
+            },
+            error: function () { alert("Error downloading report."); }
+        });
+    });
+    function TotalCount(c) {
+        debugger;
+        var arrayLength = c.length;
+        var CountMAXMCQ_Points = 0;
+        var MAXPractical_Points = 0;
+        var totalPBLStatusCount = 0;
+        var pblStatusCount = 0;
+
+        // Total possible marks for MCQs and Practicals
+        var TotalMCQMarks = 0;
+        var TotalPracticalMarks = 0;
+        var TotalPblMarks = 0; // Changed base to calculate dynamically based on pre/post or week
+
+        // Define maximum points for each week
+        var weekPoints = {
+            "Week 1": [10, 10, 5], // [MCQ Total, Practical Total, PBL Total]
+            "Week 2": [15, 10, 0],
+            "Week 3": [15, 5, 0],
+            "Week 4": [10, 5, 15]
+        };
+
+        for (var i = 0; i < arrayLength; i++) {
+            debugger;
+            let courseName = c[i]["CourseName"];
+            let isPreOrPost = courseName.includes("Pre") || courseName.includes("Post");
+
+            // Accumulate obtained points
+            CountMAXMCQ_Points += parseInt(c[i]["MAXMCQ_Points"]);
+            MAXPractical_Points += parseInt(c[i]["MAXPractical_Points"]);
+
+            let pblStatusElement = c[i]["pblStatusElement"];
+            let pblStatusCount = 0;
+
+            if (pblStatusElement && !isPreOrPost) {
+                // Check Group (10 points)
+                if (pblStatusElement.includes("GroupStatus:- Done")) {
+                    pblStatusCount += 10;
+                }
+
+                // Check Family (5 points)
+                if (pblStatusElement.includes("FamilyPBLStatus:- Done")) {
+                    pblStatusCount += 5;
+                }
+
+                // Check Individual (5 points)
+                if (pblStatusElement.includes("IndividualPBLStatus:- Done")) {
+                    debugger;
+                    pblStatusCount += 5;
+                }
+            }
+
+            // Check the week or pre/post for the current course and add to total possible marks
+            if (isPreOrPost) {
+                // Pre and Post courses have 0 total marks for MCQ, Practical, and PBL
+                TotalMCQMarks += 0;
+                TotalPracticalMarks += 0;
+                TotalPblMarks += 0;
+            } else {
+                let weekMatch = courseName.match(/Week \d/);
+                if (weekMatch) {
+                    let week = weekMatch[0];
+                    TotalMCQMarks += weekPoints[week][0];
+                    TotalPracticalMarks += weekPoints[week][1];
+                    TotalPblMarks += weekPoints[week][2];
+                }
+                else {
+                    TotalMCQMarks += 10;
+                    TotalPracticalMarks += 10;
+                    TotalPblMarks += 0;
+                }
+            }
+            totalPBLStatusCount += pblStatusCount;
+        }
+
+        // Update the obtained and total values for MCQs
+        $('#total_MaxMCQ').val(CountMAXMCQ_Points);
+        $('#formatted_MaxMCQ').val(CountMAXMCQ_Points + '/' + TotalMCQMarks); // Display in obtained/total format
+        $('#total_MaxPractical').val(MAXPractical_Points);
+        $('#formatted_MaxPrac').val(MAXPractical_Points + '/' + TotalPracticalMarks); // Display in obtained/total format
+
+        $('#formatted_MaxPBL').val(totalPBLStatusCount + '/' + TotalPblMarks); // Display in obtained/total format
+        $('#formattedidMaxPBL').val(totalPBLStatusCount + '/' + TotalPblMarks); // Display in obtained/total format
+
+        // Update practicals and other elements
+        $('#total_MaxPractical').val(MAXPractical_Points); // Fixed the spelling here
+        $('#idMCQMax').val(CountMAXMCQ_Points);
+        $('#formattedidMCQMax').val(CountMAXMCQ_Points + '/' + TotalMCQMarks);
+        $('#idPracMax').val(MAXPractical_Points);
+        $('#formattedidPracMax').val(MAXPractical_Points + '/' + TotalPracticalMarks);
+
+        var GrandTotal = 100; // Example total, you can adjust as needed
+        var totalObtained = CountMAXMCQ_Points + MAXPractical_Points + totalPBLStatusCount;
+        $('#idMCQPRAC_GrandTotal').val(totalObtained + '/' + GrandTotal);
+    }
+    function TotalCount1(c) {
+        debugger;
+        var arrayLength = c.length;
+        var CountMAXMCQ_Points = 0;
+        var MAXPractical_Points = 0;
+        var totalPBLStatusCount = 0;
+        var pblStatusCount = 0;
+
+        // Total possible marks for MCQs and Practicals
+        var TotalMCQMarks = 0;
+        var TotalPracticalMarks = 0;
+        var TotalPblMarks = 20;
+
+        // Define maximum points for each week
+        var weekPoints = {
+            "Week 1": [10, 10], // [MCQ Total, Practical Total]
+            "Week 2": [15, 10],
+            "Week 3": [15, 5],
+            "Week 4": [10, 5]
+
+        };
+
+        for (var i = 0; i < arrayLength; i++) {
+            debugger;
+            // Accumulate obtained points
+            CountMAXMCQ_Points += parseInt(c[i]["MAXMCQ_Points"]);
+            MAXPractical_Points += parseInt(c[i]["MAXPractical_Points"]);
+            //  pblStatusCount += parseInt(c[i]["pblStatusElement"])
+            pblStatusElement = c[i]["pblStatusElement"];
+            let pblStatusCount = 0;
+
+            if (pblStatusElement) {
+                pblStatusCount = 0;
+
+                // Check Group (10 points)
+                if (pblStatusElement.includes("GroupStatus:- Done")) {
+                    pblStatusCount += 10;
+                }
+
+                // Check Family (5 points)
+                if (pblStatusElement.includes("FamilyPBLStatus:- Done")) {
+                    pblStatusCount += 5;
+                }
+
+                // Check Individual (5 points)
+                if (pblStatusElement.includes("IndividualPBLStatus:- Done")) {
+                    debugger
+                    pblStatusCount += 5;
+                }
+
+                // pblStatusCount now accurately reflects the sum of completions
+            }
+
+
+
+            // Check the week for the current course and add to the total possible marks
+            let weekMatch = c[i]["CourseName"].match(/Week \d/);
+            if (weekMatch) {
+                let week = weekMatch[0];
+                TotalMCQMarks += weekPoints[week][0]; // Total MCQ marks for the week
+                TotalPracticalMarks += weekPoints[week][1]; // Total Practical marks for the week
+            }
+            else {
+                TotalMCQMarks += 10;
+                TotalPracticalMarks += 10;
+            }
+            totalPBLStatusCount += pblStatusCount;
+        }
+
+        // Update the obtained and total values for MCQs
+        $('#total_MaxMCQ').val(CountMAXMCQ_Points);
+        $('#formatted_MaxMCQ').val(CountMAXMCQ_Points + '/' + TotalMCQMarks); // Display in obtained/total format
+        $('#total_MaxPractical').val(MAXPractical_Points);
+        $('#formatted_MaxPrac').val(MAXPractical_Points + '/' + TotalPracticalMarks); // Display in obtained/total format
+
+        $('#formatted_MaxPBL').val(totalPBLStatusCount + '/' + TotalPblMarks); // Display in obtained/total format
+        $('#formattedidMaxPBL').val(totalPBLStatusCount + '/' + TotalPblMarks); // Display in obtained/total format
+
+        // Update practicals and other elements
+        $('#total_MaxPractical').val(MAXPractical_Points); // Fixed the spelling here
+        $('#idMCQMax').val(CountMAXMCQ_Points);
+        $('#formattedidMCQMax').val(CountMAXMCQ_Points + '/' + TotalMCQMarks);
+        $('#idPracMax').val(MAXPractical_Points);
+        $('#formattedidPracMax').val(MAXPractical_Points + '/' + TotalPracticalMarks);
+
+        var GrandTotal = 100; // Example total, you can adjust as needed
+        var totalObtained = CountMAXMCQ_Points + MAXPractical_Points + totalPBLStatusCount;
+        $('#idMCQPRAC_GrandTotal').val(totalObtained + '/' + GrandTotal);
+    }
+
+</script>

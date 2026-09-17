@@ -1,10 +1,16 @@
 ﻿@model HemFoundation.Models.Entities.CapacityViewModel
 
 @{
-    int categoryId = Model?.Id ?? 0;
+    int categoryId = Model?.Id ?? 0; // Yeh aapka CourseID hoga
     string categoryName = Model?.Name ?? "Cognitive Capacity";
     string categoryDesc = Model?.Description ?? "Manage evaluations and interactive modules for this capacity.";
-    string categoryImg = !string.IsNullOrEmpty(Model?.ImageUrl) ? Model.ImageUrl : "/images/default-course.png";
+
+    // Nayi default image URL set ki gayi hai
+    string defaultImgUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrU6HHZMnwIS6q7a3lvXOC_b1i94FbOj9bVpLGcSt-9g&s=10";
+    string categoryImg = !string.IsNullOrEmpty(Model?.ImageUrl) ? Model.ImageUrl : defaultImgUrl;
+
+    int? quizId = Model?.QuizId;
+    string quizName = Model?.QuizName ?? "";
 }
 
 <div class="cognitive-wrapper py-2" data-category-id="@categoryId">
@@ -13,8 +19,9 @@
     <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4 animate-fade-in" style="border: 1px solid rgba(0, 0, 0, 0.06) !important;">
         <div class="row align-items-center">
             <div class="col-md-2 text-center mb-3 mb-md-0">
-                <div class="p-2 bg-light rounded-4 border d-inline-block d-flex align-items-center justify-content-center" style="width: 105px; height: 105px; margin: 0 auto;">
-                    <img src="@categoryImg" class="img-fluid rounded-2 w-100 h-100 object-fit-contain" alt="@categoryName">
+                <div class="p-2 bg-light rounded-4 border d-inline-block d-flex align-items-center justify-content-center overflow-hidden" style="width: 105px; height: 105px; margin: 0 auto;">
+                    <!-- Added onerror here to fix the broken header image in screenshot -->
+                    <img src="@categoryImg" class="w-100 h-100 rounded-2" style="object-fit: cover; object-position: center;" alt="@categoryName" onerror="this.onerror=null; this.src='@defaultImgUrl';">
                 </div>
             </div>
             <div class="col-md-7 text-center text-md-start">
@@ -62,32 +69,35 @@
     </div>
 </div>
 
-<!-- Quiz Modal -->
-<div class="modal fade" id="cogQuizModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-4 border-0 shadow-lg p-4 bg-white">
-            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                <h6 class="fw-bold text-success m-0 d-flex align-items-center"><i class="bi bi-ui-checks me-2"></i> <span id="cogQuizTitle">Assessment Quiz</span></h6>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div id="cogQuizBody"></div>
-        </div>
-    </div>
-</div>
+<!-- Hidden values for MCQ Redirect -->
+<input type="hidden" id="quizId" value="@(quizId ?? 0)" />
 
 <!-- JavaScript Logic -->
 <script>
     $(document).ready(function() {
         let catId = $('.cognitive-wrapper').data('category-id');
-        let cogQuestions = [];
-        let cogQIndex = 0;
-        let cogActiveSubId = null;
-        let resolvedCourseRegId = catId;
-        let questionTimer = null;
-        let secondsElapsed = 0;
+        let fallbackImg = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrU6HHZMnwIS6q7a3lvXOC_b1i94FbOj9bVpLGcSt-9g&s=10';
 
         function getAuthToken() {
             return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '';
+        }
+
+        // YouTube video link se thumbnail URL extract karne ka function
+        function getYouTubeThumbnail(url) {
+            if (!url) return null;
+            let videoId = null;
+            if (url.includes('youtube.com/watch?v=')) {
+                videoId = url.split('v=')[1].split('&')[0];
+            } else if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split('?')[0];
+            } else if (url.includes('youtube.com/embed/')) {
+                videoId = url.split('embed/')[1].split('?')[0];
+            }
+
+            if (videoId) {
+                return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+            }
+            return null;
         }
 
         // Fetch Sub-Topics via API
@@ -97,181 +107,83 @@
             headers: { 'Authorization': 'Bearer ' + getAuthToken() },
             success: function(res) {
                 if (res.success) {
-                    resolvedCourseRegId = res.courseRegId;
                     $('#cogTopicsCount').text(res.counts.topicsCount);
                     $('#cogSubTopicsCount').text(res.counts.subTopicsCount);
 
                     let html = '';
                     res.subTopics.forEach((st) => {
-                        let isVideo = st.videoLink && st.numberOfQuestions === 0;
-                        let badge = isVideo ? `<span class="badge bg-info-subtle text-info border px-2 py-1 rounded-pill" style="font-size:0.7rem;"><i class="bi bi-play-circle-fill me-1"></i> Video</span>` : `<span class="badge bg-warning-subtle text-warning border px-2 py-1 rounded-pill" style="font-size:0.7rem;"><i class="bi bi-question-circle-fill me-1"></i> ${st.numberOfQuestions} Qs</span>`;
+                        let isVideo = st.videoLink && st.videoLink.trim() !== '' && st.videoLink !== 'null';
+                        let badge = isVideo ? `<span class="badge bg-info text-white border px-2 py-1 rounded-pill shadow-sm" style="font-size:0.7rem; backdrop-filter: blur(4px); background-color: rgba(13, 202, 240, 0.85) !important;"><i class="bi bi-play-circle-fill me-1"></i> Video</span>` : `<span class="badge bg-warning text-dark border px-2 py-1 rounded-pill shadow-sm" style="font-size:0.7rem; backdrop-filter: blur(4px); background-color: rgba(255, 193, 7, 0.85) !important;"><i class="bi bi-question-circle-fill me-1"></i> ${st.numberOfQuestions} Qs</span>`;
+                        debugger
+                        let ytThumb = isVideo ? getYouTubeThumbnail(st.videoLink) : null;
 
-                        let imgSrc = st.mcqThumbnail || '/images/default-course.png';
+                        let rawImg = st.mcqThumbnail && st.mcqThumbnail.trim() !== '' ? st.mcqThumbnail : fallbackImg;
+
+                        // Strip the '~' character if it exists so it becomes a valid path starting with '/'
+                        let cleanPath = rawImg ? rawImg.replace('~', '') : '';
+
+                        // Your domain
+                        let domain = "https://www.hemvirtues.in";
+
+                        // If it's a YouTube video thumbnail, use it directly without concatenating the domain. Otherwise, prepend the domain.
+                        let imgSrc = ytThumb ? ytThumb : (cleanPath ? domain + cleanPath : fallbackImg);
+                        //let imgSrc = ytThumb || (st.mcqThumbnail && st.mcqThumbnail.trim() !== '' ? st.mcqThumbnail : fallbackImg);
+
+                        // Play Button Overlay Logic
+                        let playOverlay = isVideo ? `
+                                <div class="position-absolute top-50 start-50 translate-middle play-icon-wrapper">
+                                    <i class="bi bi-play-circle-fill text-white opacity-75" style="font-size: 3.5rem; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.6));"></i>
+                                </div>` : '';
 
                         html += `
-                                <div class="col-xl-4 col-md-6">
-                                    <div class="card border-0 shadow-sm rounded-4 bg-white h-100 overflow-hidden d-flex flex-column cursor-pointer light-card" onclick="openCogModule(${st.id}, '${st.videoLink || ''}', ${st.numberOfQuestions}, '${st.subTopicName}')">
-                                        <div class="position-relative w-100 bg-light border-bottom d-flex align-items-center justify-content-center" style="height:140px;">
-                                            <img src="${imgSrc}" alt="${st.subTopicName}" class="img-fluid w-100 h-100 object-fit-cover" />
-                                            <div class="position-absolute top-0 end-0 m-2">${badge}</div>
-                                        </div>
-                                        <div class="card-body p-3 d-flex flex-column justify-content-between">
-                                            <h6 class="fw-bold text-dark mb-2 text-truncate">${st.subTopicName}</h6>
-                                            <div class="d-flex align-items-center justify-content-between pt-2 border-top small">
-                                                <span class="text-muted" style="font-size:0.75rem;"><i class="bi bi-journal-text me-1"></i> Interactive</span>
-                                                <span class="text-success fw-bold">
-                                                    ${isVideo ? 'Watch <i class="bi bi-arrow-right-short align-middle"></i>' : 'Start <i class="bi bi-arrow-right-short align-middle"></i>'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>`;
+            <div class="col-xl-4 col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 overflow-hidden d-flex flex-column cursor-pointer light-card module-card" onclick="openCogModule(${st.id}, '${st.videoLink || ''}', '${st.subTopicName}', ${st.languageId}, ${st.examinationId})">
+                    <!-- Image Container height set to 180px with contain to prevent cutting -->
+                    <div class="position-relative w-100 bg-dark border-bottom overflow-hidden d-flex align-items-center justify-content-center" style="height:180px;">
+                        <img src="${imgSrc}" alt="${st.subTopicName}" class="w-100 h-100" style="object-fit: contain; object-position: center; opacity: ${isVideo ? '0.85' : '1'};" onerror="this.onerror=null; this.src='${fallbackImg}';" />
+                        ${playOverlay}
+                        <div class="position-absolute top-0 end-0 m-2">${badge}</div>
+                    </div>
+                    <div class="card-body p-3 d-flex flex-column justify-content-between">
+                        <h6 class="fw-bold text-dark mb-2 text-truncate">${st.subTopicName}</h6>
+                        <div class="d-flex align-items-center justify-content-between pt-2 border-top small">
+                            <span class="text-muted" style="font-size:0.75rem;"><i class="bi bi-journal-text me-1"></i> Interactive</span>
+                            <span class="text-success fw-bold">
+                                ${isVideo ? 'Watch <i class="bi bi-arrow-right-short align-middle"></i>' : 'Start Exam <i class="bi bi-arrow-right-short align-middle"></i>'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
                     });
                     $('#cogSubTopicsContainer').html(html || '<div class="col-12 text-center text-muted py-4">No sub-topics found for this capacity.</div>');
                 }
+            },
+            error: function() {
+                $('#cogSubTopicsContainer').html('<div class="col-12 text-center text-danger py-4">Failed to load modules. Please try again.</div>');
             }
         });
 
-        window.openCogModule = function(subTopicId, videoLink, qCount, title) {
-            if (videoLink && qCount === 0) {
+        // Universal Click Handler for Sub-Topics
+        window.openCogModule = function(subTopicId, videoLink, title, languageId, examinationId) {
+            if (videoLink && videoLink.trim() !== '' && videoLink !== 'null') {
                 let embedUrl = videoLink.includes('watch?v=') ? videoLink.replace('watch?v=', 'embed/') : videoLink;
                 $('#cogVideoTitle').text(title);
                 $('#cogVideoIframe').attr('src', embedUrl);
                 new bootstrap.Modal(document.getElementById('cogVideoModal')).show();
-            } else {
-                cogActiveSubId = subTopicId;
-                $.ajax({
-                    url: `/api/teacher-capacity/subtopic-questions/${subTopicId}`,
-                    type: 'GET',
-                    headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                    success: function(res) {
-                        $('#cogQuizTitle').text(res.subTopicTitle || title);
-
-                        if (res.allCompleted) {
-                            fetchAndShowSummary(subTopicId);
-                        } else if (res.success && res.questions.length > 0) {
-                            cogQuestions = res.questions;
-                            cogQIndex = 0;
-                            renderCogQuestion();
-                            new bootstrap.Modal(document.getElementById('cogQuizModal')).show();
-                        } else {
-                            $('#cogQuizBody').html('<div class="text-center py-3 text-muted small">No questions configured for this sub-topic yet.</div>');
-                            new bootstrap.Modal(document.getElementById('cogQuizModal')).show();
-                        }
-                    }
-                });
+            }
+            else {
+                let quizIdVal = $('#quizId').val() || 0;
+                let topicIdVal = subTopicId;
+                let langIdVal = languageId || 1;
+                let examIdVal = examinationId || 0;
+                let isAttemptVal = examIdVal !== 0;
+                let redirectUrl = `/Exam/Index?QuizId=${quizIdVal}&TopicID=${topicIdVal}&LevelID=1&LanguageID=${langIdVal}&IsInstituteQuiz=false&IsAttempt=${isAttemptVal}&ExamID=${examIdVal}`;
+                window.location.href = redirectUrl;
             }
         };
 
-        function startTimer() {
-            secondsElapsed = 0;
-            $('#qTimer').text(secondsElapsed);
-            clearInterval(questionTimer);
-            questionTimer = setInterval(() => {
-                secondsElapsed++;
-                $('#qTimer').text(secondsElapsed);
-            }, 1000);
-        }
-
-        function renderCogQuestion() {
-            startTimer();
-            let q = cogQuestions[cogQIndex];
-            let html = `
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="badge bg-success-subtle text-success px-2 py-1 rounded-pill" style="font-size:0.75rem;">Question ${cogQIndex + 1} of ${cogQuestions.length}</span>
-                                <span class="badge bg-light text-secondary border px-2 py-1 rounded-pill" style="font-size:0.75rem;"><i class="bi bi-stopwatch me-1"></i> <span id="qTimer">0</span>s</span>
-                            </div>
-                            <h6 class="fw-bold text-dark lh-sm">${q.question}</h6>
-                        </div>
-                        <div class="list-group mb-3 gap-2">
-                            <label class="list-group-item rounded-3 border py-2 px-3 cursor-pointer d-flex align-items-center gap-2 option-label"><input class="form-check-input m-0" type="radio" name="quizOpt" value="A" onchange="saveAndNextQuestion(${q.id})"> <span class="small text-dark fw-medium"><b>A.</b> ${q.optionA}</span></label>
-                            <label class="list-group-item rounded-3 border py-2 px-3 cursor-pointer d-flex align-items-center gap-2 option-label"><input class="form-check-input m-0" type="radio" name="quizOpt" value="B" onchange="saveAndNextQuestion(${q.id})"> <span class="small text-dark fw-medium"><b>B.</b> ${q.optionB}</span></label>
-                            ${q.optionC ? `<label class="list-group-item rounded-3 border py-2 px-3 cursor-pointer d-flex align-items-center gap-2 option-label"><input class="form-check-input m-0" type="radio" name="quizOpt" value="C" onchange="saveAndNextQuestion(${q.id})"> <span class="small text-dark fw-medium"><b>C.</b> ${q.optionC}</span></label>` : ''}
-                            ${q.optionD ? `<label class="list-group-item rounded-3 border py-2 px-3 cursor-pointer d-flex align-items-center gap-2 option-label"><input class="form-check-input m-0" type="radio" name="quizOpt" value="D" onchange="saveAndNextQuestion(${q.id})"> <span class="small text-dark fw-medium"><b>D.</b> ${q.optionD}</span></label>` : ''}
-                        </div>
-                    `;
-            $('#cogQuizBody').html(html);
-        }
-
-        window.saveAndNextQuestion = function(questionId) {
-            clearInterval(questionTimer);
-            let selectedOpt = $('input[name="quizOpt"]:checked').val();
-            if (!selectedOpt) return;
-
-            let payload = {
-                courseRegistrationId: resolvedCourseRegId,
-                courseSubTopicId: cogActiveSubId,
-                courseMcqQuestionId: questionId,
-                selectedOption: selectedOpt,
-                timeSpentSeconds: secondsElapsed
-            };
-
-            $.ajax({
-                url: '/api/teacher-capacity/submit-answer',
-                type: 'POST',
-                contentType: 'application/json',
-                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                data: JSON.stringify(payload),
-                success: function(res) {
-                    if (res.success) {
-                        cogQIndex++;
-                        if (cogQIndex >= cogQuestions.length) {
-                            fetchAndShowSummary(cogActiveSubId);
-                        } else {
-                            setTimeout(renderCogQuestion, 300);
-                        }
-                    }
-                },
-                error: function(xhr) {
-                    alert(xhr.responseJSON?.message || 'Error saving answer.');
-                }
-            });
-        };
-
-        function fetchAndShowSummary(subTopicId) {
-            $.ajax({
-                url: `/api/teacher-capacity/quiz-summary/${subTopicId}`,
-                type: 'GET',
-                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                success: function(res) {
-                    if (res.success) {
-                        let total = res.totalAttempted;
-                        let correct = res.correctCount;
-                        let wrong = res.wrongCount;
-                        let accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-
-                        $('#cogQuizBody').html(`
-                                    <div class="text-center py-3">
-                                        <div class="mb-2"><i class="bi bi-award-fill text-success fs-1"></i></div>
-                                        <h5 class="fw-bold text-dark mb-1">Assessment Summary & Report</h5>
-                                        <p class="text-muted small mb-3">Here is your performance breakdown for this module.</p>
-
-                                        <div class="row g-2 mb-3 text-start">
-                                            <div class="col-6"><div class="p-2 bg-light rounded-3 border"><span class="d-block text-muted" style="font-size:0.7rem;">Total Attempted</span><h6 class="fw-bold m-0">${total} Questions</h6></div></div>
-                                            <div class="col-6"><div class="p-2 bg-light rounded-3 border"><span class="d-block text-muted" style="font-size:0.7rem;">Time Spent</span><h6 class="fw-bold m-0">${res.totalTimeSpent} Seconds</h6></div></div>
-                                            <div class="col-6"><div class="p-2 bg-success-subtle rounded-3 border border-success"><span class="d-block text-success" style="font-size:0.7rem;">Correct Answers</span><h6 class="fw-bold text-success m-0">${correct} Correct</h6></div></div>
-                                            <div class="col-6"><div class="p-2 bg-danger-subtle rounded-3 border border-danger"><span class="d-block text-danger" style="font-size:0.7rem;">Incorrect Answers</span><h6 class="fw-bold text-danger m-0">${wrong} Incorrect</h6></div></div>
-                                        </div>
-
-                                        <div class="mb-3 text-start">
-                                            <div class="d-flex justify-content-between small fw-bold mb-1"><span>Accuracy Rate</span><span>${accuracy}%</span></div>
-                                            <div class="progress rounded-pill" style="height: 10px;">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: ${accuracy}%;" aria-valuenow="${accuracy}" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                        </div>
-
-                                        <button class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm w-100" data-bs-dismiss="modal">Finish & Close</button>
-                                    </div>
-                                `);
-                        if (!$('#cogQuizModal').hasClass('show')) {
-                            new bootstrap.Modal(document.getElementById('cogQuizModal')).show();
-                        }
-                    }
-                }
-            });
-        }
-
+        // Reset iframe on close
         $('#cogVideoModal').on('hidden.bs.modal', function() {
             $('#cogVideoIframe').attr('src', '');
         });
@@ -294,8 +206,14 @@
         cursor: pointer;
     }
 
-    .option-label:hover {
-        background-color: #f8fafc;
-        border-color: #198754 !important;
+    /* Play button hover effect */
+    .module-card .play-icon-wrapper i {
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .module-card:hover .play-icon-wrapper i {
+        transform: scale(1.15);
+        opacity: 1 !important;
+        color: #fff !important;
     }
 </style>
