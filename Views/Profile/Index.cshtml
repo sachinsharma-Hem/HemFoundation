@@ -71,8 +71,8 @@
                             <input type="text" id="txtLastName" class="form-control rounded-3 shadow-none" />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Mobile Number</label>
-                            <input type="text" id="txtMobileNo" class="form-control rounded-3 shadow-none" />
+                            <label class="form-label small fw-semibold">Mobile Number <span class="text-danger">*</span></label>
+                            <input type="text" id="txtMobileNo" class="form-control rounded-3 shadow-none" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="Enter 10-digit mobile number" required />
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Gender</label>

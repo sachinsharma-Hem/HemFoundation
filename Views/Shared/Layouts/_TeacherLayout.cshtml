@@ -110,7 +110,7 @@
                                 <i id="nav-default-icon" class="bi bi-person-circle fs-3 text-success"></i>
                             </a>
 
-                            <ul class="dropdown-menu dropdown-menu-end p-3 mt-2 rounded-4 shadow-lg border-0 profile-dropdown-card" aria-labelledby="profileDropdown" style="min-width: 270px;">
+                            <ul class="dropdown-menu dropdown-menu-end p-3 mt-2 rounded-4 shadow-lg border-0 profile-dropdown-card" aria-labelledby="profileDropdown">
                                 <li class="text-center pb-3 border-bottom mb-2">
                                     <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center mb-2 shadow-sm overflow-hidden border border-2 border-success"
                                          style="width: 65px; height: 65px; background: #e8f5e9;">
@@ -119,17 +119,16 @@
                                     </div>
                                     <h6 id="profile-name" class="fw-bold mb-0 text-dark">Loading...</h6>
                                     <small id="profile-email" class="text-muted d-block text-truncate px-2" style="font-size: 0.8rem;">user@hemfoundation.org</small>
-@*                                     <span id="profile-role-badge" class="badge bg-success-subtle text-success rounded-pill mt-2 px-3 py-1 fw-medium" style="font-size: 0.75rem;">User</span>
- *@                                </li>
+                                </li>
                                 <li>
-                                    <a href="/Profile/Index" class="dropdown-item fw-semibold rounded-3 py-2 px-3 d-flex align-items-center gap-2 text-dark mb-1 transition-all">
+                                    <a href="/Profile/Index" class="dropdown-item fw-semibold rounded-3 py-2 px-3 d-flex align-items-center gap-2 text-dark mb-1 text-decoration-none" style="outline: none !important; box-shadow: none !important;">
                                         <i class="bi bi-person-gear fs-5 text-success"></i>
                                         <span>View & Edit Profile</span>
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider my-1"></li>
                                 <li>
-                                    <button onclick="logoutAdmin()" class="dropdown-item text-danger fw-semibold rounded-3 py-2 px-3 d-flex align-items-center gap-2 transition-all w-100 border-0 bg-transparent text-start">
+                                    <button onclick="logoutAdmin()" class="dropdown-item text-danger fw-semibold rounded-3 py-2 px-3 d-flex align-items-center gap-2 w-100 border-0 bg-transparent text-start" style="outline: none !important; box-shadow: none !important;">
                                         <i class="bi bi-box-arrow-right fs-5"></i>
                                         <span>Log Out</span>
                                     </button>
@@ -152,8 +151,220 @@
     <partial name="~/Views/Shared/Partials/_Scripts.cshtml" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://kit.fontawesome.com/f3d5793761.js" crossorigin="anonymous"></script>
+    <!-- Session Expiry Warning Countdown Banner (Hidden by default) -->
+    <div id="sessionExpiryBanner" class="position-fixed top-0 start-50 translate-middle-x p-3 w-100" style="z-index: 9999; display: none; max-width: 500px;">
+        <div class="alert alert-warning shadow-lg rounded-4 border-0 d-flex align-items-center justify-content-between p-3 m-0 bg-white text-dark border-start border-danger border-5">
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-3"></i>
+                <div>
+                    <h6 class="fw-bold m-0 text-dark">Inactivity Warning!</h6>
+                    <small class="text-muted m-0">You have been idle. Session expires in <span id="countdownTimer" class="fw-bold text-danger">60</span> seconds.</small>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-danger rounded-pill px-3 fw-bold shadow-none" onclick="logoutAdmin()">Logout Now</button>
+        </div>
+    </div>
 
     <script>
+            let isExpiryTriggered = false;
+
+            // --- IDLE TIMEOUT CONFIGURATION ---
+            const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // Total 5 Minutes (in milliseconds)
+            const WARNING_TIME_MS = 60 * 1000;     // Show warning when 1 minute is left
+            let idleTimer = null;
+            let countdownInterval = null;
+
+            $.ajaxSetup({
+                statusCode: {
+                    401: function() {
+                        handleSessionExpired("Your session has expired. Please log in again.");
+                    }
+                }
+            });
+
+            $(document).ready(function() {
+                // 1. Start Idle Timer Tracking
+                startIdleTimer();
+
+                // Reset idle timer on user activity (mouse move, clicks, typing, scrolling)
+                $(document).on('mousemove keypress click scroll touchstart', function() {
+                    resetIdleTimer();
+                });
+
+                // 2. Retrieve session & profile info safely
+                let userSession = null;
+                try {
+                    userSession = JSON.parse(localStorage.getItem('user_session') || sessionStorage.getItem('user_session') || 'null');
+                } catch (e) { userSession = null; }
+
+                if (userSession) {
+                    $('#profile-name').text(userSession.fullName || userSession.email || 'User');
+                    $('#profile-email').text(userSession.email || '');
+                    if (userSession.roles && userSession.roles.length > 0) {
+                        $('#profile-role-badge').text(userSession.roles[0]);
+                    }
+                }
+
+                // Fetch live profile details
+                const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+                if (token) {
+                    $.ajax({
+                        url: '/api/profile/details',
+                        type: 'GET',
+                        headers: { 'Authorization': 'Bearer ' + token },
+                        success: function(res) {
+                            if (res.success && res.profile) {
+                                const photo = res.profile.photoUrl || res.profile.profileImage;
+                                if (photo && photo !== '-') {
+                                    $('#nav-avatar-img').attr('src', photo).removeClass('d-none');
+                                    $('#nav-default-icon').addClass('d-none');
+                                    $('#dropdown-avatar-img').attr('src', photo).removeClass('d-none');
+                                    $('#dropdown-default-icon').addClass('d-none');
+                                }
+                                if (res.user && res.user.fullName) {
+                                    $('#profile-name').text(res.user.fullName);
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Theme Switcher Logic
+                const savedTheme = localStorage.getItem('hem_theme') || 'light';
+                $('html').attr('data-theme', savedTheme);
+                $('#themeSwitch').prop('checked', savedTheme === 'dark');
+
+                $('#themeSwitch').on('change', function() {
+                    const targetTheme = $(this).is(':checked') ? 'dark' : 'light';
+                    $('html').attr('data-theme', targetTheme);
+                    localStorage.setItem('hem_theme', targetTheme);
+                });
+
+                // Render Dynamic Menus
+                let userMenus = [];
+                try {
+                    const rawMenus = localStorage.getItem('user_menus') || sessionStorage.getItem('user_menus') || '[]';
+                    userMenus = JSON.parse(rawMenus);
+                } catch (e) {
+                    userMenus = [];
+                }
+
+                if (Array.isArray(userMenus) && userMenus.length > 0) {
+                    const parentMenus = userMenus.filter(m => m && (m.parentId === null || m.parentId === 0));
+                    let menuHtml = '';
+
+                    parentMenus.forEach(parent => {
+                        const subMenus = userMenus.filter(m => m && m.parentId === parent.id);
+
+                        if (subMenus.length > 0) {
+                            menuHtml += `
+                                        <li class="nav-item dropdown">
+                                            <a class="nav-link dropdown-toggle text-dark fw-medium px-2 py-1" href="#" id="topMenu_${parent.id}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="${parent.icon || 'bi bi-folder'} me-1"></i> ${parent.menuName}
+                                            </a>
+                                            <ul class="dropdown-menu shadow-sm border-0 rounded-3 p-2" aria-labelledby="topMenu_${parent.id}">
+                                    `;
+                            subMenus.forEach(sub => {
+                                let subUrl = sub.routeUrl || `/${sub.controller}/${sub.action}`;
+                                menuHtml += `
+                                                <li>
+                                                    <a class="dropdown-item rounded-2 py-2 px-3 small text-dark" href="${subUrl}">
+                                                        <i class="${sub.icon || 'bi bi-dash'} me-2"></i> ${sub.menuName}
+                                                    </a>
+                                                </li>
+                                        `;
+                            });
+                            menuHtml += `</ul></li>`;
+                        } else {
+                            let parentUrl = parent.routeUrl || `/${parent.controller}/${parent.action}`;
+                            menuHtml += `
+                                        <li class="nav-item">
+                                            <a class="nav-link text-dark fw-medium px-2 py-1" href="${parentUrl}">
+                                                <i class="${parent.icon || 'bi bi-folder'} me-1"></i> ${parent.menuName}
+                                            </a>
+                                        </li>
+                                    `;
+                        }
+                    });
+                    $('#dynamic-menu-list').html(menuHtml);
+                } else {
+                    $('#dynamic-menu-list').html('<li class="nav-item text-muted px-2 py-1 small">No menus assigned</li>');
+                }
+            });
+
+            // --- IDLE TIMER FUNCTIONS ---
+            function startIdleTimer() {
+                // Set timer for warning (1 minute remaining out of 2 minutes)
+                idleTimer = setTimeout(function() {
+                    showWarningAndStartCountdown(60); // 60 seconds left
+                }, IDLE_TIMEOUT_MS - WARNING_TIME_MS);
+            }
+
+            function resetIdleTimer() {
+                if (isExpiryTriggered) return;
+
+                // Clear existing timers & hide banner if user interacts
+                clearTimeout(idleTimer);
+                clearInterval(countdownInterval);
+                $('#sessionExpiryBanner').fadeOut();
+
+                // Restart idle monitoring
+                startIdleTimer();
+            }
+
+            function showWarningAndStartCountdown(totalSeconds) {
+                let secondsLeft = totalSeconds;
+                $('#countdownTimer').text(secondsLeft);
+                $('#sessionExpiryBanner').fadeIn();
+
+                clearInterval(countdownInterval);
+                countdownInterval = setInterval(function() {
+                    secondsLeft--;
+                    $('#countdownTimer').text(secondsLeft);
+
+                    if (secondsLeft <= 0) {
+                        clearInterval(countdownInterval);
+                        handleSessionExpired("Session expired due to 2 minutes of inactivity. Please log in again.");
+                    }
+                }, 1000);
+            }
+
+            function handleSessionExpired(message) {
+                if (isExpiryTriggered) return;
+                isExpiryTriggered = true;
+
+                $('#sessionExpiryBanner').fadeOut();
+
+                Swal.fire({
+                    title: 'Session Expired',
+                    text: message,
+                    icon: 'warning',
+                    confirmButtonColor: '#0284c7',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(() => {
+                    logoutAdmin();
+                });
+            }
+
+            // Secure Complete Cleanup Logout Function
+            function logoutAdmin() {
+                $.ajax({
+                    url: '/api/auth/logout',
+                    type: 'POST',
+                    complete: function() {
+                        performCleanupAndRedirect();
+                    }
+                });
+            }
+
+            function performCleanupAndRedirect() {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.replace('/');
+            }
+    </script>
+  @*   <script>
 
             $.ajaxSetup({
                 statusCode: {
@@ -295,7 +506,7 @@
                 sessionStorage.clear();
                 window.location.replace('/');
             }
-    </script>
+    </script> *@
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
