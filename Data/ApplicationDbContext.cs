@@ -140,12 +140,13 @@ namespace HemFoundation.Data
         public DbSet<StudentActivityLog> StudentActivityLogs { get; set; }
 
         public DbSet<View_HF_Affiliate> View_HF_Affiliate { get; set; }
+        public DbSet<HfViewUser> HfViewUsers { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
             builder.Entity<RoleMenuRight>().HasIndex(x => new { x.RoleId, x.MenuId }).IsUnique();
-
+            builder.Entity<HfViewUser>().HasNoKey().ToView("hf_view_users");
             var seedDate = DateTime.SpecifyKind(new DateTime(2026, 1, 1), DateTimeKind.Utc);
 
             builder.Entity<QuizCourseLevels>().HasNoKey();

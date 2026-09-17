@@ -71,7 +71,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">Pincode <span class="text-danger">*</span></label>
-                                <input type="text" id="txtPincode" class="form-control rounded-3 shadow-none" maxlength="10">
+                                <input type="text" id="txtPincode" class="form-control rounded-3 shadow-none" maxlength="6" placeholder="Enter 6-digit pincode">
                             </div>
                             <div class="col-12">
                                 <label class="form-label small fw-bold">Address <span class="text-danger">*</span></label>
@@ -79,17 +79,16 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">City</label>
-                                <input type="text" id="txtCity" class="form-control rounded-3 shadow-none">
+                                <input type="text" id="txtCity" class="form-control rounded-3 shadow-none bg-light" readonly>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">State</label>
-                                <input type="text" id="txtState" class="form-control rounded-3 shadow-none">
+                                <input type="text" id="txtState" class="form-control rounded-3 shadow-none bg-light" readonly>
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Schedule Date & Time <span class="text-danger">*</span></label>
-                            <!-- Restricted via script min attribute -->
                             <input type="datetime-local" id="txtScheduleDate" class="form-control rounded-3 shadow-none" required>
                         </div>
                         <div class="col-12">
@@ -147,7 +146,8 @@
         $(function() {
             loadPlans();
             loadAssignedSchoolsDropdown();
-            setMinDateTime(); // Set min date time on load
+            setMinDateTime();
+            setupPincodeLookup(); // Initialize pincode auto-fill
         });
 
         // Function to prevent backdate selection
@@ -156,6 +156,22 @@
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             let minDateTime = now.toISOString().slice(0, 16);
             $('#txtScheduleDate').attr('min', minDateTime);
+        }
+
+        // Pincode Auto-fetch City and State
+        function setupPincodeLookup() {
+            $('#txtPincode').on('blur', function() {
+                let pin = $(this).val().trim();
+                if (pin.length === 6 && /^\d+$/.test(pin)) {
+                    $.get(`https://api.postalpincode.in/pincode/${pin}`, function(data) {
+                        if (data && data[0].Status === "Success") {
+                            let po = data[0].PostOffice[0];
+                            $('#txtCity').val(po.District || po.Region || '');
+                            $('#txtState').val(po.State || '');
+                        }
+                    });
+                }
+            });
         }
 
         function captureLocation(callback) {
@@ -231,7 +247,7 @@
             $('#frmPlan')[0].reset();
             $('#chkOtherActivity').prop('checked', false);
             toggleActivityType();
-            setMinDateTime(); // Re-verify min date time when modal opens
+            setMinDateTime();
 
             captureLocation(function(lat, lng) {
                 $('#txtLat').val(lat);
