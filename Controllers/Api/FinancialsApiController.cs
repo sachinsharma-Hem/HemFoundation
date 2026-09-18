@@ -124,7 +124,7 @@ namespace HemFoundation.Controllers.Api
             if (affiliateId.HasValue && affiliateId > 0) query = query.Where(b => b.AffiliateId == affiliateId);
 
             var list = await (from b in query
-                              join a in _context.Affiliates on b.AffiliateId equals a.UserID
+                              join a in _context.Users on b.AffiliateId equals a.UserID
                               join o in _context.OrganizationMasters on b.OrganizationId equals o.Id
                               join p in _context.BillPaymentDetails on b.Id equals p.MonthlyBillId into payGroup
                               from pay in payGroup.DefaultIfEmpty()
@@ -152,7 +152,7 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("admin/affiliates-list")]
         public async Task<IActionResult> GetAffiliatesList()
         {
-            var affiliates = await _context.Affiliates.Select(a => new { a.UserID, Name = a.FirstName + " " + a.LastName }).ToListAsync();
+            var affiliates = await _context.Users.Select(a => new { a.UserID, Name = a.FirstName + " " + a.LastName }).ToListAsync();
             return Ok(new { success = true, data = affiliates });
         }
 

@@ -123,7 +123,7 @@
                             <input type="text" id="activityName" class="form-control rounded-3" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold small">School Name <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold small">Place <span class="text-danger">*</span></label>
                             <input type="text" id="schoolName" class="form-control rounded-3" required>
                         </div>
                         <div class="col-md-12">
@@ -174,6 +174,10 @@
             <form id="updateActivityForm">
                 <div class="modal-body">
                     <input type="hidden" id="updateActivityId">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Visit Date <span class="text-danger">*</span></label>
+                        <input type="date" id="expenseDate" class="form-control rounded-3" required>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Status <span class="text-danger">*</span></label>
                         <select id="updateStatus" class="form-select rounded-3" required>
