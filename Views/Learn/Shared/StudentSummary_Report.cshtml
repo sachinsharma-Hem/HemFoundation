@@ -18,7 +18,8 @@
         </div>
         <div class="row mb-4">
             <div class="col-md-6">
-                @Html.DropDownList("ddl_reportId", new SelectList(ViewBag.listCourse, "Value", "Text"), "-- Please Select Course --", new { @class = "form-control select2bs4", @onchange = "getVal()" })
+                @Html.DropDownList("ddl_reportId", (SelectList)ViewBag.listCourse, "-- Please Select Course --", new { @class = "form-control select2bs4", @onchange = "getVal()" })
+               @*  @Html.DropDownList("ddl_reportId", new SelectList(ViewBag.listCourse, "Value", "Text"), "-- Please Select Course --", new { @class = "form-control select2bs4", @onchange = "getVal()" }) *@
             </div>
             <div class="col-md-6">
                 <button type="button" class="btn btn-primary" id="btn_DetailedReport">
@@ -87,7 +88,7 @@
         var instId = $('#hddInstituteID').val();
 
         if (!selectedVal || selectedVal === "0") return;
-        $.getJSON("/Student/GetCoursesList", {
+        $.getJSON("/Learn/GetCoursesList", {
             CourseID: selectedVal,
             StudentID: studentId,
             InstituteID: instId
