@@ -205,19 +205,21 @@ namespace HemFoundation.Controllers
                                              .Where(x => x.ExaminationID == model.ExamID && x.QuestionID == model.questionID)
                                              .FirstOrDefault();
 
-                    if (examRecord != null)
+
+
+                    // Direct database update bypassing EF Core change tracker and concurrency checks
+                    int rowsAffected = _context.ExaminationRecords
+                        .Where(x => x.ExaminationID == model.ExamID && x.QuestionID == model.questionID)
+                        .ExecuteUpdate(s => s
+                            .SetProperty(b => b.Answer, model.selectedOption)
+                            .SetProperty(b => b.isCorrect, rightAnswer == true)
+                            .SetProperty(b => b.SubmitTiming, DateTime.Now)
+                            .SetProperty(b => b.ModifiedBy, userID)
+                            .SetProperty(b => b.ModifiedDate, DateTime.Now)
+                        );
+
+                    if (rowsAffected > 0)
                     {
-                        examRecord.Answer = model.selectedOption;
-                        // Safely assign boolean status
-                        examRecord.isCorrect = (rightAnswer == true);
-                        examRecord.SubmitTiming = DateTime.Now;
-                        examRecord.ModifiedBy = userID;
-                        examRecord.ModifiedDate = DateTime.Now;
-
-                        // EF Core state tracking update
-                        _context.Entry(examRecord).State = EntityState.Modified;
-                        _context.SaveChanges();
-
                         result.Success = true;
                         result.Message = "Answer submitted successfully.";
                     }
@@ -226,6 +228,27 @@ namespace HemFoundation.Controllers
                         result.Success = false;
                         result.Message = "Examination record not found for this question.";
                     }
+                    //if (examRecord != null)
+                    //{
+                    //    examRecord.Answer = model.selectedOption;
+                    //    // Safely assign boolean status
+                    //    examRecord.isCorrect = (rightAnswer == true);
+                    //    examRecord.SubmitTiming = DateTime.Now;
+                    //    examRecord.ModifiedBy = userID;
+                    //    examRecord.ModifiedDate = DateTime.Now;
+
+                    //    // EF Core state tracking update
+                    //    ///_context.Entry(examRecord).State = EntityState.Modified;
+                    //    _context.SaveChanges();
+
+                    //    result.Success = true;
+                    //    result.Message = "Answer submitted successfully.";
+                    //}
+                    //else
+                    //{
+                    //    result.Success = false;
+                    //    result.Message = "Examination record not found for this question.";
+                    //}
                 }
                 else
                 {

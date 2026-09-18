@@ -1,14 +1,19 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Dapper;
+using DocumentFormat.OpenXml.ExtendedProperties;
+using DocumentFormat.OpenXml.InkML;
+using HemFoundation.Data;
+using HemFoundation.DTOs;
+using HemFoundation.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Framework;
+using Microsoft.EntityFrameworkCore;
 using Npgsql; // Changed from Microsoft.Data.SqlClient to Npgsql for PostgreSQL
 using System.Collections.Generic;
 using System.Data;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using HemFoundation.Models;
-using Dapper;
-
 namespace HemFoundation.Controllers
 {
     public class LearnController : Controller
@@ -16,8 +21,10 @@ namespace HemFoundation.Controllers
         private readonly IConfiguration _configuration;
         private readonly string _connectionString;
 
-        public LearnController(IConfiguration configuration)
+        private readonly ApplicationDbContext _context;
+        public LearnController(IConfiguration configuration, ApplicationDbContext context)
         {
+            _context = context;
             _configuration = configuration;
             _connectionString = _configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
         }
@@ -526,6 +533,242 @@ namespace HemFoundation.Controllers
                 return false;
             }
         }
+        [HttpGet]
+        public IActionResult DisplayScoreCard(int? id)
+        {
+            StudentProfileModel obj = new StudentProfileModel();
+            try
+            {
+                // Retrieve UserID from session (ASP.NET Core Session syntax)
+                int userID = HttpContext.Session.GetInt32("UserID") ?? 0;
 
+                // Fallback or handle session structure based on your architecture
+                int studentID = userID;
+
+               
+
+               // int coinCount = mng.GetStudentCoinCount(studentID);
+                ViewBag.CoinCount = 0;
+                obj.StudentID = 0;
+
+                if (id.HasValue && id.Value >= 1)
+                {
+                    studentID = id.Value;
+                }
+
+                if (userID == 0)
+                {
+                    return RedirectToAction("Index", "Learn", new { ID = id });
+                }
+
+                if (studentID >= 1)
+                {
+                    obj = GetStudentDetailsByID(studentID);
+
+                    if (obj != null)
+                    {
+                        if (obj.StudentID >= 1)
+                        {
+                            obj.StudentID = obj.StudentID;
+                        }
+                        else
+                        {
+                            return RedirectToAction("Index", "Home");
+                        }
+                    }
+                    else
+                    {
+                        return RedirectToAction("Index", "Home");
+                    }
+                }
+                else
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+
+                
+            }
+            catch (Exception ex)
+            {
+                // ASP.NET Core Exception Logging equivalent
+               // _logger.LogError(ex, "Error occurred in DisplayScoreCard for ID: {Id}", id);
+                TempData["ErrorMessage"] = "Error 404. Page Not Found.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View(obj);
+        }
+        public StudentProfileModel GetStudentDetailsByID(int studentID)
+        {
+            StudentProfileModel obj = new StudentProfileModel();
+            int userID = HttpContext.Session.GetInt32("UserID") ?? 0;
+
+            try
+            {
+                obj.IsMobileVerified = false;
+                obj.IsEmailVerified = false;
+                obj.IsProfileUpdated = false;
+                int profileupdatecount = 0;
+
+                // 1. Fetch student base details directly from your Users/Students table using EF Core
+                var student = _context.ViewWjStudentsDetailsInfo.Where(u => u.StudentId == studentID).FirstOrDefault();
+                // Note: Change `_context.Users` to whatever your actual table/DbSet is named (e.g., _context.Students)
+
+                if (student != null)
+                {
+                    obj.StudentID = student.StudentId;
+                    obj.FirstName = student.FirstName;
+                    obj.LastName = student.LastName;
+                    obj.EmailID = student.EmailId;
+                    obj.MobileNo = student.MobileNo;
+                    //obj.DOB = student.DOB;
+                    obj.AddressLine1 = student.AddressLine1;
+                    obj.CityName = student.CityName;
+                    obj.Gender = student.Gender;
+                    obj.Pincode = student.Pincode;
+                    //obj.GardianName = student.GuardianName; // Check property spelling (Gardian vs Guardian)
+                    obj.InstituteID = student.InstituteID ?? 0;
+                    obj.InstituteName = student.InstituteName;
+                    obj.IsMobileVerified = student.IsMobileVerified;
+                    obj.IsEmailVerified = student.IsEmailVerified;
+                }
+
+                // 2. Calculate coins safely
+                int coins = _context.WJ_Coins
+                                    .Where(s => s.StudentID == studentID)
+                                    .Sum(p => (int?)p.Coins) ?? 0;
+                obj.Coins = coins;
+
+                if (obj.InstituteID != null && obj.InstituteID > 0)
+                {
+                    // Already set above from student entity
+                }
+                else
+                {
+                    profileupdatecount++;
+                    obj.IsProfileUpdated = true;
+                }
+
+                if (string.IsNullOrEmpty(obj.GardianName))
+                {
+                    obj.IsProfileUpdated = true;
+                    profileupdatecount++;
+                }
+
+                if (string.IsNullOrEmpty(obj.FirstName) || string.IsNullOrEmpty(obj.LastName) ||
+                    string.IsNullOrEmpty(obj.EmailID) || string.IsNullOrEmpty(obj.MobileNo) ||
+                    !obj.DOB.HasValue || string.IsNullOrEmpty(obj.AddressLine1) ||
+                    string.IsNullOrEmpty(obj.CityName) || string.IsNullOrEmpty(obj.Gender) ||
+                    string.IsNullOrEmpty(obj.Pincode))
+                {
+                    obj.IsProfileUpdated = true;
+                }
+
+                if (!obj.IsMobileVerified.GetValueOrDefault(false))
+                {
+                    profileupdatecount++;
+                }
+                else if (!obj.IsEmailVerified.GetValueOrDefault(false))
+                {
+                    profileupdatecount++;
+                }
+
+                // 3. Get Referral Code
+                var referralcode = _context.WJ_ReferralCodes
+                                           .Where(x => x.UserID == studentID)
+                                           .Select(x => x.ReferralCode)
+                                           .FirstOrDefault();
+                obj.ReferralCode = referralcode;
+                obj.IsPaid = true;
+
+                if (userID == studentID)
+                {
+                    obj.IsMyPage = true;
+                }
+
+                obj.IsDailySpin = false;
+            }
+            catch (Exception ex)
+            {
+                string msg = "Error 404. Page not Found.";
+                throw new Exception(msg, ex);
+            }
+            return obj;
+        }
+        [HttpGet]        
+        public IActionResult GetStudent_SummaryReportPartial(int studentID, int instituteID)
+        {
+            TempData["ID"] = studentID;
+            TempData["StudentID"] = studentID;
+            ViewBag.StudentID = studentID;
+            TempData["InsID"] = instituteID.ToString();
+            ViewBag.InstituteID = instituteID;
+
+            StundetSummaryReportModel stundetSummaryReportModel = new StundetSummaryReportModel
+            {
+                StudentID = studentID,
+                InstituteID = instituteID,
+                StudentDetailList = new List<StudentDetailSummary>()
+            };
+
+            try
+            {
+                string connectionString = _connectionString;
+                using (var connection = new Npgsql.NpgsqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    // Transactions are mandatory when fetching refcursors in PostgreSQL
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        using (var command = new Npgsql.NpgsqlCommand("SELECT * FROM \"Sp_Studnet_ReportSummary\"(@p1, @p2, @p3, @p4, @p5)", connection))
+                        {
+                            command.Parameters.AddWithValue("p1", studentID);
+                            command.Parameters.AddWithValue("p2", instituteID);
+                            command.Parameters.AddWithValue("p3", DBNull.Value); // MainCourseID
+                            command.Parameters.AddWithValue("p4", "Display");     // Action
+                            command.Parameters.AddWithValue("p5", DBNull.Value); // CourseID
+
+                            // Declare output refcursors for PostgreSQL function
+                            command.Parameters.Add(new Npgsql.NpgsqlParameter("ref1", NpgsqlTypes.NpgsqlDbType.Refcursor) { Direction = ParameterDirection.Output });
+                            command.Parameters.Add(new Npgsql.NpgsqlParameter("ref2", NpgsqlTypes.NpgsqlDbType.Refcursor) { Direction = ParameterDirection.Output });
+                            command.Parameters.Add(new Npgsql.NpgsqlParameter("ref3", NpgsqlTypes.NpgsqlDbType.Refcursor) { Direction = ParameterDirection.Output });
+
+                            using (var reader = command.ExecuteReader())
+                            {
+                                // Because refcursors return cursor names as strings first, we fetch from those cursors 
+                                // Or if mapped cleanly via Dapper, you can fetch multi-query datasets easily.
+                            }
+                        }
+                        transaction.Commit();
+                    }
+                }
+
+                HttpContext.Session.SetInt32("StudentID", studentID);
+                HttpContext.Session.SetInt32("InstituteID", instituteID);
+
+                if (User.IsInRole("WJ_Students"))
+                {
+                    return PartialView("~/Views/Learn/Shared/StudentSummary_Report.cshtml", stundetSummaryReportModel);
+                }
+                else
+                {
+                    return PartialView("~/Views/Learn/Shared/Teacher_Student_Summary_Report.cshtml", stundetSummaryReportModel);
+                }
+            }
+            catch (Exception ex)
+            {
+               // _logger.LogError(ex, "Error in GetStudent_SummaryReportPartial for StudentID: {StudentId}", studentID);
+
+                if (User.IsInRole("WJ_Students"))
+                {
+                    return PartialView("~/Views/Student/Shared/StudentSummary_Report.cshtml", null);
+                }
+                else
+                {
+                    return PartialView("~/Views/Student/Shared/Teacher_Student_Summary_Report.cshtml", null);
+                }
+            }
+        }
     }
 }
