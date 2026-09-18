@@ -1,0 +1,313 @@
+﻿@{
+    ViewData["Title"] = "Coordinator Incentive Dashboard";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<!-- Chart.js & Styles -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="~/css/insentive.css" rel="stylesheet" />
+
+<div class="coordinator-dashboard">
+
+    <!-- HEADER -->
+    <div class="dashboard-header">
+        <div class="header-left">
+            <div class="dashboard-eyebrow"><span class="live-dot"></span> COORDINATOR PERFORMANCE</div>
+            <h1>Incentive Dashboard</h1>
+            <p>Track your students, schools, projects and monthly incentive performance.</p>
+        </div>
+        <div class="header-right">
+            <button type="button" class="period-btn">
+                <i class="bi bi-calendar3"></i> September 2026
+            </button>
+            <div class="total-incentive-box">
+                <div class="total-icon"><i class="bi bi-wallet2"></i></div>
+                <div class="total-info">
+                    <span>Total Incentive</span>
+                    <strong>₹10,960</strong>
+                </div>
+                <div class="growth-badge"><i class="bi bi-arrow-up"></i> 11.27%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+        <!-- Students -->
+        <div class="kpi-card kpi-blue">
+            <div class="kpi-card-top">
+                <div class="kpi-icon"><i class="bi bi-people-fill"></i></div>
+                <span class="kpi-change"><i class="bi bi-arrow-up"></i> 12.9%</span>
+            </div>
+            <div class="kpi-title">Eligible Active Students</div>
+            <div class="kpi-number"><span class="counter" data-target="700">0</span></div>
+            <div class="kpi-bottom"><span>Previous: 620</span><strong>₹7,000</strong></div>
+            <div class="kpi-progress"><span style="width:72%;"></span></div>
+        </div>
+
+        <!-- Schools -->
+        <div class="kpi-card kpi-green">
+            <div class="kpi-card-top">
+                <div class="kpi-icon"><i class="bi bi-building"></i></div>
+                <span class="kpi-change"><i class="bi bi-arrow-up"></i> 50%</span>
+            </div>
+            <div class="kpi-title">Fully Active Schools</div>
+            <div class="kpi-number"><span class="counter" data-target="3">0</span><small>/ 60</small></div>
+            <div class="kpi-bottom"><span>Previous: 2</span><strong>5% Active</strong></div>
+            <div class="kpi-progress"><span style="width:5%;"></span></div>
+        </div>
+
+        <!-- Green Projects -->
+        <div class="kpi-card kpi-emerald">
+            <div class="kpi-card-top">
+                <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <span class="kpi-change"><i class="bi bi-arrow-up"></i> 14.3%</span>
+            </div>
+            <div class="kpi-title">Green Projects</div>
+            <div class="kpi-number"><span class="counter" data-target="200">0</span></div>
+            <div class="kpi-bottom"><span>Previous: 175</span><strong>₹2,400</strong></div>
+            <div class="kpi-progress"><span style="width:66%;"></span></div>
+        </div>
+
+        <!-- Orange Projects -->
+        <div class="kpi-card kpi-orange">
+            <div class="kpi-card-top">
+                <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
+                <span class="kpi-change neutral"><i class="bi bi-dash"></i> Stable</span>
+            </div>
+            <div class="kpi-title">Orange Projects</div>
+            <div class="kpi-number"><span class="counter" data-target="300">0</span></div>
+            <div class="kpi-bottom"><span>Previous: 280</span><strong>₹1,500</strong></div>
+            <div class="kpi-progress"><span style="width:82%;"></span></div>
+        </div>
+    </div>
+
+    <!-- MAIN CHARTS -->
+    <div class="main-chart-grid">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-label">TEACHER PERFORMANCE</div>
+                    <h3>Values Completed</h3>
+                    <p>Teacher-wise value completion</p>
+                </div>
+                <div class="header-stat"><strong>900</strong><span>Total Values</span></div>
+            </div>
+            <div class="chart-area"><canvas id="teacherChart"></canvas></div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-label">PROJECT OVERVIEW</div>
+                    <h3>Project Completion</h3>
+                    <p>Green vs Orange projects</p>
+                </div>
+              
+            </div>
+            <div class="project-chart-container">
+                <div class="project-donut">
+                    <canvas id="projectChart"></canvas>
+                    <div class="donut-center"><strong>500</strong><span>Total Projects</span></div>
+                </div>
+                <div class="project-legend">
+                    <div class="project-legend-item">
+                        <span class="legend-dot green"></span>
+                        <div><strong>200</strong><span>Green Projects</span></div>
+                        <b>40%</b>
+                    </div>
+                    <div class="project-legend-item">
+                        <span class="legend-dot orange"></span>
+                        <div><strong>300</strong><span>Orange Projects</span></div>
+                        <b>60%</b>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MONTHLY REPORT & TABLES -->
+    <div class="dashboard-card monthly-report">
+        <div class="report-header">
+            <div>
+                <div class="report-label"><i class="bi bi-bar-chart-line-fill"></i> PERFORMANCE REPORT</div>
+                <h2>Monthly Incentive Report</h2>
+                <p>Compare current and previous month performance.</p>
+            </div>
+            <div class="month-selector">
+                <label><i class="bi bi-calendar3"></i> Select Month</label>
+                <select id="reportMonth">
+                    <option value="2026-09">September 2026</option>
+                    <option value="2026-08">August 2026</option>
+                    <option value="2026-07">July 2026</option>
+                    <option value="2026-06">June 2026</option>
+                    <option value="2026-05">May 2026</option>
+                    <option value="2026-04">April 2026</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Comparison Summary -->
+        <div class="report-comparison">
+            <div class="comparison-left">
+                <span class="comparison-title">Incentive Earned</span>
+                <div class="comparison-money">
+                    <div class="old-money">
+                        <small>Previous Month</small>
+                        <strong id="previousIncentive">₹9,850</strong>
+                    </div>
+                    <div class="comparison-arrow"><i class="bi bi-arrow-right"></i></div>
+                    <div class="new-money">
+                        <small id="selectedMonthLabel">September 2026</small>
+                        <strong id="currentIncentive">₹10,960</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="comparison-result">
+                <div class="result-icon"><i class="bi bi-arrow-up"></i></div>
+                <div>
+                    <strong id="incentiveDifference">+₹1,110</strong>
+                    <span id="incentivePercentage">11.27% increase</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- History & Calculation Subgrid -->
+        <div class="report-content-grid">
+            <div class="report-panel">
+                <div class="panel-header">
+                    <div>
+                        <strong>Incentive History</strong>
+                        <span>Monthly incentive earned</span>
+                    </div>
+                    <div class="six-month-total">
+                        <span>6 Month Total</span>
+                        <strong>₹52,030</strong>
+                    </div>
+                </div>
+                <div class="history-chart"><canvas id="incentiveHistoryChart"></canvas></div>
+            </div>
+
+            <div class="report-panel">
+                <div class="panel-header">
+                    <div>
+                        <strong>Monthly Calculation</strong>
+                        <span id="calculationMonth">September 2026</span>
+                    </div>
+                    <div class="calculation-header-icon"><i class="bi bi-calculator-fill"></i></div>
+                </div>
+                <div class="calculation-list">
+                    <div class="calculation-item">
+                        <div><strong>Active Students</strong><small>700 × ₹10</small></div>
+                        <b id="calcStudents">₹7,000</b>
+                    </div>
+                    <div class="calculation-item">
+                        <div><strong>Fully Active Schools</strong><small>3 × ₹20</small></div>
+                        <b id="calcSchools">₹60</b>
+                    </div>
+                    <div class="calculation-item">
+                        <div><strong>Green Projects</strong><small>200 × ₹12</small></div>
+                        <b id="calcGreen">₹2,400</b>
+                    </div>
+                    <div class="calculation-item">
+                        <div><strong>Orange Projects</strong><small>300 × ₹5</small></div>
+                        <b id="calcOrange">₹1,500</b>
+                    </div>
+                </div>
+                <div class="calculation-total">
+                    <span>Total Incentive</span>
+                    <strong id="calculationTotal">₹10,960</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- JAVASCRIPT LOGIC -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Counter Animation
+        document.querySelectorAll(".counter").forEach(counter => {
+            const target = Number(counter.dataset.target);
+            let current = 0;
+            const increment = Math.max(1, Math.ceil(target / 45));
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) { current = target; clearInterval(timer); }
+                counter.textContent = current.toLocaleString("en-IN");
+            }, 25);
+        });
+
+        // Teacher Bar Chart
+        const teacherCanvas = document.getElementById("teacherChart");
+        if (teacherCanvas) {
+            new Chart(teacherCanvas, {
+                type: "bar",
+                data: {
+                    labels: ["Anita", "Rahul", "Priya", "Vikas"],
+                    datasets: [{
+                        data: [300, 250, 200, 150],
+                        backgroundColor: ["#2563eb", "#10b981", "#7c3aed", "#f59e0b"],
+                        borderRadius: 8,
+                        barThickness: 35
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        // Project Donut Chart
+        const projectCanvas = document.getElementById("projectChart");
+        if (projectCanvas) {
+            new Chart(projectCanvas, {
+                type: "doughnut",
+                data: {
+                    labels: ["Green Projects", "Orange Projects"],
+                    datasets: [{ data: [200, 300], backgroundColor: ["#10b981", "#f59e0b"], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: "75%", plugins: { legend: { display: false } } }
+            });
+        }
+
+        // Incentive History Line Chart
+        const historyCanvas = document.getElementById("incentiveHistoryChart");
+        if (historyCanvas) {
+            new Chart(historyCanvas, {
+                type: "line",
+                data: {
+                    labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep"],
+                    datasets: [{
+                        data: [6900, 7450, 8120, 8750, 9850, 10960],
+                        borderColor: "#7c3aed",
+                        backgroundColor: "rgba(124,58,237,.08)",
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        // Monthly Report Data Map
+        const monthlyReportData = {
+            "2026-09": { month: "September 2026", previousIncentive: 9850, currentIncentive: 10960, calculation: { students: 7000, schools: 60, green: 2400, orange: 1500 } },
+            "2026-08": { month: "August 2026", previousIncentive: 8750, currentIncentive: 9850, calculation: { students: 6200, schools: 40, green: 2100, orange: 1510 } },
+            "2026-07": { month: "July 2026", previousIncentive: 8120, currentIncentive: 8750, calculation: { students: 5700, schools: 40, green: 1800, orange: 1210 } }
+        };
+
+        const monthSelect = document.getElementById("reportMonth");
+        if (monthSelect) {
+            monthSelect.addEventListener("change", function() {
+                const data = monthlyReportData[this.value];
+                if (!data) return;
+                document.getElementById("selectedMonthLabel").textContent = data.month;
+                document.getElementById("previousIncentive").textContent = "₹" + data.previousIncentive.toLocaleString("en-IN");
+                document.getElementById("currentIncentive").textContent = "₹" + data.currentIncentive.toLocaleString("en-IN");
+                document.getElementById("calculationTotal").textContent = "₹" + data.currentIncentive.toLocaleString("en-IN");
+                document.getElementById("calculationMonth").textContent = data.month;
+            });
+        }
+    });
+</script>

@@ -6,22 +6,22 @@
 <partial name="Partials/_AssignSchoolModal" />
 <div class="container-fluid py-4">
     <div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <h3 class="fw-bold text-dark m-0"><i class="bi bi-people-fill text-primary me-2"></i> Volunteers</h3>
-        <p class="text-muted small m-0">Register single volunteers or bulk upload via Excel to assign them to your schools.</p>
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="bi bi-people-fill text-primary me-2"></i> Volunteers</h3>
+            <p class="text-muted small m-0">Register single volunteers or bulk upload via Excel to assign them to your schools.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openAssignSchoolModal()">
+                <i class="bi bi-building-add me-1"></i> Volunteer School Assign
+            </button>
+            <button class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="$('#bulkModal').modal('show')">
+                <i class="bi bi-file-earmark-excel me-1"></i> Bulk Upload
+            </button>
+            <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openVolModal()">
+                <i class="bi bi-plus-lg me-1"></i> Add Volunteer
+            </button>
+        </div>
     </div>
-    <div class="d-flex gap-2">
-        <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openAssignSchoolModal()">
-    <i class="bi bi-building-add me-1"></i> Volunteer School Assign
-</button>
-        <button class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="$('#bulkModal').modal('show')">
-            <i class="bi bi-file-earmark-excel me-1"></i> Bulk Upload
-        </button>
-        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openVolModal()">
-            <i class="bi bi-plus-lg me-1"></i> Add Volunteer
-        </button>
-    </div>
-</div>
 
     <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
         <div class="table-responsive">
@@ -73,11 +73,11 @@
                             <input type="text" id="txtMobile" class="form-control rounded-3 shadow-none" required minlength="10" maxlength="10" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                         </div>
                         <div class="col-md-6">
-    <label class="form-label small fw-bold">Email</label>
-    <input type="email" id="txtEmail" class="form-control rounded-3 shadow-none" 
-           placeholder="user@example.com"
-           title="Please enter a valid email address">
-</div>
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" id="txtEmail" class="form-control rounded-3 shadow-none"
+                                   placeholder="user@example.com"
+                                   title="Please enter a valid email address">
+                        </div>
                     </div>
                     <button type="submit" id="btnSaveVol" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm mt-4">Save Volunteer</button>
                 </form>
@@ -94,7 +94,7 @@
                 <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" id="btnModalClose"></button>
             </div>
             <div class="modal-body py-3">
-                
+
                 <div id="stepUpload">
                     <div class="d-flex justify-content-between align-items-center mb-3 alert alert-light border">
                         <span class="small text-muted">Use strictly our standard Excel format to avoid errors.</span>
@@ -140,7 +140,7 @@
                     <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
                     <h4 class="fw-bold text-success mt-3">100% Data Validated Successfully!</h4>
                     <p class="text-muted mb-4">No errors found. System is ready to save <b id="validCount">0</b> volunteers.</p>
-                    
+
                     <div class="p-3 bg-light rounded-4 d-inline-block px-5 border mb-3">
                         <h5 class="m-0 fw-bold">Auto Saving in <span id="countdownTimer" class="text-primary fs-3">20</span> seconds...</h5>
                     </div>
@@ -171,14 +171,17 @@
             padding: 4px 8px;
             box-shadow: none;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 36px;
             right: 8px;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             line-height: 28px;
             color: #212529;
         }
+
         .select2-search__field {
             outline: none !important;
             border-radius: 4px !important;
@@ -187,13 +190,13 @@
 
     <script>
         let validPayload = [];
-        let countdownInterval;
+        let volCountdownInterval; // Renamed to avoid global collision
 
-        $(function () {
+        $(function() {
             loadSchools();
             loadVolunteers();
 
-            $('#bulkModal').on('hidden.bs.modal', function () {
+            $('#bulkModal').on('hidden.bs.modal', function() {
                 resetBulkModal();
             });
         });
@@ -206,23 +209,20 @@
                 type: 'GET',
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
                 success: function(res) {
-                    if(res.success) {
+                    if (res.success) {
                         let html = '<option value="">-- Choose School --</option>';
                         res.data.forEach(s => html += `<option value="${s.instituteID || s.id}">${s.name}</option>`);
                         $('.ddl-schools').html(html);
 
-                        // ==========================================
-                        // Initialize Select2 after data is loaded
-                        // ==========================================
                         $('#ddlSchool').select2({
-                            dropdownParent: $('#volModal'), // Important for modals
+                            dropdownParent: $('#volModal'),
                             width: '100%',
                             placeholder: "-- Choose School --",
                             allowClear: true
                         });
 
                         $('#ddlBulkSchool').select2({
-                            dropdownParent: $('#bulkModal'), // Important for modals
+                            dropdownParent: $('#bulkModal'),
                             width: '100%',
                             placeholder: "-- Choose School --",
                             allowClear: true
@@ -239,21 +239,21 @@
                 type: 'GET',
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
                 success: function(res) {
-                    if(res.success && res.data.length > 0) {
+                    if (res.success && res.data.length > 0) {
                         let html = '';
                         res.data.forEach(v => {
                             let badge = v.isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
-                            
+
                             html += `<tr>
-                                <td><b class="text-dark">${v.name}</b><br><small class="text-muted">Joined: ${new Date(v.createdDate).toLocaleDateString('en-GB')}</small></td>
-                                <td><i class="bi bi-telephone text-muted"></i> ${v.mobileNo}<br><i class="bi bi-envelope text-muted"></i> <small>${v.email || 'N/A'}</small></td>
-                                <td><b>${v.schoolName}</b></td>
-                                <td>${badge}</td>
-                                <td class="text-center">
-                                    <button class="btn btn-sm btn-light border text-primary shadow-none me-1" onclick="editVol(${v.id}, '${v.name.split(' ')[0]}', '${v.name.split(' ').slice(1).join(' ')}', '${v.mobileNo}', '${v.email || ''}', ${v.instituteId})"><i class="bi bi-pencil-square"></i></button>
-                                    <button class="btn btn-sm btn-light border text-danger shadow-none" onclick="deleteVol(${v.id})"><i class="bi bi-trash"></i></button>
-                                </td>
-                            </tr>`;
+                                        <td><b class="text-dark">${v.name}</b><br><small class="text-muted">Joined: ${new Date(v.createdDate).toLocaleDateString('en-GB')}</small></td>
+                                        <td><i class="bi bi-telephone text-muted"></i> ${v.mobileNo}<br><i class="bi bi-envelope text-muted"></i> <small>${v.email || 'N/A'}</small></td>
+                                        <td><b>${v.schoolName}</b></td>
+                                        <td>${badge}</td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-light border text-primary shadow-none me-1" onclick="editVol(${v.id}, '${v.name.split(' ')[0]}', '${v.name.split(' ').slice(1).join(' ')}', '${v.mobileNo}', '${v.email || ''}', ${v.instituteId})"><i class="bi bi-pencil-square"></i></button>
+                                            <button class="btn btn-sm btn-light border text-danger shadow-none" onclick="deleteVol(${v.id})"><i class="bi bi-trash"></i></button>
+                                        </td>
+                                    </tr>`;
                         });
                         $('#volTableBody').html(html);
                     } else {
@@ -266,10 +266,7 @@
         function openVolModal() {
             $('#hdnVolId').val('0');
             $('#frmVolunteer')[0].reset();
-            
-            // Reset Select2 value visually
-            $('#ddlSchool').val('').trigger('change'); 
-
+            $('#ddlSchool').val('').trigger('change');
             $('#volModalTitle').text('Register Volunteer');
             $('#volModal').modal('show');
         }
@@ -280,23 +277,20 @@
             $('#txtLName').val(lName);
             $('#txtMobile').val(mobile);
             $('#txtEmail').val(email);
-            
-            // Set value and trigger change to update Select2 UI
-            $('#ddlSchool').val(instId).trigger('change'); 
-
+            $('#ddlSchool').val(instId).trigger('change');
             $('#volModalTitle').text('Edit Volunteer');
             $('#volModal').modal('show');
         }
 
-        $('#frmVolunteer').on('submit', function (e) {
+        $('#frmVolunteer').on('submit', function(e) {
             e.preventDefault();
-            
+
             let mobile = $('#txtMobile').val();
             if (mobile.length !== 10) {
                 alert("Mobile number must be exactly 10 digits.");
                 return;
             }
-            
+
             let payload = {
                 Id: parseInt($('#hdnVolId').val()) || 0,
                 FirstName: $('#txtFName').val(),
@@ -315,7 +309,7 @@
                 contentType: 'application/json',
                 data: JSON.stringify(payload),
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                success: function (res) {
+                success: function(res) {
                     if (res.success) {
                         $('#volModal').modal('hide');
                         loadVolunteers();
@@ -323,7 +317,7 @@
                         alert(res.message);
                     }
                 },
-                error: function (xhr) {
+                error: function(xhr) {
                     if (xhr.status === 400 && xhr.responseJSON && xhr.responseJSON.errors) {
                         let errs = Object.values(xhr.responseJSON.errors).flat().join('\n');
                         alert("Validation Error:\n" + errs);
@@ -336,7 +330,7 @@
         });
 
         function deleteVol(id) {
-            if(confirm("Are you sure you want to delete this volunteer?")) {
+            if (confirm("Are you sure you want to delete this volunteer?")) {
                 $.ajax({
                     url: '/api/volunteer/' + id,
                     type: 'DELETE',
@@ -346,15 +340,11 @@
             }
         }
 
-        // ================= LIVE VALIDATION & 20 SEC COUNTDOWN =================
         function resetBulkModal() {
-            clearInterval(countdownInterval);
+            clearInterval(volCountdownInterval);
             $('#frmBulkUpload')[0].reset();
             validPayload = [];
-            
-            // Reset Bulk Select2
             $('#ddlBulkSchool').val('').trigger('change');
-
             $('#stepProcessing, #stepErrors, #stepSuccess').addClass('d-none');
             $('#stepUpload').removeClass('d-none');
             $('#btnModalClose').prop('disabled', false);
@@ -362,10 +352,10 @@
 
         $('#frmBulkUpload').on('submit', function(e) {
             e.preventDefault();
-            
+
             $('#stepUpload').addClass('d-none');
             $('#stepProcessing').removeClass('d-none');
-            $('#btnModalClose').prop('disabled', true); 
+            $('#btnModalClose').prop('disabled', true);
 
             $('#statusMessage').text("Reading Excel File...");
             $('#subStatusMessage').text("Parsing rows and headers...");
@@ -390,9 +380,9 @@
                 contentType: false,
                 processData: false,
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                success: function (res) {
+                success: function(res) {
                     $('#stepProcessing').addClass('d-none');
-                    
+
                     if (res.hasErrors) {
                         let errHtml = '';
                         res.errors.forEach(e => errHtml += `<li>${e}</li>`);
@@ -414,35 +404,35 @@
         });
 
         function startCountdown() {
-            let seconds = 20; 
+            let seconds = 20;
             $('#countdownTimer').text(seconds);
-            
-            countdownInterval = setInterval(() => {
+
+            volCountdownInterval = setInterval(() => {
                 seconds--;
                 $('#countdownTimer').text(seconds);
-                
-                if(seconds <= 0) {
-                    clearInterval(countdownInterval);
+
+                if (seconds <= 0) {
+                    clearInterval(volCountdownInterval);
                     forceFinalUpload();
                 }
             }, 1000);
         }
 
         function cancelUpload() {
-            clearInterval(countdownInterval);
+            clearInterval(volCountdownInterval);
             resetBulkModal();
         }
 
         function forceFinalUpload() {
-            clearInterval(countdownInterval);
-            
+            clearInterval(volCountdownInterval);
+
             $('#stepSuccess').html(`
-                <div class="py-5 text-center">
-                    <div class="spinner-grow text-success" style="width: 3rem; height: 3rem;"></div>
-                    <h5 class="fw-bold mt-3 text-dark">Saving to Database...</h5>
-                    <p class="text-muted">Please do not close this window.</p>
-                </div>
-            `);
+                        <div class="py-5 text-center">
+                            <div class="spinner-grow text-success" style="width: 3rem; height: 3rem;"></div>
+                            <h5 class="fw-bold mt-3 text-dark">Saving to Database...</h5>
+                            <p class="text-muted">Please do not close this window.</p>
+                        </div>
+                    `);
 
             let saveRequest = {
                 InstituteId: parseInt($('#ddlBulkSchool').val()) || 0,
@@ -455,8 +445,8 @@
                 contentType: 'application/json',
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
                 data: JSON.stringify(saveRequest),
-                success: function (res) {
-                    if(res.success) {
+                success: function(res) {
+                    if (res.success) {
                         alert(res.message);
                         $('#bulkModal').modal('hide');
                         loadVolunteers();
