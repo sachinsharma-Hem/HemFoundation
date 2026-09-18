@@ -4,6 +4,7 @@ using DocumentFormat.OpenXml.InkML;
 using HemFoundation.Data;
 using HemFoundation.DTOs;
 using HemFoundation.Models;
+using HemFoundation.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +14,7 @@ using Npgsql; // Changed from Microsoft.Data.SqlClient to Npgsql for PostgreSQL
 using System.Collections.Generic;
 using System.Data;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 namespace HemFoundation.Controllers
 {
@@ -547,9 +549,9 @@ namespace HemFoundation.Controllers
 
                
 
-               // int coinCount = mng.GetStudentCoinCount(studentID);
+               // int coinCount = mng.GetStudentCoinCount(studentUSID);
                 ViewBag.CoinCount = 0;
-                obj.StudentID = 0;
+                
 
                 if (id.HasValue && id.Value >= 1)
                 {
@@ -560,7 +562,7 @@ namespace HemFoundation.Controllers
                 {
                     return RedirectToAction("Index", "Learn", new { ID = id });
                 }
-
+                obj.StudentID = studentID;
                 if (studentID >= 1)
                 {
                     obj = GetStudentDetailsByID(studentID);
@@ -633,11 +635,8 @@ namespace HemFoundation.Controllers
                     obj.IsEmailVerified = student.IsEmailVerified;
                 }
 
-                // 2. Calculate coins safely
-                int coins = _context.WJ_Coins
-                                    .Where(s => s.StudentID == studentID)
-                                    .Sum(p => (int?)p.Coins) ?? 0;
-                obj.Coins = coins;
+               
+                obj.Coins = 0;
 
                 if (obj.InstituteID != null && obj.InstituteID > 0)
                 {
@@ -696,7 +695,7 @@ namespace HemFoundation.Controllers
             return obj;
         }
         [HttpGet]        
-        public IActionResult GetStudent_SummaryReportPartial(int studentID, int instituteID)
+        public IActionResult GetStudent_SummaryReportPartial1(int studentID, int instituteID)
         {
             TempData["ID"] = studentID;
             TempData["StudentID"] = studentID;
@@ -762,13 +761,274 @@ namespace HemFoundation.Controllers
 
                 if (User.IsInRole("WJ_Students"))
                 {
-                    return PartialView("~/Views/Student/Shared/StudentSummary_Report.cshtml", null);
+                    return PartialView("~/Views/Learn/Shared/StudentSummary_Report.cshtml", null);
                 }
                 else
                 {
-                    return PartialView("~/Views/Student/Shared/Teacher_Student_Summary_Report.cshtml", null);
+                    return PartialView("~/Views/Learn/Shared/Teacher_Student_Summary_Report.cshtml", null);
                 }
             }
+        }
+        public IActionResult GetStudent_SummaryReportPartial(int studentID, int instituteID)
+        {
+            TempData["ID"] = studentID;
+            TempData["StudentID"] = studentID;
+            ViewBag.StudentID = studentID;
+            TempData["InsID"] = instituteID.ToString();
+            ViewBag.InstituteID = instituteID;
+            String roleNAME = HttpContext.Session.GetString("UserRole") ?? "NA";
+            StundetSummaryReportModel stundetSummaryReportModel = new StundetSummaryReportModel
+            {
+                StudentID = studentID,
+                InstituteID = instituteID,
+                StudentDetailList = new List<StudentDetailSummary>()
+            };
+
+            try
+            {
+                string connectionString = _connectionString;
+                using (var connection = new Npgsql.NpgsqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    // Transactions are mandatory when fetching refcursors in PostgreSQL
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        // 1. First, call the function which returns the cursor names
+                        string ref1Name = string.Empty;
+                        string ref2Name = string.Empty;
+                        string ref3Name = string.Empty;
+
+                        using (var command = new Npgsql.NpgsqlCommand("SELECT * FROM \"Sp_Studnet_ReportSummary\"(@p1, @p2, @p3, @p4, @p5)", connection))
+                        {
+                            command.Transaction = transaction;
+                            command.Parameters.AddWithValue("p1", studentID);
+                            command.Parameters.AddWithValue("p2", instituteID);
+                            command.Parameters.AddWithValue("p3", DBNull.Value); // MainCourseID
+                            command.Parameters.AddWithValue("p4", "Display");     // Action
+                            command.Parameters.AddWithValue("p5", DBNull.Value); // CourseID
+
+                            // Declare output refcursors for PostgreSQL function
+                            command.Parameters.Add(new Npgsql.NpgsqlParameter("ref1", NpgsqlTypes.NpgsqlDbType.Refcursor) { Direction = ParameterDirection.Output });
+                            command.Parameters.Add(new Npgsql.NpgsqlParameter("ref2", NpgsqlTypes.NpgsqlDbType.Refcursor) { Direction = ParameterDirection.Output });
+                            command.Parameters.Add(new Npgsql.NpgsqlParameter("ref3", NpgsqlTypes.NpgsqlDbType.Refcursor) { Direction = ParameterDirection.Output });
+
+                            using (var reader = command.ExecuteReader())
+                            {
+                                if (reader.Read())
+                                {
+                                    ref1Name = reader.GetString(0);
+                                    ref2Name = reader.GetString(1);
+                                    ref3Name = reader.GetString(2);
+                                }
+                            }
+                        }
+
+                        // Helper local function to fetch data from individual cursors using independent commands within the same transaction
+                        DataTable FetchCursorData(string cursorName)
+                        {
+                            var dt = new DataTable();
+                            using (var fetchCmd = new Npgsql.NpgsqlCommand($"FETCH ALL FROM \"{cursorName}\"", connection))
+                            {
+                                fetchCmd.Transaction = transaction;
+                                using (var fetchReader = fetchCmd.ExecuteReader())
+                                {
+                                    dt.Load(fetchReader);
+                                }
+                            }
+                            return dt;
+                        }
+
+                        // 2. Fetch the 3 corresponding tables matching the legacy DataSets
+                        DataTable dtStudentInfo = FetchCursorData(ref1Name);
+                        DataTable dtMcqPracticalCount = FetchCursorData(ref2Name);
+                        DataTable dtDropdownCourses = FetchCursorData(ref3Name);
+
+                        // Populate Dropdown for Views
+                        var courseList = dtDropdownCourses.AsEnumerable().Select(row => new {
+                            MainCourseID = row["MainCourseID"],
+                            MainCourseName = row["MainCourseName"]
+                        }).ToList();
+
+                        ViewBag.listCourse = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+                            courseList,
+                            "MainCourseID",
+                            "MainCourseName"
+                        );
+                        // 3. Map Student Information (Table 0 / ref1)
+                        if (dtStudentInfo.Rows.Count > 0)
+                        {
+                            DataRow row = dtStudentInfo.Rows[0];
+                            stundetSummaryReportModel.StudentName = Convert.ToString(row["StudentName"]);
+
+                            string div = Convert.ToString(row["Division"]);
+                            stundetSummaryReportModel.Division = string.IsNullOrEmpty(div) ? "--" : div;
+
+                            stundetSummaryReportModel.Stanadard = Convert.ToString(row["Standard"]);
+
+                            string schName = Convert.ToString(row["SchoolName"]);
+                            stundetSummaryReportModel.SchoolName = string.IsNullOrEmpty(schName) ? "--" : schName;
+                        }
+
+                        // 4. Map Counts (Table 1 / ref2) - Optional handling matching legacy structure if needed
+                        if (dtMcqPracticalCount.Rows.Count > 0)
+                        {
+                            // Loop or assign depending on your model properties for MCQ / Practical counts
+                            foreach (DataRow r in dtMcqPracticalCount.Rows)
+                            {
+                                string courseName = Convert.ToString(r["CourseName"]);
+                                int fearlessCount = Convert.ToInt32(r["Fearless"]);
+                                if (courseName == "MCQ")
+                                {
+                                    stundetSummaryReportModel.ToTalMCQ = fearlessCount < 0 ? 0 : fearlessCount;
+                                }
+                                else if (courseName == "Practical")
+                                {
+                                    stundetSummaryReportModel.TotalPractical = fearlessCount < 0 ? 0 : fearlessCount;
+                                }
+                            }
+                            stundetSummaryReportModel.GrandTotalMCQPractical = stundetSummaryReportModel.ToTalMCQ + stundetSummaryReportModel.TotalPractical;
+                        }
+
+                        transaction.Commit();
+                    }
+                }
+
+                HttpContext.Session.SetInt32("StudentID", studentID);
+                HttpContext.Session.SetInt32("InstituteID", instituteID);
+
+                if (roleNAME=="WJ_Students")
+                {
+                    return PartialView("~/Views/Learn/Shared/StudentSummary_Report.cshtml", stundetSummaryReportModel);
+                }
+                else
+                {
+                    return PartialView("~/Views/Learn/Shared/Teacher_Student_Summary_Report.cshtml", stundetSummaryReportModel);
+                }
+            }
+            catch (Exception ex)
+            {
+                // _logger.LogError(ex, "Error in GetStudent_SummaryReportPartial for StudentID: {StudentId}", studentID);
+
+                if (roleNAME == "WJ_Students")
+                {
+                    return PartialView("~/Views/Learn/Shared/StudentSummary_Report.cshtml", null);
+                }
+                else
+                {
+                    return PartialView("~/Views/Learn/Shared/Teacher_Student_Summary_Report.cshtml", null);
+                }
+            }
+        }
+
+        public JsonResult GetCoursesList(string CourseID, string StudentID, int InstituteID)
+        {
+            int studentID = Convert.ToInt32(StudentID);
+            if (TempData != null)
+            {
+                if (TempData["ID"] != null)
+                {
+                    StudentID = TempData["ID"].ToString();
+                    studentID = Convert.ToInt32(StudentID);
+                }
+                if (TempData["InsID"] != null)
+                {
+                    InstituteID = Convert.ToInt32(TempData["InsID"]);
+                }
+            }
+            int courseId = Convert.ToInt32(CourseID);
+
+            DataTable dtDetails = new DataTable();
+            string cursorName = string.Empty;
+
+            try
+            {
+                string connectionString = _connectionString;
+                using (var connection = new Npgsql.NpgsqlConnection(connectionString))
+                {
+                    connection.Open();
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        // 1. Call function and retrieve the returned cursor name using ExecuteScalar
+                        using (var command = new Npgsql.NpgsqlCommand("SELECT \"SP_Studnet_ReportSummarydemo_updated2026\"(@p1, @p2, @p3, @p4, @p5)", connection))
+                        {
+                            command.Transaction = transaction;
+                            command.Parameters.AddWithValue("p1", studentID);
+                            command.Parameters.AddWithValue("p2", InstituteID);
+                            command.Parameters.AddWithValue("p3", courseId);
+                            command.Parameters.AddWithValue("p4", "DisplayDetials");
+                            command.Parameters.AddWithValue("p5", DBNull.Value); // CourseID
+
+                            cursorName = command.ExecuteScalar()?.ToString();
+                        }
+
+                        // 2. Fetch the data out of the returned cursor within the same transaction
+                        if (!string.IsNullOrEmpty(cursorName))
+                        {
+                            using (var fetchCmd = new Npgsql.NpgsqlCommand($"FETCH ALL FROM \"{cursorName}\"", connection))
+                            {
+                                fetchCmd.Transaction = transaction;
+                                using (var fetchReader = fetchCmd.ExecuteReader())
+                                {
+                                    dtDetails.Load(fetchReader);
+                                }
+                            }
+                        }
+
+                        transaction.Commit();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log exception if needed
+            }
+
+            string pblStatusElement = "";
+            if (dtDetails.Rows.Count > 3)
+            {
+                if (dtDetails.Rows[3]["pblStatusElement"] != DBNull.Value)
+                {
+                    pblStatusElement = dtDetails.Rows[3]["pblStatusElement"].ToString();
+                }
+            }
+
+            var listValues = DataTableToJSONWithStringBuilder(dtDetails);
+
+            return Json(new { listValues = listValues, pblStatus = pblStatusElement });
+        }
+        public static string DataTableToJSONWithStringBuilder(DataTable table)
+        {
+            var JSONString = new StringBuilder();
+            if (table.Rows.Count > 0)
+            {
+                JSONString.Append("[");
+                for (int i = 0; i < table.Rows.Count; i++)
+                {
+                    JSONString.Append("{");
+                    for (int j = 0; j < table.Columns.Count; j++)
+                    {
+                        if (j < table.Columns.Count - 1)
+                        {
+                            JSONString.Append("\"" + table.Columns[j].ColumnName.ToString() + "\":" + "\"" + table.Rows[i][j].ToString() + "\",");
+                        }
+                        else if (j == table.Columns.Count - 1)
+                        {
+                            JSONString.Append("\"" + table.Columns[j].ColumnName.ToString() + "\":" + "\"" + table.Rows[i][j].ToString() + "\"");
+                        }
+                    }
+                    if (i == table.Rows.Count - 1)
+                    {
+                        JSONString.Append("}");
+                    }
+                    else
+                    {
+                        JSONString.Append("},");
+                    }
+                }
+                JSONString.Append("]");
+            }
+            return JSONString.ToString();
         }
     }
 }

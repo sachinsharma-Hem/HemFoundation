@@ -9,9 +9,9 @@
         public string StudentName { get; set; }
         public string Division { get; set; }
         public string Stanadard { get; set; }
-        //public int ToTalMCQ { get; set; }
-        //public int TotalPractical { get; set; }
-        //public int GrandTotalMCQPractical { get; set; }
+        public int ToTalMCQ { get; set; }
+        public int TotalPractical { get; set; }
+        public int GrandTotalMCQPractical { get; set; }
         public List<StudentDetailSummary> StudentDetailList { get; set; }
     }
     public class StudentDetailSummary
