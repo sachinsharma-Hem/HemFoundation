@@ -1,0 +1,380 @@
+﻿@{
+    ViewData["Title"] = "Hem Sampark Admin Panel";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-dark fw-bold mb-1"><i class="fas fa-newspaper text-primary me-2"></i> Hem Sampark Admin Control Panel</h2>
+            <p class="text-muted mb-0">Manage Master Settings, Daily PDF Content, Quizzes, and Previews.</p>
+        </div>
+    </div>
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-pills mb-4 shadow-sm p-2 bg-white rounded" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold px-4" id="master-tab" data-bs-toggle="pill" data-bs-target="#master" type="button" role="tab">
+                <i class="fas fa-cogs me-2"></i>Master Settings & Logos
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold px-4" id="daily-tab" data-bs-toggle="pill" data-bs-target="#daily" type="button" role="tab">
+                <i class="fas fa-calendar-day me-2"></i>Daily Entry & Quiz
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold px-4" id="list-tab" data-bs-toggle="pill" data-bs-target="#list" type="button" role="tab">
+                <i class="fas fa-list-alt me-2"></i>Entries List & PDF Preview
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="adminTabsContent">
+
+        <!-- 1. MASTER FORM TAB -->
+        <div class="tab-pane fade show active" id="master" role="tabpanel">
+            <div class="row">
+                <!-- Form Column -->
+                <div class="col-lg-8 mb-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                        <h4 class="text-primary fw-bold mb-3 border-bottom pb-2">Master Configuration (One-Time Setup)</h4>
+                        <form id="masterForm" enctype="multipart/form-data">
+
+                            <h6 class="text-secondary fw-bold mt-3 mb-2">Upload Logos (PNG supported)</h6>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Logo (RR Global)</label>
+                                    <input type="file" class="form-control form-control-sm" id="Logo1File" accept="image/png, image/jpeg">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Logo(Hem Sampark)</label>
+                                    <input type="file" class="form-control form-control-sm" id="Logo2File" accept="image/png, image/jpeg">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Logo (Hema Foundation)</label>
+                                    <input type="file" class="form-control form-control-sm" id="Logo3File" accept="image/png, image/jpeg">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Morning Mantra (English)</label>
+                                    <textarea class="form-control" id="MorningMantraEn" rows="3" required></textarea>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Morning Mantra (Hindi)</label>
+                                    <textarea class="form-control" id="MorningMantraHi" rows="3" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Values in Focus (English)</label>
+                                    <textarea class="form-control" id="ValuesInFocusEn" rows="2" required></textarea>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Values in Focus (Hindi)</label>
+                                    <textarea class="form-control" id="ValuesInFocusHi" rows="2" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Footer Text</label>
+                                    <input type="text" class="form-control" id="FooterText" value="Please participate by visiting the above link" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Footer Link</label>
+                                    <input type="text" class="form-control" id="FooterLink" value="www.hemafoundation.org/hem-sampark" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary px-4 py-2 fw-bold shadow-sm">
+                                <i class="fas fa-save me-2"></i> Save Master Settings
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Live View Master Data Column -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
+                        <h5 class="text-dark fw-bold mb-3"><i class="fas.fa-eye me-2"></i> Current Master Data View</h5>
+                        <div id="masterDataDisplay">
+                            <p class="text-muted small">Loading saved master settings...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. DAILY ENTRY TAB -->
+        <div class="tab-pane fade" id="daily" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h4 class="text-primary fw-bold mb-3 border-bottom pb-2">Date-wise Content & Quiz Entry Form</h4>
+                <form id="dailyForm">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Select Date</label>
+                            <input type="date" class="form-control" id="EntryDate" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Day (Hindi - e.g. शुक्रवार)</label>
+                            <input type="text" class="form-control" id="DayHindi" placeholder="शुक्रवार" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Issue Number</label>
+                            <input type="number" class="form-control" id="IssueNumber" placeholder="2043" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Vikram Samvat / Details</label>
+                            <input type="text" class="form-control" id="VikramSamvat" value="Vikram Samvat 2083" required>
+                        </div>
+                    </div>
+
+                    <h5 class="text-dark fw-bold mt-4 mb-3"><i class="fas fa-star text-warning me-2"></i> Celebrations Today Section</h5>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Heading (English)</label>
+                            <input type="text" class="form-control" id="CelebrationHeadingEn" placeholder="WORLD WATER MONITORING DAY" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Heading (Hindi)</label>
+                            <input type="text" class="form-control" id="CelebrationHeadingHi" placeholder="विश्व जल निगरानी दिवस" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Content (English)</label>
+                            <textarea class="form-control" id="CelebrationContentEn" rows="4" placeholder="Detailed English paragraphs..." required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Content (Hindi)</label>
+                            <textarea class="form-control" id="CelebrationContentHi" rows="4" placeholder="विस्तृत हिंदी अनुच्छेद..." required></textarea>
+                        </div>
+                    </div>
+
+                    <h5 class="text-dark fw-bold mt-4 mb-3"><i class="fas fa-question-circle text-success me-2"></i> Day's Challenge / 4 Questions</h5>
+                    <div id="questionsContainer">
+                        <!-- Dynamic questions injected here -->
+                    </div>
+
+                    <button type="submit" class="btn btn-success px-5 py-2 fw-bold shadow-sm mt-3">
+                        <i class="fas fa-paper-plane me-2"></i> Submit Daily Entry & Questions
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 3. LIST & PREVIEW TAB -->
+        <div class="tab-pane fade" id="list" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h4 class="text-primary fw-bold mb-3 border-bottom pb-2">Submitted Entries History</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" id="entriesTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Day (Hindi)</th>
+                                <th>Issue No.</th>
+                                <th>Heading</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamically loaded -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- PREVIEW MODAL -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-file-pdf me-2"></i> PDF Layout Preview</h5>
+                <div>
+                    <button type="button" class="btn btn-sm btn-light fw-bold me-2" id="regenerateBtn">
+                        <i class="fas fa-sync-alt me-1"></i> Regenerate PDF
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
+            <div class="modal-body bg-light p-2" id="pdfPreviewBody" style="height: 75vh;">
+                <!-- PDF Iframe loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let currentEntryId = 0;
+
+        $(document).ready(function() {
+            loadMasterSettings();
+            loadEntriesList();
+
+            // Generate 4 Question blocks dynamically
+            let qHtml = "";
+            for (let i = 1; i <= 4; i++) {
+                qHtml += `
+                        <div class="card border p-3 mb-3 bg-light rounded-3">
+                            <h6 class="fw-bold text-dark">Question ${i}</h6>
+                            <div class="mb-2">
+                                <input type="text" class="form-control q-text" placeholder="Enter Question ${i} text..." required>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-3"><input type="text" class="form-control form-control-sm q-opt1" placeholder="Option 1" required></div>
+                                <div class="col-md-3"><input type="text" class="form-control form-control-sm q-opt2" placeholder="Option 2" required></div>
+                                <div class="col-md-3"><input type="text" class="form-control form-control-sm q-opt3" placeholder="Option 3" required></div>
+                                <div class="col-md-3"><input type="text" class="form-control form-control-sm q-opt4" placeholder="Option 4" required></div>
+                            </div>
+                            <div>
+                                <label class="form-label small fw-bold text-success">Correct Option:</label>
+                                <select class="form-select form-select-sm q-correct" style="width: 180px;" required>
+                                    <option value="1">Option 1</option>
+                                    <option value="2">Option 2</option>
+                                    <option value="3">Option 3</option>
+                                    <option value="4">Option 4</option>
+                                </select>
+                            </div>
+                        </div>`;
+            }
+            $("#questionsContainer").html(qHtml);
+
+            // Submit Master Form
+            $("#masterForm").submit(function(e) {
+                e.preventDefault();
+                let formData = new FormData();
+                let logo1 = $("#Logo1File")[0].files[0];
+                let logo2 = $("#Logo2File")[0].files[0];
+                let logo3 = $("#Logo3File")[0].files[0];
+
+                if (logo1) formData.append("logo1File", logo1);
+                if (logo2) formData.append("logo2File", logo2);
+                if (logo3) formData.append("logo3File", logo3);
+
+                formData.append("morningMantraEn", $("#MorningMantraEn").val());
+                formData.append("morningMantraHi", $("#MorningMantraHi").val());
+                formData.append("valuesInFocusEn", $("#ValuesInFocusEn").val());
+                formData.append("valuesInFocusHi", $("#ValuesInFocusHi").val());
+                formData.append("footerText", $("#FooterText").val());
+                formData.append("footerLink", $("#FooterLink").val());
+
+                $.ajax({
+                    url: '/api/hem-sampark/master',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        alert(res.message);
+                        loadMasterSettings();
+                    }
+                });
+            });
+
+            // Submit Daily Form
+            $("#dailyForm").submit(function(e) {
+                e.preventDefault();
+                let questions = [];
+                $("#questionsContainer .card").each(function() {
+                    let q = {
+                        QuestionText: $(this).find(".q-text").val(),
+                        Option1: $(this).find(".q-opt1").val(),
+                        Option2: $(this).find(".q-opt2").val(),
+                        Option3: $(this).find(".q-opt3").val(),
+                        Option4: $(this).find(".q-opt4").val(),
+                        CorrectOption: parseInt($(this).find(".q-correct").val())
+                    };
+                    questions.push(q);
+                });
+
+                let dailyData = {
+                    EntryDate: $("#EntryDate").val(),
+                    DayHindi: $("#DayHindi").val(),
+                    IssueNumber: parseInt($("#IssueNumber").val()),
+                    VikramSamvat: $("#VikramSamvat").val(),
+                    CelebrationHeadingEn: $("#CelebrationHeadingEn").val(),
+                    CelebrationContentEn: $("#CelebrationContentEn").val(),
+                    CelebrationHeadingHi: $("#CelebrationHeadingHi").val(),
+                    CelebrationContentHi: $("#CelebrationContentHi").val(),
+                    Questions: questions
+                };
+
+                $.ajax({
+                    url: '/api/hem-sampark/daily-entry',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(dailyData),
+                    success: function(res) {
+                        alert(res.message);
+                        $("#dailyForm")[0].reset();
+                        loadEntriesList();
+                    }
+                });
+            });
+
+            // Regenerate Button Click Handler
+            $("#regenerateBtn").click(function() {
+                if (currentEntryId > 0) {
+                    previewPdf(currentEntryId, true);
+                }
+            });
+        });
+
+        function loadMasterSettings() {
+            $.get('/api/hem-sampark/master', function(data) {
+                if (data) {
+                    $("#MorningMantraEn").val(data.morningMantraEn);
+                    $("#MorningMantraHi").val(data.morningMantraHi);
+                    $("#ValuesInFocusEn").val(data.valuesInFocusEn);
+                    $("#ValuesInFocusHi").val(data.valuesInFocusHi);
+                    $("#FooterText").val(data.footerText);
+                    $("#FooterLink").val(data.footerLink);
+                }
+            });
+        }
+
+        function loadEntriesList() {
+            $.get('/api/hem-sampark/entries-list', function(data) {
+                let rows = "";
+                $.each(data, function(i, item) {
+                    rows += `<tr>
+                            <td>${item.id}</td>
+                            <td>${item.entryDate}</td>
+                            <td><span class="badge bg-secondary">${item.dayHindi}</span></td>
+                            <td>${item.issueNumber}</td>
+                            <td>${item.celebrationHeadingEn}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary fw-bold px-3" onclick="previewPdf(${item.id}, false)">
+                                    <i class="fas fa-eye me-1"></i> Preview PDF
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+                $("#entriesTable tbody").html(rows);
+            });
+        }
+
+        function previewPdf(id, regenerate = false) {
+            currentEntryId = id;
+            $.get(`/api/hem-sampark/preview/${id}/${regenerate}`, function(res) {
+                if (res.success && res.pdfUrl) {
+                    let iframeHtml = `<iframe src="${res.pdfUrl}" width="100%" height="100%" style="border:none;"></iframe>`;
+                    $("#pdfPreviewBody").html(iframeHtml);
+                    $("#previewModal").modal('show');
+                } else {
+                    alert("Could not load PDF preview.");
+                }
+            });
+        }
+    </script>
+}

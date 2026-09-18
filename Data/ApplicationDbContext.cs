@@ -1,16 +1,15 @@
 ﻿using HemFoundation.Models;
-
 using HemFoundation.Models.DTOs;
-
 using HemFoundation.Models.Entities;
+using HemFoundation.Models.HemSampark;
 using HemFoundation.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections;
-using System.Reflection.Emit;
 using System.Collections;
+using System.Reflection.Emit;
 namespace HemFoundation.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
@@ -142,9 +141,31 @@ namespace HemFoundation.Data
         public DbSet<View_HF_Affiliate> View_HF_Affiliate { get; set; }
         public DbSet<HfViewUser> HfViewUsers { get; set; }
         public DbSet<HfTblAffliateFocusedList> HfTblAffliateFocusedLists { get; set; }
+
+        public DbSet<MasterSetting> mastersettings { get; set; }
+        public DbSet<DailySamparkEntry> dailysamparkentries { get; set; }
+        public DbSet<DailyQuestion> dailyquestions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<MasterSetting>()
+        .ToTable("mastersettings");
+
+            builder.Entity<DailySamparkEntry>()
+                .ToTable("dailysamparkentries");
+
+            builder.Entity<DailyQuestion>()
+                .ToTable("dailyquestions");
+
+
+            // DailySamparkEntry -> DailyQuestions
+            builder.Entity<DailyQuestion>()
+                .HasOne(q => q.DailySamparkEntry)
+                .WithMany(e => e.Questions)
+                .HasForeignKey(q => q.DailyEntryId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<RoleMenuRight>().HasIndex(x => new { x.RoleId, x.MenuId }).IsUnique();
             builder.Entity<HfViewUser>().HasNoKey().ToView("hf_view_users");
