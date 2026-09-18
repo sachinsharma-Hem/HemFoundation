@@ -289,7 +289,7 @@ namespace HemFoundation.Controllers.Api
                 .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
 
             var activeStudents = await _context.StudentActivityLogs
-                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType!="Survey")
                 .Select(x => x.StudentID)
                 .Distinct()
                 .CountAsync();
@@ -365,7 +365,7 @@ namespace HemFoundation.Controllers.Api
                 "active-students" => await (from log in _context.StudentActivityLogs
                                             join student in _context.Set<ViewWjStudentsDetailsInfo>()
                                             on log.StudentID equals student.StudentId
-                                            where log.InstituteID != null && instituteIds.Contains(log.InstituteID)
+                                            where log.InstituteID != null && instituteIds.Contains(log.InstituteID) && log.ActivityType!="Survey"
                                             select student)
                                     .Distinct()
                                     .ToListAsync(),
@@ -437,11 +437,14 @@ namespace HemFoundation.Controllers.Api
                 return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
             }
 
+
+            int schoolcount = instituteIds.Count;
+
             var totalStudents = await _context.Set<ViewWjStudentsDetailsInfo>()
                 .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
 
             var activeStudents = await _context.StudentActivityLogs
-                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType != "Survey") 
                 .Select(x => x.StudentID)
                 .Distinct()
                 .CountAsync();
@@ -475,6 +478,7 @@ namespace HemFoundation.Controllers.Api
                 success = true,
                 data = new
                 {
+                    schoolcount,
                     totalStudents,
                     activeStudents,
                     totalTeachers,

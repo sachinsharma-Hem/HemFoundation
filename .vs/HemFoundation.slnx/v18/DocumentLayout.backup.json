@@ -3,9 +3,40 @@
   "WorkspaceRootPath": "H:\\Rajan Thakur\\Project\\HemFoundation\\",
   "Documents": [
     {
-
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\affiliate\\financials.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\affiliate\\financials.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\affiliatecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\affiliatecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\affiliate\\partials\\_focusedperformance.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\affiliate\\partials\\_focusedperformance.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\api\\affiliatedashboardapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\affiliatedashboardapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\affiliate\\partials\\_performancedashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\affiliate\\partials\\_performancedashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\dashboard\\partials\\_affiliatedashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\dashboard\\partials\\_affiliatedashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\api\\volunteerapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\volunteerapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\learncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\learncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\learn\\shared\\teacher_student_summary_report.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\learn\\shared\\teacher_student_summary_report.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\learn\\shared\\studentsummary_report.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -38,26 +69,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\anubhutitransaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\anubhutitransaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\affiliate\\volunteers.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\affiliate\\volunteers.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\api\\hemsamparkapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\hemsamparkapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\hemsampark\\admin.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\hemsampark\\admin.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\models\\hemsampark\\hemsampark.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\hemsampark\\hemsampark.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\hemsamparkcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\hemsamparkcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-
     }
   ],
   "DocumentGroupContainers": [
@@ -67,20 +78,118 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-
-          "SelectedChildIndex": 4,
-
-          "SelectedChildIndex": 3,
-
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             },
             {
-
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Financials.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Affiliate\\Financials.cshtml",
+              "RelativeDocumentMoniker": "Views\\Affiliate\\Financials.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Affiliate\\Financials.cshtml",
+              "RelativeToolTip": "Views\\Affiliate\\Financials.cshtml",
+              "ViewState": "AgIAACsBAABA/f///38UwDEBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-18T17:57:48.868Z",
+              "EditorCaption": ""
+            },
+            {
               "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "_FocusedPerformance.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Affiliate\\Partials\\_FocusedPerformance.cshtml",
+              "RelativeDocumentMoniker": "Views\\Affiliate\\Partials\\_FocusedPerformance.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Affiliate\\Partials\\_FocusedPerformance.cshtml",
+              "RelativeToolTip": "Views\\Affiliate\\Partials\\_FocusedPerformance.cshtml",
+              "ViewState": "AgIAACcBAAAAAAAAAAAIwDQBAABoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-18T17:34:56.014Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "_PerformanceDashboard.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
+              "RelativeDocumentMoniker": "Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
+              "RelativeToolTip": "Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABkAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-18T17:34:31.159Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AffiliateController.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\AffiliateController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AffiliateController.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\AffiliateController.cs",
+              "RelativeToolTip": "Controllers\\AffiliateController.cs",
+              "ViewState": "AgIAAEAAAAAAAAAAAAAwwFEAAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T17:34:00.55Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "_AffiliateDashboard.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Dashboard\\Partials\\_AffiliateDashboard.cshtml",
+              "RelativeDocumentMoniker": "Views\\Dashboard\\Partials\\_AffiliateDashboard.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Dashboard\\Partials\\_AffiliateDashboard.cshtml",
+              "RelativeToolTip": "Views\\Dashboard\\Partials\\_AffiliateDashboard.cshtml",
+              "ViewState": "AgIAAG4BAAAA4DIzM/MmwIEBAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-18T17:32:13.611Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "VolunteerApiController.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\VolunteerApiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Api\\VolunteerApiController.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\VolunteerApiController.cs",
+              "RelativeToolTip": "Controllers\\Api\\VolunteerApiController.cs",
+              "ViewState": "AgIAAEQFAAAAAAAAAAAawFIFAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T17:04:12.864Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "AffiliateDashboardApiController.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\AffiliateDashboardApiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Api\\AffiliateDashboardApiController.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\AffiliateDashboardApiController.cs",
+              "RelativeToolTip": "Controllers\\Api\\AffiliateDashboardApiController.cs",
+              "ViewState": "AgIAAM8BAAAA9P////8GwOABAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T17:12:51.185Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Teacher_Student_Summary_Report.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Learn\\Shared\\Teacher_Student_Summary_Report.cshtml",
+              "RelativeDocumentMoniker": "Views\\Learn\\Shared\\Teacher_Student_Summary_Report.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Learn\\Shared\\Teacher_Student_Summary_Report.cshtml",
+              "RelativeToolTip": "Views\\Learn\\Shared\\Teacher_Student_Summary_Report.cshtml",
+              "ViewState": "AgIAAPYAAACAo5mZmdkuwAEBAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-18T17:03:45.208Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
               "Title": "UniversalRegisterApiController.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\UniversalRegisterApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\Api\\UniversalRegisterApiController.cs",
@@ -88,33 +197,12 @@
               "RelativeToolTip": "Controllers\\Api\\UniversalRegisterApiController.cs",
               "ViewState": "AgIAAIUAAAAAAAAAAAAawJoAAABQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-18T11:06:54.354Z",
-
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{c6f34f0d-7ae5-4f3a-be61-fe0c21ae9eb8}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:1948313171:0:{81164725-9a96-4ece-a4cb-440d8fd285e5}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Volunteers.cshtml",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Volunteers.cshtml",
-              "RelativeDocumentMoniker": "Views\\Affiliate\\Volunteers.cshtml",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Volunteers.cshtml",
-              "RelativeToolTip": "Views\\Affiliate\\Volunteers.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAANABAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-18T11:58:24.284Z",
-
+              "WhenOpened": "2026-09-18T17:03:45.241Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-
+              "DocumentIndex": 11,
               "Title": "RegistrationController.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\RegistrationController.cs",
               "RelativeDocumentMoniker": "Controllers\\RegistrationController.cs",
@@ -122,23 +210,11 @@
               "RelativeToolTip": "Controllers\\RegistrationController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-18T11:31:36.583Z",
-
-              "Title": "HemSampark.cs",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Models\\HemSampark\\HemSampark.cs",
-              "RelativeDocumentMoniker": "Models\\HemSampark\\HemSampark.cs",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Models\\HemSampark\\HemSampark.cs",
-              "RelativeToolTip": "Models\\HemSampark\\HemSampark.cs",
-              "ViewState": "AgIAAEwAAAAAAAAAAAAQwF4AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-18T11:32:20.364Z",
-
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-18T17:03:45.244Z"
             },
             {
               "$type": "Document",
-
-              "DocumentIndex": 4,
+              "DocumentIndex": 12,
               "Title": "StundetSummaryReportModel.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\DTOs\\StundetSummaryReportModel.cs",
               "RelativeDocumentMoniker": "DTOs\\StundetSummaryReportModel.cs",
@@ -146,61 +222,36 @@
               "RelativeToolTip": "DTOs\\StundetSummaryReportModel.cs",
               "ViewState": "AgIAAAEAAAAAyszMzMwHwAsAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-17T15:25:20.464Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-18T17:03:45.246Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 7,
               "Title": "LearnController.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\LearnController.cs",
               "RelativeDocumentMoniker": "Controllers\\LearnController.cs",
               "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\LearnController.cs",
               "RelativeToolTip": "Controllers\\LearnController.cs",
-              "ViewState": "AgIAAJIDAAAAAAAAAAAiwOIDAAANAAAAAAAAAA==",
+              "ViewState": "AgIAAKoDAACAmZmZmRkfwNIDAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-17T15:25:20.473Z",
-
-              "DocumentIndex": 2,
-              "Title": "Admin.cshtml",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\HemSampark\\Admin.cshtml",
-              "RelativeDocumentMoniker": "Views\\HemSampark\\Admin.cshtml",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\HemSampark\\Admin.cshtml",
-              "RelativeToolTip": "Views\\HemSampark\\Admin.cshtml",
-              "ViewState": "AgIAAOsAAAAAAAAAAAAmwG8BAAAgAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-18T10:22:37.666Z",
-
+              "WhenOpened": "2026-09-18T17:03:45.247Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-
+              "DocumentIndex": 9,
               "Title": "StudentSummary_Report.cshtml",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Learn\\Shared\\StudentSummary_Report.cshtml",
               "RelativeDocumentMoniker": "Views\\Learn\\Shared\\StudentSummary_Report.cshtml",
               "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Learn\\Shared\\StudentSummary_Report.cshtml",
               "RelativeToolTip": "Views\\Learn\\Shared\\StudentSummary_Report.cshtml",
-              "ViewState": "AgIAAAUAAAAAAAAAAAAawBQAAAARAAAAAAAAAA==",
+              "ViewState": "AgIAAFYAAAAAAAAAAAAawFoAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-17T15:25:20.461Z",
-
-              "Title": "HemSamparkApiController.cs",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\HemSamparkApiController.cs",
-              "RelativeDocumentMoniker": "Controllers\\Api\\HemSamparkApiController.cs",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\HemSamparkApiController.cs",
-              "RelativeToolTip": "Controllers\\Api\\HemSamparkApiController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAATAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-18T10:21:00.154Z",
-
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-18T17:03:45.256Z"
             },
             {
               "$type": "Document",
-
-              "DocumentIndex": 5,
+              "DocumentIndex": 13,
               "Title": "DisplayScoreCard.cshtml",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Learn\\DisplayScoreCard.cshtml",
               "RelativeDocumentMoniker": "Views\\Learn\\DisplayScoreCard.cshtml",
@@ -208,11 +259,11 @@
               "RelativeToolTip": "Views\\Learn\\DisplayScoreCard.cshtml",
               "ViewState": "AgIAAA8AAAAAAAAAAAAAAB0AAABQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-17T15:25:20.468Z"
+              "WhenOpened": "2026-09-18T17:03:45.258Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 14,
               "Title": "Index.cshtml",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Learn\\Index.cshtml",
               "RelativeDocumentMoniker": "Views\\Learn\\Index.cshtml",
@@ -220,11 +271,11 @@
               "RelativeToolTip": "Views\\Learn\\Index.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-17T15:25:20.466Z"
+              "WhenOpened": "2026-09-18T17:03:45.26Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 16,
               "Title": "AnubhutiTransaction.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\AnubhutiTransaction.cs",
               "RelativeDocumentMoniker": "Models\\AnubhutiTransaction.cs",
@@ -232,11 +283,11 @@
               "RelativeToolTip": "Models\\AnubhutiTransaction.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-17T15:25:20.47Z"
+              "WhenOpened": "2026-09-18T17:03:45.262Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 15,
               "Title": "StudentProfileModel.cs",
               "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\DTOs\\StudentProfileModel.cs",
               "RelativeDocumentMoniker": "DTOs\\StudentProfileModel.cs",
@@ -244,19 +295,7 @@
               "RelativeToolTip": "DTOs\\StudentProfileModel.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAALAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-17T15:25:20.472Z"
-
-              "DocumentIndex": 4,
-              "Title": "HemSamparkController.cs",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\HemSamparkController.cs",
-              "RelativeDocumentMoniker": "Controllers\\HemSamparkController.cs",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\HemSamparkController.cs",
-              "RelativeToolTip": "Controllers\\HemSamparkController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-18T10:18:17.528Z",
-              "EditorCaption": ""
-
+              "WhenOpened": "2026-09-18T17:03:45.264Z"
             }
           ]
         }

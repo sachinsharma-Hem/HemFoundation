@@ -1362,7 +1362,7 @@ namespace HemFoundation.Controllers.Api
                 .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
 
             var activeStudents = await _context.StudentActivityLogs
-                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType != "Survey") 
                 .Select(x => x.StudentID)
                 .Distinct()
                 .CountAsync();
@@ -1437,7 +1437,7 @@ namespace HemFoundation.Controllers.Api
                     .ToListAsync(),
 
                 "active-students" => await _context.StudentActivityLogs
-                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType != "Survey") 
                     .Select(x => new { x.StudentID, x.InstituteID })
                     .Distinct()
                     .ToListAsync(),

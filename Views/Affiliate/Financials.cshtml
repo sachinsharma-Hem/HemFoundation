@@ -313,6 +313,10 @@
             $('#tblItems').html('');
             addLineItem();
             calculateTotal();
+
+            let todayStr = getSafeDateInputStr(new Date());
+            $('#txtBillDate').attr('min', todayStr);
+
             document.getElementById('txtBillDate').valueAsDate = new Date();
 
             $('#draftListSection').addClass('d-none');
