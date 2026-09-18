@@ -114,5 +114,16 @@ namespace HemFoundation.Controllers
 
             return View("~/Views/Affiliate/Guides.cshtml");
         }
+
+        public IActionResult AffiliateIncentive()
+        {
+            var isLoggedIn = HttpContext.Session.GetString("IsAdminLoggedIn");
+            if (string.IsNullOrEmpty(isLoggedIn) || isLoggedIn != "true")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View("~/Views/Affiliate/AffiliateIncentive.cshtml");
+        }
     }
 }

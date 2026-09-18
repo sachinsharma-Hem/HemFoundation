@@ -11,10 +11,176 @@
 
 <script src="~/lib/jquery/jquery.min.js"></script>
 <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="~/js/jwtsession.js" asp-append-version="true"></script>
+@* <script src="~/js/jwtsession.js" asp-append-version="true"></script> *@
 <script src="~/js/site.js" asp-append-version="true"></script>
-
 <script>
+    function showToast(message, isSuccess = true) {
+        const $toast =$('#liveToast');
+        $toast.removeClass('bg-success bg-danger').addClass(isSuccess ? 'bg-success' : 'bg-danger');
+        $('#toastMessage').text(message);
+        var toast = new bootstrap.Toast($toast[0]);
+        toast.show();
+    }
+
+    let isForgotPasswordMode = false;
+
+    // Reset modal state completely when closed
+    $(document).on('hidden.bs.modal', '#loginModal', function() {
+        isForgotPasswordMode = false;
+        $('#passwordFieldContainer').show();
+        $('#rememberMeContainer').show();
+        $('#backToLogin').addClass('d-none');
+        $('#toggleForgotPassword').removeClass('d-none');
+        $('#loginModalLabel').text('Welcome Back');
+        $('#modalSubText').text('Please enter your credentials to access the dashboard.');
+        $('#badgeText').text('Secure Portal Access');
+        $('#badgeIcon').attr('class', 'bi bi-shield-lock-fill me-1');
+        $('#btnText').text('Sign In to Dashboard');
+        $('#loginEmailLabel').html('<i class="bi bi-person text-success me-2"></i> Email Address or Mobile No');
+        $('#ajaxLoginForm')[0].reset();
+    });
+
+    $(document).ready(function() {
+        // Toggle to Forgot Password view inside the same modal
+        $(document).on('click', '#toggleForgotPassword', function(e) {
+            e.preventDefault();
+            isForgotPasswordMode = true;
+            $('#passwordFieldContainer').hide();
+            $('#rememberMeContainer').hide();
+            $('#toggleForgotPassword').addClass('d-none');
+            $('#backToLogin').removeClass('d-none');
+
+            $('#loginModalLabel').text('Recover Credentials');
+            $('#modalSubText').text('Enter your username or mobile number to receive credentials via SMS.');
+            $('#badgeText').text('SMS Recovery');
+            $('#badgeIcon').attr('class', 'bi bi-key-fill me-1');
+            $('#btnText').text('Send Credentials via SMS');
+            $('#loginEmailLabel').html('<i class="bi bi-phone text-success me-2"></i> Username or Mobile No');
+        });
+
+        // Switch back to Login view
+        $(document).on('click', '#backToLogin', function(e) {
+            e.preventDefault();
+            isForgotPasswordMode = false;
+            $('#passwordFieldContainer').show();
+            $('#rememberMeContainer').show();
+            $('#backToLogin').addClass('d-none');
+            $('#toggleForgotPassword').removeClass('d-none');
+
+            $('#loginModalLabel').text('Welcome Back');
+            $('#modalSubText').text('Please enter your credentials to access the dashboard.');
+            $('#badgeText').text('Secure Portal Access');
+            $('#badgeIcon').attr('class', 'bi bi-shield-lock-fill me-1');
+            $('#btnText').text('Sign In to Dashboard');
+            $('#loginEmailLabel').html('<i class="bi bi-person text-success me-2"></i> Email Address or Mobile No');
+        });
+
+        // Unified Form Submit Handler for both Login and Forgot Password
+        $(document).on('submit', '#ajaxLoginForm', function(e) {
+            e.preventDefault();
+            const inputVal = $('#loginEmail').val().trim();
+
+            if (!inputVal) {
+                showToast('Please enter required field.', false);
+                return;
+            }
+
+            const $btn =$('#submitBtn');
+            const $btnText =$('#btnText');
+            const $spinner =$('#btnSpinner');
+            const rememberMe = $('#rememberMe').is(':checked'); // <-- Remember Me state captured here
+
+            if (isForgotPasswordMode) {
+                // --- FORGOT PASSWORD SUBMIT ---
+                $btn.prop('disabled', true);
+                $btnText.text('Sending SMS...');$spinner.removeClass('d-none');
+
+                $.ajax({
+                    url: '/api/auth/forgot-password',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ username: inputVal }),
+                    success: function(res) {
+                        $btn.prop('disabled', false);$spinner.addClass('d-none');
+
+                        if (res.success) {
+                            showToast(res.message, true);
+                            var modalEl = document.getElementById('loginModal');
+                            var modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+                        } else {
+                            $btnText.text('Send Credentials via SMS');
+                            showToast(res.message || 'Failed to send SMS.', false);
+                        }
+                    },
+                    error: function(err) {
+                        $btn.prop('disabled', false);
+                        $spinner.addClass('d-none');$btnText.text('Send Credentials via SMS');
+                        showToast(err.responseJSON?.message || 'Something went wrong. Please try again.', false);
+                    }
+                });
+
+            } else {
+                // --- NORMAL LOGIN SUBMIT WITH REMEMBER ME SUPPORT ---
+                const passwordVal = $('#loginPassword').val();
+                if (!passwordVal) {
+                    showToast('Please enter password.', false);
+                    return;
+                }
+
+                $btn.prop('disabled', true);
+                $btnText.text('Signing In...');$spinner.removeClass('d-none');
+
+                const payload = {
+                    email: inputVal,
+                    password: passwordVal,
+                    rememberMe: rememberMe // <-- Backend par rememberMe bhej rahe hain
+                };
+
+                $.ajax({
+                    url: '/api/auth/login',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function(res) {
+                        $btn.prop('disabled', false);$spinner.addClass('d-none');
+
+                        if (res.success) {
+                            // Agar Remember Me checked hai toh localStorage use hoga, warna sessionStorage
+                            const storage = rememberMe ? localStorage : sessionStorage;
+
+                            localStorage.removeItem('jwt_token');
+                            sessionStorage.removeItem('jwt_token');
+
+                            storage.setItem('jwt_token', res.token);
+                            storage.setItem('user_session', JSON.stringify(res.user));
+                            storage.setItem('user_menus', JSON.stringify(res.menus));
+                            storage.setItem('user_rights', JSON.stringify(res.rights));
+                            storage.setItem('token_expiry', res.expiration);
+                            storage.setItem('user_role', res.user.roles ? res.user.roles[0] : '');
+
+                            sessionStorage.setItem('login_success_toast', `Welcome back, ${res.user.fullName}!`);
+
+                            showToast('Login successful! Redirecting...', true);
+                            setTimeout(function() {
+                                window.location.replace(res.redirectUrl || '/Home/Index');
+                            }, 800);
+                        } else {
+                            $btnText.text('Sign In to Dashboard');
+                            showToast(res.message || 'Invalid credentials', false);
+                        }
+                    },
+                    error: function(err) {
+                        $btn.prop('disabled', false);
+                        $spinner.addClass('d-none');$btnText.text('Sign In to Dashboard');
+                        showToast(err.responseJSON?.message || 'Invalid credentials or account inactive.', false);
+                    }
+                });
+            }
+        });
+    });
+</script>
+@* <script>
     function showToast(message, isSuccess = true) {
         const $toast = $('#liveToast');
         $toast.removeClass('bg-success bg-danger').addClass(isSuccess ? 'bg-success' : 'bg-danger');
@@ -166,4 +332,4 @@
             }
         });
     });
-</script>
+</script> *@

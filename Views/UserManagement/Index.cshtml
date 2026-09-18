@@ -9,1648 +9,578 @@
          PAGE HEADER
     ========================================== -->
     <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-
             <div>
                 <h3 class="fw-bold text-dark mb-1">
                     <i class="bi bi-people-fill text-success me-2"></i>
                     User Management
                 </h3>
-
                 <p class="text-muted small m-0">
                     Manage all registered system users from optimized unified view.
                 </p>
             </div>
-
             <div>
                 <span class="badge bg-success-subtle text-success border px-3 py-2">
                     <i class="bi bi-database-check me-1"></i>
                     Unified User View
                 </span>
             </div>
-
         </div>
-
     </div>
-
 
     <!-- =========================================
          ROLE SUMMARY
     ========================================== -->
     <div class="card border-0 shadow-sm rounded-4 bg-white p-3 mb-4">
-
         <div class="d-flex align-items-center mb-3">
-
             <div class="bg-success-subtle rounded-3 p-2 me-2">
                 <i class="bi bi-bar-chart-fill text-success"></i>
             </div>
-
             <div>
                 <h6 class="fw-bold text-dark mb-0">
                     User Summary
                 </h6>
-
                 <small class="text-muted">
                     Total users grouped by role
                 </small>
             </div>
-
         </div>
 
-
         <div id="roleCounts" class="d-flex flex-wrap gap-2">
-
             <span class="text-muted small">
                 Loading role statistics...
             </span>
-
         </div>
-
     </div>
-
 
     <!-- =========================================
          MASTER USERS TABLE
     ========================================== -->
     <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
 
-        <!-- Filters -->
+        <!-- Filters & Search -->
         <div class="row mb-3 align-items-end g-3 px-2">
 
             <!-- Role Filter -->
-            <div class="col-md-4">
-
+            <div class="col-md-3">
                 <label class="form-label small fw-bold text-secondary mb-1">
                     Filter by Role / Portal:
                 </label>
-
                 <select class="form-select form-select-sm rounded-3 shadow-none border"
                         id="filterPortal"
                         onchange="filterMasterUsers()">
-
                     <option value="">
                         -- All Roles --
                     </option>
-
                 </select>
-
             </div>
 
+            <!-- Live Text Search Box -->
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-secondary mb-1">
+                    Search Users:
+                </label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0 rounded-start-3 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text"
+                           class="form-control form-control-sm rounded-end-3 shadow-none border-start-0 bg-light"
+                           id="searchQuery"
+                           placeholder="Search by name, username, mobile..."
+                           onkeyup="filterMasterUsers()">
+                </div>
+            </div>
 
             <!-- Total -->
-            <div class="col-md-4">
-
+            <div class="col-md-2">
                 <div class="small text-muted mb-1">
                     Current Result
                 </div>
-
                 <span class="badge bg-light text-dark border px-3 py-2 fw-bold small"
                       id="totalUsersCount">
-
                     Total Users: 0
-
                 </span>
-
             </div>
 
-
             <!-- Page Information -->
-            <div class="col-md-4 text-md-end">
-
+            <div class="col-md-3 text-md-end">
                 <span class="badge bg-light text-secondary border px-3 py-2 small"
                       id="pageInfo">
-
                     Page 1 of 1
-
                 </span>
-
             </div>
 
         </div>
-
 
         <!-- Table -->
         <div class="table-responsive">
-
             <table class="table table-hover table-sm align-middle mb-0"
                    id="masterUserTable">
-
                 <thead class="table-light">
-
                     <tr>
-
-                        <th class="py-2"
-                            style="width: 60px;">
-
-                            S.No.
-
-                        </th>
-
-                        <th class="py-2">
-                            Code / Username
-                        </th>
-
-                        <th class="py-2">
-                            Full Name & Role
-                        </th>
-
-                        <th class="py-2">
-                            Mobile
-                        </th>
-
-                        <th class="py-2">
-                            Password
-                        </th>
-
-                        <th class="py-2">
-                            Registered Date
-                        </th>
-
-                        <th class="py-2 text-center"
-                            style="width: 80px;">
-
-                            Status
-
-                        </th>
-
-                        <th class="py-2 text-end pe-3"
-                            style="width: 90px;">
-
-                            Actions
-
-                        </th>
-
+                        <th class="py-2" style="width: 60px;">S.No.</th>
+                        <th class="py-2">Code / Username</th>
+                        <th class="py-2">Full Name & Role</th>
+                        <th class="py-2">Mobile</th>
+                        <th class="py-2">Password</th>
+                        <th class="py-2">Registered Date</th>
+                        <th class="py-2 text-center" style="width: 80px;">Status</th>
+                        <th class="py-2 text-end pe-3" style="width: 90px;">Actions</th>
                     </tr>
-
                 </thead>
-
-
                 <tbody id="masterUserTableBody">
-
                     <tr>
-
-                        <td colspan="8"
-                            class="text-center py-5 text-muted">
-
-                            <div class="spinner-border spinner-border-sm text-success mb-2"
-                                 role="status">
-                            </div>
-
-                            <p class="small m-0">
-                                Loading master user records from view...
-                            </p>
-
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <div class="spinner-border spinner-border-sm text-success mb-2" role="status"></div>
+                            <p class="small m-0">Loading master user records from view...</p>
                         </td>
-
                     </tr>
-
                 </tbody>
-
             </table>
-
         </div>
-
 
         <!-- =========================================
              PAGINATION
         ========================================== -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 pt-3 border-top">
-
-            <div class="small text-muted"
-                 id="recordInfo">
-
+            <div class="small text-muted" id="recordInfo">
                 Showing 0 to 0 of 0 users
-
             </div>
-
-
             <nav aria-label="User pagination">
-
-                <ul class="pagination pagination-sm mb-0"
-                    id="pagination">
+                <ul class="pagination pagination-sm mb-0" id="pagination">
                 </ul>
-
             </nav>
-
         </div>
 
     </div>
 
 </div>
-
 
 <!-- =========================================
      VIEW DETAILS MODAL
 ========================================== -->
-<div class="modal fade"
-     id="viewDetailModal"
-     tabindex="-1"
-     aria-hidden="true">
-
+<div class="modal fade" id="viewDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-white text-dark">
 
-
-            <!-- Modal Header -->
             <div class="modal-header bg-success text-white px-4 py-3">
-
                 <h5 class="fw-bold m-0 d-flex align-items-center gap-2">
-
                     <i class="bi bi-person-badge fs-4"></i>
-
-                    <span>
-                        User Complete Details
-                    </span>
-
+                    <span>User Complete Details</span>
                 </h5>
-
-                <button type="button"
-                        class="btn-close btn-close-white shadow-none"
-                        data-bs-dismiss="modal">
-                </button>
-
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"></button>
             </div>
 
-
-            <!-- Modal Body -->
             <div class="modal-body p-4 bg-light text-dark">
-
                 <div class="row g-3">
-
-
-                    <!-- User Code -->
                     <div class="col-md-6">
-
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-
-                            <small class="text-muted">
-                                User Code
-                            </small>
-
-                            <div id="detCode"
-                                 class="fw-bold text-dark mt-1">
-
-                                -
-
-                            </div>
-
+                            <small class="text-muted">User Code</small>
+                            <div id="detCode" class="fw-bold text-dark mt-1">-</div>
                         </div>
-
                     </div>
-
-
-                    <!-- Full Name -->
                     <div class="col-md-6">
-
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-
-                            <small class="text-muted">
-                                Full Name
-                            </small>
-
-                            <div id="detName"
-                                 class="fw-bold text-dark mt-1">
-
-                                -
-
-                            </div>
-
+                            <small class="text-muted">Full Name</small>
+                            <div id="detName" class="fw-bold text-dark mt-1">-</div>
                         </div>
-
                     </div>
-
-
-                    <!-- Role -->
                     <div class="col-md-6">
-
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-
-                            <small class="text-muted">
-                                Portal / Role
-                            </small>
-
+                            <small class="text-muted">Portal / Role</small>
                             <div class="mt-1">
-
-                                <span id="detPortal"
-                                      class="badge bg-primary">
-
-                                    -
-
-                                </span>
-
+                                <span id="detPortal" class="badge bg-primary">-</span>
                             </div>
-
                         </div>
-
                     </div>
-
-
-                    <!-- Username -->
                     <div class="col-md-6">
-
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-
-                            <small class="text-muted">
-                                Username
-                            </small>
-
-                            <div id="detUsername"
-                                 class="fw-bold text-dark mt-1">
-
-                                -
-
-                            </div>
-
+                            <small class="text-muted">Username</small>
+                            <div id="detUsername" class="fw-bold text-dark mt-1">-</div>
                         </div>
-
                     </div>
-
-
-                    <!-- Email -->
                     <div class="col-md-6">
-
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-
-                            <small class="text-muted">
-                                Email
-                            </small>
-
-                            <div id="detEmail"
-                                 class="text-dark mt-1 text-break">
-
-                                -
-
-                            </div>
-
+                            <small class="text-muted">Email</small>
+                            <div id="detEmail" class="text-dark mt-1 text-break">-</div>
                         </div>
-
                     </div>
-
-
-                    <!-- Mobile -->
                     <div class="col-md-6">
-
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-
-                            <small class="text-muted">
-                                Mobile
-                            </small>
-
-                            <div id="detMobile"
-                                 class="text-dark mt-1">
-
-                                -
-
-                            </div>
-
+                            <small class="text-muted">Mobile</small>
+                            <div id="detMobile" class="text-dark mt-1">-</div>
                         </div>
-
                     </div>
-
-
-                    <!-- Address -->
                     <div class="col-md-12">
-
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-
-                            <small class="text-muted">
-                                Address
-                            </small>
-
-                            <div id="detAddress"
-                                 class="text-dark mt-1">
-
-                                -
-
-                            </div>
-
+                            <small class="text-muted">Address</small>
+                            <div id="detAddress" class="text-dark mt-1">-</div>
                         </div>
-
                     </div>
-
-
-                    <!-- Registered Date -->
                     <div class="col-md-6">
-
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-
-                            <small class="text-muted">
-                                Registered On
-                            </small>
-
-                            <div id="detDate"
-                                 class="text-dark mt-1">
-
-                                -
-
-                            </div>
-
+                            <small class="text-muted">Registered On</small>
+                            <div id="detDate" class="text-dark mt-1">-</div>
                         </div>
-
                     </div>
-
-
-                    <!-- Status -->
                     <div class="col-md-6">
-
                         <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-
-                            <small class="text-muted">
-                                Status
-                            </small>
-
-                            <div id="detStatus"
-                                 class="mt-1">
-
-                                -
-
-                            </div>
-
+                            <small class="text-muted">Status</small>
+                            <div id="detStatus" class="mt-1">-</div>
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
 
-
-            <!-- Modal Footer -->
             <div class="modal-footer bg-white border-0">
-
-                <button type="button"
-                        class="btn btn-secondary btn-sm rounded-3"
-                        data-bs-dismiss="modal">
-
-                    Close
-
-                </button>
-
+                <button type="button" class="btn btn-secondary btn-sm rounded-3" data-bs-dismiss="modal">Close</button>
             </div>
 
         </div>
-
     </div>
-
 </div>
 
-
 @section Scripts {
-
     <script>
-
-        // ============================================================
-        // GLOBAL VARIABLES
-        // ============================================================
-
         let allMasterUsers = [];
-
         let filteredMasterUsers = [];
-
         let currentPage = 1;
-
         const pageSize = 50;
 
-
-        // ============================================================
-        // DOCUMENT READY
-        // ============================================================
-
         $(document).ready(function() {
-
             loadRolesDropdown();
-
             loadMasterUsers();
-
         });
 
-
-        // ============================================================
-        // LOAD ROLE DROPDOWN
-        // ============================================================
-
         function loadRolesDropdown() {
-
             $.get('/api/usermanagement/roles-list')
-
                 .done(function(res) {
-
-                    if (!res || !res.success || !res.data) {
-
-                        return;
-
-                    }
-
-
-                    let opts = `
-                            <option value="">
-                                -- All Roles --
-                            </option>
-                        `;
-
-
+                    if (!res || !res.success || !res.data) return;
+                    let opts = `<option value="">-- All Roles --</option>`;
                     res.data.forEach(function(r) {
-
                         const roleName = r.roleName || '-';
-
-                        opts += `
-                                <option value="${escapeHtml(roleName)}">
-                                    ${escapeHtml(roleName)}
-                                </option>
-                            `;
-
+                        opts += `<option value="${escapeHtml(roleName)}">${escapeHtml(roleName)}</option>`;
                     });
-
-
                     $('#filterPortal').html(opts);
-
                 })
-
                 .fail(function(xhr) {
-
-                    console.error(
-                        "Roles API Error:",
-                        xhr.responseText
-                    );
-
+                    console.error("Roles API Error:", xhr.responseText);
                 });
-
         }
-
-
-        // ============================================================
-        // LOAD USERS
-        // ============================================================
 
         function loadMasterUsers() {
-
-            showTableLoading();
-
+            showTableLoading("Loading master user records from server...");
 
             $.get('/api/usermanagement/all-users')
-
                 .done(function(res) {
-
                     if (!res || !res.success) {
-
-                        showTableError(
-                            "Unable to load user records."
-                        );
-
+                        showTableError("Unable to load user records.");
                         return;
-
                     }
 
-
                     allMasterUsers = res.data || [];
-
-                    filteredMasterUsers =
-                        [...allMasterUsers];
-
+                    filteredMasterUsers = [...allMasterUsers];
 
                     updateTotalCount();
-
-                    renderRoleCounts(
-                        res.roleCounts || {}
-                    );
-
+                    renderRoleCounts(res.roleCounts || {});
 
                     currentPage = 1;
-
                     renderMasterTable();
-
                 })
-
                 .fail(function(xhr) {
-
-                    console.error(
-                        "Users API Error:",
-                        xhr.responseText
-                    );
-
-
-                    showTableError(
-                        "Failed to load user records."
-                    );
-
+                    console.error("Users API Error:", xhr.responseText);
+                    showTableError("Failed to load user records.");
                 });
-
         }
 
-
-        // ============================================================
-        // TABLE LOADING
-        // ============================================================
-
-        function showTableLoading() {
-
+        function showTableLoading(message) {
             $('#masterUserTableBody').html(`
-
-                    <tr>
-
-                        <td
-                            colspan="8"
-                            class="text-center py-5 text-muted">
-
-                            <div
-                                class="spinner-border spinner-border-sm text-success mb-2"
-                                role="status">
-                            </div>
-
-                            <p class="small m-0">
-                                Loading master user records...
-                            </p>
-
-                        </td>
-
-                    </tr>
-
-                `);
-
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <div class="spinner-border spinner-border-sm text-success mb-2" role="status"></div>
+                                <p class="small m-0">${escapeHtml(message)}</p>
+                            </td>
+                        </tr>
+                    `);
         }
-
-
-        // ============================================================
-        // TABLE ERROR
-        // ============================================================
 
         function showTableError(message) {
-
             $('#masterUserTableBody').html(`
-
-                    <tr>
-
-                        <td
-                            colspan="8"
-                            class="text-center py-5 text-danger">
-
-                            <i class="bi bi-exclamation-triangle fs-3"></i>
-
-                            <p class="small mt-2 mb-0">
-                                ${escapeHtml(message)}
-                            </p>
-
-                            <button
-                                type="button"
-                                class="btn btn-sm btn-outline-success mt-3"
-                                onclick="loadMasterUsers()">
-
-                                <i class="bi bi-arrow-clockwise me-1"></i>
-                                Retry
-
-                            </button>
-
-                        </td>
-
-                    </tr>
-
-                `);
-
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-danger">
+                                <i class="bi bi-exclamation-triangle fs-3"></i>
+                                <p class="small mt-2 mb-0">${escapeHtml(message)}</p>
+                                <button type="button" class="btn btn-sm btn-outline-success mt-3" onclick="loadMasterUsers()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i> Retry
+                                </button>
+                            </td>
+                        </tr>
+                    `);
         }
-
-
-        // ============================================================
-        // UPDATE TOTAL COUNT
-        // ============================================================
 
         function updateTotalCount() {
-
-            $('#totalUsersCount').text(
-                `Total Users: ${filteredMasterUsers.length}`
-            );
-
+            $('#totalUsersCount').text(`Total Users: ${filteredMasterUsers.length}`);
         }
-
-
-        // ============================================================
-        // ROLE COUNTS
-        // ============================================================
 
         function renderRoleCounts(roleCounts) {
-
-            const container =
-                $('#roleCounts');
-
-
+            const container = $('#roleCounts');
             container.empty();
 
-
-            if (!roleCounts ||
-                Object.keys(roleCounts).length === 0) {
-
-                container.html(`
-
-                        <span class="text-muted small">
-                            No role information available.
-                        </span>
-
-                    `);
-
+            if (!roleCounts || Object.keys(roleCounts).length === 0) {
+                container.html(`<span class="text-muted small">No role information available.</span>`);
                 return;
-
             }
-
 
             Object.entries(roleCounts)
-
-                .sort(function(a, b) {
-
-                    return b[1] - a[1];
-
-                })
-
+                .sort(function(a, b) { return b[1] - a[1]; })
                 .forEach(function([role, count]) {
-
                     const badge = `
-
-                            <div
-                                class="border rounded-3 bg-light px-3 py-2">
-
-                                <div
-                                    class="d-flex align-items-center gap-2">
-
-                                    <span
-                                        class="fw-semibold text-dark small">
-
-                                        ${escapeHtml(role)}
-
-                                    </span>
-
-                                    <span
-                                        class="badge bg-primary rounded-pill">
-
-                                        ${count}
-
-                                    </span>
-
+                                <div class="border rounded-3 bg-light px-3 py-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-semibold text-dark small">${escapeHtml(role)}</span>
+                                        <span class="badge bg-primary rounded-pill">${count}</span>
+                                    </div>
                                 </div>
-
-                            </div>
-
-                        `;
-
-
+                            `;
                     container.append(badge);
-
                 });
-
         }
-
-
-        // ============================================================
-        // RENDER MASTER TABLE
-        // ============================================================
 
         function renderMasterTable() {
-
-            const tbody =
-                $('#masterUserTableBody');
-
-
-            const totalRecords =
-                filteredMasterUsers.length;
-
-
-            const totalPages =
-                Math.ceil(totalRecords / pageSize) || 1;
-
+            const tbody = $('#masterUserTableBody');
+            const totalRecords = filteredMasterUsers.length;
+            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
 
             if (currentPage > totalPages) {
-
                 currentPage = totalPages;
-
             }
 
-
-            const startIndex =
-                (currentPage - 1) * pageSize;
-
-
-            const endIndex =
-                Math.min(
-                    startIndex + pageSize,
-                    totalRecords
-                );
-
-
-            /*
-             * IMPORTANT:
-             * Sirf current page ke 50 records
-             * DOM mein render honge.
-             *
-             * Isse "RangeError: Invalid string length"
-             * issue avoid hota hai.
-             */
-
-            const pageData =
-                filteredMasterUsers.slice(
-                    startIndex,
-                    endIndex
-                );
-
-
-            // ----------------------------------------
-            // EMPTY
-            // ----------------------------------------
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, totalRecords);
+            const pageData = filteredMasterUsers.slice(startIndex, endIndex);
 
             if (pageData.length === 0) {
-
                 tbody.html(`
-
-                        <tr>
-
-                            <td
-                                colspan="8"
-                                class="text-center py-5 text-muted">
-
-                                <i class="bi bi-inbox fs-2"></i>
-
-                                <p class="small mt-2 mb-0">
-                                    No records found.
-                                </p>
-
-                            </td>
-
-                        </tr>
-
-                    `);
-
-
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-2"></i>
+                                    <p class="small mt-2 mb-0">No records found matching your filter or search.</p>
+                                </td>
+                            </tr>
+                        `);
                 $('#pagination').empty();
-
-                $('#recordInfo').text(
-                    'Showing 0 to 0 of 0 users'
-                );
-
-
-                $('#pageInfo').text(
-                    'Page 1 of 1'
-                );
-
-
+                $('#recordInfo').text('Showing 0 to 0 of 0 users');
+                $('#pageInfo').text('Page 1 of 1');
                 return;
-
             }
 
-
-            // ----------------------------------------
-            // UPDATE PAGE INFO
-            // ----------------------------------------
-
-            $('#recordInfo').text(
-                `Showing ${startIndex + 1} to ${endIndex} of ${totalRecords} users`
-            );
-
-
-            $('#pageInfo').text(
-                `Page ${currentPage} of ${totalPages}`
-            );
-
-
-            // ----------------------------------------
-            // HTML
-            // ----------------------------------------
+            $('#recordInfo').text(`Showing ${startIndex + 1} to ${endIndex} of ${totalRecords} users`);
+            $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
 
             let html = '';
-
-
             pageData.forEach(function(u, index) {
+                const actualIndex = startIndex + index;
+                let statusIcon = u.isActive
+                    ? `<span class="text-success fs-6" title="Active"><i class="bi bi-check-circle-fill"></i></span>`
+                    : `<span class="text-danger fs-6" title="Deactive"><i class="bi bi-x-circle-fill"></i></span>`;
 
-                const actualIndex =
-                    startIndex + index;
-
-
-                // ------------------------------------
-                // STATUS
-                // ------------------------------------
-
-                let statusIcon;
-
-
-                if (u.isActive) {
-
-                    statusIcon = `
-
-                            <span
-                                class="text-success fs-6"
-                                title="Active">
-
-                                <i class="bi bi-check-circle-fill"></i>
-
-                            </span>
-
-                        `;
-
-                }
-                else {
-
-                    statusIcon = `
-
-                            <span
-                                class="text-danger fs-6"
-                                title="Deactive">
-
-                                <i class="bi bi-x-circle-fill"></i>
-
-                            </span>
-
-                        `;
-
-                }
-
-
-                // ------------------------------------
-                // PASSWORD
-                // ------------------------------------
-
-                let pwdBox = `
-
-                        <span class="text-muted small">
-                            -
-                        </span>
-
-                    `;
-
-
-                if (
-                    u.password &&
-                    u.password !== '-'
-                ) {
-
-                    const cleanPassword =
-                        String(u.password)
-                            .substring(0, 25);
-
-
+                let pwdBox = `<span class="text-muted small">-</span>`;
+                if (u.password && u.password !== '-') {
+                    const cleanPassword = String(u.password).substring(0, 25);
                     pwdBox = `
-
-                            <div
-                                class="input-group input-group-sm"
-                                style="width:130px;">
-
-                                <input
-                                    type="password"
-                                    class="form-control bg-light border-0 px-1"
-                                    style="font-size:11px;"
-                                    id="pwd_${actualIndex}"
-                                    value="${escapeHtml(cleanPassword)}"
-                                    readonly />
-
-                                <button
-                                    class="btn btn-outline-secondary border-0 bg-transparent text-muted px-1"
-                                    type="button"
-                                    onclick="togglePassword(${actualIndex})"
-                                    title="Show / Hide">
-
-                                    <i
-                                        class="bi bi-eye-slash"
-                                        id="eye_${actualIndex}"
-                                        style="font-size:11px;">
-                                    </i>
-
-                                </button>
-
-                            </div>
-
-                        `;
-
+                                <div class="input-group input-group-sm" style="width:130px;">
+                                    <input type="password" class="form-control bg-light border-0 px-1" style="font-size:11px;" id="pwd_${actualIndex}" value="${escapeHtml(cleanPassword)}" readonly />
+                                    <button class="btn btn-outline-secondary border-0 bg-transparent text-muted px-1" type="button" onclick="togglePassword(${actualIndex})" title="Show / Hide">
+                                        <i class="bi bi-eye-slash" id="eye_${actualIndex}" style="font-size:11px;"></i>
+                                    </button>
+                                </div>
+                            `;
                 }
-
-
-                // ------------------------------------
-                // ROW
-                // ------------------------------------
 
                 html += `
-
-                        <tr>
-
-                            <td
-                                class="fw-bold text-secondary small">
-
-                                ${actualIndex + 1}
-
-                            </td>
-
-
-                            <td>
-
-                                <div
-                                    class="fw-bold text-dark small">
-
-                                    ${escapeHtml(
-                    u.username || '-'
-                )}
-
-                                </div>
-
-                                <small
-                                    class="text-muted">
-
-                                    ${escapeHtml(
-                    u.userCode || '-'
-                )}
-
-                                </small>
-
-                            </td>
-
-
-                            <td>
-
-                                <div
-                                    class="fw-bold text-dark small">
-
-                                    ${escapeHtml(
-                    u.fullName || 'N/A'
-                )}
-
-                                </div>
-
-
-                                <span
-                                    class="badge bg-primary-subtle text-primary px-1 py-0"
-                                    style="font-size:10px;">
-
-                                    ${escapeHtml(
-                    u.portalName || 'User'
-                )}
-
-                                </span>
-
-                            </td>
-
-
-                            <td class="small">
-
-                                ${escapeHtml(
-                    u.phoneNumber || '-'
-                )}
-
-                            </td>
-
-
-                            <td>
-
-                                ${pwdBox}
-
-                            </td>
-
-
-                            <td class="small text-muted">
-
-                                ${escapeHtml(
-                    u.createdDate || '-'
-                )}
-
-                            </td>
-
-
-                            <td class="text-center">
-
-                                ${statusIcon}
-
-                            </td>
-
-
-                            <td class="text-end pe-2">
-
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-outline-info rounded-circle p-1 shadow-none"
-                                    style="width:28px;height:28px;"
-                                    onclick="viewUserDetailsByIndex(${actualIndex})"
-                                    title="View Details">
-
-                                    <i
-                                        class="bi bi-eye"
-                                        style="font-size:12px;">
-                                    </i>
-
-                                </button>
-
-                            </td>
-
-                        </tr>
-
-                    `;
-
+                            <tr>
+                                <td class="fw-bold text-secondary small">${actualIndex + 1}</td>
+                                <td>
+                                    <div class="fw-bold text-dark small">${escapeHtml(u.username || '-')}</div>
+                                    <small class="text-muted">${escapeHtml(u.userCode || '-')}</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark small">${escapeHtml(u.fullName || 'N/A')}</div>
+                                    <span class="badge bg-primary-subtle text-primary px-1 py-0" style="font-size:10px;">${escapeHtml(u.portalName || 'User')}</span>
+                                </td>
+                                <td class="small">${escapeHtml(u.phoneNumber || '-')}</td>
+                                <td>${pwdBox}</td>
+                                <td class="small text-muted">${escapeHtml(u.createdDate || '-')}</td>
+                                <td class="text-center">${statusIcon}</td>
+                                <td class="text-end pe-2">
+                                    <button type="button" class="btn btn-sm btn-outline-info rounded-circle p-1 shadow-none" style="width:28px;height:28px;" onclick="viewUserDetailsByIndex(${actualIndex})" title="View Details">
+                                        <i class="bi bi-eye" style="font-size:12px;"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
             });
-
 
             tbody.html(html);
-
-
-            // Render pagination
-
             renderPagination(totalPages);
-
         }
-
-
-        // ============================================================
-        // PAGINATION
-        // ============================================================
 
         function renderPagination(totalPages) {
-
-            const pagination =
-                $('#pagination');
-
-
+            const pagination = $('#pagination');
             pagination.empty();
 
+            if (totalPages <= 1) return;
 
-            if (totalPages <= 1) {
-
-                return;
-
-            }
-
-
-            // ----------------------------------------
-            // PREVIOUS
-            // ----------------------------------------
-
-            const previousDisabled =
-                currentPage === 1
-                    ? 'disabled'
-                    : '';
-
-
+            const previousDisabled = currentPage === 1 ? 'disabled' : '';
             pagination.append(`
-
-                    <li class="page-item ${previousDisabled}">
-
-                        <button
-                            class="page-link"
-                            type="button"
-                            onclick="changePage(${currentPage - 1})">
-
-                            <i class="bi bi-chevron-left"></i>
-
-                        </button>
-
-                    </li>
-
-                `);
-
-
-            // ----------------------------------------
-            // PAGE NUMBERS
-            // ----------------------------------------
+                        <li class="page-item ${previousDisabled}">
+                            <button class="page-link" type="button" onclick="changePage(${currentPage - 1})"><i class="bi bi-chevron-left"></i></button>
+                        </li>
+                    `);
 
             let pages = [];
-
-
             if (totalPages <= 7) {
-
-                for (
-                    let i = 1;
-                    i <= totalPages;
-                    i++
-                ) {
-
-                    pages.push(i);
-
-                }
-
-            }
-            else {
-
+                for (let i = 1; i <= totalPages; i++) { pages.push(i); }
+            } else {
                 pages.push(1);
-
-
-                if (currentPage > 4) {
-
-                    pages.push('...');
-
-                }
-
-
-                const start =
-                    Math.max(2, currentPage - 2);
-
-
-                const end =
-                    Math.min(
-                        totalPages - 1,
-                        currentPage + 2
-                    );
-
-
-                for (
-                    let i = start;
-                    i <= end;
-                    i++
-                ) {
-
-                    pages.push(i);
-
-                }
-
-
-                if (
-                    currentPage <
-                    totalPages - 3
-                ) {
-
-                    pages.push('...');
-
-                }
-
-
+                if (currentPage > 4) pages.push('...');
+                const start = Math.max(2, currentPage - 2);
+                const end = Math.min(totalPages - 1, currentPage + 2);
+                for (let i = start; i <= end; i++) { pages.push(i); }
+                if (currentPage < totalPages - 3) pages.push('...');
                 pages.push(totalPages);
-
             }
-
 
             pages.forEach(function(page) {
-
                 if (page === '...') {
-
-                    pagination.append(`
-
-                            <li class="page-item disabled">
-
-                                <span class="page-link">
-                                    ...
-                                </span>
-
-                            </li>
-
-                        `);
-
+                    pagination.append(`<li class="page-item disabled"><span class="page-link">...</span></li>`);
                     return;
-
                 }
-
-
-                const active =
-                    page === currentPage
-                        ? 'active'
-                        : '';
-
-
+                const active = page === currentPage ? 'active' : '';
                 pagination.append(`
-
-                        <li class="page-item ${active}">
-
-                            <button
-                                class="page-link"
-                                type="button"
-                                onclick="changePage(${page})">
-
-                                ${page}
-
-                            </button>
-
-                        </li>
-
-                    `);
-
+                            <li class="page-item ${active}">
+                                <button class="page-link" type="button" onclick="changePage(${page})">${page}</button>
+                            </li>
+                        `);
             });
 
-
-            // ----------------------------------------
-            // NEXT
-            // ----------------------------------------
-
-            const nextDisabled =
-                currentPage === totalPages
-                    ? 'disabled'
-                    : '';
-
-
+            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
             pagination.append(`
-
-                    <li class="page-item ${nextDisabled}">
-
-                        <button
-                            class="page-link"
-                            type="button"
-                            onclick="changePage(${currentPage + 1})">
-
-                            <i class="bi bi-chevron-right"></i>
-
-                        </button>
-
-                    </li>
-
-                `);
-
+                        <li class="page-item ${nextDisabled}">
+                            <button class="page-link" type="button" onclick="changePage(${currentPage + 1})"><i class="bi bi-chevron-right"></i></button>
+                        </li>
+                    `);
         }
-
-
-        // ============================================================
-        // CHANGE PAGE
-        // ============================================================
 
         function changePage(page) {
-
-            const totalPages =
-                Math.ceil(
-                    filteredMasterUsers.length /
-                    pageSize
-                );
-
-
-            if (
-                page < 1 ||
-                page > totalPages
-            ) {
-
-                return;
-
-            }
-
-
+            const totalPages = Math.ceil(filteredMasterUsers.length / pageSize);
+            if (page < 1 || page > totalPages) return;
             currentPage = page;
-
-
             renderMasterTable();
-
-
-            // Scroll table to top
-
-            const table =
-                document.getElementById(
-                    'masterUserTable'
-                );
-
-
+            const table = document.getElementById('masterUserTable');
             if (table) {
+                table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
 
-                table.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
+        // ============================================================
+        // COMBINED FILTER & LIVE SEARCH WITH LOADER
+        // ============================================================
+        function filterMasterUsers() {
+            // Show loading spinner instantly when filtering starts
+            showTableLoading("Filtering user records...");
+
+            // Use setTimeout to let the DOM paint the spinner before heavy filtering
+            setTimeout(function() {
+                const selectedRole = $('#filterPortal').val();
+                const searchText = $('#searchQuery').val().toLowerCase().trim();
+
+                filteredMasterUsers = allMasterUsers.filter(function(u) {
+                    let matchesRole = true;
+                    if (selectedRole) {
+                        if (!u.portalName) {
+                            matchesRole = false;
+                        } else {
+                            const roles = String(u.portalName).split(',').map(function(x) { return x.trim(); });
+                            matchesRole = roles.includes(selectedRole);
+                        }
+                    }
+
+                    let matchesSearch = true;
+                    if (searchText) {
+                        const fullName = (u.fullName || '').toLowerCase();
+                        const username = (u.username || '').toLowerCase();
+                        const mobile = (u.phoneNumber || '').toLowerCase();
+                        const email = (u.email || '').toLowerCase();
+                        const userCode = (u.userCode || '').toLowerCase();
+
+                        matchesSearch = fullName.includes(searchText) ||
+                            username.includes(searchText) ||
+                            mobile.includes(searchText) ||
+                            email.includes(searchText) ||
+                            userCode.includes(searchText);
+                    }
+
+                    return matchesRole && matchesSearch;
                 });
 
-            }
-
+                currentPage = 1;
+                updateTotalCount();
+                renderMasterTable();
+            }, 50);
         }
-
-
-        // ============================================================
-        // FILTER USERS
-        // ============================================================
-
-        function filterMasterUsers() {
-
-            const selectedRole =
-                $('#filterPortal').val();
-
-
-            if (!selectedRole) {
-
-                filteredMasterUsers =
-                    [...allMasterUsers];
-
-            }
-            else {
-
-                filteredMasterUsers =
-                    allMasterUsers.filter(function(u) {
-
-                        if (!u.portalName) {
-
-                            return false;
-
-                        }
-
-
-                        const roles =
-                            String(u.portalName)
-                                .split(',')
-                                .map(function(x) {
-
-                                    return x.trim();
-
-                                });
-
-
-                        return roles.includes(
-                            selectedRole
-                        );
-
-                    });
-
-            }
-
-
-            currentPage = 1;
-
-
-            updateTotalCount();
-
-
-            renderMasterTable();
-
-        }
-
-
-        // ============================================================
-        // VIEW USER DETAILS
-        // ============================================================
 
         function viewUserDetailsByIndex(index) {
+            const u = filteredMasterUsers[index];
+            if (!u) return;
 
-            const u =
-                filteredMasterUsers[index];
-
-
-            if (!u) {
-
-                return;
-
-            }
-
-
-            $('#detCode').text(
-                u.userCode || '-'
-            );
-
-
-            $('#detName').text(
-                u.fullName || '-'
-            );
-
-
-            $('#detPortal').text(
-                u.portalName || '-'
-            );
-
-
-            $('#detUsername').text(
-                u.username || '-'
-            );
-
-
-            $('#detEmail').text(
-                u.email || '-'
-            );
-
-
-            $('#detMobile').text(
-                u.phoneNumber || '-'
-            );
-
-
-            $('#detAddress').text(
-                u.address || '-'
-            );
-
-
-            $('#detDate').text(
-                u.createdDate || '-'
-            );
-
-
-            // Status
+            $('#detCode').text(u.userCode || '-');
+            $('#detName').text(u.fullName || '-');
+            $('#detPortal').text(u.portalName || '-');
+            $('#detUsername').text(u.username || '-');
+            $('#detEmail').text(u.email || '-');
+            $('#detMobile').text(u.phoneNumber || '-');
+            $('#detAddress').text(u.address || '-');
+            $('#detDate').text(u.createdDate || '-');
 
             if (u.isActive) {
-
-                $('#detStatus').html(`
-
-                        <span class="badge bg-success">
-                            <i class="bi bi-check-circle me-1"></i>
-                            Active
-                        </span>
-
-                    `);
-
-            }
-            else {
-
-                $('#detStatus').html(`
-
-                        <span class="badge bg-danger">
-                            <i class="bi bi-x-circle me-1"></i>
-                            Deactive
-                        </span>
-
-                    `);
-
+                $('#detStatus').html(`<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Active</span>`);
+            } else {
+                $('#detStatus').html(`<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> Deactive</span>`);
             }
 
-
-            // Bootstrap 5 modal
-
-            const modalElement =
-                document.getElementById(
-                    'viewDetailModal'
-                );
-
-
-            if (
-                modalElement &&
-                typeof bootstrap !== 'undefined'
-            ) {
-
-                const modal =
-                    bootstrap.Modal.getOrCreateInstance(
-                        modalElement
-                    );
-
-
+            const modalElement = document.getElementById('viewDetailModal');
+            if (modalElement && typeof bootstrap !== 'undefined') {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
                 modal.show();
-
             }
-
         }
-
-
-        // ============================================================
-        // TOGGLE PASSWORD
-        // ============================================================
 
         function togglePassword(index) {
-
-            const input =
-                document.getElementById(
-                    `pwd_${index}`
-                );
-
-
-            const eye =
-                document.getElementById(
-                    `eye_${index}`
-                );
-
-
-            if (!input || !eye) {
-
-                return;
-
-            }
-
+            const input = document.getElementById(`pwd_${index}`);
+            const eye = document.getElementById(`eye_${index}`);
+            if (!input || !eye) return;
 
             if (input.type === 'password') {
-
                 input.type = 'text';
-
-
-                eye.classList.remove(
-                    'bi-eye-slash'
-                );
-
-
-                eye.classList.add(
-                    'bi-eye'
-                );
-
-            }
-            else {
-
+                eye.classList.remove('bi-eye-slash');
+                eye.classList.add('bi-eye');
+            } else {
                 input.type = 'password';
-
-
-                eye.classList.remove(
-                    'bi-eye'
-                );
-
-
-                eye.classList.add(
-                    'bi-eye-slash'
-                );
-
+                eye.classList.remove('bi-eye');
+                eye.classList.add('bi-eye-slash');
             }
-
         }
-
-
-        // ============================================================
-        // HTML ESCAPE
-        // ============================================================
 
         function escapeHtml(value) {
-
-            if (
-                value === null ||
-                value === undefined
-            ) {
-
-                return '';
-
-            }
-
-
+            if (value === null || value === undefined) return '';
             return String(value)
-
                 .replace(/&/g, '&amp;')
-
                 .replace(/</g, '&lt;')
-
                 .replace(/>/g, '&gt;')
-
                 .replace(/"/g, '&quot;')
-
                 .replace(/'/g, '&#039;');
-
         }
-
     </script>
-
 }

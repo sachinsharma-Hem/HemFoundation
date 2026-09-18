@@ -261,10 +261,6 @@ namespace HemFoundation.Controllers.Api
 
             }
 
-
-
-
-
             var affiliate = await _context.Users
                 .FirstOrDefaultAsync(x => x.UserID == reportaffiliateid);
 
@@ -422,10 +418,6 @@ namespace HemFoundation.Controllers.Api
                 reportaffiliateid = loggedInUserID;
 
             }
-
-
-
-
 
             var affiliate = await _context.Users
                 .FirstOrDefaultAsync(x => x.UserID == reportaffiliateid);
