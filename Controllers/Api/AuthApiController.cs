@@ -171,11 +171,13 @@ namespace HemFoundation.Controllers.Api
             HttpContext.Session.SetString("UserEmail", user.Email ?? "");
             HttpContext.Session.SetString("UserFullName", fullName);
             HttpContext.Session.SetString("FirstName", firstName);
+            
             HttpContext.Session.SetString("LastName", lastName);
             HttpContext.Session.SetString("UserMobile", mobileNo);
             HttpContext.Session.SetString("UserRole", primaryRole);
             HttpContext.Session.SetInt32("UserID", businessUser?.UserID ?? 0);
             HttpContext.Session.SetString("AspNetUserID", user.Id);
+            HttpContext.Session.SetString("DefaultURL", dashboardMapping.RedirectUrl);
 
             return Ok(new
             {
