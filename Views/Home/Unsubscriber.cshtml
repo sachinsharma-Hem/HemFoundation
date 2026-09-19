@@ -1,0 +1,259 @@
+﻿@{
+    ViewData["Title"] = "Account Unsubscribe & Deletion";
+}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.0/dist/sweetalert2.all.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.0/dist/sweetalert2.min.css" rel="stylesheet">
+
+
+<div class="unsub-page-wrapper bg-soft-light min-vh-100 d-flex align-items-center py-5" style="background-color: #f8fafc;">
+    <div class="container py-3">
+        <div class="row g-4 align-items-center justify-content-center">
+
+            <!-- LEFT SIDE: INFO & GUIDELINES PANEL -->
+            <div class="col-lg-6 col-md-10">
+                <div class="pe-lg-4">
+                    <span class="badge bg-danger-subtle text-danger fw-semibold px-3 py-2 rounded-pill mb-3 border border-danger border-opacity-10">
+                        <i class="bi bi-shield-exclamation me-1"></i> Data Privacy & Control
+                    </span>
+                    <h1 class="fw-bold text-dark display-6 mb-3">Account Deletion & Unsubscribe</h1>
+                    <p class="text-muted mb-4" style="line-height: 1.7;">
+                        We respect your privacy. If you wish to discontinue your membership or remove your account from the <strong>HEM Virtues</strong> portal, you can securely submit a deletion request using your registered mobile number or user ID.
+                    </p>
+
+                    <!-- Feature Bullet Points -->
+                    <div class="d-flex flex-column gap-3 mb-4">
+                        <div class="d-flex align-items-start gap-3 bg-white p-3 rounded-4 shadow-xs">
+                            <div class="bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; flex-shrink: 0;">
+                                <i class="bi bi-whatsapp fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1 fs-6">Instant WhatsApp OTP Verification</h6>
+                                <p class="text-muted small mb-0">A secure 4-digit verification code is instantly dispatched to your registered WhatsApp number.</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-start gap-3 bg-white p-3 rounded-4 shadow-xs">
+                            <div class="bg-warning-subtle text-warning-emphasis rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; flex-shrink: 0;">
+                                <i class="bi bi-lock-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1 fs-6">Permanent & Secure Deactivation</h6>
+                                <p class="text-muted small mb-0">Once verified, your login access is permanently revoked and account status is marked inactive.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning border-0 rounded-4 p-3 shadow-xs d-flex align-items-center gap-3">
+                        <i class="bi bi-info-circle-fill text-warning fs-4"></i>
+                        <span class="text-secondary small mb-0">Need help? Contact our support desk at <a href="mailto:support@hemvirtues.com" class="fw-bold text-decoration-none">support@hemvirtues.com</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT SIDE: INTERACTIVE FORM CARD -->
+            <div class="col-lg-5 col-md-8">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+
+                    <!-- Card Header -->
+                    <div class="card-header text-center text-white py-4 px-3" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%) !important;">
+                        <div class="bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 50px; height: 50px;">
+                            <i class="bi bi-person-x-fill fs-4"></i>
+                        </div>
+                        <h3 class="mb-1 fw-bold fs-5 text-white">Unsubscribe Portal</h3>
+                        <p class="mb-0 text-white-50 small">
+                            Secure Verification Step
+                        </p>
+                    </div>
+
+                    <div class="card-body p-4 p-md-4">
+
+                        <input type="hidden" id="OTPCode" />
+
+                        <div id="headermibolno" class="text-center mb-3">
+                            <h5 class="fw-bold text-dark fs-6">Enter Account Identifier</h5>
+                            <p class="text-muted small mb-0">
+                                Provide your registered Mobile User Name.
+                            </p>
+                        </div>
+
+                        <div id="contentmobilno">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-dark small">User Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-light text-muted"><i class="bi bi-phone"></i></span>
+                                    <input type="text"
+                                           id="txtmobileno"
+                                           class="form-control form-control-lg shadow-none border-light bg-light"
+                                           placeholder="Enter User Name" style="font-size: 14px;">
+                                </div>
+                            </div>
+                            <div class="d-grid">
+                                <button type="button"
+                                        id="submitBtnotp"
+                                        class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2"
+                                        style="min-height: 48px; font-size: 14px;"
+                                        onclick="SendOTP()">
+                                    <i class="fa-solid fa-paper-plane"></i> Send OTP via WhatsApp
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2. OTP Verification Section -->
+                        <div id="headerotp" class="text-center mb-3" style="display: none;">
+                            <h5 class="fw-bold text-dark fs-6">Enter Verification OTP</h5>
+                            <p class="text-muted small mb-0">
+                                Enter the 4-digit OTP sent to your WhatsApp.
+                            </p>
+                        </div>
+
+                        <div id="contentotp" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-dark small">4-Digit OTP Code</label>
+                                <input type="password"
+                                       id="txtotp"
+                                       maxlength="4"
+                                       class="form-control form-control-lg text-center shadow-none border-light bg-light fw-bold"
+                                       placeholder="••••" style="letter-spacing: 6px; font-size: 18px; min-height: 48px;">
+                            </div>
+                            <div class="d-grid">
+                                <button type="button"
+                                        id="submitBtn"
+                                        class="btn btn-danger btn-lg rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2"
+                                        style="min-height: 48px; font-size: 14px;"
+                                        onclick="validateOtpCode()">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Verify & Delete Account
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="card-footer bg-white border-0 text-center pb-4 pt-0">
+                        <hr class="text-muted opacity-15 mb-3">
+                        <a href="/Home/Index"
+                           class="btn btn-outline-secondary rounded-pill px-4 btn-sm fw-semibold">
+                            <i class="fa-solid fa-arrow-left me-2"></i> Back to Home
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- PAGE STYLING & SWEETALERT SCRIPT -->
+<style>
+    .shadow-xs {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1) !important;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('#contentotp').hide();
+        $('#headerotp').hide();
+        $('#contentmobilno').show();
+        $('#headermibolno').show();
+    });
+
+    function SendOTP() {
+        var mobileNo = $('#txtmobileno').val().trim();
+        if (!mobileNo) {
+            Swal.fire("Info!", "Please enter a valid mobile number or user ID.", "info");
+            return;
+        }
+
+        Swal.fire({
+            title: "Sending OTP...",
+            text: "Please wait while we send OTP via WhatsApp.",
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        $.ajax({
+            type: "GET",
+            url: '/api/auth/whatsapp-send-otp',
+            data: { mobileNo: mobileNo },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    $('#OTPCode').val(response.message);
+                    $('#contentmobilno').hide();
+                    $('#headermibolno').hide();
+                    $('#contentotp').show();
+                    $('#headerotp').show();
+                    Swal.fire("Success!", "OTP has been sent to your WhatsApp number.", "success");
+                } else {
+                    Swal.fire("Error!", response.message, "error");
+                }
+            },
+            error: function(xhr) {
+                Swal.close();
+                var msg = xhr.responseJSON ? xhr.responseJSON.message : "Something went wrong.";
+                Swal.fire("Error!", msg, "error");
+            }
+        });
+    }
+
+    function validateOtpCode() {
+        var oldOTP = $("#OTPCode").val().trim();
+        var newOTP = $("#txtotp").val().trim();
+
+        if (newOTP.length !== 4 || oldOTP !== newOTP) {
+            Swal.fire("Info!", "Please enter the correct 4-digit OTP Code.", "info");
+            return;
+        }
+
+        DeleteUser();
+    }
+
+    function DeleteUser() {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this! Your account will be deactivated.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#dc3545",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var mobileNo = $('#txtmobileno').val().trim();
+
+                $.ajax({
+                    url: "/api/auth/delete-user-account",
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify({ identifier: mobileNo }),
+                    beforeSend: function() {
+                        Swal.fire({
+                            title: "Processing...",
+                            text: "Deactivating your account...",
+                            allowOutsideClick: false,
+                            didOpen: () => { Swal.showLoading(); }
+                        });
+                    },
+                    success: function(response) {
+                        Swal.close();
+                        if (response.success) {
+                            Swal.fire("Deleted!", response.message, "success").then(() => {
+                                window.location.href = '/Home/Index';
+                            });
+                        } else {
+                            Swal.fire("Error!", response.message, "error");
+                        }
+                    },
+                    error: function() {
+                        Swal.close();
+                        Swal.fire("Error!", "There was an error processing your request.", "error");
+                    }
+                });
+            }
+        });
+    }
+</script>
