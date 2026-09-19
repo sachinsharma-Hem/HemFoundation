@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 
 namespace HemFoundation.Models.Entities
@@ -28,7 +29,8 @@ namespace HemFoundation.Models.Entities
 
         [Required]
         public DateTime ScheduleDate { get; set; }
-
+        [Column("visitdate")]
+        public DateTime? visitdate { get; set; }
         [Required, StringLength(500)]
         public string Purpose { get; set; } = string.Empty;
 

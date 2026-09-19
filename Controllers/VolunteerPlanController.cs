@@ -28,16 +28,13 @@ namespace HemFoundation.Controllers
             return View("~/Views/Volunteer/PlanVisit.cshtml");
         }
 
-        // Helper method to get current logged-in volunteer from session or context
         private async Task<Volunteer?> GetCurrentVolunteerAsync()
         {
-            // Aapka login system username/userid session ya claims mein kaise store karta hai uske anusaar:
             string? userId = HttpContext.Session.GetString("UserId") ?? User.Identity?.Name;
 
             var volunteer = await _context.Volunteers
                 .FirstOrDefaultAsync(v => (v.AspNetUserId == userId || v.MobileNo == userId) && !v.IsDeleted);
 
-            // Fallback agar session mein direct VolunteerId save ho
             if (volunteer == null)
             {
                 var sessVolId = HttpContext.Session.GetString("VolunteerId");
@@ -47,7 +44,6 @@ namespace HemFoundation.Controllers
                 }
             }
 
-            // Agar fir bhi na mile toh pehla active volunteer utha lo (testing ke liye yaagar session alag ho)
             if (volunteer == null)
             {
                 volunteer = await _context.Volunteers.FirstOrDefaultAsync(v => !v.IsDeleted);
@@ -56,7 +52,6 @@ namespace HemFoundation.Controllers
             return volunteer;
         }
 
-        // 1. Get List of Plans
         [HttpGet("api/volunteer-plan/list")]
         public async Task<IActionResult> GetPlans()
         {
@@ -75,7 +70,8 @@ namespace HemFoundation.Controllers
                 .AsNoTracking()
                 .Where(p =>
                     p.VolunteerId == volunteer.Id &&
-                    !p.IsDeleted)
+                    !p.IsDeleted
+                )
                 .OrderByDescending(p => p.ScheduleDate)
                 .Select(p => new
                 {
@@ -90,6 +86,10 @@ namespace HemFoundation.Controllers
                             .FirstOrDefault(),
 
                     p.ScheduleDate,
+
+                    // NULL is allowed
+                    VisitDate = p.visitdate,
+
                     p.Purpose,
                     p.Status,
                     p.Remarks,
@@ -108,7 +108,58 @@ namespace HemFoundation.Controllers
             });
         }
 
-        // 2. Get Assigned Schools for Dropdown
+        // 4. Update Progress / Complete Visit
+        [HttpPost("api/volunteer-plan/update-progress")]
+        public async Task<IActionResult> UpdateProgress(
+     [FromForm] int id,
+     [FromForm] string remarks,
+     [FromForm] string status,
+     [FromForm] DateTime? visitDate,
+     [FromForm] string? latitude,
+     [FromForm] string? longitude,
+     IFormFile? visitImage)
+        {
+            var plan = await _context.VolunteerVisitPlans.FindAsync(id);
+            if (plan == null) return NotFound(new { success = false, message = "Plan not found." });
+
+            // Yahan par check laga dein taaki locked plans update na ho sakein
+            if (plan.Status != null && (plan.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase) || plan.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase)))
+            {
+                return BadRequest(new { success = false, message = "Ye visit pehle hi complete ya cancel ho chuki hai, ab dubara update nahi ho sakti." });
+            }
+
+            if (status == "Completed" && (visitImage == null || visitImage.Length == 0) && string.IsNullOrEmpty(plan.ImagePath))
+            {
+                return BadRequest(new { success = false, message = "Photo proof is mandatory when completing a visit." });
+            }
+
+            plan.Remarks = remarks;
+            plan.Status = status;
+            plan.visitdate = visitDate ?? DateTime.UtcNow;
+            plan.ReportLatitude = latitude;
+            plan.ReportLongitude = longitude;
+            plan.ReportedDate = DateTime.UtcNow;
+            plan.ModifiedDate = DateTime.UtcNow;
+
+            if (visitImage != null && visitImage.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "volunteer_visits");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + visitImage.FileName;
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await visitImage.CopyToAsync(stream);
+                }
+
+                plan.ImagePath = "/uploads/volunteer_visits/" + uniqueFileName;
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = "Visit status updated successfully." });
+        }
         [HttpGet("api/volunteer-plan/assigned-schools")]
         public async Task<IActionResult> GetAssignedSchools()
         {
@@ -125,9 +176,7 @@ namespace HemFoundation.Controllers
                     });
                 }
 
-                // ============================================
-                // 1. Volunteer ke active assigned Institute IDs
-                // ============================================
+      
                 var instituteIds = await _context.VolunteerInstituteMappings
                     .Where(m =>
                         m.VolunteerId == volunteer.Id &&
@@ -194,48 +243,6 @@ namespace HemFoundation.Controllers
             return Ok(new { success = true, message = "Visit plan scheduled successfully." });
         }
 
-        // 4. Update Progress / Complete Visit
-        [HttpPost("api/volunteer-plan/update-progress")]
-        public async Task<IActionResult> UpdateProgress([FromForm] int id, [FromForm] string remarks, [FromForm] string status, [FromForm] string? latitude, [FromForm] string? longitude, IFormFile? visitImage)
-        {
-            var plan = await _context.VolunteerVisitPlans.FindAsync(id);
-            if (plan == null) return NotFound(new { success = false, message = "Plan not found." });
-
-            if (status == "Completed" && (visitImage == null || visitImage.Length == 0))
-            {
-                return BadRequest(new { success = false, message = "Photo proof is mandatory when completing a visit." });
-            }
-
-            plan.Remarks = remarks;
-            plan.Status = status;
-            plan.ReportLatitude = latitude;
-            plan.ReportLongitude = longitude;
-            plan.ReportedDate = DateTime.UtcNow;
-            plan.ModifiedDate = DateTime.UtcNow;
-
-            if (visitImage != null && visitImage.Length > 0)
-            {
-                var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "volunteer_visits");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                var uniqueFileName = Guid.NewGuid().ToString() + "_" + visitImage.FileName;
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await visitImage.CopyToAsync(stream);
-                }
-
-                plan.ImagePath = "/uploads/volunteer_visits/" + uniqueFileName;
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "Visit status updated successfully." });
-        }
-
-        // =========================================================
-        // VOLUNTEER ACTIVITY DASHBOARD COUNTS
-        // =========================================================
         [HttpGet("api/volunteer-plan/dashboard-counts")]
         public async Task<IActionResult> GetDashboardCounts(
             [FromQuery] DateTime? fromDate = null,

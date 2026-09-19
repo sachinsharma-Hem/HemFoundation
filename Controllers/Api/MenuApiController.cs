@@ -18,7 +18,6 @@ namespace HemFoundation.Controllers.Api
             _context = context;
         }
 
-        // 1. GET ALL MENUS (For Listing Table & Parent Dropdown)
         [HttpGet("list")]
         public async Task<IActionResult> GetMenuList()
         {
@@ -44,7 +43,6 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = menus });
         }
 
-        // 2. GET SINGLE MENU BY ID (For Edit Modal Pre-fill)
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMenuById(long id)
         {
@@ -55,7 +53,6 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = menu });
         }
 
-        // 3. SAVE MENU (Handles Both Add & Update)
         [HttpPost("save")]
         public async Task<IActionResult> SaveMenu([FromBody] MenuDto dto)
         {
@@ -66,7 +63,6 @@ namespace HemFoundation.Controllers.Api
             {
                 if (dto.Id == 0)
                 {
-                    // ADD NEW MENU
                     var newMenu = new Menu
                     {
                         ParentId = dto.ParentId == 0 ? null : dto.ParentId,
@@ -91,7 +87,6 @@ namespace HemFoundation.Controllers.Api
                 }
                 else
                 {
-                    // UPDATE EXISTING MENU
                     var existingMenu = await _context.Menus.FindAsync(dto.Id);
                     if (existingMenu == null || existingMenu.IsDeleted)
                         return NotFound(new { success = false, message = "Menu not found." });
@@ -119,7 +114,6 @@ namespace HemFoundation.Controllers.Api
             }
         }
 
-        // 4. SOFT DELETE MENU
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteMenu(long id)
         {
@@ -127,7 +121,6 @@ namespace HemFoundation.Controllers.Api
             if (menu == null || menu.IsDeleted)
                 return NotFound(new { success = false, message = "Menu not found." });
 
-            // Soft delete
             menu.IsDeleted = true;
             menu.IsActive = false;
             menu.UpdatedOn = DateTimeHelper.UtcNow;

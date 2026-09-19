@@ -125,14 +125,21 @@
                             <option value="Cancelled">Cancelled</option>
                         </select>
                     </div>
+
+                    <!-- Naya Field: Actual Visit Date -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Actual Visit Date & Time <span class="text-danger">*</span></label>
+                        <input type="datetime-local" id="updateVisitDate" class="form-control rounded-3 shadow-none" required>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Remarks / Notes <span class="text-danger">*</span></label>
                         <textarea id="updateRemarks" class="form-control rounded-3 shadow-none" rows="3" required></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Upload Photo / Open Camera <span class="text-danger">*</span></label>
-                        <input type="file" id="updateImage" class="form-control rounded-3 shadow-none" accept="image/*" capture="environment" required>
-                        <small class="text-muted">Photo proof is mandatory.</small>
+                        <input type="file" id="updateImage" class="form-control rounded-3 shadow-none" accept="image/*" capture="environment">
+                        <small class="text-muted">Photo proof is mandatory for completion.</small>
                     </div>
                     <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm mt-3">Update Status</button>
                 </form>
@@ -141,6 +148,20 @@
     </div>
 </div>
 
+<!-- Lightbox Modal for viewing uploaded photo -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 overflow-hidden shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold m-0">Visit Photo Proof</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <img id="modalVisitImg" src="" alt="Visit Photo" class="img-fluid rounded-3 shadow-sm" style="max-height: 400px;" />
+            </div>
+        </div>
+    </div>
+</div>
 @section Scripts {
     <script>
         $(function() {
@@ -204,7 +225,7 @@
         }
 
         function loadPlans() {
-            $('#planTableBody').html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>');
+            $('#planTableBody').html('<tr><td colspan="8" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>');
             $.ajax({
                 url: '/api/volunteer-plan/list',
                 type: 'GET',
@@ -213,30 +234,44 @@
                         let html = '';
                         res.data.forEach(p => {
                             let typeBadge = p.isOtherActivity ? '<span class="badge bg-warning-subtle text-warning">Other Activity</span>' : '<span class="badge bg-primary-subtle text-primary">School Visit</span>';
-                            let statusBadge = p.status === 'Completed' ? 'bg-success-subtle text-success' : (p.status === 'Cancelled' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning');
 
-                            // Map Icon Buttons instead of raw Latitude/Longitude text
+                            // Status Badge Styling
+                            let statusLower = (p.status || '').toLowerCase();
+                            let statusBadge = statusLower === 'completed' ? 'bg-success-subtle text-success' : (statusLower === 'cancelled' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning');
+
                             let planLocBtn = (p.planLatitude && p.planLongitude)
                                 ? `<a href="https://www.google.com/maps?q=${p.planLatitude},${p.planLongitude}" target="_blank" class="btn btn-outline-primary btn-sm rounded-circle p-1 shadow-none me-2" title="View Plan Location"><i class="bi bi-map-fill"></i></a>`
-                                : `<span class="text-muted me-2" title="Plan Location N/A">-</span>`;
+                                : `<span class="text-muted me-2">-</span>`;
 
                             let reportLocBtn = (p.reportLatitude && p.reportLongitude)
                                 ? `<a href="https://www.google.com/maps?q=${p.reportLatitude},${p.reportLongitude}" target="_blank" class="btn btn-outline-success btn-sm rounded-circle p-1 shadow-none" title="View Report Location"><i class="bi bi-geo-alt-fill"></i></a>`
-                                : `<span class="text-muted" title="Report Location Not Available">-</span>`;
+                                : `<span class="text-muted">-</span>`;
 
-                            let actionBtn = (p.status === 'Completed' || p.status === 'Cancelled')
-                                ? `<span class="badge bg-light text-muted border">Locked (${p.status})</span>`
+                            // Photo Icon Button
+                            let photoIcon = p.imagePath
+                                ? `<button class="btn btn-outline-secondary btn-sm rounded-circle p-1 shadow-none ms-2" onclick="viewPhoto('${p.imagePath}')" title="View Uploaded Photo"><i class="bi bi-image-fill text-info"></i></button>`
+                                : `<span class="text-muted ms-2" title="No Photo">-</span>`;
+
+                            let visitDateStr = p.visitDate ? new Date(p.visitDate).toLocaleString('en-GB') : '<span class="text-muted">Not Visited</span>';
+
+                            // FRONTEND LOCK CHECK: Agar Completed ya Cancelled hai toh Update button hide ho jayega
+                            let actionBtn = (statusLower === 'completed' || statusLower === 'cancelled')
+                                ? `<span class="badge bg-light text-muted border px-2 py-1"><i class="bi bi-lock-fill me-1"></i> Locked (${p.status})</span>`
                                 : `<button class="btn btn-sm btn-light border text-primary shadow-none" onclick="openUpdateModal(${p.id})"><i class="bi bi-pencil-square me-1"></i> Update</button>`;
 
                             html += `<tr>
                                                 <td>${typeBadge}</td>
                                                 <td><b>${p.schoolName || 'N/A'}</b></td>
-                                                <td>${new Date(p.scheduleDate).toLocaleString('en-GB')}</td>
+                                                <td>
+                                                    <div><b>Plan:</b> ${new Date(p.scheduleDate).toLocaleString('en-GB')}</div>
+                                                    <div class="text-muted small"><b>Visit:</b> ${visitDateStr}</div>
+                                                </td>
                                                 <td>${p.purpose}</td>
                                                 <td class="text-center">
-                                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                                    <div class="d-flex align-items-center justify-content-center gap-1">
                                                         <span><b>Plan:</b> ${planLocBtn}</span>
-                                                        <span><b>Report:</b> ${reportLocBtn}</span>
+                                                        <span><b>Rep:</b> ${reportLocBtn}</span>
+                                                        <span><b>Pic:</b> ${photoIcon}</span>
                                                     </div>
                                                 </td>
                                                 <td><span class="badge ${statusBadge}">${p.status}</span></td>
@@ -245,12 +280,115 @@
                         });
                         $('#planTableBody').html(html);
                     } else {
-                        $('#planTableBody').html('<tr><td colspan="7" class="text-center py-5 text-muted">No visit plans scheduled yet.</td></tr>');
+                        $('#planTableBody').html('<tr><td colspan="8" class="text-center py-5 text-muted">No visit plans scheduled yet.</td></tr>');
                     }
                 }
             });
         }
 
+        function viewPhoto(path) {
+            $('#modalVisitImg').attr('src', path);
+            $('#photoModal').modal('show');
+        }
+
+        function openUpdateModal(id) {
+            $('#updatePlanId').val(id);
+            $('#frmUpdate')[0].reset();
+
+            // 1. Current local date & time nikalna
+            let now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            let currentDateTime = now.toISOString().slice(0, 16);
+
+            // 2. Input field par max limit set karna taaki future date select na ho
+            $('#updateVisitDate').attr('max', currentDateTime);
+
+            // 3. By default current date & time value me dalna
+            $('#updateVisitDate').val(currentDateTime);
+
+            captureLocation(function(lat, lng) {
+                $('#updateLat').val(lat);
+                $('#updateLng').val(lng);
+            });
+
+            $('#updateModal').modal('show');
+        }
+
+        $('#frmUpdate').on('submit', function(e) {
+            e.preventDefault();
+            let formData = new FormData();
+            formData.append('id', $('#updatePlanId').val());
+            formData.append('status', $('#updateStatus').val());
+            formData.append('visitDate', $('#updateVisitDate').val()); // <-- Visit Date backend par bhejne ke liye
+            formData.append('remarks', $('#updateRemarks').val());
+            formData.append('latitude', $('#updateLat').val());
+            formData.append('longitude', $('#updateLng').val());
+
+            let fileInput = $('#updateImage')[0].files[0];
+            if (fileInput) {
+                formData.append('visitImage', fileInput);
+            } else if ($('#updateStatus').val() === 'Completed') {
+                alert("Please click or upload a photo proof to submit.");
+                return;
+            }
+
+            $.ajax({
+                url: '/api/volunteer-plan/update-progress',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(res) {
+                    if (res.success) {
+                        $('#updateModal').modal('hide');
+                        loadPlans();
+                    } else {
+                        alert(res.message);
+                    }
+                },
+                error: function(xhr) {
+                    alert(xhr.responseJSON?.message || "Error updating progress.");
+                }
+            });
+        });
+
+        $('#frmUpdate').on('submit', function(e) {
+            e.preventDefault();
+            let formData = new FormData();
+            formData.append('id', $('#updatePlanId').val());
+            formData.append('status', $('#updateStatus').val());
+            formData.append('visitDate', $('#updateVisitDate').val());
+            formData.append('remarks', $('#updateRemarks').val());
+            formData.append('latitude', $('#updateLat').val());
+            formData.append('longitude', $('#updateLng').val());
+
+            let fileInput = $('#updateImage')[0].files[0];
+            if (fileInput) {
+                formData.append('visitImage', fileInput);
+            } else if ($('#updateStatus').val() === 'Completed') {
+                alert("Please click or upload a photo proof to submit.");
+                return;
+            }
+
+            $.ajax({
+                url: '/api/volunteer-plan/update-progress',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(res) {
+                    if (res.success) {
+                        $('#updateModal').modal('hide');
+                        loadPlans();
+                    } else {
+                        alert(res.message);
+                    }
+                },
+                error: function(xhr) {
+                    alert(xhr.responseJSON?.message || "Error updating progress.");
+                }
+            });
+        });
         function openPlanModal() {
             $('#frmPlan')[0].reset();
             $('#chkOtherActivity').prop('checked', false);
