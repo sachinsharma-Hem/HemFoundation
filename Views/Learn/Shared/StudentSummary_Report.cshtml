@@ -137,7 +137,7 @@
 
         $.ajax({
             type: "POST",
-            url: '@Url.Action("ExportStudentSummaryReport", "Student")',
+            url: '@Url.Action("ExportStudentSummaryReport", "Learn")',
             data: JSON.stringify({ StudentID: StudID, InstituteID: InstID }),
             contentType: "application/json; charset=utf-8",
            // xhrFields: { responseType: 'blob' }, // Necessary for file downloads via AJAX
