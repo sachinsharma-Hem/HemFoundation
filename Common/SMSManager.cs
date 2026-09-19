@@ -7,10 +7,13 @@ namespace HemFoundation.Common
     public class SMSManager
     {
         private readonly IConfiguration _configuration;
+        private static string WHatsapp_ApiKey;
+        private static string templeteid;
 
         public SMSManager(IConfiguration configuration)
         {
             _configuration = configuration;
+
         }
 
         public string SendSMS(string mobile, string message)
@@ -64,6 +67,34 @@ namespace HemFoundation.Common
             {
                 System.Diagnostics.Debug.WriteLine("StudentRegistration SMS failed: " + ex.ToString());
             }
+        }
+
+        public  string WhatsAppsendSMSForOTP(string mobile, string otp)
+        {
+            string result = string.Empty;
+
+            try
+            {
+
+                // Safe configuration reading without trailing space issues
+                String WHatsapp_ApiKey = _configuration["AppSettings:WhatsApp_ApiKey"] ?? "";
+                String templeteid = _configuration["AppSettings:OTPTempleteID"] ?? "";
+                if (string.IsNullOrEmpty(templeteid))
+                {
+                    templeteid = "code_hema_1";
+                }
+
+                string url = "http://wa.iconicsolution.co.in/wapp/api/send/bytemplate?apikey=" + WHatsapp_ApiKey + "&templatename=" + templeteid + "&mobile=" + mobile + "&dvariables=" + otp;
+
+                System.Net.WebClient web = new System.Net.WebClient();
+                System.IO.StreamReader webReader = new System.IO.StreamReader(web.OpenRead(url));
+                result = webReader.ReadToEnd();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("WhatsApp OTP Error: " + ex.Message);
+            }
+            return result;
         }
     }
 }

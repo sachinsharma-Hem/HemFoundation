@@ -8,5 +8,6 @@ namespace HemFoundation.Models.Identity
         public string? UserCode { get; set; }
         public string? PortalName { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow; 
+
     }
 }

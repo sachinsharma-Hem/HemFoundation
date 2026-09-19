@@ -108,7 +108,7 @@
 
                     </li>
 
-                    <li>
+                   @*  <li>
 
                         <a href="#">
 
@@ -130,7 +130,7 @@
 
                         </a>
 
-                    </li>
+                    </li> *@
 
                 </ul>
 
@@ -152,11 +152,11 @@
 
                     <li>
 
-                        <a href="#">
+                        <a href="Account/Register?portalId=4">
 
                             <i class="bi bi-chevron-right"></i>
 
-                            Register School
+                            School Registration
 
                         </a>
 
@@ -164,7 +164,7 @@
 
                     <li>
 
-                        <a href="#">
+                        <a href="Account/Register?portalId=2">
 
                             <i class="bi bi-chevron-right"></i>
 
@@ -173,7 +173,12 @@
                         </a>
 
                     </li>
-
+                    <li>
+                        <a href="/Account/Register?portalId=4">
+                            <i class="bi bi-chevron-right"></i>
+                            Student Registration
+                        </a>
+                    </li>
                     <li>
 
                         <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#loginModal" class="btn btn-success rounded-pill px-4">
@@ -200,40 +205,24 @@
 
                 <ul class="footer-links">
 
-                    <li>
+                   
+                       
+                        <li>
+                            <a asp-controller="Home" asp-action="FAQ">
+                                <i class="bi bi-chevron-right"></i>
+                                FAQs
+                            </a>
+                        </li>
 
-                        <a href="#">
 
-                            <i class="bi bi-chevron-right"></i>
 
-                            FAQs
-
-                        </a>
-
-                    </li>
-
-                    <li>
-
-                        <a href="#">
-
-                            <i class="bi bi-chevron-right"></i>
-
-                            Privacy Policy
-
-                        </a>
-
-                    </li>
+                    
 
                     <li>
-
-                        <a href="#">
-
+                        <a asp-controller="Home" asp-action="Unsubscriber">
                             <i class="bi bi-chevron-right"></i>
-
-                            Delete Account
-
+                            Delete/Unsubscribe Account
                         </a>
-
                     </li>
 
                     <li>

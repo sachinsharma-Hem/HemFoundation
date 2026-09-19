@@ -53,6 +53,7 @@
 		<Folder Include="wwwroot\images\logo\" />
 		<Folder Include="wwwroot\images\homepage\" />
 		<Folder Include="wwwroot\images\team\" />
+		<Folder Include="wwwroot\marketing-kit\" />
 		<Folder Include="wwwroot\template\" />
 		<Folder Include="wwwroot\plugins\" />
 		<Folder Include="wwwroot\uploads\profiles\" />

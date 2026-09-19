@@ -1,0 +1,166 @@
+﻿@{
+    ViewData["Title"] = "Frequently Asked Questions";
+}
+
+<!-- =========================================================
+     HEM VIRTUES - FAQ & HELP CENTER PAGE
+========================================================== -->
+<div class="faq-page-wrapper bg-soft-light min-vh-100 pb-5" style="background-color: #f8fafc;">
+
+    <!-- 1. HERO BANNER SECTION -->
+    <section class="faq-hero-banner text-center text-white py-5 mb-5 position-relative overflow-hidden" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);">
+        <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 24px 24px;"></div>
+        <div class="container position-relative py-4" style="z-index: 2;">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <span class="badge bg-white bg-opacity-15 text-warning px-3 py-2 rounded-pill fw-semibold mb-3 border border-white border-opacity-10">
+                        <i class="bi bi-question-circle-fill me-1"></i> Help & Support Center
+                    </span>
+                    <h1 class="fw-bold text-white mb-3 display-6">Have Questions? We Have Answers</h1>
+                    <p class="text-white-50 mb-4 mx-auto small" style="max-width: 600px; line-height: 1.6;">
+                        Find quick help, operational guides, and structural parameters for the HemVirtues value learning model.
+                    </p>
+
+                    <!-- Search Input Filter (Optional UI Enhancement) -->
+                    <div class="input-group input-group-lg bg-white rounded-pill p-1 shadow-sm mx-auto" style="max-width: 500px;">
+                        <span class="input-group-text bg-transparent border-0 ps-3 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" id="faqSearch" class="form-control border-0 shadow-none bg-transparent" placeholder="Search questions, values, or guides..." style="font-size: 14px;">
+                        <button class="btn btn-primary rounded-pill px-4 fw-semibold" type="button" style="font-size: 14px;">Search</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. FAQ CONTENT SECTION -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                <!-- Section Header -->
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h4 class="fw-bold text-dark m-0 fs-5">Frequently Asked Questions</h4>
+                    <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill">All Categories</span>
+                </div>
+
+                <!-- Accordions Container -->
+                <div class="accordion custom-accordion" id="hemFaqAccordion">
+
+                    <!-- Item 1 -->
+                    <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
+                        <h2 class="accordion-header" id="faqHeadingOne">
+                            <button class="accordion-button fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseOne" aria-expanded="true" aria-controls="faqCollapseOne">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-mortarboard-fill"></i>
+                                    </div>
+                                    <span>Who can register and participate in the HEM Virtues program?</span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="faqCollapseOne" class="accordion-collapse collapse show" aria-labelledby="faqHeadingOne" data-bs-parent="#hemFaqAccordion">
+                            <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
+                                Teachers, students, and institutional authorities from any authorized school can seamlessly register and participate in the <strong>HEM Virtues</strong> program via our dedicated portal onboarding flows.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
+                        <h2 class="accordion-header" id="faqHeadingTwo">
+                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseTwo" aria-expanded="false" aria-controls="faqCollapseTwo">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-success-subtle text-success rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-award-fill"></i>
+                                    </div>
+                                    <span>How are marks and values structured under the NEP framework?</span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="faqCollapseTwo" class="accordion-collapse collapse" aria-labelledby="faqHeadingTwo" data-bs-parent="#hemFaqAccordion">
+                            <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
+                                The portal covers <strong>50 foundational human values</strong> aligned with NEP 2020. Each value carries 80 marks, culminating in a maximum score of 4,000 marks, plus additional bonus marks for milestone completions.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-warning-subtle text-warning-emphasis rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-file-earmark-text-fill"></i>
+                                    </div>
+                                    <span>What learning resources are provided for each value module?</span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#hemFaqAccordion">
+                            <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
+                                Every value module includes engaging instructional video lessons, downloadable PDF learning documents, interactive practical tasks, and a 5-question MCQ assessment test.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 4 -->
+                    <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
+                        <h2 class="accordion-header" id="headingFour">
+                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-info-subtle text-info-emphasis rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-patch-check-fill"></i>
+                                    </div>
+                                    <span>How do students qualify for Digital E-Certificates?</span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#hemFaqAccordion">
+                            <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
+                                To qualify for digital e-certificates, students must correctly answer at least 3 out of 5 MCQs per value and successfully complete a minimum of 50% of the assigned practical tasks.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 3. STILL HAVE QUESTIONS CARD -->
+                <div class="card border-0 shadow-xs rounded-4 bg-white p-4 p-md-5 text-center mt-5">
+                    <div class="col-lg-8 mx-auto">
+                        <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-headset fs-4"></i>
+                        </div>
+                        <h4 class="fw-bold text-dark fs-5 mb-2">Still Have Questions or Need Help?</h4>
+                        <p class="text-muted small mb-4">Our support desk is available to assist you with any portal issues or guidance.</p>
+                        <a href="mailto:support@hemvirtues.com" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                            <i class="bi bi-envelope-fill me-2"></i> Contact Support Team
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE STYLING -->
+<style>
+    .shadow-xs {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1) !important;
+    }
+
+    .custom-accordion .accordion-button:not(.collapsed) {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        box-shadow: none !important;
+    }
+
+    .custom-accordion .accordion-button::after {
+        background-size: 1rem;
+    }
+
+    .faq-hero-banner {
+        border-bottom-left-radius: 2rem;
+        border-bottom-right-radius: 2rem;
+    }
+</style>

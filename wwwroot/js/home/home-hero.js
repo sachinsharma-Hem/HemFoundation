@@ -99,22 +99,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const whyCards = document.querySelectorAll(".hem-why-card");
 
     if (whyCards.length > 0) {
-        // Initial setup: 3D Pop effect ke liye scale-down aur translate set kiya hai
         whyCards.forEach((card, index) => {
             card.style.opacity = "0";
             card.style.transform = "translateY(45px) scale(0.85)";
-            // Staggered delay: har card line se 0.12s ke gap me pop hoga
             card.style.transition = `opacity 0.7s ease, transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${index * 0.12}s`;
         });
 
         const observer = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    // Viewport me aate hi smoothly original size aur position pe aayega
                     entry.target.style.opacity = "1";
                     entry.target.style.transform = "translateY(0) scale(1)";
 
-                    // Entry animation khatam hone ke baad normal hover transition wapas laga dega
                     setTimeout(() => {
                         entry.target.style.transition = "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
                     }, 1200);
@@ -123,8 +119,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         }, {
-            threshold: 0.15, // Screen par 15% dikhte hi trigger ho jayega
-            rootMargin: "0px 0px -30px 0px" // Scroll karte time thoda pehle hi activate hoga
+            threshold: 0.15, 
+            rootMargin: "0px 0px -30px 0px" 
         });
 
         whyCards.forEach(card => observer.observe(card));
@@ -132,12 +128,10 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Select both steps and arrows in order of DOM
     const howElements = document.querySelectorAll(".hem-how-step-col, .hem-how-arrow");
     const howHeader = document.querySelector(".hem-how-header");
 
     if (howElements.length > 0) {
-        // Initial setup: Hide elements slightly scaled down and below
         if (howHeader) {
             howHeader.style.opacity = "0";
             howHeader.style.transform = "translateY(-20px)";
@@ -149,33 +143,28 @@ document.addEventListener("DOMContentLoaded", () => {
             el.style.transform = "translateY(30px) scale(0.95)";
         });
 
-        // Create Intersection Observer
         const observer = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
 
-                    // 1. Animate Header First
                     if (howHeader) {
                         howHeader.style.opacity = "1";
                         howHeader.style.transform = "translateY(0)";
                     }
 
-                    // 2. Animate Steps & Arrows sequentially with stagger delay
                     howElements.forEach((el, index) => {
                         setTimeout(() => {
                             el.style.transition = "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)";
                             el.style.opacity = "1";
                             el.style.transform = "translateY(0) scale(1)";
-                        }, index * 150); // 150ms delay between each step/arrow
+                        }, index * 150); 
                     });
 
-                    // Stop observing once animated
                     observer.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.2 }); // Triggers when 20% of the section is visible
+        }, { threshold: 0.2 }); 
 
-        // Observe the first element to trigger the whole sequence
         observer.observe(howElements[0]);
     }
 });
@@ -185,18 +174,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const progHeader = document.querySelector(".hem-prog-header");
 
     if (progCols.length > 0) {
-        // Hide header initially
         if (progHeader) {
             progHeader.style.opacity = "0";
             progHeader.style.transform = "translateY(-20px)";
             progHeader.style.transition = "all 0.6s ease-out";
         }
 
-        // Hide cards slightly scaled down and translated below
         progCols.forEach((col, index) => {
             col.style.opacity = "0";
             col.style.transform = "translateY(45px) scale(0.85)";
-            // Staggered delay: 0.1s gap between each card entry
             col.style.transition = `opacity 0.7s ease, transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${index * 0.1}s`;
         });
 
@@ -204,18 +190,15 @@ document.addEventListener("DOMContentLoaded", () => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
 
-                    // 1. Animate Header First
                     if (progHeader) {
                         progHeader.style.opacity = "1";
                         progHeader.style.transform = "translateY(0)";
                     }
 
-                    // 2. Animate all cards sequentially
                     progCols.forEach((col) => {
                         col.style.opacity = "1";
                         col.style.transform = "translateY(0) scale(1)";
 
-                        // Reset transition for normal hover effects after entry animation completes
                         setTimeout(() => {
                             col.style.transition = "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
                         }, 1200);
@@ -225,11 +208,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         }, {
-            threshold: 0.15, // Triggers as soon as 15% of the card is visible
+            threshold: 0.15, 
             rootMargin: "0px 0px -20px 0px"
         });
 
-        // Observe the first card to start the sequence
+      
         observer.observe(progCols[0]);
     }
 });
