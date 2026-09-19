@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "H:\\Sachin\\Project\\HemFoundation\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\dashboard\\partials\\_volunteerdashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\dashboard\\partials\\_volunteerdashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\affiliate\\volunteers.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\affiliate\\volunteers.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
@@ -51,19 +55,32 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "_VolunteerDashboard.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dashboard\\Partials\\_VolunteerDashboard.cshtml",
+              "RelativeDocumentMoniker": "Views\\Dashboard\\Partials\\_VolunteerDashboard.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dashboard\\Partials\\_VolunteerDashboard.cshtml",
+              "RelativeToolTip": "Views\\Dashboard\\Partials\\_VolunteerDashboard.cshtml",
+              "ViewState": "AgIAAJUAAAAAzMzMzMwXwKQAAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-19T19:04:53.406Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "Volunteers.cshtml",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Volunteers.cshtml",
               "RelativeDocumentMoniker": "Views\\Affiliate\\Volunteers.cshtml",
               "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Volunteers.cshtml",
               "RelativeToolTip": "Views\\Affiliate\\Volunteers.cshtml",
-              "ViewState": "AgIAALwAAAAAAAAAAAAwwM4AAAAgAAAAAAAAAA==",
+              "ViewState": "AgIAALwAAAAAAAAAAAAwwM8AAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-09-19T11:33:09.147Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "AffiliateExpense.cs",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Models\\Entities\\AffiliateExpense.cs",
               "RelativeDocumentMoniker": "Models\\Entities\\AffiliateExpense.cs",
@@ -71,12 +88,11 @@
               "RelativeToolTip": "Models\\Entities\\AffiliateExpense.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAuwBsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-19T11:07:08.659Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-19T11:07:08.659Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "OtherActivityApiController.cs",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\OtherActivityApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\Api\\OtherActivityApiController.cs",
@@ -89,7 +105,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "OtherActivity.cshtml",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\OtherActivity.cshtml",
               "RelativeDocumentMoniker": "Views\\Affiliate\\OtherActivity.cshtml",
@@ -97,12 +113,11 @@
               "RelativeToolTip": "Views\\Affiliate\\OtherActivity.cshtml",
               "ViewState": "AgIAAKMAAAAAAAAAAIAwwLsAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-19T11:03:05.641Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-19T11:03:05.641Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "VolunteerPlanController.cs",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\VolunteerPlanController.cs",
               "RelativeDocumentMoniker": "Controllers\\VolunteerPlanController.cs",
@@ -110,12 +125,11 @@
               "RelativeToolTip": "Controllers\\VolunteerPlanController.cs",
               "ViewState": "AgIAAGcAAAAAAAAAAAD4v3AAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-19T10:19:16.605Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-19T10:19:16.605Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "PlanVisit.cshtml",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Volunteer\\PlanVisit.cshtml",
               "RelativeDocumentMoniker": "Views\\Volunteer\\PlanVisit.cshtml",
@@ -123,8 +137,7 @@
               "RelativeToolTip": "Views\\Volunteer\\PlanVisit.cshtml",
               "ViewState": "AgIAAD8BAAAAAAAAAAAmwFEBAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-19T09:57:59.146Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-19T09:57:59.146Z"
             }
           ]
         }
