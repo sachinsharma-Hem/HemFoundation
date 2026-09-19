@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using ClosedXML.Excel;
+using Dapper;
 using DocumentFormat.OpenXml.ExtendedProperties;
 using DocumentFormat.OpenXml.InkML;
 using HemFoundation.Data;
@@ -1127,6 +1128,255 @@ namespace HemFoundation.Controllers
             ViewBag.DefaultURL = string.IsNullOrEmpty(sessionUrl) ? Url.Action("Index", "Home") : sessionUrl;
 
             return View(model);
+        }
+
+        [HttpPost]
+        public IActionResult ExportStudentSummaryReport(int studentID, int instituteID)
+        {
+            try
+            {
+                string connString = _configuration.GetConnectionString("DefaultConnection");
+                DataSet essr = new DataSet();
+                DataTable pblReportDataTable = new DataTable("PBL Report");
+
+                using (var conn = new Npgsql.NpgsqlConnection(connString))
+                {
+                    conn.Open();
+
+                    // 1. Execute batched multi-result-set query for Student Details, MCQ, and Practical Marks
+                    string summaryBatchSql = @"
+                -- Table 0: Student Details
+                SELECT 
+                    wjs.studentid AS ""StudentID"",
+                    u.firstname || ' ' || u.lastname AS ""StudentName"",
+                    u.gender AS ""Gender"",
+                    wjs.standard AS ""Standard"",
+                    wjs.division AS ""Division"",
+                    u.mobileno AS ""MobileNo"",
+                    u.cityname AS ""CityName"",
+                    wji.""Name"" AS ""SchoolName""
+                FROM wj_students AS wjs
+                LEFT JOIN users AS u ON u.userid = wjs.studentid
+                LEFT JOIN wj_studentassociates AS wjsa ON wjsa.studentid = wjs.studentid
+                LEFT JOIN wj_institutes AS wji ON wji.instituteid = wjsa.instituteid
+                WHERE wjs.studentid = @StudentID;
+
+                -- Table 1: MCQ Marks
+                SELECT 
+                    wjs.studentid AS ""StudentID"",                  
+                    u.firstname || ' ' || u.lastname AS ""Student_Name"",                  
+                    wjs.standard AS ""Standard"",                  
+                    vs.maincoursename AS ""MainCourseName"",                  
+                    c.coursename AS ""CourseName"",                  
+                    t.topicname AS ""TopicName"",                 
+                    '5' AS ""TotalMarks"",                
+                    e.marksobtain AS ""MarksObtain"",                  
+                    e.starttime AS ""Activity_Date""                  
+                FROM hf_view_diffrentexaminationrecords AS e                   
+                LEFT JOIN wj_students AS wjs ON e.userid = wjs.studentid                  
+                LEFT JOIN users AS u ON u.userid = e.userid                  
+                LEFT JOIN topics AS t ON t.topicid = e.examtopicid                  
+                LEFT JOIN courses AS c ON c.courseid = t.courseid                  
+                LEFT JOIN view_wj_syllabus AS vs ON vs.courseid = t.courseid                  
+                WHERE e.endtime IS NOT NULL 
+                  AND e.endtime::text <> '0'
+                  AND c.courseallocatedto <> 'Teacher' 
+                  AND c.coursename <> 'HEM-Sampark Mega Quiz' 
+                  AND t.topicname <> 'Belief Survey MCQ' 
+                  AND vs.maincoursename NOT LIKE '%Beliefs%' 
+                  AND wjs.studentid = @StudentID  
+                  AND wjs.studentid IS NOT NULL 
+                  AND wjs.studentid <> 0;
+
+                -- Table 2: Practical Marks
+                SELECT DISTINCT 
+                    wjs.studentid AS ""StudentID"",                  
+                    u.firstname || ' ' || u.lastname AS ""Student_Name"",                  
+                    wjs.standard AS ""Standard"",                  
+                    COALESCE(vs.maincoursename, 'NA') AS ""MainCourseName"",                  
+                    COALESCE(c.coursename, 'NA') AS ""CourseName"",                  
+                    COALESCE(pa.title, 'NA') AS ""Title"",                 
+                    COALESCE(pa.coins, 0) AS ""TotalMarks"",                
+                    CASE      
+                        WHEN pa.code = 'G_E_10' THEN '10'        
+                        WHEN pa.title NOT IN ('Game','Ken Ken','Futoshiki','Puzzle','Scramble','Wordgame') THEN '5'           
+                        WHEN pa.title = 'Game' THEN (SELECT COUNT(DISTINCT game24id) FROM game24solution WHERE game24solution.courseid = pa.courseid AND game24solution.iscreatedby = wjs.studentid AND game24solution.solutionanswers <> 'NA' AND game24solution.game24id <> 0)  
+                        WHEN pa.title = 'Ken Ken' THEN (SELECT COUNT(DISTINCT kmid) FROM ken_answers WHERE ken_answers.courseid = pa.courseid AND ken_answers.iscreatedby = wjs.studentid AND ken_answers.kmid NOT IN ('345','346','350','351','352'))                   
+                        WHEN pa.title = 'Futoshiki' THEN (SELECT COUNT(DISTINCT fid) FROM futoshiki_answer WHERE futoshiki_answer.courseid = pa.courseid AND futoshiki_answer.iscreatedby = wjs.studentid AND futoshiki_answer.fid <> 0)                    
+                        WHEN pa.title IN ('Puzzle','Scramble','Wordgame') THEN '2'                  
+                        ELSE '0' 
+                    END AS ""MarksObtain"",                  
+                    p.createddate::DATE AS ""Activity_Date""                  
+                FROM hf_view_praticalsubmissionrecords AS p                  
+                LEFT JOIN wj_students AS wjs ON p.studentid = wjs.studentid                  
+                LEFT JOIN users AS u ON u.userid = p.studentid                  
+                LEFT JOIN wj_practicals AS pa ON pa.practicalid = p.practicalid                  
+                LEFT JOIN courses AS c ON c.courseid = pa.courseid                  
+                LEFT JOIN view_wj_syllabus AS vs ON vs.courseid = c.courseid                  
+                WHERE wjs.studentid = @StudentID 
+                  AND pa.code NOT IN ('G_E_010','G_E_011');
+            ";
+
+                    using (var cmd = new Npgsql.NpgsqlCommand(summaryBatchSql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("StudentID", studentID);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            // Read Result Set 1: Student Details
+                            DataTable dtStudent = new DataTable("StudentDetails");
+                            dtStudent.Load(reader);
+                            essr.Tables.Add(dtStudent);
+
+                            // Read Result Set 2: MCQ
+                            DataTable dtMcq = new DataTable("MCQ");
+                            dtMcq.Load(reader);
+                            essr.Tables.Add(dtMcq);
+
+                            // Read Result Set 3: Practical
+                            DataTable dtPractical = new DataTable("Practical");
+                            dtPractical.Load(reader);
+                            essr.Tables.Add(dtPractical);
+                        }
+                    }
+
+                    // 2. Execute PBL Report Function
+                    string pblQuery = "SELECT * FROM \"PBL_Report_Student\"(@StudentID)";
+                    using (var cmd = new Npgsql.NpgsqlCommand(pblQuery, conn))
+                    {
+                        cmd.Parameters.AddWithValue("StudentID", studentID);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            pblReportDataTable.Load(reader);
+                        }
+                    }
+                }
+
+                // Assign table names matching the original design
+                if (essr.Tables.Count > 0) essr.Tables[0].TableName = "StudentDetails";
+                if (essr.Tables.Count > 1) essr.Tables[1].TableName = "MCQ";
+                if (essr.Tables.Count > 2) essr.Tables[2].TableName = "Practical";
+                pblReportDataTable.TableName = "PBL Report";
+
+                using (XLWorkbook wb = new XLWorkbook())
+                {
+                    if (essr.Tables.Count > 0) wb.Worksheets.Add(essr.Tables[0], "StudentDetails");
+                    if (essr.Tables.Count > 1) wb.Worksheets.Add(essr.Tables[1], "MCQ");
+                    if (essr.Tables.Count > 2) wb.Worksheets.Add(essr.Tables[2], "Practical");
+                    wb.Worksheets.Add(pblReportDataTable, "PBL");
+
+                    // Extract distinct MainCourseNames safely
+                    var distinctMainCourses = new List<string>();
+                    if (essr.Tables.Count > 1)
+                        distinctMainCourses.AddRange(essr.Tables[1].AsEnumerable().Select(row => row["MainCourseName"].ToString()));
+                    if (essr.Tables.Count > 2)
+                        distinctMainCourses.AddRange(essr.Tables[2].AsEnumerable().Select(row => row["MainCourseName"].ToString()));
+                    distinctMainCourses.AddRange(pblReportDataTable.AsEnumerable().Select(row => row["MainCourseName"].ToString()));
+                    distinctMainCourses = distinctMainCourses.Distinct().ToList();
+
+                    // Create separate sheets for each MainCourse
+                    foreach (var mainCourse in distinctMainCourses)
+                    {
+                        var ws = wb.Worksheets.Add(mainCourse);
+                        int currentRow = 1;
+
+                        // Process MCQ Data
+                        if (essr.Tables.Count > 1)
+                        {
+                            DataTable mcqTable = essr.Tables[1].Clone();
+                            var mcqRows = essr.Tables[1].AsEnumerable().Where(row => row["MainCourseName"].ToString() == mainCourse);
+                            foreach (var row in mcqRows) mcqTable.ImportRow(row);
+
+                            if (mcqTable.Rows.Count > 0)
+                            {
+                                ws.Cell(currentRow, 1).Value = $"{mainCourse} - MCQ Data";
+                                ws.Cell(currentRow, 1).Style.Font.Bold = true;
+                                currentRow++;
+                                ws.Cell(currentRow, 1).InsertTable(mcqTable);
+                                currentRow += mcqTable.Rows.Count + 3;
+                            }
+                        }
+
+                        // Process Practical Data
+                        if (essr.Tables.Count > 2)
+                        {
+                            DataTable practicalTable = essr.Tables[2].Clone();
+                            var practicalRows = essr.Tables[2].AsEnumerable().Where(row => row["MainCourseName"].ToString() == mainCourse);
+                            foreach (var row in practicalRows) practicalTable.ImportRow(row);
+
+                            if (practicalTable.Rows.Count > 0)
+                            {
+                                ws.Cell(currentRow, 1).Value = $"{mainCourse} - Practical Data";
+                                ws.Cell(currentRow, 1).Style.Font.Bold = true;
+                                currentRow++;
+                                ws.Cell(currentRow, 1).InsertTable(practicalTable);
+                                currentRow += practicalTable.Rows.Count + 3;
+                            }
+                        }
+
+                        // Process PBL Data
+                        DataTable pblTable = pblReportDataTable.Clone();
+                        var pblRows = pblReportDataTable.AsEnumerable().Where(row => row["MainCourseName"].ToString() == mainCourse);
+                        foreach (var row in pblRows) pblTable.ImportRow(row);
+
+                        if (pblTable.Rows.Count > 0)
+                        {
+                            ws.Cell(currentRow, 1).Value = $"{mainCourse} - PBL Report";
+                            ws.Cell(currentRow, 1).Style.Font.Bold = true;
+                            currentRow++;
+                            ws.Cell(currentRow, 1).InsertTable(pblTable);
+                        }
+                    }
+
+                    // Create Summary Sheet
+                    DataTable summaryTable = new DataTable();
+                    summaryTable.Columns.Add("Standard");
+                    summaryTable.Columns.Add("MainCourseName");
+                    summaryTable.Columns.Add("Total Marks", typeof(int));
+                    summaryTable.Columns.Add("Gain Marks", typeof(int));
+
+                    var allData = Enumerable.Empty<DataRow>();
+                    if (essr.Tables.Count > 1) allData = allData.Union(essr.Tables[1].AsEnumerable());
+                    if (essr.Tables.Count > 2) allData = allData.Union(essr.Tables[2].AsEnumerable());
+                    allData = allData.Union(pblReportDataTable.AsEnumerable());
+
+                    var summaryData = allData
+                           .GroupBy(row => new
+                           {
+                               Standard = row["Standard"].ToString(),
+                               MainCourseName = row["MainCourseName"].ToString()
+                           })
+                         .Select(g => new
+                         {
+                             Standard = g.Key.Standard,
+                             MainCourseName = g.Key.MainCourseName,
+                             TotalMarks = 100,
+                             GainMarks = g.Sum(row => row.Table.Columns.Contains("MarksObtain")
+                                     ? (row["MarksObtain"] != DBNull.Value
+                                         ? Convert.ToInt32(row["MarksObtain"])
+                                         : 0)
+                                     : 0)
+                         }).ToList();
+
+                    foreach (var item in summaryData)
+                    {
+                        summaryTable.Rows.Add(item.Standard, item.MainCourseName, item.TotalMarks, item.GainMarks);
+                    }
+
+                    var summarySheet = wb.Worksheets.Add("Summary");
+                    summarySheet.Cell(1, 1).InsertTable(summaryTable);
+
+                    // Save and Return File stream
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        wb.SaveAs(stream);
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "StudentSummaryReport.xlsx");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
 }
