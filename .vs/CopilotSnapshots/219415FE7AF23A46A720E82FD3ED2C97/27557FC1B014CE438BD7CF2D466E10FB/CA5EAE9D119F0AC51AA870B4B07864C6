@@ -1,0 +1,316 @@
+﻿@model HemFoundation.DTOs.PrintableScorecardViewModel
+@{
+    Layout = null;
+    string url = HttpContext.Session.GetString("DefaultURL", dashboardMapping.RedirectUrl);
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Holistic Statement of Marks - @Model.StudentName</title>
+
+    <!-- Add this before the </body> tag -->
+    <!-- Add this before the </body> tag -->
+    @*<link href="~/Content/bootstrap-5.1.3-dist/bootstrap-5.1.3-dist/css/bootstrap.min.css" rel="stylesheet" />*@
+    <link href="~/Boostrap/bootstrap.min.css" rel="stylesheet" />
+    <style>
+            body {
+                background-color: #FFF;
+                font-family: 'Arial', sans-serif;
+                color: #333;
+            }
+
+            .scorecard-container {
+                border: 2px solid #333;
+                padding: 40px;
+                margin: 20px auto;
+                max-width: 1100px;
+                background-color: #FFF;
+                position: relative;
+                z-index: 1;
+            }
+
+                /* --- WATERMARK BACKGROUND LAYER SETUP --- */
+                .scorecard-container::before {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    /* Pointing to your official HEM logo asset path */
+                    background-image: url('https://www.hemvirtues.com/images/logo/logo.png');
+                    background-repeat: no-repeat;
+                    background-position: center 55%;
+                    background-size: 450px; /* Size of the center background watermark */
+                    opacity: 0.05; /* Keeps thumbnail subtle so data remains legible */
+                    z-index: -1; /* Pushes the image strictly behind text and tables */
+                }
+
+            .scorecard-header {
+                border-bottom: 2px solid #1e3c72;
+                padding-bottom: 25px;
+                margin-bottom: 30px;
+            }
+
+            .logo-left {
+                max-height: 80px;
+                float: none;
+            }
+
+            .logo-right {
+                max-height: 80px;
+                float: none;
+                font-style: italic;
+                color: #999;
+            }
+
+            .center-title {
+                text-align: center;
+                margin-top: 10px;
+            }
+
+                .center-title h2 {
+                    margin: 0;
+                    font-weight: bold;
+                    color: #1e3c72;
+                    letter-spacing: 1px;
+                }
+
+            .metadata-section {
+                margin: 25px 0;
+                font-size: 15px;
+                line-height: 2;
+                text-align: center;
+            }
+
+            .metadata-label {
+                font-weight: bold;
+                color: #555;
+            }
+
+            .metadata-value {
+                border-bottom: 1px dashed #333;
+                padding: 0 15px;
+                font-weight: bold;
+                display: inline-block;
+                min-width: 200px;
+            }
+
+            .section-heading {
+                background-color: #f5f5f5;
+                padding: 8px 15px;
+                font-weight: bold;
+                color: #2a5298;
+                border-left: 5px solid #1e3c72;
+                margin-top: 25px;
+                margin-bottom: 15px;
+                text-transform: uppercase;
+                font-size: 14px;
+            }
+
+            .table-scorecard {
+                width: 100%;
+                margin-bottom: 20px;
+                background-color: transparent !important;
+            }
+
+                .table-scorecard th {
+                    background-color: #1e3c72 !important;
+                    color: white !important;
+                    text-align: center;
+                    font-size: 13px;
+                    padding: 10px !important;
+                }
+
+                .table-scorecard td {
+                    text-align: center;
+                    vertical-align: middle !important;
+                    padding: 8px !important;
+                    font-size: 13px;
+                    background-color: transparent !important;
+                }
+
+                .table-scorecard .text-left-align {
+                    text-align: left;
+                    font-weight: bold;
+                }
+
+            /* --- CRITICAL NATIVE PRINT ENGINE CONFIGURATIONS --- */
+            @@media print {
+                body {
+                    background-color: #FFF;
+                    padding: 0;
+                    margin: 0;
+                }
+
+                .scorecard-container {
+                    border: none;
+                    padding: 0;
+                    margin: 0;
+                    max-width: 100%;
+                }
+
+                .no-print {
+                    display: none !important;
+                }
+                /* Forces Chrome/Edge/Safari to print the background watermark accurately */
+                .scorecard-container::before {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+
+                .table-scorecard th {
+                    background-color: #1e3c72 !important;
+                    color: white !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+
+                .section-heading {
+                    background-color: #f5f5f5 !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+            }
+    </style>
+</head>
+<body>
+
+    <div class="container text-center no-print">
+
+        <button onclick="window.print();" class="btn btn-primary">
+            <span class="glyphicon glyphicon-print"></span> Print Statement of Marks
+        </button>
+        <a href="@Url.Action("Index", "Dashboard")" class="btn btn-primary">
+            Return to Page
+        </a>
+    </div>
+
+    <div class="scorecard-container">
+
+        <div class="scorecard-header row">
+            <div class="col-xs-3">
+                <img src="https://www.hemvirtues.com/images/logo/logo.png" class="logo-left" alt="Hema Foundation" />
+            </div>
+            <div class="col-xs-6 center-title">
+                <h2>HEM VIRTUES</h2>
+                <p class="text-muted">Academic Evaluation & Value Ledger Statement</p>
+            </div>
+            <div class="col-xs-3 text-right">
+                <div class="logo-right">[ School Logo Placeholder ]</div>
+            </div>
+        </div>
+
+        <div class="metadata-section">
+            <div>
+                <span class="metadata-label">Student Name:</span>
+                <span class="metadata-value">@Model.StudentName</span>
+            </div>
+            <div style="margin-top: 10px;">
+                <span class="metadata-label">Standard Scope:</span>
+                <span class="metadata-value">@Model.Standard</span>
+
+                <span class="metadata-label" style="margin-left: 30px;">Academic Session:</span>
+                <span class="metadata-value">@Model.AcademicYear</span>
+            </div>
+            <div style="margin-top: 10px;">
+                <span class="metadata-label">Institutional Affiliation:</span>
+                <span class="metadata-value">@Model.InstituteName</span>
+            </div>
+        </div>
+
+        <p class="text-center" style="font-size: 14px; margin: 25px 0; font-weight: bold; color: #555;">
+            Has Successfully Completed the Value Courses & Scholastic Programs of Hem Virtues
+        </p>
+
+        <div class="section-heading">Part I: Value-Based Performance Ledger</div>
+        <table class="table table-bordered table-scorecard">
+            <thead>
+                <tr>
+                    <th>Main Course Name</th>
+                    <th>MCQ Marks</th>
+                    <th>Practical Marks</th>
+                    <th>PBL Marks</th>
+                    <th>Grand Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.ValueScores.Count == 0)
+                {
+                    <tr><td colspan="5" class="text-muted">No value course parameters filed for this segment.</td></tr>
+                }
+                else
+                {
+                    foreach (var line in Model.ValueScores)
+                    {
+                        <tr>
+                            <td class="text-left-align">@line.CourseName</td>
+                            <td>@line.McqMarks</td>
+                            <td>@line.PracticalMarks</td>
+                            <td>@line.PblMarks</td>
+                            <td><strong>@line.GrandTotal / 100</strong></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <div class="section-heading">Part II: Scholastic Academic Progress Summary</div>
+        <table class="table table-bordered table-scorecard">
+            <thead>
+                <tr>
+                    <th>Subject Mapping Context Target</th>
+                    <th>Evaluation Term</th>
+                    <th>Max Bound</th>
+                    <th>Passing Barrier</th>
+                    <th>Marks Obtained</th>
+                    <th>Result Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.AcademicScores.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-muted">No external published academic score lines mapped to this portfolio profile.</td></tr>
+                }
+                else
+                {
+                    foreach (var line in Model.AcademicScores)
+                    {
+                        <tr>
+                            <td class="text-left-align">@line.SubjectName</td>
+                            <td>@line.TermName</td>
+                            <td>@line.MaxMarks</td>
+                            <td>@line.PassingMarks</td>
+                            <td><strong>@line.MarksObtained</strong></td>
+                            <td>
+                                @if (line.Status == "Pass")
+                                {
+                                    <span class="text-success" style="font-weight:bold;">PASS</span>
+                                }
+                                else
+                                {
+
+                                    <span class="text-danger" style="font-weight:bold;">REMEDIAL</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <div class="row" style="margin-top: 70px; padding: 0 20px;">
+            <div class="col-xs-4 text-center">
+                <div style="border-top: 1px solid #333; padding-top: 5px; font-size: 12px; font-weight: bold; color: #555;">Class Teacher Signature</div>
+            </div>
+            <div class="col-xs-4 col-xs-offset-4 text-center">
+                <div style="border-top: 1px solid #333; padding-top: 5px; font-size: 12px; font-weight: bold; color: #555;">Institutional Principal Seal</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="~/Boostrap/jquery.min.js"></script>
+    <script src="~/Boostrap/bootstrap.min.js"></script>
+</body>
+</html>

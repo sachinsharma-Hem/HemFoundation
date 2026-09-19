@@ -1030,5 +1030,103 @@ namespace HemFoundation.Controllers
             }
             return JSONString.ToString();
         }
+        [HttpGet]
+        public IActionResult PrintStudentScorecard(int? id)
+        {
+            int targetStudentId = id ?? HttpContext.Session.GetInt32("UserID") ?? 0;
+           // int instituteId = HttpContext.Session.GetInt32("InstituteID") ?? 1;
+
+            if (targetStudentId == 0) return NotFound("The system cannot identify this student.");
+
+            var model = new PrintableScorecardViewModel
+            {
+                AcademicYear = "2026-2027",
+                AcademicScores = new List<AcademicScoreLine>(),
+                ValueScores = new List<ValueCourseScoreLine>()
+            };
+
+            
+
+            using (var conn = new Npgsql.NpgsqlConnection(_connectionString))
+            {
+                conn.Open();
+
+                // 1. Fetch Core Profile Data Details (Fixed verbatim string quotes and multi-line syntax)
+                string studentSql = @"
+            SELECT s.studentid, 
+                   COALESCE(s.firstname, '') || ' ' || COALESCE(s.lastname, '') AS ""FullName"", 
+                   s.institutename AS ""InstituteName"", 
+                   standard 
+            FROM view_wj_students_details_info s 
+            WHERE s.studentID = @StudentID";
+                using (var cmd = new Npgsql.NpgsqlCommand(studentSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("StudentID", targetStudentId);
+                    using (var rdr = cmd.ExecuteReader())
+                    {
+                        if (rdr.Read())
+                        {
+                            model.StudentName = rdr["FullName"].ToString();
+                            model.InstituteName = rdr["InstituteName"].ToString();
+                            model.Standard = rdr["Standard"].ToString();
+                        }
+                    }
+                }
+
+                // 2. Fetch Academic Records Matrix via PostgreSQL Function/Procedure
+                using (var cmd = new Npgsql.NpgsqlCommand("SELECT * FROM \"HF_SP_GetStudentHolisticAcademicReport\"(@StudentID)", conn))
+                {
+                    cmd.Parameters.AddWithValue("StudentID", targetStudentId);
+                    using (var rdr = cmd.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                        {
+                            model.AcademicScores.Add(new AcademicScoreLine
+                            {
+                                SubjectName = rdr["SubjectName"].ToString(),
+                                TermName = rdr["TermName"].ToString(),
+                                MaxMarks = Convert.ToDecimal(rdr["MaxMarks"]),
+                                MarksObtained = Convert.ToBoolean(rdr["IsAbsent"]) ? 0 : Convert.ToDecimal(rdr["MarksObtained"]),
+                                Status = rdr["Status"].ToString()
+                            });
+                        }
+                    }
+                }
+
+                // 3. Fetch Value-Based Score Matrix Rows
+                string valueSql = "SELECT * FROM \"SP_GetStudentActivityLogMarks\"(@StudentID, @Standard)";
+
+                using (var cmd = new Npgsql.NpgsqlCommand(valueSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("StudentID", targetStudentId);
+                    cmd.Parameters.AddWithValue("Standard", model.Standard ?? (object)DBNull.Value);
+
+                    using (var rdr = cmd.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                        {
+                            int mcq = rdr["MCQ_MarksObtain"] != DBNull.Value ? Convert.ToInt32(rdr["MCQ_MarksObtain"]) : 0;
+                            int practical = rdr["Practical_MarksObtain"] != DBNull.Value ? Convert.ToInt32(rdr["Practical_MarksObtain"]) : 0;
+                            int pbl = rdr["PBL_MarksObtain"] != DBNull.Value ? Convert.ToInt32(rdr["PBL_MarksObtain"]) : 0;
+
+                            model.ValueScores.Add(new ValueCourseScoreLine
+                            {
+                                CourseName = rdr["MainCourseName"]?.ToString() ?? "Unnamed Course",
+                                McqMarks = mcq,
+                                PracticalMarks = practical,
+                                PblMarks = pbl,
+                                GrandTotal = (mcq + practical + pbl)
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Provide DefaultURL from session to the view (fallback to Dashboard index)
+            var sessionUrl = HttpContext.Session.GetString("DefaultURL");
+            ViewBag.DefaultURL = string.IsNullOrEmpty(sessionUrl) ? Url.Action("Index", "Home") : sessionUrl;
+
+            return View(model);
+        }
     }
 }

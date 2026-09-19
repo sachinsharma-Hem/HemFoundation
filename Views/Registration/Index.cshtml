@@ -662,18 +662,18 @@
                             return data.password_ || data.Password_ || data.password || data.Password || '';
                         }
                     },
-                    // {
-                    //     title: "Report",
-                    //     field: "coins",
-                    //     hozAlign: "center",
-                    //     download: false,
-                    //     formatter: cell => {
-                    //         let d = cell.getData();
-                    //         let sId = d.studentId || d.StudentID || 0;
-                    //         let coins = d.coins || d.Coins || 0;
-                    //         return `<a target="_blank" href="/marks/PrintStudentScorecard?id=${sId}" class="ms-2 text-info" title="Print Scorecard"><i class="fas fa-print"></i></a>`;
-                    //     }
-                    // },
+                    {
+                        title: "Report",
+                        field: "coins",
+                        hozAlign: "center",
+                        download: false,
+                        formatter: cell => {
+                            let d = cell.getData();
+                            let sId = d.studentId || d.StudentID || 0;
+                            let coins = d.coins || d.Coins || 0;
+                            return `<a target="_blank" href="/Learn/PrintStudentScorecard?id=${sId}" class="ms-2 text-info" title="Print Scorecard"><i class="fas fa-print"></i></a>`;
+                        }
+                    },
                     {
                         title: "Actions",
                         hozAlign: "center",
