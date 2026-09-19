@@ -439,19 +439,12 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, hasErrors = false, validData = validData });
         }
 
-        // 6. SAVE BULK DATA (BULK UPLOAD STEP 2)
-        // =========================================================
-        // 6. SAVE BULK DATA
-        // Same registration process as manual RegisterVolunteer()
-        // =========================================================
         [HttpPost("save-bulk")]
         public async Task<IActionResult> SaveBulk([FromBody] BulkSaveRequestDto request)
         {
             try
             {
-                // ---------------------------------------------------------
-                // 1. BASIC VALIDATION
-                // ---------------------------------------------------------
+
                 if (request == null ||
                     request.ValidData == null ||
                     !request.ValidData.Any())
@@ -463,9 +456,6 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
-                // ---------------------------------------------------------
-                // 2. CURRENT AFFILIATE
-                // ---------------------------------------------------------
                 var aff = await GetCurrentAffiliate();
 
                 if (aff == null)
@@ -477,10 +467,6 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
-                // ---------------------------------------------------------
-                // 3. GET Volunteer ROLE
-                // Same role used in manual registration
-                // ---------------------------------------------------------
                 var role = await _context.AspNetRoles
                     .FirstOrDefaultAsync(x => x.Name == "HF_Volunteers");
 
@@ -493,16 +479,6 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
-                // ---------------------------------------------------------
-                // 4. GET NEXT SHARED ID
-                //
-                // Users.UserID == Volunteers.Id
-                //
-                // Example:
-                // Current max = 105
-                // First Excel volunteer = 106
-                // Second Excel volunteer = 107
-                // ---------------------------------------------------------
                 int nextId = 1;
 
                 var maxUserId = await _context.Users
@@ -514,17 +490,11 @@ namespace HemFoundation.Controllers.Api
                     nextId = maxUserId.Value + 1;
                 }
 
-                // ---------------------------------------------------------
-                // 5. COUNTERS
-                // ---------------------------------------------------------
                 int addedCount = 0;
                 int failedCount = 0;
 
                 var errors = new List<object>();
 
-                // ---------------------------------------------------------
-                // 6. PROCESS EACH EXCEL VOLUNTEER
-                // ---------------------------------------------------------
                 foreach (var item in request.ValidData)
                 {
                     try
@@ -626,13 +596,7 @@ namespace HemFoundation.Controllers.Api
                             }
                         );
 
-                        // -------------------------------------------------
-                        // 11. USERS TABLE
-                        //
-                        // IMPORTANT:
-                        // PostgreSQL users.isactive etc. are BIT.
-                        // So BitArray is used.
-                        // -------------------------------------------------
+
                         var customUser = new Users
                         {
                             UserID = nextId,
@@ -670,12 +634,6 @@ namespace HemFoundation.Controllers.Api
 
                         _context.Users.Add(customUser);
 
-                        // -------------------------------------------------
-                        // 12. VOLUNTEERS TABLE
-                        //
-                        // IMPORTANT:
-                        // Volunteers.Id == Users.UserID
-                        // -------------------------------------------------
                         var volunteer = new Volunteer
                         {
                             Id = nextId,
@@ -775,9 +733,6 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, message = "Deleted successfully." });
         }
 
-        // =========================================================
-        // ADMIN ENDPOINTS FOR VOLUNTEER MANAGEMENT
-        // =========================================================
 
         [HttpPost("admin/upload-format")]
         public async Task<IActionResult> AdminUploadFormat([FromForm] IFormFile formatFile)
@@ -850,8 +805,6 @@ namespace HemFoundation.Controllers.Api
         }
 
 
-        // 9. GET SCHOOLS MAPPING FOR A SPECIFIC VOLUNTEER
-        // =========================================================
         [HttpGet("mapping-schools/{volunteerId}")]
         public async Task<IActionResult> GetVolunteerSchoolMapping(int volunteerId)
         {
@@ -864,9 +817,6 @@ namespace HemFoundation.Controllers.Api
                     message = "Affiliate not found."
                 });
 
-            // ---------------------------------------------------------
-            // CHECK VOLUNTEER
-            // ---------------------------------------------------------
             var volunteer = await _context.Volunteers
                 .FirstOrDefaultAsync(v =>
                     v.Id == volunteerId &&
@@ -883,9 +833,6 @@ namespace HemFoundation.Controllers.Api
                 });
             }
 
-            // ---------------------------------------------------------
-            // GET AFFILIATE REFERRAL CODE
-            // ---------------------------------------------------------
             var referralCode = await _context.WJ_ReferralCodes
                 .Where(x => x.UserID == aff.UserID)
                 .Select(x => x.ReferralCode)

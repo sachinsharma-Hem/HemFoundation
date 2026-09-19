@@ -149,7 +149,16 @@ namespace HemFoundation.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            builder.Entity<VolunteerVisitPlan>(entity =>
+            {
+                entity.ToTable("VolunteerVisitPlans", "public"); 
 
+                entity.Property(e => e.Id).HasColumnName("Id");
+                entity.Property(e => e.VolunteerId).HasColumnName("VolunteerId");
+                entity.Property(e => e.ScheduleDate).HasColumnName("ScheduleDate");
+
+                entity.Property(e => e.visitdate).HasColumnName("visitdate");
+            });
             builder.Entity<MasterSetting>()
         .ToTable("mastersettings");
 

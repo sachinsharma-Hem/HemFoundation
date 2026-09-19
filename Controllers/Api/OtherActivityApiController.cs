@@ -247,8 +247,6 @@ namespace HemFoundation.Controllers.Api
             }
         }
 
-        // ================= EXPENSE ENDPOINTS =================
-
         [HttpGet("expense/list")]
         public async Task<IActionResult> GetExpenses()
         {
@@ -258,30 +256,82 @@ namespace HemFoundation.Controllers.Api
             var list = await _context.AffiliateExpenses
                 .Where(x => x.AffiliateId == affId && !x.IsDeleted)
                 .OrderByDescending(x => x.ExpenseDate)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.ExpenseDate,
+                    x.ExpenseDetail,
+                    x.Amount,
+                    x.Status,
+                    x.ReceiptPath // <-- List me bhej diya
+                })
                 .ToListAsync();
 
             return Ok(new { success = true, data = list });
         }
 
         [HttpPost("expense/create")]
-        public async Task<IActionResult> CreateExpense([FromBody] ExpenseCreateModel model)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> CreateExpense(
+      [FromForm] DateTime expenseDate,
+      [FromForm] string expenseDetail,
+      [FromForm] decimal amount,
+      [FromForm] string? relatedType,
+      [FromForm] long? relatedId,
+      IFormFile? expenseImage)
         {
             long affId = await GetCurrentAffiliateIdAsync();
             if (affId == 0) return Unauthorized(new { success = false, message = "Unauthorized" });
 
-            // Auto-prepend related information to ExpenseDetail for clarity
-            string prefix = model.RelatedType == "SchoolVisit" ? "[School Visit] " : (model.RelatedType == "OtherActivity" ? "[Other Activity] " : "");
-            string finalDetail = prefix + model.ExpenseDetail;
+            string prefix = relatedType == "SchoolVisit" ? "[School Visit] " : (relatedType == "OtherActivity" ? "[Other Activity] " : "");
+            string finalDetail = prefix + expenseDetail;
+
+            string? savedReceiptPath = null;
+
+            if (expenseImage != null && expenseImage.Length > 0)
+            {
+                if (expenseImage.Length > 10 * 1024 * 1024)
+                {
+                    return BadRequest(new { success = false, message = "Image size cannot exceed 10 MB." });
+                }
+
+                var uploadsFolder = Path.Combine(
+                    _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"),
+                    "uploads",
+                    "expenses"
+                );
+
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                var extension = Path.GetExtension(expenseImage.FileName);
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".pdf" };
+
+                if (!allowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+                {
+                    return BadRequest(new { success = false, message = "Only JPG, JPEG, PNG, WEBP and PDF files are allowed." });
+                }
+
+                var uniqueFileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                await using (var stream = new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                {
+                    await expenseImage.CopyToAsync(stream);
+                }
+
+                savedReceiptPath = $"/uploads/expenses/{uniqueFileName}";
+            }
 
             var expense = new AffiliateExpense
             {
                 AffiliateId = affId,
-                ExpenseDate = model.ExpenseDate.Date,
+                ExpenseDate = expenseDate.Date,
                 ExpenseDetail = finalDetail,
-                Amount = model.Amount,
-                RelatedType = model.RelatedType,
-                RelatedId = model.RelatedId,
+                Amount = amount,
+                RelatedType = relatedType,
+                RelatedId = relatedId,
                 Status = "Pending",
+                ReceiptPath = savedReceiptPath,
                 CreatedDate = DateTime.UtcNow
             };
 
@@ -290,6 +340,50 @@ namespace HemFoundation.Controllers.Api
 
             return Ok(new { success = true, message = "Expense submitted successfully." });
         }
+
+        // ================= EXPENSE ENDPOINTS =================
+
+        //[HttpGet("expense/list")]
+        //public async Task<IActionResult> GetExpenses()
+        //{
+        //    long affId = await GetCurrentAffiliateIdAsync();
+        //    if (affId == 0) return Unauthorized(new { success = false, message = "Unauthorized" });
+
+        //    var list = await _context.AffiliateExpenses
+        //        .Where(x => x.AffiliateId == affId && !x.IsDeleted)
+        //        .OrderByDescending(x => x.ExpenseDate)
+        //        .ToListAsync();
+
+        //    return Ok(new { success = true, data = list });
+        //}
+
+        //[HttpPost("expense/create")]
+        //public async Task<IActionResult> CreateExpense([FromBody] ExpenseCreateModel model)
+        //{
+        //    long affId = await GetCurrentAffiliateIdAsync();
+        //    if (affId == 0) return Unauthorized(new { success = false, message = "Unauthorized" });
+
+        //    // Auto-prepend related information to ExpenseDetail for clarity
+        //    string prefix = model.RelatedType == "SchoolVisit" ? "[School Visit] " : (model.RelatedType == "OtherActivity" ? "[Other Activity] " : "");
+        //    string finalDetail = prefix + model.ExpenseDetail;
+
+        //    var expense = new AffiliateExpense
+        //    {
+        //        AffiliateId = affId,
+        //        ExpenseDate = model.ExpenseDate.Date,
+        //        ExpenseDetail = finalDetail,
+        //        Amount = model.Amount,
+        //        RelatedType = model.RelatedType,
+        //        RelatedId = model.RelatedId,
+        //        Status = "Pending",
+        //        CreatedDate = DateTime.UtcNow
+        //    };
+
+        //    _context.AffiliateExpenses.Add(expense);
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok(new { success = true, message = "Expense submitted successfully." });
+        //}
 
         // Get list of completed/active school visits for dropdown
         [HttpGet("expense/school-visits")]
