@@ -1131,8 +1131,11 @@ namespace HemFoundation.Controllers
         }
 
         [HttpPost]
-        public IActionResult ExportStudentSummaryReport(int studentID, int instituteID)
+        public IActionResult ExportStudentSummaryReport([FromBody] ReportRequestModel model)
         {
+            int studentID = Convert.ToInt32(model.studentIDstr);
+            int instituteID = Convert.ToInt32(model.instituteIDstr);
+            
             try
             {
                 string connString = _configuration.GetConnectionString("DefaultConnection");
@@ -1369,6 +1372,7 @@ namespace HemFoundation.Controllers
                     using (MemoryStream stream = new MemoryStream())
                     {
                         wb.SaveAs(stream);
+                        stream.Position = 0;
                         return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "StudentSummaryReport.xlsx");
                     }
                 }
@@ -1377,6 +1381,11 @@ namespace HemFoundation.Controllers
             {
                 return BadRequest(new { success = false, message = ex.Message });
             }
+        }
+        public class ReportRequestModel
+        {
+            public string studentIDstr { get; set; }
+            public string instituteIDstr { get; set; }
         }
     }
 }

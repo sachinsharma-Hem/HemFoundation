@@ -65,7 +65,8 @@ namespace HemFoundation.Controllers
 
                     bool alreadyUploaded = knowledgePartner != null;
 
-                    ViewBag.StudentsCount =  institute.associatedstudents;
+                    ViewBag.instituteId = instituteId;
+                    ViewBag.StudentsCount = institute.associatedstudents;
                     ViewBag.ActivetudentCount = institute.activestudents;
                     ViewBag.TeachersCount = institute.totalteachers;
                     ViewBag.ActiveTeacherCount = institute.activeteachers;

@@ -348,7 +348,43 @@
                 window.location.replace('/');
             }
     </script>
- 
+    <script >
+                  $("#btn_ExportInstituteReport").off("click").on("click", function () {
+    var InstID = $("#hddInstituteID").val();
+
+    if (!InstID || InstID === "0") {
+        alert("Institute ID not found.");
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: '/api/Report/export-institute-summary',
+        data: JSON.stringify({ instituteIDstr: InstID }),
+        contentType: "application/json; charset=utf-8",
+        xhrFields: { 
+            responseType: 'blob' // Essential for receiving binary files over AJAX
+        },
+        success: function (data) {
+            var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            var url = window.URL.createObjectURL(blob);
+            var $anchor = $('<a />').attr({
+                'href': url,
+                'download': 'StudentPerformanceReport.xlsx'
+            }).appendTo('body');
+            
+            $anchor[0].click();
+            
+            setTimeout(function () {
+                window.URL.revokeObjectURL(url);
+                $anchor.remove();
+            }, 100);
+        },
+        error: function (xhr, status, error) {
+            alert("Error downloading institute report: " + error);
+        }
+    });
+});        </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

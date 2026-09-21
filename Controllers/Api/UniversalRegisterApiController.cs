@@ -609,7 +609,11 @@ namespace HemFoundation.Controllers.Api
         {
             if (excelFile == null || excelFile.Length == 0)
                 return BadRequest(new { success = false, message = "Please select a valid Excel file." });
-
+            string extension = Path.GetExtension(excelFile.FileName).ToLowerInvariant();
+            if (extension != ".xlsx" && extension != ".xls")
+            {
+                return BadRequest(new { success = false, message = "Only Excel files (.xlsx or .xls) are allowed." });
+            }
             int? currentUserId = HttpContext.Session.GetInt32("UserID");
 
             if (currentUserId == null || currentUserId == 0)
@@ -656,7 +660,7 @@ namespace HemFoundation.Controllers.Api
             _context.BulkUploadLogs.Add(log);
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = $"{uploadType}s Excel file uploaded and saved successfully!" });
+            return Ok(new { success = true, message = $"{uploadType}s Excel file uploaded and saved successfully! Users will be updated in next 24 hr." });
         }
 
         [HttpGet("download-sample/{fileType}")]

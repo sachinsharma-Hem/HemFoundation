@@ -735,6 +735,15 @@
 @section Scripts {
 
     <script>
+        var activeCourseDataCache = null;
+        var activeWeekGlobalIndex = 1;
+        var isStudent = @isStudentBool.ToString().ToLower();
+
+        // Capture server-side metrics globally for client-side workspace reset
+        var globalAssignedCount = @assignedCount;
+        var globalCompletedCount = @completedCount;
+        var globalPointScore = @pointScore;
+        var globalCertificatesCount = @certificatesAwarded;
         function toggleCourseCollapse(mainCourseId) {
             var targetContainer = $('#collapse-mc-' + mainCourseId);
             if (targetContainer.is(':visible')) {
@@ -878,10 +887,15 @@
             var courseNameVal = courseData.courseName || courseData.CourseName;
             var courseMarksVal = courseData.courseMarks || courseData.CourseMarks || 0;
 
-            var html = '<div class="animate__animated animate__fadeIn lms-content-stage">' +
+            var htmlprev = '<div class="animate__animated animate__fadeIn lms-content-stage">' +
                 showCertificateBannerHtml +
                 '<div class="hero-learning-banner" style="padding-bottom:15px !important;">' +
                 '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
+                '<div class="container-fluid mb-3"><button type="button" id="btnReturnToDesk" class="btn btn-sm btn-primary" onclick="loadStudentWorkspaceDesk();">'+
+                        '<i class="glyphicon glyphicon-home"></i> Back to Student Desk'+
+                    '</button>'+
+                    '</div >'+
+
                 '<div>' +
                 '<span style="text-transform:uppercase; font-size:11px; font-weight:700; letter-spacing:1px; color:#38bdf8;">MODULE CONTROL HUB</span>' +
                 '<h2 style="font-weight:800; font-size:26px; margin:6px 0 4px 0; color:#fff;">' + courseNameVal + '</h2>' +
@@ -899,7 +913,39 @@
 
                 '<div class="activity-deck-grid" id="tabbedDeckGrid"></div>' +
                 '</div>';
+            var html = '<div class="animate__animated animate__fadeIn lms-content-stage">' +
+            showCertificateBannerHtml +
+            '<div class="hero-learning-banner" style="padding-bottom:15px !important;">' +
+            
+            /* Top Flex Container for Navigation and Title */
+            '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:15px;">' +
+            
+            /* Left Side: Back Button & Module Title */
+            '<div style="display:flex; align-items:center; gap:20px;">' +
+            '<button type="button" id="btnReturnToDesk" class="btn btn-sm btn-light" onclick="loadStudentWorkspaceDesk();" style="font-weight:700; border-radius:30px; padding:6px 16px; color:#1e293b; background:#fff;">' +
+            '<i class="fa fa-arrow-left"></i> Back to Desk' +
+            '</button>' +
+            '<div>' +
+            '<span style="text-transform:uppercase; font-size:11px; font-weight:700; letter-spacing:1px; color:#38bdf8; display:block;">MODULE CONTROL HUB</span>' +
+            '<h2 style="font-weight:800; font-size:24px; margin:2px 0 0 0; color:#fff;">' + courseNameVal + '</h2>' +
+            '</div>' +
+            '</div>' +
 
+            /* Right Side: Total Score Badge */
+            '<span class="score-badge score-badge-white" style="font-size:13px; padding:8px 16px; border-radius:30px;"><i class="fa fa-star text-warning"></i> Total Week Score: ' + courseMarksVal + ' Pts</span>' +
+            '</div>' +
+
+            /* Sub-tabs Ribbon */
+            '<div class="workspace-tabs-ribbon">' +
+            '<a class="workspace-tab-link tab-active" onclick="switchWorkspaceSubTab(this, \'learning\')"><i class="fa fa-graduation-cap"></i> Learning Path</a>' +
+            '<a class="workspace-tab-link" onclick="switchWorkspaceSubTab(this, \'practical\')"><i class="fa fa-flask"></i> Practical Labs</a>' +
+            '<a class="workspace-tab-link" onclick="switchWorkspaceSubTab(this, \'video\')"><i class="fa fa-video-camera"></i> Videos & Documents</a>' +
+            '<a class="workspace-tab-link" onclick="switchWorkspaceSubTab(this, \'quiz\')"><i class="fa fa-check-square-o"></i> Assessments</a>' +
+            '</div>' +
+            '</div>' +
+
+            '<div class="activity-deck-grid" id="tabbedDeckGrid"></div>' +
+            '</div>';
             $('#workspaceStage').html(html);
             renderFilteredDeckCards('learning');
         }
@@ -1290,6 +1336,58 @@
             $('#FamilymodelindCourseName').val(courseName);
             $('#FamilylblTaskName').text(taskName);
             $('#FamilyuploadModal').modal('show');
+        }
+
+        function loadStudentWorkspaceDesk() {
+            var html = '<div id="initialHubState" class="lms-dashboard-hub animate__animated animate__fadeIn">' +
+                '<div class="welcome-header-card">' +
+                '<span style="font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:1px; color:#e0f2fe; display:block; margin-bottom:4px;">STUDENT PERFORMANCE DESK</span>' +
+                '<h2 style="font-weight:800; font-size:32px; margin:0; line-height:1.2;">Welcome to Your Workspace</h2>' +
+                '<p style="margin:8px 0 0 0; font-size:15px; color:#e0f2fe; opacity:0.95;">Expand your categories on the left track tree and pick an active course milestone row to access curriculum assignments and grading elements.</p>' +
+                '</div>' +
+
+                '<div class="stats-summary-row">' +
+                '<div class="stat-metric-card">' +
+                '<div class="stat-icon-wrapper" style="background:#f0f9ff; color:#0284c7;"><i class="fa fa-book"></i></div>' +
+                '<div>' +
+                '<span style="display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Assigned</span>' +
+                '<span style="font-size:18px; font-weight:800; color:var(--slate-900);">' + globalAssignedCount + ' Courses</span>' +
+                '</div>' +
+                '</div>' +
+                '<div class="stat-metric-card">' +
+                '<div class="stat-icon-wrapper" style="background:#f0fdf4; color:#10b981;"><i class="fa fa-check-circle"></i></div>' +
+                '<div>' +
+                '<span style="display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Completed</span>' +
+                '<span style="font-size:18px; font-weight:800; color:var(--slate-900);">' + globalCompletedCount + ' Modules</span>' +
+                '</div>' +
+                '</div>' +
+                '<div class="stat-metric-card">' +
+                '<div class="stat-icon-wrapper" style="background:#fef3c7; color:#d97706;"><i class="fa fa-trophy"></i></div>' +
+                '<div>' +
+                '<span style="display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Total Marks</span>' +
+                '<span style="font-size:18px; font-weight:800; color:var(--slate-900);">' + globalPointScore + ' Pts</span>' +
+                '</div>' +
+                '</div>' +
+                '<div class="stat-metric-card">' +
+                '<div class="stat-icon-wrapper" style="background:#faf5ff; color:#7c3aed;"><i class="fa fa-certificate"></i></div>' +
+                '<div>' +
+                '<span style="display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Certificates</span>' +
+                '<span style="font-size:18px; font-weight:800; color:var(--slate-900);">' + globalCertificatesCount + ' Earned</span>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+
+                '<div class="motivation-quote-banner">' +
+                '<i class="fa fa-quote-left text-primary" style="font-size:20px; color:var(--brand-blue); opacity:0.6;"></i>' +
+                '<div>' +
+                '<h4 style="font-weight:800; margin:0 0 4px 0; font-size:15px; color:var(--slate-900);">Tip for Today:</h4>' +
+                '<p style="margin:0; font-size:14px; color:#475569; line-height:1.5;">Check your marked results inside sub-tabs. Completing practical labs unlocks reward coins, while mandatory week-end MCQs expand your path to certificates.</p>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+
+            $('#workspaceStage').html(html);
+            $('.week-nav-card').removeClass('active-track');
         }
     </script>
 }

@@ -132,28 +132,43 @@
 
     // Fixed Download Button Handler
     $("#btn_DetailedReport").off("click").on("click", function () {
-        var StudID = $("#hddStudentID").val();
-        var InstID = $("#hddInstituteID").val();
+    var StudID = $("#hddStudentID").val();
+    var InstID = $("#hddInstituteID").val();
 
-        $.ajax({
-            type: "POST",
-            url: '@Url.Action("ExportStudentSummaryReport", "Learn")',
-            data: JSON.stringify({ StudentID: StudID, InstituteID: InstID }),
-            contentType: "application/json; charset=utf-8",
-           // xhrFields: { responseType: 'blob' }, // Necessary for file downloads via AJAX
-            success: function (Rdata) {
-
-                var bytes = new Uint8Array(Rdata.FileContents);
-                var blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-                var link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-
-                link.download = "StudentSummaryReport.xlsx";
-                link.click();
-            },
-            error: function () { alert("Error downloading report."); }
-        });
+    $.ajax({
+        type: "POST",
+        url: '@Url.Action("ExportStudentSummaryReport", "Learn")',
+        data: JSON.stringify({ studentIDstr: StudID, instituteIDstr: InstID }),
+        contentType: "application/json; charset=utf-8",
+        xhrFields: { 
+            responseType: 'blob' 
+        },
+        success: function (data, status, xhr) {
+            var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            
+            // Check if window.navigator.msSaveOrOpenBlob is available (for legacy IE/Edge)
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                window.navigator.msSaveOrOpenBlob(blob, "StudentSummaryReport.xlsx");
+            } else {
+                var url = window.URL.createObjectURL(blob);
+                var $anchor = $('<a />').attr({
+                    'href': url,
+                    'download': 'StudentSummaryReport.xlsx'
+                }).appendTo('body');
+                
+                $anchor[0].click();
+                
+                setTimeout(function () {
+                    window.URL.revokeObjectURL(url);
+                    $anchor.remove();
+                }, 100);
+            }
+        },
+        error: function (xhr, status, error) {
+            alert("Error downloading report: " + error);
+        }
     });
+});
     function TotalCount(c) {
         debugger;
         var arrayLength = c.length;
