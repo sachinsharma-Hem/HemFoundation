@@ -10,7 +10,6 @@
     </div>
 
     <div class="row g-4 mb-5">
-        <!-- 1. Total School -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-blue">
                 <div class="d-flex align-items-center">
@@ -29,7 +28,6 @@
             </div>
         </div>
 
-        <!-- 2. Total Student -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-green">
                 <div class="d-flex align-items-center">
@@ -46,7 +44,6 @@
             </div>
         </div>
 
-        <!-- 3. Active Student -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-orange">
                 <div class="d-flex align-items-center">
@@ -63,7 +60,6 @@
             </div>
         </div>
 
-        <!-- 4. Total Teacher -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-teal">
                 <div class="d-flex align-items-center">
@@ -80,7 +76,6 @@
             </div>
         </div>
 
-        <!-- 5. Active Teacher -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-purple">
                 <div class="d-flex align-items-center">
@@ -97,7 +92,6 @@
             </div>
         </div>
 
-        <!-- 6. Total SEL Project -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-pink">
                 <div class="d-flex align-items-center">
@@ -114,7 +108,6 @@
             </div>
         </div>
 
-        <!-- 7. No of Family Project -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-yellow">
                 <div class="d-flex align-items-center">
@@ -131,7 +124,6 @@
             </div>
         </div>
 
-        <!-- 8. No of Individual Project -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-cyan">
                 <div class="d-flex align-items-center">
@@ -148,7 +140,6 @@
             </div>
         </div>
 
-        <!-- 9. No of Group PBL -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-indigo">
                 <div class="d-flex align-items-center">
@@ -172,14 +163,7 @@
         Activity Dashboard
     </h4>
 </div>
-  <!-- =========================================================
-         ACTIVITY CARDS
-    ========================================================= -->
     <div class="row g-4 mb-5">
-
-        <!-- =====================================================
-             1. VISIT PLAN
-        ====================================================== -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-blue">
                 <div class="d-flex align-items-center">
@@ -200,11 +184,6 @@
                 </div>
             </div>
         </div>
-
-
-        <!-- =====================================================
-             2. VISITED
-        ====================================================== -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-green">
                 <div class="d-flex align-items-center">
@@ -225,11 +204,6 @@
                 </div>
             </div>
         </div>
-
-
-        <!-- =====================================================
-             3. VISIT PENDING
-        ====================================================== -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-orange">
                 <div class="d-flex align-items-center">
@@ -250,11 +224,6 @@
                 </div>
             </div>
         </div>
-
-
-        <!-- =====================================================
-             4. ACTIVITY UPDATED
-        ====================================================== -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-teal">
                 <div class="d-flex align-items-center">
@@ -275,11 +244,6 @@
                 </div>
             </div>
         </div>
-
-
-        <!-- =====================================================
-             5. ACTIVITY PENDING
-        ====================================================== -->
         <div class="col-xl-3 col-lg-4 col-sm-6">
             <div class="premium-card bg-red">
                 <div class="d-flex align-items-center">
@@ -303,33 +267,11 @@
 
     </div>
 
-  @*   <!-- =========================================================
-         3. ATTENDANCE DASHBOARD
-    ========================================================== -->
-    <div class="d-flex align-items-center mb-4 border-bottom pb-2">
-        <h4 class="fw-bolder text-dark m-0">
-            <i class="bi bi-person-lines-fill text-success me-2"></i>
-            Attendance Dashboard
-        </h4>
-    </div>
-    <div class="p-4 bg-light rounded-4 border text-center text-muted fw-semibold">
-        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-        Attendance data will appear here.
-    </div> *@
-
-</div>
-
-<!-- Hidden Element (Sirf isliye taaki JS variables error na dein) -->
 <div class="d-none" id="lblAssignedSchoolCount">0</div>
 
-
-<!-- =============================================================
-     ASSIGNED SCHOOLS MODAL
-============================================================= -->
 <div class="modal fade" id="volunteerSchoolsModal" tabindex="-1" aria-labelledby="volunteerSchoolsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 border-0 shadow-lg bg-white">
-            <!-- HEADER -->
             <div class="modal-header border-bottom px-4 py-3">
                 <div>
                     <h5 class="fw-bold text-dark m-0" id="volunteerSchoolsModalLabel">
@@ -380,9 +322,7 @@
         </div>
     </div>
 </div>
-<!-- =============================================================
-     REUSABLE GENERIC DETAIL MODAL (For Students, Teachers, Projects)
-============================================================= -->
+
 <div class="modal fade" id="genericDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 border-0 shadow-lg bg-white">
@@ -414,9 +354,7 @@
         </div>
     </div>
 </div>
-<!-- =============================================================
-     CSS FOR PREMIUM CARDS
-============================================================= -->
+
 <style>
     .premium-card {
         border-radius: 12px;
@@ -516,25 +454,18 @@
     .school-id { font-size: 0.72rem; color: #6c757d; }
 </style>
 
-<!-- =============================================================
-     JAVASCRIPT (Untouched)
-============================================================= -->
 <script>
     (function() {
         "use strict";
 
-        // =========================================================
-        // GET JWT TOKEN
-        // =========================================================
+      
         function getAuthToken() {
             return localStorage.getItem("jwt_token")
                 || sessionStorage.getItem("jwt_token")
                 || "";
         }
 
-        // =========================================================
-        // HTML ENCODE
-        // =========================================================
+       
         function escapeHtml(value) {
             if (value === null || value === undefined) {
                 return "";
@@ -545,9 +476,7 @@
             return div.innerHTML;
         }
 
-        // =========================================================
-        // SET SCHOOL COUNT
-        // =========================================================
+     
         function setSchoolCount(count) {
 
             var finalCount = Number.isFinite(Number(count))
@@ -576,9 +505,7 @@
             }
         }
 
-        // =========================================================
-        // SCHOOL COUNT LOADING
-        // =========================================================
+       
         function showCountLoading() {
 
             var countElement =
@@ -594,9 +521,6 @@
             }
         }
 
-        // =========================================================
-        // FETCH ASSIGNED SCHOOLS
-        // =========================================================
         async function fetchAssignedSchools() {
 
             var token = getAuthToken();

@@ -27,10 +27,49 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Data will be populated here via AJAX -->
                     <tr><td colspan="6" class="text-center text-muted py-4">Loading reports...</td></tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- ================= UPLOAD & PROCESS MODAL ================= -->
+<div class="modal fade" id="uploadProcessModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="fw-bold text-dark"><i class="bi bi-file-earmark-arrow-up text-success me-2"></i> Upload & Process Records</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="frmUploadAndProcess">
+                    <input type="hidden" id="modalLogId" name="logId" />
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Select Excel File (Format: FirstName, LastName, MobileNo, Email)</label>
+                        <input type="file" class="form-control rounded-3 shadow-none bg-light border-0" id="excelFile" name="excelFile" accept=".xlsx, .xls" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2">
+                        <i class="bi bi-upload me-1"></i> Upload & Process Data
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= SUCCESS POPUP MODAL ================= -->
+<div class="modal fade" id="successPopupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-4 text-center">
+            <div class="mb-3">
+                <i class="bi bi-check-circle-fill text-success display-4"></i>
+            </div>
+            <h5 class="fw-bold text-dark mb-2">Success!</h5>
+            <p class="text-muted mb-4" id="successPopupMessage">Operation completed successfully.</p>
+            <button type="button" class="btn btn-success w-100 rounded-pill fw-bold py-2" data-bs-dismiss="modal">OK</button>
         </div>
     </div>
 </div>
@@ -46,7 +85,7 @@
             <div class="modal-body">
                 <form id="frmUpdateStatus">
                     <input type="hidden" id="hdnLogId" name="logId" />
-                    
+
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-muted">Select New Status</label>
                         <select class="form-select form-select-lg rounded-3 shadow-none bg-light border-0" id="ddlStatus" name="status" required>
@@ -69,17 +108,16 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             loadBulkLogs();
 
             // Form Submit for Status Update
-            $('#frmUpdateStatus').on('submit', function (e) {
+            $('#frmUpdateStatus').on('submit', function(e) {
                 e.preventDefault();
                 let formData = new FormData(this);
 
                 let $btn = $(this).find('button[type="submit"]');
-                let originalText = $btn.html();
-                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Updating...');
+                let originalText = $btn.html(); $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Updating...');
 
                 $.ajax({
                     url: '/api/admin/update-bulk-status',
@@ -87,33 +125,70 @@
                     data: formData,
                     processData: false,
                     contentType: false,
-                    success: function (res) {
+                    success: function(res) {
                         if (res.success) {
                             $('#statusUpdateModal').modal('hide');
-                            alert(res.message);
-                            loadBulkLogs(); // Table refresh
+                            showSuccessPopup(res.message);
+                            loadBulkLogs();
                         } else {
                             alert(res.message);
                         }
                     },
-                    error: function (xhr) {
+                    error: function(xhr) {
                         alert(xhr.responseJSON?.message || "Failed to update status.");
                     },
-                    complete: function () {
+                    complete: function() {
+                        $btn.prop('disabled', false).html(originalText);
+                    }
+                });
+            });
+
+            // Form Submit for Upload & Process Records
+            $('#frmUploadAndProcess').on('submit', function(e) {
+                e.preventDefault();
+                let formData = new FormData(this);
+
+                let $btn = $(this).find('button[type="submit"]');
+                let originalText = $btn.html(); $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Processing & Registering...');
+
+                $.ajax({
+                    url: '/api/admin/upload-and-process',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        if (res.success) {
+                            $('#uploadProcessModal').modal('hide');
+                            showSuccessPopup(res.message);
+                            loadBulkLogs();
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseJSON?.message || "Failed to process file.");
+                    },
+                    complete: function() {
                         $btn.prop('disabled', false).html(originalText);
                     }
                 });
             });
         });
 
+        function showSuccessPopup(message) {
+            $('#successPopupMessage').text(message);
+            $('#successPopupModal').modal('show');
+        }
+
         // Fetch Data from API
         function loadBulkLogs() {
             $('#bulkLogsTable tbody').html('<tr><td colspan="6" class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm me-2"></span> Loading...</td></tr>');
-            
-            $.get('/api/admin/bulk-logs', function (res) {
+
+            $.get('/api/admin/bulk-logs', function(res) {
                 if (res.success) {
                     let rows = '';
-                    if(res.data.length === 0){
+                    if (res.data.length === 0) {
                         rows = '<tr><td colspan="6" class="text-center text-muted py-4">No bulk uploads found.</td></tr>';
                     } else {
                         res.data.forEach(log => {
@@ -121,24 +196,31 @@
                             let dateStr = new Date(log.uploadedDate).toLocaleString();
 
                             rows += `
-                                <tr>
-                                    <td class="fw-semibold text-dark">${log.schoolName}</td>
-                                    <td><span class="badge bg-light text-dark border">${log.uploadType}</span></td>
-                                    <td><i class="bi bi-file-earmark-excel text-success me-1"></i> ${log.fileName}</td>
-                                    <td class="small text-muted">${dateStr}</td>
-                                    <td><span class="badge ${badgeClass} px-2 py-1">${log.status}</span></td>
-                                    <td class="text-center">
-                                        <div class="btn-group shadow-sm">
-                                            <a href="${log.filePath}" target="_blank" class="btn btn-sm btn-light border-end" title="Download File">
-                                                <i class="bi bi-download text-primary"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-light" title="Update Status" onclick="openStatusModal(${log.logID}, '${log.status}')">
-                                                <i class="bi bi-pencil-square text-warning"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
+                                        <tr>
+                                            <td class="fw-semibold text-dark">${log.schoolName}</td>
+                                            <td><span class="badge bg-light text-dark border">${log.uploadType}</span></td>
+                                            <td>
+                                                <a href="${log.filePath}" target="_blank" class="text-decoration-none text-success fw-semibold" title="Click to download file">
+                                                    <i class="bi bi-file-earmark-excel text-success me-1"></i> ${log.fileName}
+                                                </a>
+                                            </td>
+                                            <td class="small text-muted">${dateStr}</td>
+                                            <td><span class="badge ${badgeClass} px-2 py-1">${log.status}</span></td>
+                                            <td class="text-center">
+                                                <div class="btn-group shadow-sm">
+                                                    <a href="${log.filePath}" target="_blank" class="btn btn-sm btn-light border-end" title="Download File">
+                                                        <i class="bi bi-download text-primary"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-light border-end" title="Upload & Process Users" onclick="openUploadProcessModal(${log.logID})">
+                                                        <i class="bi bi-upload text-success"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-light" title="Update Status" onclick="openStatusModal(${log.logID}, '${log.status}')">
+                                                        <i class="bi bi-pencil-square text-warning"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `;
                         });
                     }
                     $('#bulkLogsTable tbody').html(rows);
@@ -148,26 +230,27 @@
             });
         }
 
-        // Helper function for dynamic badge colors
+        function openUploadProcessModal(logId) {
+            $('#modalLogId').val(logId);
+            $('#excelFile').val('');
+            $('#uploadProcessModal').modal('show');
+        }
+
         function getStatusBadgeClass(status) {
-            status = status.toLowerCase();
+            status = status ? status.toLowerCase() : "";
             if (status.includes("success") || status === "completed") return "bg-success-subtle text-success border border-success-subtle";
             if (status.includes("progress")) return "bg-warning-subtle text-warning border border-warning-subtle";
             if (status.includes("fail") || status.includes("reject")) return "bg-danger-subtle text-danger border border-danger-subtle";
             return "bg-secondary-subtle text-secondary border border-secondary-subtle";
         }
 
-        // Open Modal and Pre-fill data
         function openStatusModal(logId, currentStatus) {
             $('#hdnLogId').val(logId);
-            
-            // Check if exact status exists in dropdown, else set to closest match or default
             if ($(`#ddlStatus option[value="${currentStatus}"]`).length > 0) {
                 $('#ddlStatus').val(currentStatus);
             } else {
                 $('#ddlStatus').val("Uploaded Successfully");
             }
-            
             $('#statusUpdateModal').modal('show');
         }
     </script>
