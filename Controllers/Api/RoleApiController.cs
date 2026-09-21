@@ -188,24 +188,14 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, message = $"Role renamed to '{newName}' successfully!" });
         }
 
-        // 4. DELETE ROLE BY ID
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteRole(string id)
         {
             try
             {
-                // -----------------------------------------
-                // 1. Role ko direct DB se get karo
-                //    RoleManager use nahi karna
-                //    ConcurrencyStamp bhi read nahi hoga
-                // -----------------------------------------
                 var role = await _context.AspNetRoles
                     .Where(r => r.Id == id)
-                    .Select(r => new
-                    {
-                        r.Id,
-                        r.Name
-                    })
+                    .Select(r => new { r.Id, r.Name })
                     .FirstOrDefaultAsync();
 
                 if (role == null)
@@ -217,42 +207,18 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
-                // -----------------------------------------
-                // 2. Admin role delete nahi karna
-                // -----------------------------------------
-                if (string.Equals(
-                        role.Name,
-                        "Admin",
-                        StringComparison.OrdinalIgnoreCase))
+                // Admin role delete nahi hone dena
+                if (string.Equals(role.Name, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(role.Name, "WhizClassical-Admin", StringComparison.OrdinalIgnoreCase))
                 {
                     return BadRequest(new
                     {
                         success = false,
-                        message = "The 'Admin' role cannot be deleted."
+                        message = $"The '{role.Name}' role cannot be deleted."
                     });
                 }
 
-                // -----------------------------------------
-                // 3. Check karo role kisi user ko assigned hai ya nahi
-                //    UserManager use nahi karna
-                // -----------------------------------------
-                var usersInRole = await _context
-                    .Set<IdentityUserRole<string>>()
-                    .AnyAsync(x => x.RoleId == id);
-
-                if (usersInRole)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message =
-                            $"Cannot delete role '{role.Name}' because it is assigned to users."
-                    });
-                }
-
-                // -----------------------------------------
-                // 4. Pehle Role Menu Rights delete karo
-                // -----------------------------------------
+                // 1. Pehle Role Menu Rights delete karo
                 var rightsToRemove = await _context.RoleMenuRights
                     .Where(r => r.RoleId == id)
                     .ToListAsync();
@@ -260,18 +226,39 @@ namespace HemFoundation.Controllers.Api
                 if (rightsToRemove.Any())
                 {
                     _context.RoleMenuRights.RemoveRange(rightsToRemove);
-
-                    await _context.SaveChangesAsync();
                 }
 
-                // -----------------------------------------
-                // 5. Role direct SQL se delete karo
-                //    RoleManager.DeleteAsync() nahi
-                //    Isliye ConcurrencyStamp check nahi hoga
-                // -----------------------------------------
+                // 2. Is role se jude hue saare Users find karo aur delete karo (Optional / Cascade Clean)
+                var userIdsInRole = await _context.Set<IdentityUserRole<string>>()
+                    .Where(x => x.RoleId == id)
+                    .Select(x => x.UserId)
+                    .ToListAsync();
+
+                if (userIdsInRole.Any())
+                {
+                    // Users table se bhi delete karna ho toh ye use karein
+                    var usersToDelete = await _context.Users
+                        .Where(u => userIdsInRole.Contains(u.AspNetUserID))
+                        .ToListAsync();
+
+                    if (usersToDelete.Any())
+                    {
+                        _context.Users.RemoveRange(usersToDelete);
+                    }
+
+                    // Identity User Roles mapping clean karein
+                    var userRolesToRemove = await _context.Set<IdentityUserRole<string>>()
+                        .Where(x => x.RoleId == id)
+                        .ToListAsync();
+
+                    _context.Set<IdentityUserRole<string>>().RemoveRange(userRolesToRemove);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // 3. Role direct SQL se delete karo taaki Concurrency error na aaye
                 var deletedRows = await _context.Database
-                    .ExecuteSqlInterpolatedAsync(
-                        $"DELETE FROM public.aspnetroles WHERE id = {id}");
+                    .ExecuteSqlInterpolatedAsync($"DELETE FROM public.aspnetroles WHERE id = {id}");
 
                 if (deletedRows == 0)
                 {
@@ -285,7 +272,7 @@ namespace HemFoundation.Controllers.Api
                 return Ok(new
                 {
                     success = true,
-                    message = $"Role '{role.Name}' deleted successfully!"
+                    message = $"Role '{role.Name}' and its associated users deleted successfully!"
                 });
             }
             catch (Exception ex)
@@ -299,7 +286,6 @@ namespace HemFoundation.Controllers.Api
             }
         }
 
-        // 5. GET MENUS AND RIGHTS FOR A SPECIFIC ROLE
         [HttpGet("rights/{roleId}")]
         public async Task<IActionResult> GetRoleRights(string roleId)
         {
@@ -332,7 +318,6 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = mergedData });
         }
 
-        // 6. SAVE / UPDATE ROLE PERMISSIONS (Bulk Upsert)
         [HttpPost("save-rights")]
         public async Task<IActionResult> SaveRoleRights([FromBody] SaveRoleRightsPayload payload)
         {

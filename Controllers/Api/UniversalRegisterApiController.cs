@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims; // <-- YEH NAYA ADD KIYA HAI ClaimTypes.NameIdentifier KE LIYE
+using System.Security.Claims; 
 
 namespace HemFoundation.Controllers.Api
 {
@@ -76,7 +76,6 @@ namespace HemFoundation.Controllers.Api
             string baseMobile = model.MobileNo.Trim();
             string uniqueUsername = baseMobile;
 
-            // Duplicate mobile number safe username generator matching legacy logic via Utility
             int counter = 1;
             while (await HemFoundation.Common.Utility.CheckUsernameExistsAsync(_context, uniqueUsername))
             {
@@ -101,9 +100,7 @@ namespace HemFoundation.Controllers.Api
                 photoUrl = $"/uploads/profiles/{roleName}/{uniqueFileName}";
             }
 
-            // 1. Create AspNetUser & Role mapping cleanly via Utility helper method (Bypassing EF Core translation bugs)
             string aspNetUserId = await HemFoundation.Common.Utility.CreateIdentityUserRawAsync(_context, uniqueUsername, model.EmailID, baseMobile, roleName);
-            // Convert gender to database format
             string? genderCode = gender?.Trim().ToLower() switch
             {
                 "male" => "1",
@@ -111,7 +108,6 @@ namespace HemFoundation.Controllers.Api
                 "other" => "3",
                 _ => null
             };
-            // 2. Create entry in core [Users] table to generate shared Primary Key (UserID)
             var coreUser = new HemFoundation.Models.Entities.Users
             {
                 FirstName = model.FirstName,
@@ -134,15 +130,13 @@ namespace HemFoundation.Controllers.Api
             _context.Users.Add(coreUser);
             await _context.SaveChangesAsync();
 
-            int generatedUserId = coreUser.UserID; // Serves as primary key for StudentID, TeacherID, InstituteID, etc.
+            int generatedUserId = coreUser.UserID; 
 
-            // Resolve logged-in institute context if applicable
             int? mappedInstituteId = null;
             int? currentUserId = HttpContext.Session.GetInt32("UserID");
 
             if (currentUserId == null || currentUserId == 0)
             {
-                // Fall back to claims if session is missing
                 string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 currentUserId = int.TryParse(claimId, out int parsed) ? parsed : 0;
             }
@@ -161,10 +155,8 @@ namespace HemFoundation.Controllers.Api
                 {
                     InstituteID = generatedUserId,
 
-                    // Database expects "School" here
                     InstituteType = "School",
 
-                    // School / Institute name
                     Name = model.OrganisationName ?? "N/A",
 
                     TypeOfOrganisation = model.TypeOfOrganisation ?? "N/A",
@@ -175,7 +167,6 @@ namespace HemFoundation.Controllers.Api
 
                     IsVerify =  true,
 
-                    // Affiliate referral code / referred-by code
                     ReferralCode = string.IsNullOrWhiteSpace(referredBy)
                         ? null
                         : referredBy.Trim()
@@ -202,7 +193,6 @@ namespace HemFoundation.Controllers.Api
 
                 _context.WJ_Students.Add(student);
 
-                // Process referral and association mapping
                 if (!string.IsNullOrEmpty(referredBy))
                 {
                     var refCodeRecord = await _context.WJ_ReferralCodes
@@ -330,7 +320,6 @@ namespace HemFoundation.Controllers.Api
 
             await _context.SaveChangesAsync();
 
-            // 4. Notifications (SMS and Email Handling)
             try
             {
                
@@ -343,7 +332,7 @@ namespace HemFoundation.Controllers.Api
                     }
                     else
                     {
-                        // SMSManager.PromotionalNewSMS(baseMobile, model.FirstName);
+                        
                     }
                 }
 
@@ -359,7 +348,6 @@ namespace HemFoundation.Controllers.Api
                         MobileNo = baseMobile
                     };
                     Utility.StudentRegistration(studentRegObj);
-                    // EmailSendService.StudentRegistration(...);
                 }
             }
             catch (Exception ex)
