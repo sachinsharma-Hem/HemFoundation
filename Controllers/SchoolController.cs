@@ -1,13 +1,17 @@
-﻿using HemFoundation.Common; // Required for DBManager
+﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing;
+using HemFoundation.Common; // Required for DBManager
+using HemFoundation.Models; 
 using HemFoundation.Models.Entities; // Required for View_WJ_Teachercertificate (adjust namespace if needed)
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration; // Required for IConfiguration
 using Npgsql;
 using System.Collections.Generic;
 using System.Data;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using HemFoundation.Models; 
+using HemFoundation.DTOs;
 
 namespace HemFoundation.Controllers
 {
@@ -113,8 +117,7 @@ namespace HemFoundation.Controllers
         }
 
 
-        [HttpGet]
-       
+        [HttpGet]    
         public async Task<IActionResult> GetStudentCertificate(int eventID)
         {
             StudentCertificateModel model = new StudentCertificateModel();
@@ -208,7 +211,7 @@ namespace HemFoundation.Controllers
                 throw new Exception(ex.Message);
             }
 
-            return PartialView("~/Views/Admin/Shared/_GetStudentCertificateView.cshtml", model);
+            return PartialView("~/Views/Learn/Shared/_GetStudentCertificateViewNew.cshtml", model);
         }
 
         private async Task<DataTable> GetInstituteCertificateAsync(int studentID, int courseID, int instituteID)
@@ -260,6 +263,480 @@ namespace HemFoundation.Controllers
             return dt;
         }
         #endregion
+
+
+        [HttpGet]
+        public async Task<IActionResult> SubmissionStatus()
+        {
+            int instituteID = 0;
+            if (HttpContext.Session.GetInt32("UserID") is int sessionId && sessionId > 0)
+            {
+                instituteID = sessionId;
+            }
+            else if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedClaim))
+            {
+                instituteID = parsedClaim;
+            }
+
+            string firstName = "";
+            string lastName = "";
+            string cityName = "";
+            string instituteName = "";
+            string pinCode = "";
+            string coordinatorName = "";
+
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                await conn.OpenAsync();
+                string query = @"
+            SELECT instituteid, institute_name AS institutename, firstname, lastname, cityname, pincode 
+            FROM public.vw_school_profile_details 
+            WHERE instituteid = @InstituteID 
+            LIMIT 1;
+        ";
+
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@InstituteID", instituteID);
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            instituteID = reader["instituteid"] != DBNull.Value ? Convert.ToInt32(reader["instituteid"]) : instituteID;
+                            instituteName = reader["institutename"]?.ToString() ?? "";
+                            firstName = reader["firstname"]?.ToString() ?? "";
+                            lastName = reader["lastname"]?.ToString() ?? "";
+                            cityName = reader["cityname"]?.ToString() ?? "";
+                            pinCode = reader["pincode"]?.ToString() ?? "";
+                            coordinatorName = $"{firstName} {lastName}".Trim();
+                        }
+                    }
+                }
+            }
+
+            ViewBag.InstituteID = instituteID;
+            ViewBag.InstituteName = instituteName;
+            ViewBag.FirstName = firstName;
+            ViewBag.LastName = lastName;
+            ViewBag.CityName = cityName;
+            ViewBag.CoordinatorName = coordinatorName;
+            ViewBag.PinCode = pinCode;
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> GetMainCourses(string Standard)
+        {
+            List<MainCourse> mainCourses = new List<MainCourse>();
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                await conn.OpenAsync();
+                string query = @"
+            SELECT DISTINCT m.maincourseid, m.maincoursename 
+            FROM maincourses AS m 
+            INNER JOIN view_wj_syllabus AS s ON s.maincourseid = m.maincourseid 
+            WHERE @Standard = s.standard_;
+        ";
+
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Standard", Standard ?? "");
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            mainCourses.Add(new MainCourse
+                            {
+                                Id = reader["maincourseid"] != DBNull.Value ? Convert.ToInt32(reader["maincourseid"]) : 0,
+                                Name = reader["maincoursename"]?.ToString() ?? ""
+                            });
+                        }
+                    }
+                }
+            }
+
+            return Json(mainCourses);
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> GetStatus(int course)
+        {
+            int instituteID = 0;
+            if (HttpContext.Session.GetInt32("UserID") is int sessionId && sessionId > 0)
+            {
+                instituteID = sessionId;
+            }
+            else if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedClaim))
+            {
+                instituteID = parsedClaim;
+            }
+
+            string groupSelectionStatus = "Pending";
+            string imageUploadStatus = "Pending";
+            string videoUploadStatus = "Pending";
+            string projectexplanationstatus = "Pending";
+
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                await conn.OpenAsync();
+
+                // 1. Group Selection Check
+                using (var cmd = new NpgsqlCommand("SELECT 1 FROM hf_rel_manage_group_list WHERE isallocatedby = @InstituteID AND maincourseid = @CourseID LIMIT 1;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@InstituteID", instituteID);
+                    cmd.Parameters.AddWithValue("@CourseID", course);
+                    var res = await cmd.ExecuteScalarAsync();
+                    if (res != null) groupSelectionStatus = "Done";
+                }
+
+                // 2. Image Upload Check
+                using (var cmd = new NpgsqlCommand("SELECT 1 FROM creativityactivitessubmission2021 WHERE instituteid = @InstituteID AND imageactivity IS NOT NULL AND maincourseid = @CourseID LIMIT 1;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@InstituteID", instituteID);
+                    cmd.Parameters.AddWithValue("@CourseID", course);
+                    var res = await cmd.ExecuteScalarAsync();
+                    if (res != null) imageUploadStatus = "Done";
+                }
+
+                // 3. Video Upload Check
+                using (var cmd = new NpgsqlCommand("SELECT 1 FROM creativityactivitessubmission2021 WHERE instituteid = @InstituteID AND videoactivity IS NOT NULL AND maincourseid = @CourseID LIMIT 1;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@InstituteID", instituteID);
+                    cmd.Parameters.AddWithValue("@CourseID", course);
+                    var res = await cmd.ExecuteScalarAsync();
+                    if (res != null) videoUploadStatus = "Done";
+                }
+
+                // 4. Project Explanation Check
+                using (var cmd = new NpgsqlCommand("SELECT 1 FROM creativityactivitessubmission2021 WHERE instituteid = @InstituteID AND shortdescription IS NOT NULL AND maincourseid = @CourseID LIMIT 1;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@InstituteID", instituteID);
+                    cmd.Parameters.AddWithValue("@CourseID", course);
+                    var res = await cmd.ExecuteScalarAsync();
+                    if (res != null) projectexplanationstatus = "Done";
+                }
+            }
+
+            return Json(new
+            {
+                groupSelectionStatus = groupSelectionStatus,
+                imageUploadStatus = imageUploadStatus,
+                videoUploadStatus = videoUploadStatus,
+                projectexplanationstatus = projectexplanationstatus
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ExportSubmissionStatus()
+        {
+            int instituteID = 0;
+            if (HttpContext.Session.GetInt32("UserID") is int sessionId && sessionId > 0)
+            {
+                instituteID = sessionId;
+            }
+            else if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedClaim))
+            {
+                instituteID = parsedClaim;
+            }
+
+            DataTable dt = new DataTable("SubmissionStatusReport");
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                await conn.OpenAsync();
+                string sqlQuery = "SELECT * FROM public.\"SubmissionActivity_Status\"(@InstituteID);";
+
+                using (var cmd = new NpgsqlCommand(sqlQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@InstituteID", instituteID);
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        dt.Load(reader);
+                    }
+                }
+            }
+
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+                wb.Worksheets.Add(dt, "SubmissionStatusReport");
+
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    wb.SaveAs(stream);
+                    stream.Position = 0; // CRITICAL: Reset position to prevent 0 KB downloads
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SubmissionStatusReport.xlsx");
+                }
+            }
+        }
+        [HttpGet]
+        public async Task<IActionResult> PrintInstituteReport(int instituteId)
+        {
+            var model = await GetreportData(instituteId);
+
+            // Flag to tell the View we are in "PDF Mode"
+            ViewBag.IsPdf = true;
+
+            // Note: Rotativa may require rotativa.aspnetcore NuGet package in .NET Core
+            return new Rotativa.AspNetCore.ViewAsPdf("PrintReport", model)
+            {
+                FileName = "InstituteReport.pdf",
+                PageSize = Rotativa.AspNetCore.Options.Size.A4,
+                CustomSwitches = "--javascript-delay 1000 --no-stop-slow-scripts"
+            };
+        }
+
+        public async Task<SchoolReportViewModel> GetreportData(int instituteId)
+        {
+            var model = new SchoolReportViewModel();
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                await conn.OpenAsync();
+
+                // Batched SQL containing all 9 query blocks in exact order of reading
+                string batchedQuery = @"
+                            -- 1. Header & Profile Stats (Students & Teachers)
+                           SELECT institute_name AS InstituteName,addressline1 Address,cityname City,pincode Pincode,
+                                 emailid Email,mobileno MobileNo, 
+                                        associatedstudents, activestudents, totalteachers, activeteachers 
+                                 FROM vw_school_profile_details
+                            WHERE instituteid = @InstituteID LIMIT 1;
+
+                            -- 2. Placeholder/Skipped (Integrated into Read 1)
+                            SELECT 1;
+
+                            -- 3. Placeholder/Skipped (Integrated into Read 1)
+                            SELECT 1;
+
+                            -- 4. Teacher Course Summary
+                            SELECT 
+                                u.firstname || ' ' || u.lastname AS Teacher_Name,
+                                '' AS CourseCompleted,
+                                '' AS CoursePending,
+                                0 AS NoOFCourseCompleted,
+                                0 AS NoofCoursePending,
+                                0 AS CertifiedinMainCourseCount,
+                                0 AS TotalObtainedMarks
+                            FROM wj_teacherassociates AS wjta
+                            INNER JOIN users AS u ON u.userid = wjta.teacherid
+                            WHERE wjta.instituteid = @InstituteID;
+
+                            -- 5. Standard Summaries
+                            SELECT 
+                                standard AS Standard,
+                                COUNT(*) AS TotalStudents,
+                                SUM(CASE WHEN isactive THEN 1 ELSE 0 END) AS ActiveStudents,
+                                SUM(CASE WHEN NOT isactive THEN 1 ELSE 0 END) AS InactiveStudents
+                            FROM view_wj_students_details_info 
+                            WHERE instituteid = @InstituteID
+                            GROUP BY standard;
+
+                            -- 6. Top 10 Performers
+                           SELECT ""Standard"", ""Student_Name"", ""TotalPoints"", ""InstRank""        
+                            FROM ""HF_View_InstitutewiseTop10StudentPerformer"" 
+                            WHERE ""InstituteID"" = @InstituteID;
+
+                            -- 7. Std wise top 3 performer
+                            SELECT standard, student_name, totalpoints, 1 AS StdRank 
+                            FROM view_wj_students_details_info 
+                            WHERE instituteid = @InstituteID 
+                            ORDER BY standard, totalpoints DESC;
+
+                            -- 8. Project Summary
+                            SELECT 
+                                standard AS Standard,
+                                COUNT(*) AS TotalStudents,
+                                0 AS GroupPBLCompleted,
+                                0 AS IndividualPBLCompleted,
+                                0 AS FamilyPBLCompleted
+                            FROM view_wj_students_details_info 
+                            WHERE instituteid = @InstituteID
+                            GROUP BY standard;
+
+                            -- 9. Students wise certified list
+                            SELECT 
+                                student_name AS Student_Name,
+                                standard AS Standard_,
+                                0 AS No_of_Courses_Completed,
+                                0 AS No_of_Courses_Pending,
+                                0 AS MarksObtain,
+                                '' AS Courses_Completed,
+                                '' AS Courses_Pending
+                            FROM view_wj_students_details_info 
+                            WHERE instituteid = @InstituteID;
+                        ";
+                using (var cmd = new NpgsqlCommand(batchedQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@InstituteID", instituteId);
+
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        // ---------------------------------------------------------
+                        // Read 1: Header & Profile Counts (Students & Teachers)
+                        // ---------------------------------------------------------
+                        if (await reader.ReadAsync())
+                        {
+                            model.Header = new InstituteDetails
+                            {
+                                InstituteName = Convert.ToString(reader["InstituteName"]),
+                                Address = Convert.ToString(reader["Address"]),
+                                City = Convert.ToString(reader["City"]),
+                                Pincode = Convert.ToString(reader["Pincode"]),
+                                Email = Convert.ToString(reader["Email"]),
+                                MobileNo = Convert.ToString(reader["MobileNo"])
+                            };
+
+                            // Extract student stats from vw_school_profile_details
+                            int totalStudents = reader["associatedstudents"] == DBNull.Value ? 0 : Convert.ToInt32(reader["associatedstudents"]);
+                            int activeStudents = reader["activestudents"] == DBNull.Value ? 0 : Convert.ToInt32(reader["activestudents"]);
+                            model.studentStats = new StudentStats
+                            {
+                                TotalStudents = totalStudents,
+                                ActiveStudents = activeStudents,
+                                InactiveStudents = totalStudents - activeStudents // Inactive minus active from total
+                            };
+
+                            // Extract teacher stats from vw_school_profile_details
+                            int totalTeachers = reader["totalteachers"] == DBNull.Value ? 0 : Convert.ToInt32(reader["totalteachers"]);
+                            int activeTeachers = reader["activeteachers"] == DBNull.Value ? 0 : Convert.ToInt32(reader["activeteachers"]);
+                            model.teacherStats = new TeacherStats
+                            {
+                                TotalTeacher = totalTeachers,
+                                ActiveTeacher = activeTeachers,
+                                InActiveTeacher = totalTeachers - activeTeachers // Inactive minus active from total
+                            };
+                        }
+
+                        // ---------------------------------------------------------
+                        // Read 2: Skip or remove separate Student Stats query block 
+                        // since it's now handled entirely in Read 1 from profile details!
+                        // ---------------------------------------------------------
+                        // ---------------------------------------------------------
+                        // Read 2: Skip or remove separate Student Stats query block 
+                        // ---------------------------------------------------------
+                        await reader.NextResultAsync();
+
+                        // ---------------------------------------------------------
+                        // Read 3: Skip or remove separate Teacher Counts query block 
+                        // ---------------------------------------------------------
+                        await reader.NextResultAsync();
+
+                        // ---------------------------------------------------------
+                        // Read 4: Teacher Course Summary
+                        // ---------------------------------------------------------
+                        await reader.NextResultAsync();
+                        model.teacherCourseSummary = new List<TeacherCourseSummary>();
+                        while (await reader.ReadAsync())
+                        {
+                            model.teacherCourseSummary.Add(new TeacherCourseSummary
+                            {
+                                Teacher_Name = Convert.ToString(reader["Teacher_Name"]),
+                                CourseCompleted = Convert.ToString(reader["CourseCompleted"]),
+                                CoursePending = Convert.ToString(reader["CoursePending"]),
+                                NoOFCourseCompleted = reader["NoOFCourseCompleted"] == DBNull.Value ? 0 : Convert.ToInt32(reader["NoOFCourseCompleted"]),
+                                NoofCoursePending = reader["NoofCoursePending"] == DBNull.Value ? 0 : Convert.ToInt32(reader["NoofCoursePending"]),
+                                CertifiedinMainCourseCount = reader["CertifiedinMainCourseCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["CertifiedinMainCourseCount"]),
+                                TotalObtainedMarks = reader["TotalObtainedMarks"] == DBNull.Value ? 0 : Convert.ToInt32(reader["TotalObtainedMarks"])
+                            });
+                        }
+
+                        // ---------------------------------------------------------
+                        // Read 5: Standard Summaries
+                        // ---------------------------------------------------------
+                        await reader.NextResultAsync();
+                        model.standardSummaries = new List<StandardSummary>();
+                        while (await reader.ReadAsync())
+                        {
+                            model.standardSummaries.Add(new StandardSummary
+                            {
+                                Standard = Convert.ToString(reader["Standard"]),
+                                TotalStudents = reader["TotalStudents"] == DBNull.Value ? 0 : Convert.ToInt32(reader["TotalStudents"]),
+                                ActiveStudents = reader["ActiveStudents"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ActiveStudents"]),
+                                InactiveStudents = reader["InactiveStudents"] == DBNull.Value ? 0 : Convert.ToInt32(reader["InactiveStudents"])
+                            });
+                        }
+
+                        // ---------------------------------------------------------
+                        // Read 6: Top 10 Performers
+                        // ---------------------------------------------------------
+                        await reader.NextResultAsync();
+                        model.top10Performer = new List<Top10Performer>();
+                        while (await reader.ReadAsync())
+                        {
+                            model.top10Performer.Add(new Top10Performer
+                            {
+                                Standard = Convert.ToString(reader["Standard"]),
+                                Student_Name = Convert.ToString(reader["student_name"]),
+                                InstRank = reader["InstRank"] == DBNull.Value ? 0 : Convert.ToInt64(reader["InstRank"]),
+                                TotalPoints = reader["totalpoints"] == DBNull.Value ? 0 : Convert.ToInt32(reader["totalpoints"])
+                            });
+                        }
+
+                        // ---------------------------------------------------------
+                        // Read 7: Std wise top 3 performer
+                        // ---------------------------------------------------------
+                        await reader.NextResultAsync();
+                        model.Top3StdPerformers = new List<TopStd3Performer>();
+                        while (await reader.ReadAsync())
+                        {
+                            model.Top3StdPerformers.Add(new TopStd3Performer
+                            {
+                                Standard = Convert.ToString(reader["Standard"]),
+                                Student_Name = Convert.ToString(reader["student_name"]),
+                                TotalPoints = reader["totalpoints"] == DBNull.Value ? 0 : Convert.ToInt32(reader["totalpoints"]),
+                                StdRank = reader["StdRank"] == DBNull.Value ? 0 : Convert.ToInt64(reader["StdRank"])
+                            });
+                        }
+
+                        // ---------------------------------------------------------
+                        // Read 8: Project Summary
+                        // ---------------------------------------------------------
+                        await reader.NextResultAsync();
+                        model.ProjectSummaries = new List<ProjectStats>();
+                        while (await reader.ReadAsync())
+                        {
+                            model.ProjectSummaries.Add(new ProjectStats
+                            {
+                                Standard = Convert.ToString(reader["Standard"]),
+                                TotalStudents = reader["TotalStudents"] == DBNull.Value ? 0 : Convert.ToInt32(reader["TotalStudents"]),
+                                GroupPBLCompleted = reader["GroupPBLCompleted"] == DBNull.Value ? 0 : Convert.ToInt32(reader["GroupPBLCompleted"]),
+                                IndividualPBLCompleted = reader["IndividualPBLCompleted"] == DBNull.Value ? 0 : Convert.ToInt32(reader["IndividualPBLCompleted"]),
+                                FamilyPBLCompleted = reader["FamilyPBLCompleted"] == DBNull.Value ? 0 : Convert.ToInt32(reader["FamilyPBLCompleted"])
+                            });
+                        }
+
+                        // ---------------------------------------------------------
+                        // Read 9: Students wise certified list
+                        // ---------------------------------------------------------
+                        await reader.NextResultAsync();
+                        model.studentsCertifiedStats = new List<StudentsCertifiedStats>();
+                        while (await reader.ReadAsync())
+                        {
+                            model.studentsCertifiedStats.Add(new StudentsCertifiedStats
+                            {
+                                Student_Name = Convert.ToString(reader["Student_Name"]),
+                                Standard_ = Convert.ToString(reader["Standard_"]),
+                                No_of_Courses_Completed = reader["No_of_Courses_Completed"] == DBNull.Value ? 0 : Convert.ToInt32(reader["No_of_Courses_Completed"]),
+                                No_of_Courses_Pending = reader["No_of_Courses_Pending"] == DBNull.Value ? 0 : Convert.ToInt32(reader["No_of_Courses_Pending"]),
+                                MarksObtain = reader["MarksObtain"] == DBNull.Value ? 0 : Convert.ToInt32(reader["MarksObtain"]),
+                                Courses_Completed = Convert.ToString(reader["Courses_Completed"]),
+                                Courses_Pending = Convert.ToString(reader["Courses_Pending"])
+                            });
+                        }
+                    }
+                }
+            }
+            return model;
+        }
     }
 
     internal class View_WJ_Teachercertificate
