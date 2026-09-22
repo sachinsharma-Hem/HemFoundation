@@ -49,6 +49,7 @@ namespace HemFoundation.Controllers.Api
      [FromForm] string? gender,
      [FromForm] string? role)
         {
+
             if (!ModelState.IsValid)
             {
                 var errorMessages = ModelState.Values
@@ -103,9 +104,9 @@ namespace HemFoundation.Controllers.Api
             string aspNetUserId = await HemFoundation.Common.Utility.CreateIdentityUserRawAsync(_context, uniqueUsername, model.EmailID, baseMobile, roleName);
             string? genderCode = gender?.Trim().ToLower() switch
             {
-                "male" => "1",
-                "female" => "2",
-                "other" => "3",
+                "male" or "m" => "1",
+                "female" or "f" => "2",
+                "other" or "o" => "3",
                 _ => null
             };
             var coreUser = new HemFoundation.Models.Entities.Users
@@ -150,6 +151,10 @@ namespace HemFoundation.Controllers.Api
 
             if (roleName == "WJ_School")
             {
+                var referralCode = await _context.WJ_ReferralCodes
+                .Where(x => x.UserID ==Convert.ToInt32(referredBy))
+                .Select(x => x.ReferralCode)
+                .FirstOrDefaultAsync();
                 messagerolename = "School";
                 var institute = new WJ_Institutes
                 {
@@ -165,11 +170,9 @@ namespace HemFoundation.Controllers.Api
 
                     IsActive = true,
 
-                    IsVerify =  true,
+                    IsVerify = true,
 
-                    ReferralCode = string.IsNullOrWhiteSpace(referredBy)
-                        ? null
-                        : referredBy.Trim()
+                    ReferralCode = referralCode
                 };
 
                 _context.WJ_Institutes.Add(institute);
