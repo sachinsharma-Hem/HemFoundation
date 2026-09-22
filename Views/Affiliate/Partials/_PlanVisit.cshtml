@@ -1,4 +1,7 @@
-﻿<div class="card border-0 shadow-sm rounded-4 bg-white p-4 animate-fade-in" style="border: 1px solid #d9dfe5 !important;">
+﻿<!-- Include Select2 CSS for searchable dropdown -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<div class="card border-0 shadow-sm rounded-4 bg-white p-4 animate-fade-in" style="border: 1px solid #d9dfe5 !important;">
     <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
         <div>
             <h4 class="fw-bold text-success mb-1"><i class="bi bi-calendar-check me-2"></i> Plan Visit Module</h4>
@@ -28,7 +31,7 @@
 </div>
 
 <div class="modal fade" id="addVisitModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 border-0 shadow-lg p-3 bg-white">
             <div class="modal-header border-bottom pb-3">
                 <h5 class="fw-bold text-dark m-0"><i class="bi bi-calendar-plus text-success me-2"></i> Schedule New Visit</h5>
@@ -137,14 +140,19 @@
         box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
     }
 </style>
-
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(function() {
         loadMyVisits();
         loadAssignedSchools();
-        setMinDateTime(); // Set minimum date-time to prevent backdate selection
+        setMinDateTime();
 
-        // Form Submit Handler
+        // Initialize Select2 with Bootstrap 5 Theme inside modal
+        $('#ddlMySchools').select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#addVisitModal')
+        });
+
         $('#frmPlanVisit').on('submit', function(e) {
             e.preventDefault();
             let model = {
@@ -163,8 +171,9 @@
                     if (res.success) {
                         $('#addVisitModal').modal('hide');
                         $('#frmPlanVisit')[0].reset();
-                        setMinDateTime(); // Reset min datetime after form reset
-                        loadMyVisits(); // Refresh list
+                        $('#ddlMySchools').val(null).trigger('change'); // Reset Select2 selection
+                        setMinDateTime();
+                        loadMyVisits();
                     }
                 }
             });
@@ -200,7 +209,7 @@
                 if (res.success && res.data) {
                     let opts = '<option value="">-- Select Assigned School --</option>';
                     res.data.forEach(s => { opts += `<option value="${s.instituteID}">${s.name} (${s.city || 'N/A'})</option>`; });
-                    $('#ddlMySchools').html(opts);
+                    $('#ddlMySchools').html(opts).trigger('change'); 
                 }
             }
         });

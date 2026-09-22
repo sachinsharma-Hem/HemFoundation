@@ -8,7 +8,7 @@ namespace HemFoundation.Controllers
         [HttpGet("register")]
         public IActionResult Register()
         {
-            return View(); // Searches Views/Account/Register.cshtml
+            return View();
         }
     }
 }

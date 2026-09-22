@@ -14,10 +14,43 @@
             </button>
         </div>
 
+        <!-- SEARCH / FILTER BAR & PAGE SIZE -->
+        <div class="row g-3 mb-3 align-items-center">
+            <div class="col-md-4">
+                <input type="text" class="form-control rounded-pill bg-light border-0 px-3 shadow-none" id="searchSchool" placeholder="Filter by School Name..." onkeyup="resetPaginationAndFilter()" />
+            </div>
+            <div class="col-md-3">
+                <select class="form-select rounded-pill bg-light border-0 px-3 shadow-none" id="filterType" onchange="resetPaginationAndFilter()">
+                    <option value="">All Types (Student/Teacher)</option>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="volunteer">Volunteer</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select rounded-pill bg-light border-0 px-3 shadow-none" id="filterStatus" onchange="resetPaginationAndFilter()">
+                    <option value="">All Statuses</option>
+                    <option value="Completed">Completed</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Failed">Failed</option>
+                </select>
+            </div>
+            <div class="col-md-2 text-md-end">
+                <select class="form-select rounded-pill bg-light border-0 px-2 shadow-none d-inline-block w-auto" id="pageSize" onchange="resetPaginationAndFilter()">
+                    <option value="10">10 per page</option>
+                    <option value="25" selected>25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- TABLE WITH SERIAL NUMBER -->
         <div class="table-responsive">
             <table class="table table-hover align-middle border rounded-3 overflow-hidden" id="bulkLogsTable">
                 <thead class="table-light">
                     <tr>
+                        <th class="text-secondary small fw-bold text-uppercase" style="width: 60px;">S.No.</th>
                         <th class="text-secondary small fw-bold text-uppercase">School Name</th>
                         <th class="text-secondary small fw-bold text-uppercase">Type</th>
                         <th class="text-secondary small fw-bold text-uppercase">File Name</th>
@@ -27,34 +60,60 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td colspan="6" class="text-center text-muted py-4">Loading reports...</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted py-4">Loading reports...</td></tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- PAGINATION CONTROLS FOOTER -->
+        <div class="d-flex justify-content-between align-items-center mt-3 px-2">
+            <div class="small text-muted" id="paginationInfo">Showing 0 to 0 of 0 entries</div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0 rounded-pill" id="paginationControls">
+                    <!-- Dynamic Pagination Buttons -->
+                </ul>
+            </nav>
         </div>
     </div>
 </div>
 
-<!-- ================= UPLOAD & PROCESS MODAL ================= -->
-<div class="modal fade" id="uploadProcessModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
+<!-- ================= INTELLIGENT PREVIEW & MAP MODAL ================= -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-4">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="fw-bold text-dark"><i class="bi bi-file-earmark-arrow-up text-success me-2"></i> Upload & Process Records</h5>
+                <h5 class="fw-bold text-dark"><i class="bi bi-robot text-success me-2"></i> Smart Excel Column Detection & Preview</h5>
                 <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="frmUploadAndProcess">
-                    <input type="hidden" id="modalLogId" name="logId" />
+                <p class="text-muted small mb-3">System has automatically mapped your columns. Review the preview below before starting registration.</p>
+                <input type="hidden" id="previewLogId" />
+                <input type="hidden" id="previewFilePath" />
 
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Select Excel File (Format: FirstName, LastName, MobileNo, Email)</label>
-                        <input type="file" class="form-control rounded-3 shadow-none bg-light border-0" id="excelFile" name="excelFile" accept=".xlsx, .xls" required />
+                <div class="table-responsive border rounded-3 mb-4" style="max-height: 350px;">
+                    <table class="table table-striped table-sm mb-0" id="previewTable">
+                        <thead class="table-light"></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- Progress & Timer Bar -->
+                <div id="importProgressContainer" class="d-none mb-3">
+                    <div class="d-flex justify-content-between small fw-bold mb-1 text-success">
+                        <span>Processing data in background...</span>
+                        <span id="timerCounter">0s elapsed</span>
                     </div>
+                    <div class="progress rounded-pill" style="height: 10px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success w-100"></div>
+                    </div>
+                </div>
 
-                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2">
-                        <i class="bi bi-upload me-1"></i> Upload & Process Data
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm" id="btnConfirmImport" onclick="startFastImport()">
+                        <i class="bi bi-play-circle me-1"></i> Agree & Start Registration
                     </button>
-                </form>
+                </div>
             </div>
         </div>
     </div>
@@ -67,173 +126,254 @@
             <div class="mb-3">
                 <i class="bi bi-check-circle-fill text-success display-4"></i>
             </div>
-            <h5 class="fw-bold text-dark mb-2">Success!</h5>
+            <h5 class="fw-bold text-dark mb-2">Operation Summary</h5>
             <p class="text-muted mb-4" id="successPopupMessage">Operation completed successfully.</p>
             <button type="button" class="btn btn-success w-100 rounded-pill fw-bold py-2" data-bs-dismiss="modal">OK</button>
         </div>
     </div>
 </div>
 
-<!-- ================= STATUS UPDATE MODAL ================= -->
-<div class="modal fade" id="statusUpdateModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
-            <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="fw-bold text-dark"><i class="bi bi-pencil-square text-warning me-2"></i> Update Upload Status</h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="frmUpdateStatus">
-                    <input type="hidden" id="hdnLogId" name="logId" />
-
-                    <div class="mb-4">
-                        <label class="form-label small fw-bold text-muted">Select New Status</label>
-                        <select class="form-select form-select-lg rounded-3 shadow-none bg-light border-0" id="ddlStatus" name="status" required>
-                            <option value="Uploaded Successfully">Uploaded Successfully</option>
-                            <option value="In Progress">In Progress (Processing)</option>
-                            <option value="Completed">Completed (Data Saved)</option>
-                            <option value="Failed">Failed (Invalid Data)</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm py-2">
-                        <i class="bi bi-check-circle me-1"></i> Save Status
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
     <script>
+        let allLogsData = [];
+        let currentPage = 1;
+
         $(document).ready(function() {
             loadBulkLogs();
-
-            // Form Submit for Status Update
-            $('#frmUpdateStatus').on('submit', function(e) {
-                e.preventDefault();
-                let formData = new FormData(this);
-
-                let $btn = $(this).find('button[type="submit"]');
-                let originalText = $btn.html(); $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Updating...');
-
-                $.ajax({
-                    url: '/api/admin/update-bulk-status',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(res) {
-                        if (res.success) {
-                            $('#statusUpdateModal').modal('hide');
-                            showSuccessPopup(res.message);
-                            loadBulkLogs();
-                        } else {
-                            alert(res.message);
-                        }
-                    },
-                    error: function(xhr) {
-                        alert(xhr.responseJSON?.message || "Failed to update status.");
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false).html(originalText);
-                    }
-                });
-            });
-
-            // Form Submit for Upload & Process Records
-            $('#frmUploadAndProcess').on('submit', function(e) {
-                e.preventDefault();
-                let formData = new FormData(this);
-
-                let $btn = $(this).find('button[type="submit"]');
-                let originalText = $btn.html(); $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Processing & Registering...');
-
-                $.ajax({
-                    url: '/api/admin/upload-and-process',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(res) {
-                        if (res.success) {
-                            $('#uploadProcessModal').modal('hide');
-                            showSuccessPopup(res.message);
-                            loadBulkLogs();
-                        } else {
-                            alert(res.message);
-                        }
-                    },
-                    error: function(xhr) {
-                        alert(xhr.responseJSON?.message || "Failed to process file.");
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false).html(originalText);
-                    }
-                });
-            });
         });
+
+        function loadBulkLogs() {
+            $('#bulkLogsTable tbody').html('<tr><td colspan="7" class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm me-2"></span> Loading...</td></tr>');
+
+            $.get('/api/admin/bulk-logs', function(res) {
+                if (res.success) {
+                    allLogsData = res.data;
+                    filterAndRenderTable();
+                }
+            }).fail(function() {
+                $('#bulkLogsTable tbody').html('<tr><td colspan="7" class="text-center text-danger py-4">Error loading data.</td></tr>');
+            });
+        }
+
+        function resetPaginationAndFilter() {
+            currentPage = 1;
+            filterAndRenderTable();
+        }
+
+        function filterAndRenderTable() {
+            let search = $('#searchSchool').val().toLowerCase();
+            let type = $('#filterType').val().toLowerCase();
+            let status = $('#filterStatus').val().toLowerCase();
+
+            let filtered = allLogsData.filter(log => {
+                let matchSchool = log.schoolName.toLowerCase().includes(search);
+                let matchType = type === "" || log.uploadType.toLowerCase().includes(type);
+                let matchStatus = status === "" || log.status.toLowerCase().includes(status);
+                return matchSchool && matchType && matchStatus;
+            });
+
+            renderPagedTable(filtered);
+        }
+
+        function renderPagedTable(data) {
+            let pageSize = parseInt($('#pageSize').val()) || 25;
+            let totalRecords = data.length;
+            let totalPages = Math.ceil(totalRecords / pageSize) || 1;
+
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            let startIndex = (currentPage - 1) * pageSize;
+            let endIndex = startIndex + pageSize;
+            let pagedData = data.slice(startIndex, endIndex);
+
+            let rows = '';
+            if (pagedData.length === 0) {
+                rows = '<tr><td colspan="7" class="text-center text-muted py-4">No bulk uploads found.</td></tr>';
+            } else {
+                pagedData.forEach((log, index) => {
+                    let serialNo = startIndex + index + 1;
+                    let badgeClass = getStatusBadgeClass(log.status);
+                    let dateStr = new Date(log.uploadedDate).toLocaleString();
+
+                    rows += `
+                        <tr>
+                            <td class="fw-bold text-muted">${serialNo}</td>
+                            <td class="fw-semibold text-dark">${log.schoolName}</td>
+                            <td><span class="badge bg-light text-dark border">${log.uploadType}</span></td>
+                            <td>
+                                <a href="${log.filePath}" target="_blank" class="text-decoration-none text-success fw-semibold">
+                                    <i class="bi bi-file-earmark-excel text-success me-1"></i> ${log.fileName}
+                                </a>
+                            </td>
+                            <td class="small text-muted">${dateStr}</td>
+                            <td><span class="badge ${badgeClass} px-2 py-1">${log.status}</span></td>
+                            <td class="text-center">
+                                <div class="btn-group shadow-sm">
+                                    <a href="${log.filePath}" target="_blank" class="btn btn-sm btn-light border-end" title="Download">
+                                        <i class="bi bi-download text-primary"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-light border-end" title="Smart Upload & Preview" onclick="openSmartPreview(${log.logID})">
+                                        <i class="bi bi-magic text-success"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-light text-danger" title="Delete Record" onclick="deleteBulkLog(${log.logID})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            $('#bulkLogsTable tbody').html(rows);
+
+            // Pagination Info & Controls Update
+            let startDisplay = totalRecords > 0 ? startIndex + 1 : 0;
+            let endDisplay = Math.min(endIndex, totalRecords);
+            $('#paginationInfo').text(`Showing ${startDisplay} to ${endDisplay} of ${totalRecords} entries`);
+
+            let paginationHtml = '';
+            // Previous Button
+            paginationHtml += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Prev</a>
+            </li>`;
+
+            // Page Number Buttons
+            for (let p = 1; p <= totalPages; p++) {
+                if (p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) {
+                    paginationHtml += `<li class="page-item ${p === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${p}); return false;">${p}</a>
+                    </li>`;
+                } else if (p === currentPage - 2 || p === currentPage + 2) {
+                    paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+
+            // Next Button
+            paginationHtml += `<li class="page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Next</a>
+            </li>`;
+
+            $('#paginationControls').html(paginationHtml);
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            filterAndRenderTable();
+        }
+
+        function openSmartPreview(logId) {
+            let input = $('<input type="file" accept=".xlsx, .xls" />');
+            input.click();
+            input.on('change', function(e) {
+                let file = e.target.files[0];
+                if (!file) return;
+
+                let formData = new FormData();
+                formData.append('logId', logId);
+                formData.append('excelFile', file);
+
+                showSuccessPopup("Analyzing excel columns intelligently...");
+                $('#successPopupModal').modal('hide');
+
+                $.ajax({
+                    url: '/api/admin/preview-excel',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                   success: function(res) {
+        if (res.success) {
+            $('#previewLogId').val(logId);
+            $('#previewFilePath').val(res.filePath);
+
+            let thead = '<tr>';
+            res.columns.forEach(c => {
+                let mappedField = res.columnMapping[c] || 'Unmapped';
+                thead += `<th>${c}<br><small class="text-success fw-normal" style="font-size: 10px;">➔ ${mappedField}</small></th>`;
+            });
+            thead += '</tr>';
+            $('#previewTable thead').html(thead);
+
+            let tbody = '';
+            res.previewData.forEach(row => {
+                tbody += '<tr>';
+                res.columns.forEach(c => tbody += `<td>${row[c] || '<span class="text-muted fst-italic">null</span>'}</td>`);
+                tbody += '</tr>';
+            });
+            $('#previewTable tbody').html(tbody);
+
+            $('#importProgressContainer').addClass('d-none');
+            $('#btnConfirmImport').prop('disabled', false);
+            $('#previewModal').modal('show');
+        } else {
+            alert(res.message);
+        }
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseJSON?.message || "Failed to preview excel.");
+                    }
+                });
+            });
+        }
+
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        function startFastImport() {
+            let logId = $('#previewLogId').val();
+            let filePath = $('#previewFilePath').val();
+
+            $('#importProgressContainer').removeClass('d-none');
+            $('#btnConfirmImport').prop('disabled', true);
+
+            secondsElapsed = 0;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                $('#timerCounter').text(secondsElapsed + 's elapsed');
+            }, 1000);
+
+            $.post('/api/admin/process-mapped-excel', { logId: logId, filePath: filePath }, function(res) {
+                clearInterval(timerInterval);
+                if (res.success) {
+                    $('#previewModal').modal('hide');
+                    showSuccessPopup(res.message);
+                    loadBulkLogs();
+                } else {
+                    alert(res.message);
+                    $('#btnConfirmImport').prop('disabled', false);
+                }
+            }).fail(function(xhr) {
+                clearInterval(timerInterval);
+                alert(xhr.responseJSON?.message || "Failed to process import.");
+                $('#btnConfirmImport').prop('disabled', false);
+            });
+        }
+
+        function deleteBulkLog(id) {
+            if (confirm("Are you sure you want to delete this upload log?")) {
+                $.ajax({
+                    url: `/api/admin/delete-bulk-log/${id}`,
+                    type: 'DELETE',
+                    success: function(res) {
+                        if (res.success) {
+                            showSuccessPopup(res.message);
+                            loadBulkLogs();
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function() {
+                        alert("Failed to delete record.");
+                    }
+                });
+            }
+        }
 
         function showSuccessPopup(message) {
             $('#successPopupMessage').text(message);
             $('#successPopupModal').modal('show');
-        }
-
-        // Fetch Data from API
-        function loadBulkLogs() {
-            $('#bulkLogsTable tbody').html('<tr><td colspan="6" class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm me-2"></span> Loading...</td></tr>');
-
-            $.get('/api/admin/bulk-logs', function(res) {
-                if (res.success) {
-                    let rows = '';
-                    if (res.data.length === 0) {
-                        rows = '<tr><td colspan="6" class="text-center text-muted py-4">No bulk uploads found.</td></tr>';
-                    } else {
-                        res.data.forEach(log => {
-                            let badgeClass = getStatusBadgeClass(log.status);
-                            let dateStr = new Date(log.uploadedDate).toLocaleString();
-
-                            rows += `
-                                        <tr>
-                                            <td class="fw-semibold text-dark">${log.schoolName}</td>
-                                            <td><span class="badge bg-light text-dark border">${log.uploadType}</span></td>
-                                            <td>
-                                                <a href="${log.filePath}" target="_blank" class="text-decoration-none text-success fw-semibold" title="Click to download file">
-                                                    <i class="bi bi-file-earmark-excel text-success me-1"></i> ${log.fileName}
-                                                </a>
-                                            </td>
-                                            <td class="small text-muted">${dateStr}</td>
-                                            <td><span class="badge ${badgeClass} px-2 py-1">${log.status}</span></td>
-                                            <td class="text-center">
-                                                <div class="btn-group shadow-sm">
-                                                    <a href="${log.filePath}" target="_blank" class="btn btn-sm btn-light border-end" title="Download File">
-                                                        <i class="bi bi-download text-primary"></i>
-                                                    </a>
-                                                    <button type="button" class="btn btn-sm btn-light border-end" title="Upload & Process Users" onclick="openUploadProcessModal(${log.logID})">
-                                                        <i class="bi bi-upload text-success"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-light" title="Update Status" onclick="openStatusModal(${log.logID}, '${log.status}')">
-                                                        <i class="bi bi-pencil-square text-warning"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    `;
-                        });
-                    }
-                    $('#bulkLogsTable tbody').html(rows);
-                }
-            }).fail(function() {
-                $('#bulkLogsTable tbody').html('<tr><td colspan="6" class="text-center text-danger py-4">Error loading data.</td></tr>');
-            });
-        }
-
-        function openUploadProcessModal(logId) {
-            $('#modalLogId').val(logId);
-            $('#excelFile').val('');
-            $('#uploadProcessModal').modal('show');
         }
 
         function getStatusBadgeClass(status) {
@@ -242,16 +382,6 @@
             if (status.includes("progress")) return "bg-warning-subtle text-warning border border-warning-subtle";
             if (status.includes("fail") || status.includes("reject")) return "bg-danger-subtle text-danger border border-danger-subtle";
             return "bg-secondary-subtle text-secondary border border-secondary-subtle";
-        }
-
-        function openStatusModal(logId, currentStatus) {
-            $('#hdnLogId').val(logId);
-            if ($(`#ddlStatus option[value="${currentStatus}"]`).length > 0) {
-                $('#ddlStatus').val(currentStatus);
-            } else {
-                $('#ddlStatus').val("Uploaded Successfully");
-            }
-            $('#statusUpdateModal').modal('show');
         }
     </script>
 }
