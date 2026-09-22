@@ -178,7 +178,7 @@
                     <div class="card grade-card shadow-sm h-100 text-center">
                         <div class="grade-card-top">
                                             <div class="grade-title mb-1">${grade.standardName}</div>
-                                            <div class="grade-subtitle text-uppercase">${grade.standardName}</div>
+                                            
                         </div>
                         <div class="p-3 bg-white">
                             <button class="btn btn-warning-custom w-100 rounded-pill fw-bold shadow-sm" onclick="showCapacities(${grade.id})">
@@ -205,26 +205,24 @@
                     let imgUrl = cap.valueImageUrl ? cap.valueImageUrl : `/Uploads/Common_Document/${cap.valueTitleEng}.jpg`;
                     // NAYA: Dynamic Action Button (Checks isCompleted flag)
                     let actionBtn = cap.isCompleted 
-                        ? `<a href="/ValueOfYear/ActivitySubmission/${cap.id}" class="btn btn-success w-100 rounded-pill fw-bold btn-sm shadow-sm"><i class="bi bi-check-circle-fill me-1"></i> Completed</a>`
-                        : `<a href="/ValueOfYear/ActivitySubmission/${cap.id}" class="btn btn-purple w-100 rounded-pill fw-bold btn-sm shadow-sm"><i class="bi bi-play-fill me-1"></i> Start</a>`;
+                        ? `<a href="/ValueOfYear/ActivitySubmission/${cap.id}" class="btn btn-success  btn-sm"><i class="bi bi-check-circle-fill me-1"></i> Completed</a>`
+                        : `<a href="/ValueOfYear/ActivitySubmission/${cap.id}" class="btn btn-purple  btn-sm"><i class="bi bi-play-fill me-1"></i> Start Project</a>`;
                     
                     html += `
                     <div class="col">
                         <div class="card capacity-card h-100 d-flex flex-column">
                             <img src="${imgUrl}" class="capacity-img" alt="${cap.valueTitleEng}">
                             <div class="card-body text-center p-3 d-flex flex-column">
-                                <div class="mb-2">
-                                            <span class="capacity-badge shadow-sm">${cap.valueTitleEng}</span>
-                                </div>
+                                
                                 <h6 class="fw-bolder text-dark mb-0">${cap.valueTitleEng}</h6>
-                                <p class="small text-muted mb-3 fw-semibold">${cap.valueTitleHin}</p>
+                              
                                 
                                 <div class="mt-auto d-flex gap-2">
                                     ${cap.activityPdfUrl ? 
-                                        `<a href="${cap.activityPdfUrl}" target="_blank" class="btn btn-primary w-100 rounded-pill fw-bold btn-sm shadow-sm">
-                                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> View Activity
+                                        `<a href="${cap.activityPdfUrl}" target="_blank" class="btn btn-primary btn-sm">
+                                           View  Activity
                                         </a>` : 
-                                        `<button class="btn btn-secondary w-100 rounded-pill fw-bold btn-sm" disabled>No PDF</button>`
+                                        `<button class="btn btn-secondary btn-sm" disabled>No PDF</button>`
                                     }
                                     <!-- Dynamic Start/Completed Button -->
                                     ${actionBtn}
