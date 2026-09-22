@@ -420,63 +420,565 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, message = "Bulk upload record deleted successfully." });
         }
 
-        // GET: /api/admin/overall-dashboard-counts
+        // ================================================================
+        // ADMIN DASHBOARD - OVERALL PERFORMANCE + FOCUSED REPORT
+        // ================================================================
+
         [HttpGet("overall-dashboard-counts")]
         public async Task<IActionResult> GetOverallDashboardCounts()
         {
             try
             {
-                var totalStudents = await _context.Set<ViewWjStudentsDetailsInfo>().CountAsync();
+                // ============================================================
+                // PERFORMANCE REPORT
+                //
+                // Affiliate Report logic:
+                // Users
+                //   -> WJ_ReferralCodes
+                //      -> SchoolProfileDetails
+                //         -> InstituteID
+                // ============================================================
 
-                var activeStudents = await _context.StudentActivityLogs
-                    .Where(x => x.ActivityType != "Survey")
-                    .Select(x => x.StudentID)
+                var performanceReferralCodes = await _context.WJ_ReferralCodes
+                    .AsNoTracking()
+                    .Where(x => x.ReferralCode != null && x.ReferralCode != "")
+                    .Select(x => x.ReferralCode)
                     .Distinct()
-                    .CountAsync();
+                    .ToListAsync();
 
-                var totalTeachers = await _context.Set<ViewHfTeacherDetails>().CountAsync();
 
-                var activeTeachers = await _context.TeacherActivityLogs
-                    .Select(x => x.TeacherID)
+                var performanceInstituteIds = await _context.SchoolProfileDetails
+                    .AsNoTracking()
+                    .Where(x =>
+                        x.referralcode != null &&
+                        performanceReferralCodes.Contains(x.referralcode))
+                    .Select(x => (int?)x.instituteid)
                     .Distinct()
-                    .CountAsync();
+                    .ToListAsync();
 
-                var totalSelProjects = await _context.creativityActivitiesSubmission2021s
-                    .Select(x => x.InstituteID)
+
+                // ============================================================
+                // FOCUSED REPORT
+                //
+                // HfTblAffliateFocusedLists
+                //       -> InstituteID
+                // ============================================================
+
+                var focusedInstituteIds = await _context.HfTblAffliateFocusedLists
+                    .AsNoTracking()
+                    .Where(x => x.InstituteId != null)
+                    .Select(x => (int?)x.InstituteId)
                     .Distinct()
-                    .CountAsync();
+                    .ToListAsync();
 
-                var familyProjects = await _context.StudentActivityLogs
-                    .CountAsync(x => x.ActivityType == "Family PBL");
 
-                var individualProjects = await _context.StudentActivityLogs
-                    .CountAsync(x => x.ActivityType == "Individual PBL");
+                // ============================================================
+                // PERFORMANCE COUNTS
+                // ============================================================
 
-                var groupPbl = await _context.creativityActivitiesSubmission2021s.CountAsync();
+                int performanceSchoolCount = performanceInstituteIds.Count;
+
+                int performanceTotalStudents = 0;
+                int performanceActiveStudents = 0;
+                int performanceTotalTeachers = 0;
+                int performanceActiveTeachers = 0;
+                int performanceTotalSelProjects = 0;
+                int performanceFamilyProjects = 0;
+                int performanceIndividualProjects = 0;
+                int performanceGroupPbl = 0;
+
+
+                if (performanceInstituteIds.Any())
+                {
+                    performanceTotalStudents =
+                        await _context.Set<ViewWjStudentsDetailsInfo>()
+                            .AsNoTracking()
+                            .CountAsync(x =>
+                                x.InstituteID != null &&
+                                performanceInstituteIds.Contains(x.InstituteID));
+
+
+                    performanceActiveStudents =
+                        await _context.StudentActivityLogs
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                performanceInstituteIds.Contains(x.InstituteID) &&
+                                x.ActivityType != "Survey")
+                            .Select(x => x.StudentID)
+                            .Distinct()
+                            .CountAsync();
+
+
+                    performanceTotalTeachers =
+                        await _context.Set<ViewHfTeacherDetails>()
+                            .AsNoTracking()
+                            .CountAsync(x =>
+                                x.InstituteID != null &&
+                                performanceInstituteIds.Contains(x.InstituteID));
+
+
+                    performanceActiveTeachers =
+                        await _context.TeacherActivityLogs
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                performanceInstituteIds.Contains(x.InstituteID))
+                            .Select(x => x.TeacherID)
+                            .Distinct()
+                            .CountAsync();
+
+
+                    performanceTotalSelProjects =
+                        await _context.creativityActivitiesSubmission2021s
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                performanceInstituteIds.Contains(x.InstituteID))
+                            .Select(x => x.InstituteID)
+                            .Distinct()
+                            .CountAsync();
+
+
+                    performanceFamilyProjects =
+                        await _context.StudentActivityLogs
+                            .AsNoTracking()
+                            .CountAsync(x =>
+                                x.InstituteID != null &&
+                                performanceInstituteIds.Contains(x.InstituteID) &&
+                                x.ActivityType == "Family PBL");
+
+
+                    performanceIndividualProjects =
+                        await _context.StudentActivityLogs
+                            .AsNoTracking()
+                            .CountAsync(x =>
+                                x.InstituteID != null &&
+                                performanceInstituteIds.Contains(x.InstituteID) &&
+                                x.ActivityType == "Individual PBL");
+
+
+                    performanceGroupPbl =
+                        await _context.creativityActivitiesSubmission2021s
+                            .AsNoTracking()
+                            .CountAsync(x =>
+                                x.InstituteID != null &&
+                                performanceInstituteIds.Contains(x.InstituteID));
+                }
+
+
+                // ============================================================
+                // FOCUSED COUNTS
+                // ============================================================
+
+                int focusedSchoolCount = focusedInstituteIds.Count;
+
+                int focusedTotalStudents = 0;
+                int focusedActiveStudents = 0;
+                int focusedTotalTeachers = 0;
+                int focusedActiveTeachers = 0;
+                int focusedTotalSelProjects = 0;
+                int focusedFamilyProjects = 0;
+                int focusedIndividualProjects = 0;
+                int focusedGroupPbl = 0;
+
+
+                if (focusedInstituteIds.Any())
+                {
+                    focusedTotalStudents =
+                        await _context.Set<ViewWjStudentsDetailsInfo>()
+                            .AsNoTracking()
+                            .CountAsync(x =>
+                                x.InstituteID != null &&
+                                focusedInstituteIds.Contains(x.InstituteID));
+
+
+                    focusedActiveStudents =
+                        await _context.StudentActivityLogs
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                focusedInstituteIds.Contains(x.InstituteID) &&
+                                x.ActivityType != "Survey")
+                            .Select(x => x.StudentID)
+                            .Distinct()
+                            .CountAsync();
+
+
+                    focusedTotalTeachers =
+                        await _context.Set<ViewHfTeacherDetails>()
+                            .AsNoTracking()
+                            .CountAsync(x =>
+                                x.InstituteID != null &&
+                                focusedInstituteIds.Contains(x.InstituteID));
+
+
+                    focusedActiveTeachers =
+                        await _context.TeacherActivityLogs
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                focusedInstituteIds.Contains(x.InstituteID))
+                            .Select(x => x.TeacherID)
+                            .Distinct()
+                            .CountAsync();
+
+
+                    focusedTotalSelProjects =
+                        await _context.creativityActivitiesSubmission2021s
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                focusedInstituteIds.Contains(x.InstituteID))
+                            .Select(x => x.InstituteID)
+                            .Distinct()
+                            .CountAsync();
+
+
+                    focusedFamilyProjects =
+                        await _context.StudentActivityLogs
+                            .AsNoTracking()
+                            .CountAsync(x =>
+                                x.InstituteID != null &&
+                                focusedInstituteIds.Contains(x.InstituteID) &&
+                                x.ActivityType == "Family PBL");
+
+
+                    focusedIndividualProjects =
+                        await _context.StudentActivityLogs
+                            .AsNoTracking()
+                            .CountAsync(x =>
+                                x.InstituteID != null &&
+                                focusedInstituteIds.Contains(x.InstituteID) &&
+                                x.ActivityType == "Individual PBL");
+
+
+                    focusedGroupPbl =
+                        await _context.creativityActivitiesSubmission2021s
+                            .AsNoTracking()
+                            .CountAsync(x =>
+                                x.InstituteID != null &&
+                                focusedInstituteIds.Contains(x.InstituteID));
+                }
+
+
+                // ============================================================
+                // RESPONSE
+                // ============================================================
 
                 return Ok(new
                 {
                     success = true,
+
                     data = new
                     {
-                        totalStudents,
-                        activeStudents,
-                        totalTeachers,
-                        activeTeachers,
-                        totalSelProjects,
-                        familyProjects,
-                        individualProjects,
-                        groupPbl
+                        performance = new
+                        {
+                            schoolCount = performanceSchoolCount,
+                            totalStudents = performanceTotalStudents,
+                            activeStudents = performanceActiveStudents,
+                            totalTeachers = performanceTotalTeachers,
+                            activeTeachers = performanceActiveTeachers,
+                            totalSelProjects = performanceTotalSelProjects,
+                            familyProjects = performanceFamilyProjects,
+                            individualProjects = performanceIndividualProjects,
+                            groupPbl = performanceGroupPbl
+                        },
+
+                        focused = new
+                        {
+                            schoolCount = focusedSchoolCount,
+                            totalStudents = focusedTotalStudents,
+                            activeStudents = focusedActiveStudents,
+                            totalTeachers = focusedTotalTeachers,
+                            activeTeachers = focusedActiveTeachers,
+                            totalSelProjects = focusedTotalSelProjects,
+                            familyProjects = focusedFamilyProjects,
+                            individualProjects = focusedIndividualProjects,
+                            groupPbl = focusedGroupPbl
+                        }
                     }
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = ex.Message });
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error loading dashboard counts.",
+                    error = ex.Message,
+                    innerException = ex.InnerException?.Message
+                });
             }
         }
 
+        // ================================================================
+        // ADMIN DASHBOARD DETAILS
+        // category = performance / focused
+        // type = total-schools / total-students / etc.
+        // ================================================================
 
+        [HttpGet("overall-details-list/{category}/{type}")]
+        public async Task<IActionResult> GetOverallDetailsList(
+            string category,
+            string type)
+        {
+            try
+            {
+                category = category?.Trim().ToLower() ?? "";
+                type = type?.Trim().ToLower() ?? "";
+
+
+                // ============================================================
+                // GET INSTITUTE IDS
+                // ============================================================
+
+                List<int?> instituteIds;
+
+
+                if (category == "performance")
+                {
+                    // --------------------------------------------------------
+                    // PERFORMANCE
+                    // ReferralCode -> SchoolProfileDetails
+                    // --------------------------------------------------------
+
+                    var referralCodes = await _context.WJ_ReferralCodes
+                        .AsNoTracking()
+                        .Where(x =>
+                            x.ReferralCode != null &&
+                            x.ReferralCode != "")
+                        .Select(x => x.ReferralCode)
+                        .Distinct()
+                        .ToListAsync();
+
+
+                    instituteIds = await _context.SchoolProfileDetails
+                        .AsNoTracking()
+                        .Where(x =>
+                            x.referralcode != null &&
+                            referralCodes.Contains(x.referralcode))
+                        .Select(x => (int?)x.instituteid)
+                        .Distinct()
+                        .ToListAsync();
+                }
+                else if (category == "focused")
+                {
+                    // --------------------------------------------------------
+                    // FOCUSED
+                    // HfTblAffliateFocusedLists -> InstituteId
+                    // --------------------------------------------------------
+
+                    instituteIds = await _context.HfTblAffliateFocusedLists
+                        .AsNoTracking()
+                        .Where(x => x.InstituteId != null)
+                        .Select(x => (int?)x.InstituteId)
+                        .Distinct()
+                        .ToListAsync();
+                }
+                else
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Invalid report category."
+                    });
+                }
+
+
+                if (!instituteIds.Any())
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new List<object>()
+                    });
+                }
+
+
+                // ============================================================
+                // DETAILS
+                // ============================================================
+
+                object result = type switch
+                {
+                    // ========================================================
+                    // TOTAL STUDENTS
+                    // ========================================================
+
+                    "total-students" =>
+                        await _context.Set<ViewWjStudentsDetailsInfo>()
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID))
+                            .Take(1000)
+                            .ToListAsync(),
+
+
+                    // ========================================================
+                    // ACTIVE STUDENTS
+                    // ========================================================
+
+                    "active-students" =>
+                        await (
+                            from log in _context.StudentActivityLogs.AsNoTracking()
+
+                            join student in _context.Set<ViewWjStudentsDetailsInfo>()
+                                on log.StudentID equals student.StudentId
+
+                            where
+                                log.InstituteID != null &&
+                                instituteIds.Contains(log.InstituteID) &&
+                                log.ActivityType != "Survey"
+
+                            select student
+                        )
+                        .Distinct()
+                        .Take(1000)
+                        .ToListAsync(),
+
+
+                    // ========================================================
+                    // TOTAL TEACHERS
+                    // ========================================================
+
+                    "total-teachers" =>
+                        await _context.Set<ViewHfTeacherDetails>()
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID))
+                            .Take(1000)
+                            .ToListAsync(),
+
+
+                    // ========================================================
+                    // ACTIVE TEACHERS
+                    // ========================================================
+
+                    "active-teachers" =>
+                        await (
+                            from log in _context.TeacherActivityLogs.AsNoTracking()
+
+                            join teacher in _context.Set<ViewHfTeacherDetails>()
+                                on log.TeacherID equals teacher.TeacherID
+
+                            where
+                                log.InstituteID != null &&
+                                instituteIds.Contains(log.InstituteID)
+
+                            select teacher
+                        )
+                        .Distinct()
+                        .Take(1000)
+                        .ToListAsync(),
+
+
+                    // ========================================================
+                    // SEL PROJECTS
+                    // ========================================================
+
+                    "sel-projects" =>
+                        await _context.creativityActivitiesSubmission2021s
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID))
+                            .Take(1000)
+                            .ToListAsync(),
+
+
+                    // ========================================================
+                    // FAMILY PROJECTS
+                    // ========================================================
+
+                    "family-projects" =>
+                        await _context.StudentActivityLogs
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID) &&
+                                x.ActivityType == "Family PBL")
+                            .Take(1000)
+                            .ToListAsync(),
+
+
+                    // ========================================================
+                    // INDIVIDUAL PROJECTS
+                    // ========================================================
+
+                    "individual-projects" =>
+                        await _context.StudentActivityLogs
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID) &&
+                                x.ActivityType == "Individual PBL")
+                            .Take(1000)
+                            .ToListAsync(),
+
+
+                    // ========================================================
+                    // GROUP PBL
+                    // ========================================================
+
+                    "group-pbl" =>
+                        await _context.creativityActivitiesSubmission2021s
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID))
+                            .Take(1000)
+                            .ToListAsync(),
+
+
+                    // ========================================================
+                    // TOTAL SCHOOLS
+                    //
+                    // We only use fields already confirmed in your
+                    // SchoolProfileDetails usage.
+                    // ========================================================
+
+                    "total-schools" =>
+                        await _context.SchoolProfileDetails
+                            .AsNoTracking()
+                            .Where(x =>
+                                x.instituteid != null &&
+                                instituteIds.Contains(x.instituteid))
+                            .Select(x => new
+                            {
+                                InstituteID = x.instituteid,
+                                ReferralCode = x.referralcode
+                            })
+                            .Distinct()
+                            .Take(1000)
+                            .ToListAsync(),
+
+
+                    _ => new List<object>()
+                };
+
+
+                return Ok(new
+                {
+                    success = true,
+                    category = category,
+                    type = type,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error loading report details.",
+                    error = ex.Message,
+                    innerException = ex.InnerException?.Message
+                });
+            }
+        }
 
     }
 }

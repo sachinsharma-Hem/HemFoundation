@@ -4,232 +4,1396 @@
 }
 
 <div class="container-fluid py-4">
-    <!-- Welcome Header -->
+
+    <!-- ========================================================= -->
+    <!-- WELCOME HEADER -->
+    <!-- ========================================================= -->
+
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
                 <div class="d-flex align-items-center justify-content-between">
+
                     <div>
-                        <h2 class="fw-bold text-dark mb-1">Dashboard Overview 🚀</h2>
-                        <p class="text-muted m-0">Welcome back, <span id="adminUserName" class="text-success fw-semibold">Admin</span>!</p>
+                        <h2 class="fw-bold text-dark mb-1">
+                            Dashboard Overview 🚀
+                        </h2>
+
+                        <p class="text-muted m-0">
+                            Welcome back,
+                            <span id="adminUserName"
+                                  class="text-success fw-semibold">
+                                Admin
+                            </span>!
+                        </p>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Metrics Cards Grid -->
-    <div class="row g-3 mb-4">
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="card text-white bg-info border-0 shadow-sm h-100 rounded-4 cursor-pointer" onclick="openDetailsModal('total-students')">
+
+    <!-- ========================================================= -->
+    <!-- PERFORMANCE REPORT -->
+    <!-- ========================================================= -->
+
+    <div class="d-flex align-items-center mb-3">
+
+        <div>
+            <h4 class="fw-bold text-dark mb-1">
+                <i class="bi bi-graph-up-arrow me-2 text-primary"></i>
+                Performance Report
+            </h4>
+
+            <p class="text-muted small mb-0">
+                Overall performance metrics across all associated schools.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="row g-3 mb-5">
+
+        <!-- TOTAL SCHOOLS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-performance-primary"
+                 onclick="openDetailsModal('performance','total-schools')">
+
                 <div class="card-body p-4">
+
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <h2 class="fw-bold mb-1" id="dash_totalStudents">0</h2>
-                            <p class="card-text small mb-0">Total Students</p>
+                            <h2 class="fw-bold mb-1"
+                                id="p_totalSchools">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Associated Schools
+                            </p>
                         </div>
-                        <i class="bi bi-people-fill fs-1 opacity-50"></i>
+
+                        <i class="bi bi-building fs-1 opacity-50"></i>
+
                     </div>
+
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="card text-white bg-success border-0 shadow-sm h-100 rounded-4 cursor-pointer" onclick="openDetailsModal('active-students')">
+
+
+        <!-- TOTAL STUDENTS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-performance-info"
+                 onclick="openDetailsModal('performance','total-students')">
+
                 <div class="card-body p-4">
+
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <h2 class="fw-bold mb-1" id="dash_activeStudents">0</h2>
-                            <p class="card-text small mb-0">Active Students</p>
+                            <h2 class="fw-bold mb-1"
+                                id="p_totalStudents">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Total Students
+                            </p>
                         </div>
+
+                        <i class="bi bi-people-fill fs-1 opacity-50"></i>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ACTIVE STUDENTS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-performance-success"
+                 onclick="openDetailsModal('performance','active-students')">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h2 class="fw-bold mb-1"
+                                id="p_activeStudents">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Active Students
+                            </p>
+                        </div>
+
                         <i class="bi bi-person-check-fill fs-1 opacity-50"></i>
+
                     </div>
+
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="card text-dark bg-warning border-0 shadow-sm h-100 rounded-4 cursor-pointer" onclick="openDetailsModal('total-teachers')">
+
+
+        <!-- TOTAL TEACHERS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-performance-warning"
+                 onclick="openDetailsModal('performance','total-teachers')">
+
                 <div class="card-body p-4">
+
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <h2 class="fw-bold mb-1" id="dash_totalTeachers">0</h2>
-                            <p class="card-text small mb-0">Total Teachers</p>
+                            <h2 class="fw-bold mb-1"
+                                id="p_totalTeachers">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Total Teachers
+                            </p>
                         </div>
+
                         <i class="bi bi-person-badge-fill fs-1 opacity-50"></i>
+
                     </div>
+
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="card text-white bg-success border-0 shadow-sm h-100 rounded-4 cursor-pointer" onclick="openDetailsModal('active-teachers')">
+
+
+        <!-- ACTIVE TEACHERS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-performance-success"
+                 onclick="openDetailsModal('performance','active-teachers')">
+
                 <div class="card-body p-4">
+
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <h2 class="fw-bold mb-1" id="dash_activeTeachers">0</h2>
-                            <p class="card-text small mb-0">Active Teachers</p>
+                            <h2 class="fw-bold mb-1"
+                                id="p_activeTeachers">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Active Teachers
+                            </p>
                         </div>
+
                         <i class="bi bi-award-fill fs-1 opacity-50"></i>
+
                     </div>
+
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="card text-white bg-primary border-0 shadow-sm h-100 rounded-4 cursor-pointer" onclick="openDetailsModal('sel-projects')">
+
+
+        <!-- TOTAL SEL PROJECTS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-performance-primary"
+                 onclick="openDetailsModal('performance','sel-projects')">
+
                 <div class="card-body p-4">
+
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <h2 class="fw-bold mb-1" id="dash_totalSelProjects">0</h2>
-                            <p class="card-text small mb-0">Total SEL Projects</p>
+                            <h2 class="fw-bold mb-1"
+                                id="p_totalSelProjects">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Total SEL Projects
+                            </p>
                         </div>
+
                         <i class="bi bi-journal-richtext fs-1 opacity-50"></i>
+
                     </div>
+
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="card text-white bg-dark border-0 shadow-sm h-100 rounded-4 cursor-pointer" onclick="openDetailsModal('family-projects')">
+
+
+        <!-- FAMILY PROJECTS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-performance-dark"
+                 onclick="openDetailsModal('performance','family-projects')">
+
                 <div class="card-body p-4">
+
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <h2 class="fw-bold mb-1" id="dash_familyProjects">0</h2>
-                            <p class="card-text small mb-0">Family Projects</p>
+                            <h2 class="fw-bold mb-1"
+                                id="p_familyProjects">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Family Projects
+                            </p>
                         </div>
+
                         <i class="bi bi-house-heart-fill fs-1 opacity-50"></i>
+
                     </div>
+
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="card text-dark bg-light border border-secondary-subtle shadow-sm h-100 rounded-4 cursor-pointer" onclick="openDetailsModal('individual-projects')">
+
+
+        <!-- INDIVIDUAL PROJECTS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-performance-light"
+                 onclick="openDetailsModal('performance','individual-projects')">
+
                 <div class="card-body p-4">
+
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <h2 class="fw-bold mb-1 text-dark" id="dash_individualProjects">0</h2>
-                            <p class="card-text small mb-0 text-muted">Individual Projects</p>
+                            <h2 class="fw-bold mb-1"
+                                id="p_individualProjects">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Individual Projects
+                            </p>
                         </div>
-                        <i class="bi bi-person-fill fs-1 opacity-50 text-muted"></i>
+
+                        <i class="bi bi-person-fill fs-1 opacity-50"></i>
+
                     </div>
+
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="card text-white bg-secondary border-0 shadow-sm h-100 rounded-4 cursor-pointer" onclick="openDetailsModal('group-pbl')">
+
+
+        <!-- GROUP PBL -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-performance-secondary"
+                 onclick="openDetailsModal('performance','group-pbl')">
+
                 <div class="card-body p-4">
+
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <h2 class="fw-bold mb-1" id="dash_groupPbl">0</h2>
-                            <p class="card-text small mb-0">Group PBL</p>
+                            <h2 class="fw-bold mb-1"
+                                id="p_groupPbl">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Group PBL
+                            </p>
                         </div>
+
                         <i class="bi bi-people-fill fs-1 opacity-50"></i>
+
                     </div>
+
                 </div>
             </div>
         </div>
+
     </div>
 
-    <!-- Info Banner -->
-    <div class="row">
+
+    <!-- ========================================================= -->
+    <!-- FOCUSED REPORT -->
+    <!-- ========================================================= -->
+
+    <div class="d-flex align-items-center mb-3">
+
+        <div>
+            <h4 class="fw-bold text-dark mb-1">
+                <i class="bi bi-bullseye me-2 text-success"></i>
+                Focused Report
+            </h4>
+
+            <p class="text-muted small mb-0">
+                Overall metrics from focused school activities.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="row g-3 mb-5">
+
+        <!-- FOCUSED SCHOOLS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-focused-primary"
+                 onclick="openDetailsModal('focused','total-schools')">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h2 class="fw-bold mb-1"
+                                id="f_totalSchools">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Associated Schools
+                            </p>
+                        </div>
+
+                        <i class="bi bi-building fs-1 opacity-50"></i>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- FOCUSED STUDENTS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-focused-info"
+                 onclick="openDetailsModal('focused','total-students')">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h2 class="fw-bold mb-1"
+                                id="f_totalStudents">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Total Students
+                            </p>
+                        </div>
+
+                        <i class="bi bi-people-fill fs-1 opacity-50"></i>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- FOCUSED ACTIVE STUDENTS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-focused-success"
+                 onclick="openDetailsModal('focused','active-students')">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h2 class="fw-bold mb-1"
+                                id="f_activeStudents">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Active Students
+                            </p>
+                        </div>
+
+                        <i class="bi bi-person-check-fill fs-1 opacity-50"></i>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- FOCUSED TEACHERS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-focused-warning"
+                 onclick="openDetailsModal('focused','total-teachers')">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h2 class="fw-bold mb-1"
+                                id="f_totalTeachers">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Total Teachers
+                            </p>
+                        </div>
+
+                        <i class="bi bi-person-badge-fill fs-1 opacity-50"></i>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- FOCUSED ACTIVE TEACHERS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-focused-success"
+                 onclick="openDetailsModal('focused','active-teachers')">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h2 class="fw-bold mb-1"
+                                id="f_activeTeachers">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Active Teachers
+                            </p>
+                        </div>
+
+                        <i class="bi bi-award-fill fs-1 opacity-50"></i>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- FOCUSED SEL PROJECTS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-focused-primary"
+                 onclick="openDetailsModal('focused','sel-projects')">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h2 class="fw-bold mb-1"
+                                id="f_totalSelProjects">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Total SEL Projects
+                            </p>
+                        </div>
+
+                        <i class="bi bi-journal-richtext fs-1 opacity-50"></i>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- FOCUSED FAMILY PROJECTS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-focused-dark"
+                 onclick="openDetailsModal('focused','family-projects')">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h2 class="fw-bold mb-1"
+                                id="f_familyProjects">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Family Projects
+                            </p>
+                        </div>
+
+                        <i class="bi bi-house-heart-fill fs-1 opacity-50"></i>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- FOCUSED INDIVIDUAL PROJECTS -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-focused-light"
+                 onclick="openDetailsModal('focused','individual-projects')">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h2 class="fw-bold mb-1"
+                                id="f_individualProjects">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Individual Projects
+                            </p>
+                        </div>
+
+                        <i class="bi bi-person-fill fs-1 opacity-50"></i>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- FOCUSED GROUP PBL -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="dashboard-card card-focused-secondary"
+                 onclick="openDetailsModal('focused','group-pbl')">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h2 class="fw-bold mb-1"
+                                id="f_groupPbl">
+                                0
+                            </h2>
+
+                            <p class="mb-0">
+                                Group PBL
+                            </p>
+                        </div>
+
+                        <i class="bi bi-people-fill fs-1 opacity-50"></i>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- INFO BANNER -->
+    <!-- ========================================================= -->
+
+    <div class="row mb-4">
+
         <div class="col-12">
+
             <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
-                <h4 class="fw-bold text-dark mb-3">JWT & RBAC Active Control Center</h4>
-                <div class="alert alert-success border-0 rounded-4 shadow-sm p-4">
-                    <h5 class="fw-bold text-success mb-1"><i class="bi bi-shield-check-fill me-2"></i> Universal Sidebar Active!</h5>
-                    <p class="mb-0 text-secondary small">Menus are now handled globally inside the layout, supporting parent-child hierarchy across all pages.</p>
+
+                <div class="alert alert-success border-0 rounded-4 shadow-sm p-4 mb-0">
+
+                    <h5 class="fw-bold text-success mb-1">
+                        <i class="bi bi-shield-check-fill me-2"></i>
+                        Universal Sidebar Active!
+                    </h5>
+
+                    <p class="mb-0 text-secondary small">
+                        Menus are now handled globally inside the layout,
+                        supporting parent-child hierarchy across all pages.
+                    </p>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Details Modal -->
-<div class="modal fade" id="dashboardDetailsModal" tabindex="-1" aria-hidden="true">
+
+<!-- ========================================================= -->
+<!-- DETAILS MODAL -->
+<!-- ========================================================= -->
+
+<div class="modal fade"
+     id="dashboardDetailsModal"
+     tabindex="-1"
+     aria-hidden="true">
+
     <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
-            <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="fw-bold text-dark" id="modalTitle">Records List</h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="table-responsive border rounded-3" style="max-height: 400px;">
-                    <table class="table table-hover align-middle mb-0" id="modalTable">
-                        <thead class="table-light"></thead>
-                        <tbody></tbody>
-                    </table>
+
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+
+            <!-- MODAL HEADER -->
+            <div class="modal-header border-bottom px-4 py-3">
+
+                <div>
+
+                    <h5 class="fw-bold text-dark mb-1"
+                        id="modalTitle">
+                        Records List
+                    </h5>
+
+                    <small class="text-muted"
+                           id="modalSubtitle">
+                        Loading records...
+                    </small>
+
                 </div>
+
+                <button type="button"
+                        class="btn-close shadow-none"
+                        data-bs-dismiss="modal">
+                </button>
+
             </div>
+
+
+            <!-- MODAL BODY -->
+            <div class="modal-body p-4">
+
+                <div class="table-responsive border rounded-3 modal-table-wrapper">
+
+                    <table class="table table-hover align-middle mb-0"
+                           id="modalTable">
+
+                        <thead class="table-light">
+                        </thead>
+
+                        <tbody>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
         </div>
+
     </div>
+
 </div>
+
+
+<!-- ========================================================= -->
+<!-- STYLES -->
+<!-- ========================================================= -->
+
+<style>
+
+    .dashboard-card {
+        border: 0;
+        border-radius: 18px;
+        min-height: 145px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+        transition: all 0.2s ease;
+        color: #fff;
+    }
+
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .dashboard-card:active {
+            transform: translateY(-1px);
+        }
+
+
+    /* ================= PERFORMANCE COLORS ================= */
+
+    .card-performance-primary {
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
+    }
+
+    .card-performance-info {
+        background: linear-gradient(135deg, #0891b2, #06b6d4);
+    }
+
+    .card-performance-success {
+        background: linear-gradient(135deg, #059669, #10b981);
+    }
+
+    .card-performance-warning {
+        background: linear-gradient(135deg, #d97706, #f59e0b);
+    }
+
+    .card-performance-dark {
+        background: linear-gradient(135deg, #343a40, #495057);
+    }
+
+    .card-performance-light {
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        color: #212529;
+        border: 1px solid #dee2e6;
+    }
+
+    .card-performance-secondary {
+        background: linear-gradient(135deg, #64748b, #475569);
+    }
+
+
+    /* ================= FOCUSED COLORS ================= */
+
+    .card-focused-primary {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+    }
+
+    .card-focused-info {
+        background: linear-gradient(135deg, #0284c7, #0ea5e9);
+    }
+
+    .card-focused-success {
+        background: linear-gradient(135deg, #15803d, #22c55e);
+    }
+
+    .card-focused-warning {
+        background: linear-gradient(135deg, #b45309, #f59e0b);
+    }
+
+    .card-focused-dark {
+        background: linear-gradient(135deg, #1f2937, #374151);
+    }
+
+    .card-focused-light {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        color: #212529;
+        border: 1px solid #dee2e6;
+    }
+
+    .card-focused-secondary {
+        background: linear-gradient(135deg, #475569, #64748b);
+    }
+
+
+    /* ================= MODAL ================= */
+
+    .modal-table-wrapper {
+        max-height: 480px;
+        overflow: auto;
+    }
+
+    #modalTable {
+        min-width: 700px;
+    }
+
+        #modalTable thead th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            white-space: nowrap;
+            font-size: 13px;
+            font-weight: 600;
+            background: #f8f9fa;
+        }
+
+        #modalTable tbody td {
+            font-size: 13px;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+
+    /* ================= LOADING ================= */
+
+    .dashboard-loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .modal-loader {
+        padding: 45px 20px;
+    }
+
+        .modal-loader .spinner-border {
+            width: 2rem;
+            height: 2rem;
+        }
+
+
+    /* ================= SECTION ================= */
+
+    .report-section-title {
+        letter-spacing: -0.2px;
+    }
+
+</style>
+
 
 @section Scripts {
+
     <script>
+
+        /* =========================================================
+           PAGE LOAD
+        ========================================================= */
+
         $(document).ready(function() {
-            const userSession = JSON.parse(localStorage.getItem('user_session'));
+
+            const userSession =
+                JSON.parse(localStorage.getItem('user_session'));
+
             if (userSession) {
-                $('#adminUserName').text(userSession.fullName || userSession.email);
+
+                $('#adminUserName').text(
+                    userSession.fullName ||
+                    userSession.email ||
+                    'Admin'
+                );
             }
 
             loadAdminDashboardCounts();
+
         });
 
+
+        /* =========================================================
+           AUTH TOKEN
+        ========================================================= */
+
         function getAuthToken() {
-            return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '';
+
+            return localStorage.getItem('jwt_token') ||
+                sessionStorage.getItem('jwt_token') ||
+                '';
         }
+
+
+        /* =========================================================
+           LOAD DASHBOARD COUNTS
+        ========================================================= */
 
         function loadAdminDashboardCounts() {
+
             $.ajax({
+
                 url: '/api/admin/overall-dashboard-counts',
+
                 type: 'GET',
-                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+
+                headers: {
+                    'Authorization':
+                        'Bearer ' + getAuthToken()
+                },
+
                 success: function(res) {
-                    if (res.success && res.data) {
-                        let d = res.data;
-                        $('#dash_totalStudents').text(d.totalStudents || 0);
-                        $('#dash_activeStudents').text(d.activeStudents || 0);
-                        $('#dash_totalTeachers').text(d.totalTeachers || 0);
-                        $('#dash_activeTeachers').text(d.activeTeachers || 0);
-                        $('#dash_totalSelProjects').text(d.totalSelProjects || 0);
-                        $('#dash_familyProjects').text(d.familyProjects || 0);
-                        $('#dash_individualProjects').text(d.individualProjects || 0);
-                        $('#dash_groupPbl').text(d.groupPbl || 0);
+
+                    if (!res || !res.success || !res.data) {
+
+                        console.error(
+                            'Invalid dashboard response:',
+                            res
+                        );
+
+                        return;
                     }
+
+
+                    /*
+                     * Expected response:
+                     *
+                     * data.performance
+                     * data.focused
+                     */
+
+                    const performance =
+                        res.data.performance || {};
+
+                    const focused =
+                        res.data.focused || {};
+
+
+                    /* ================================
+                       PERFORMANCE
+                       ================================= */
+
+                    $('#p_totalSchools').text(
+                        performance.schoolCount ?? 0
+                    );
+
+                    $('#p_totalStudents').text(
+                        performance.totalStudents ?? 0
+                    );
+
+                    $('#p_activeStudents').text(
+                        performance.activeStudents ?? 0
+                    );
+
+                    $('#p_totalTeachers').text(
+                        performance.totalTeachers ?? 0
+                    );
+
+                    $('#p_activeTeachers').text(
+                        performance.activeTeachers ?? 0
+                    );
+
+                    $('#p_totalSelProjects').text(
+                        performance.totalSelProjects ?? 0
+                    );
+
+                    $('#p_familyProjects').text(
+                        performance.familyProjects ?? 0
+                    );
+
+                    $('#p_individualProjects').text(
+                        performance.individualProjects ?? 0
+                    );
+
+                    $('#p_groupPbl').text(
+                        performance.groupPbl ?? 0
+                    );
+
+
+                    /* ================================
+                       FOCUSED
+                       ================================= */
+
+                    $('#f_totalSchools').text(
+                        focused.schoolCount ?? 0
+                    );
+
+                    $('#f_totalStudents').text(
+                        focused.totalStudents ?? 0
+                    );
+
+                    $('#f_activeStudents').text(
+                        focused.activeStudents ?? 0
+                    );
+
+                    $('#f_totalTeachers').text(
+                        focused.totalTeachers ?? 0
+                    );
+
+                    $('#f_activeTeachers').text(
+                        focused.activeTeachers ?? 0
+                    );
+
+                    $('#f_totalSelProjects').text(
+                        focused.totalSelProjects ?? 0
+                    );
+
+                    $('#f_familyProjects').text(
+                        focused.familyProjects ?? 0
+                    );
+
+                    $('#f_individualProjects').text(
+                        focused.individualProjects ?? 0
+                    );
+
+                    $('#f_groupPbl').text(
+                        focused.groupPbl ?? 0
+                    );
+
+                },
+
+                error: function(xhr) {
+
+                    console.error(
+                        'Dashboard count API error:',
+                        xhr
+                    );
+
                 }
+
             });
+
         }
 
-        function openDetailsModal(type) {
-            $('#modalTitle').text(type.replace('-', ' ').toUpperCase());
-            $('#modalTable thead').html('<tr><th>Loading...</th></tr>');
-            $('#modalTable tbody').html('<tr><td class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></td></tr>');
+
+        /* =========================================================
+           OPEN DETAILS MODAL
+        ========================================================= */
+
+        function openDetailsModal(category, type) {
+
+            const titleMap = {
+
+                'total-schools':
+                    'Associated Schools',
+
+                'total-students':
+                    'Total Students',
+
+                'active-students':
+                    'Active Students',
+
+                'total-teachers':
+                    'Total Teachers',
+
+                'active-teachers':
+                    'Active Teachers',
+
+                'sel-projects':
+                    'Total SEL Projects',
+
+                'family-projects':
+                    'Family Projects',
+
+                'individual-projects':
+                    'Individual Projects',
+
+                'group-pbl':
+                    'Group PBL'
+            };
+
+
+            const categoryTitle =
+                category === 'performance'
+                    ? 'Performance Report'
+                    : 'Focused Report';
+
+
+            const detailTitle =
+                titleMap[type] || 'Details';
+
+
+            /* ================================
+               MODAL TITLE
+               ================================= */
+
+            $('#modalTitle').text(
+                categoryTitle + ' - ' + detailTitle
+            );
+
+            $('#modalSubtitle').text(
+                'Loading records...'
+            );
+
+
+            /* ================================
+               SHOW LOADING STATE
+               ================================= */
+
+            $('#modalTable thead').html('');
+
+            $('#modalTable tbody').html(`
+
+                        <tr>
+
+                            <td colspan="100%" class="text-center">
+
+                                <div class="modal-loader">
+
+                                    <div class="spinner-border text-primary"
+                                         role="status">
+
+                                        <span class="visually-hidden">
+                                            Loading...
+                                        </span>
+
+                                    </div>
+
+                                    <div class="text-muted small mt-3">
+                                        Loading records...
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    `);
+
+
+            /* ================================
+               OPEN MODAL
+               ================================= */
+
             $('#dashboardDetailsModal').modal('show');
 
-            $.ajax({
-                url: `/api/affiliate-dashboard/details-list/${type}`,
-                type: 'GET',
-                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                success: function(res) {
-                    if (res.success && res.data && res.data.length > 0) {
-                        let keys = Object.keys(res.data[0]);
-                        let thead = '<tr>';
-                        keys.forEach(k => thead += `<th>${k}</th>`);
-                        thead += '</tr>';
-                        $('#modalTable thead').html(thead);
 
-                        let tbody = '';
-                        res.data.forEach(row => {
-                            tbody += '<tr>';
-                            keys.forEach(k => tbody += `<td>${row[k] !== null ? row[k] : ''}</td>`);
-                            tbody += '</tr>';
-                        });
-                        $('#modalTable tbody').html(tbody);
-                    } else {
-                        $('#modalTable thead').html('');
-                        $('#modalTable tbody').html('<tr><td class="text-center py-4 text-muted">No records found.</td></tr>');
-                    }
+            /* ================================
+               API CALL
+               ================================= */
+
+            $.ajax({
+
+                url:
+                    `/api/admin/overall-details-list/${category}/${type}`,
+
+                type: 'GET',
+
+                headers: {
+
+                    'Authorization':
+                        'Bearer ' + getAuthToken()
+
                 },
-                error: function() {
-                    $('#modalTable tbody').html('<tr><td class="text-center py-4 text-danger">Failed to load details.</td></tr>');
+
+                success: function(res) {
+
+                    console.log(
+                        'Details response:',
+                        res
+                    );
+
+
+                    /* ============================
+                       NO DATA
+                       ============================ */
+
+                    if (
+                        !res ||
+                        !res.success ||
+                        !res.data ||
+                        !Array.isArray(res.data) ||
+                        res.data.length === 0
+                    ) {
+
+                        $('#modalTable thead').html('');
+
+                        $('#modalTable tbody').html(`
+
+                                    <tr>
+
+                                        <td colspan="100%"
+                                            class="text-center py-5">
+
+                                            <div class="text-muted">
+
+                                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+
+                                                <div class="fw-semibold">
+                                                    No records found
+                                                </div>
+
+                                                <small>
+                                                    There is no data available
+                                                    for this section.
+                                                </small>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                `);
+
+
+                        $('#modalSubtitle').text(
+                            'No records found'
+                        );
+
+                        return;
+                    }
+
+
+                    /* ============================
+                       GET COLUMN NAMES
+                       ============================ */
+
+                    const keys =
+                        Object.keys(res.data[0]);
+
+
+                    /* ============================
+                       TABLE HEADER
+                       ============================ */
+
+                    let thead = '<tr>';
+
+
+                    keys.forEach(function(key) {
+
+                        thead += `
+                                    <th>
+                                        ${formatColumnName(key)}
+                                    </th>
+                                `;
+
+                    });
+
+
+                    thead += '</tr>';
+
+
+                    $('#modalTable thead')
+                        .html(thead);
+
+
+                    /* ============================
+                       TABLE BODY
+                       ============================ */
+
+                    let tbody = '';
+
+
+                    res.data.forEach(function(row) {
+
+                        tbody += '<tr>';
+
+
+                        keys.forEach(function(key) {
+
+                            let value = row[key];
+
+
+                            if (
+                                value === null ||
+                                value === undefined ||
+                                value === ''
+                            ) {
+
+                                value = '-';
+
+                            }
+
+
+                            tbody += `
+
+                                        <td>
+                                            ${escapeHtml(value)}
+                                        </td>
+
+                                    `;
+
+                        });
+
+
+                        tbody += '</tr>';
+
+                    });
+
+
+                    $('#modalTable tbody')
+                        .html(tbody);
+
+
+                    /* ============================
+                       RECORD COUNT
+                       ============================ */
+
+                    $('#modalSubtitle').text(
+
+                        res.data.length +
+                        (
+                            res.data.length === 1
+                                ? ' record'
+                                : ' records'
+                        )
+
+                    );
+
+                },
+
+                error: function(xhr) {
+
+                    console.error(
+                        'Details API error:',
+                        xhr
+                    );
+
+
+                    $('#modalTable thead').html('');
+
+
+                    $('#modalTable tbody').html(`
+
+                                <tr>
+
+                                    <td colspan="100%"
+                                        class="text-center py-5">
+
+                                        <div class="text-danger">
+
+                                            <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
+
+                                            <div class="fw-semibold">
+                                                Failed to load records
+                                            </div>
+
+                                            <small>
+                                                Please try again.
+                                            </small>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            `);
+
+
+                    $('#modalSubtitle').text(
+                        'Unable to load records'
+                    );
+
                 }
+
             });
+
         }
+
+
+        /* =========================================================
+           FORMAT TABLE COLUMN NAME
+        ========================================================= */
+
+        function formatColumnName(key) {
+
+            if (!key) {
+                return '';
+            }
+
+
+            let result = key
+                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                .replace(/_/g, ' ')
+                .replace(/-/g, ' ');
+
+
+            result =
+                result.charAt(0).toUpperCase() +
+                result.slice(1);
+
+
+            return result;
+
+        }
+
+
+        /* =========================================================
+           HTML ESCAPE
+        ========================================================= */
+
+        function escapeHtml(value) {
+
+            return $('<div>')
+                .text(value)
+                .html();
+
+        }
+
     </script>
 }
