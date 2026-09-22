@@ -1,0 +1,103 @@
+﻿@using HemFoundation.Controllers
+@model HemFoundation.Controllers.SchoolController
+
+@{
+    ViewBag.Title = "studentcertificate";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+<!-- Tabulator CSS -->
+<link href="https://unpkg.com/tabulator-tables@6.2.5/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="container" style="overflow:auto">
+    <h5 class="text-center">Student Certificate List</h5>
+    <!-- Tabulator Table Container -->
+    <div id="studentTable"></div>
+</div>
+
+<!-- Modal Structure -->
+<div class="modal fade" id="stuCertificateModal" tabindex="-1" role="dialog" aria-labelledby="formModalLabel" aria-modal="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="formModalLabel">Certificate View</h4>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="dv_Student_Certificate"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+<!-- Bootstrap 5 Bundle -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<!-- Tabulator JS -->
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.5/dist/js/tabulator.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize Tabulator
+        var table = new Tabulator("#studentTable", {
+            ajaxURL: "/School/studentnewCertificate",
+            ajaxConfig: "GET",
+            ajaxResponse: function(url, params, response) {
+                // Parse response if it comes back as a JSON string
+                return typeof response === 'string' ? JSON.parse(response) : response;
+            },
+            layout: "fitColumns",
+            responsiveLayout: "collapse",
+            pagination: "local",
+            paginationSize: 10,
+            paginationSizeSelector: [10, 25, 50, 100],
+            movableColumns: true,
+            columns: [
+                { formatter: "responsiveCollapse", width: 30, minWidth: 30, hozAlign: "center", resizable: false, headerSort: false },
+                { title: "Id", field: "id", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "number" },
+                { title: "Student Name", field: "studentName", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
+                { title: "Standard", field: "standard", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
+                { title: "Institute Name", field: "instituteName", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
+                { title: "EmailID", field: "emailID", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
+                { title: "MobileNo", field: "mobileNo", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
+                { title: "CourseID", field: "courseID", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "number" },
+                { title: "CourseName", field: "courseName", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
+                {
+                    title: "Action",
+                    formatter: function(cell, formatterParams, onRendered) {
+                        var rowData = cell.getRow().getData();
+                        return `<a href="javascript:void(0);" onclick="fnViewSubmitCertification(${rowData.Id})" data-bs-toggle="modal" data-bs-target="#stuCertificateModal"><i class="fa fa-eye"></i></a>`;
+                    },
+                    hozAlign: "center",
+                    headerSort: false,
+                    width: 80
+                }
+            ],
+        });
+    });
+
+    function fnViewSubmitCertification(id) {
+        if (id > 0) {
+            var url = '@Url.Action("GetCertificateStatus", "School")';
+            var param = { 'eventID': id };
+
+            $.get(url, param, function(data) {
+                $("#dv_Student_Certificate").empty().html(data);
+            }).fail(function() {
+                alert('Failed to load certificate. Please try again.');
+                // $.alert({
+                //     title: 'Error',
+                //     content: 'Failed to load certificate. Please try again.',
+                // });
+            });
+        } else {
+            alert('Failed to load certificate. Please try again.');
+        }
+    }
+</script>

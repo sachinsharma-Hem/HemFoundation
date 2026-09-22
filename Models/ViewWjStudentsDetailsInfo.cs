@@ -28,7 +28,7 @@ namespace HemFoundation.Models.Entities
         public string? ReferralCode { get; set; }
 
         [Column("registrationamount", TypeName = "numeric(18,2)")]
-        public decimal RegistrationAmount { get; set; }
+        public decimal? RegistrationAmount { get; set; }
 
         [Column("profileurl")]
         [StringLength(50)]

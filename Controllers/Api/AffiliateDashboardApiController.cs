@@ -210,7 +210,7 @@ namespace HemFoundation.Controllers.Api
             {
                 return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
             }
-
+            var totalinstitute = instituteIds.Count;
             var totalStudents = await _context.Set<ViewWjStudentsDetailsInfo>()
                 .CountAsync(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID));
 
@@ -249,6 +249,7 @@ namespace HemFoundation.Controllers.Api
                 success = true,
                 data = new
                 {
+                    totalinstitute,
                     totalStudents,
                     activeStudents,
                     totalTeachers,

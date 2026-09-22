@@ -527,6 +527,269 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
             }
         }
 
+
+        [HttpGet("export-survey-report")]
+        public IActionResult ExportStudentSurveyReports()
+        {
+            int instituteID = 0;
+
+            // Safely extract session value as an int
+            int? sessionUserId = HttpContext.Session.GetInt32("UserID");
+            if (sessionUserId.HasValue && sessionUserId.Value > 0)
+            {
+                instituteID = sessionUserId.Value;
+            }
+            else
+            {
+                string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (int.TryParse(claimId, out int parsedClaim))
+                {
+                    instituteID = parsedClaim;
+                }
+            }
+
+            if (instituteID == 0)
+            {
+                return Unauthorized(new { success = false, message = "User session not found or user not logged in." });
+            }
+
+            try
+            {
+                string connString = _configuration.GetConnectionString("DefaultConnection");
+                DataSet ds = new DataSet();
+                DataTable dt = new DataTable("SurveyReport");
+
+                using (var conn = new Npgsql.NpgsqlConnection(connString))
+                {
+                    conn.Open();
+                    string query = "SELECT * FROM \"ExportSurvey_ReportWithInstitute\"(@InstituteID);";
+
+                    using (var cmd = new Npgsql.NpgsqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("InstituteID", instituteID);
+                        using (var adapter = new Npgsql.NpgsqlDataAdapter(cmd))
+                        {
+                            adapter.Fill(dt);
+                        }
+                    }
+                }
+
+                ds.Tables.Add(dt);
+
+                using (XLWorkbook wb = new XLWorkbook())
+                {
+                    foreach (DataTable table in ds.Tables)
+                    {
+                        wb.Worksheets.Add(table);
+                    }
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        wb.SaveAs(stream);
+                        stream.Position = 0;
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SurveyReport.xlsx");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("export-teacher-summary")]
+        public async Task<IActionResult> TeacherSummaryReportForInstitute()
+        {
+            // Retrieve InstituteID from session or claims
+            int instituteID = 0;
+            if (HttpContext.Session.GetInt32("UserID") is int sessionId && sessionId > 0)
+            {
+                instituteID = sessionId;
+            }
+            else if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedClaim))
+            {
+                instituteID = parsedClaim;
+            }
+
+            if (instituteID == 0)
+            {
+                return Unauthorized(new { success = false, message = "User session not found or user not logged in." });
+            }
+
+            try
+            {
+                string connString = _configuration.GetConnectionString("DefaultConnection");
+                DataSet essr = new DataSet();
+
+                using (var conn = new Npgsql.NpgsqlConnection(connString))
+                {
+                    await conn.OpenAsync();
+
+                    // Batched multi-result-set query compatible with PostgreSQL
+                    string batchSql = @"
+                -- Table 0: TeacherDetails
+                SELECT DISTINCT 
+                    WJT.TeacherID AS ""TeacherID"", 
+                    U.FirstName || ' ' || U.LastName AS ""TeacherName"", 
+                    U.Gender AS ""Gender"", 
+                    WJT.Standard AS ""Standard"", 
+                    WJT.Division AS ""Division"", 
+                    U.MobileNo AS ""MobileNo"", 
+                    U.CityName AS ""CityName"", 
+                    WJI.Name AS ""SchoolName"" 
+                FROM WJ_Teacher AS WJT 
+                LEFT JOIN Users AS U ON U.UserID = WJT.TeacherID 
+                INNER JOIN WJ_TeacherAssociates AS WJTA ON WJTA.TeacherID = WJT.TeacherID 
+                INNER JOIN WJ_Institutes AS WJI ON WJI.InstituteID = WJTA.InstituteID 
+                WHERE (@InstituteID = 0 OR WJI.InstituteID = @InstituteID);
+
+                -- Table 1: MCQ Marks
+                SELECT DISTINCT 
+                    E.UserID AS ""UserID"", 
+                    Q.Name AS ""Course Name"", 
+                    T.TopicName AS ""TopicName"", 
+                    T.NoOfQuestion AS ""TotalMarks"", 
+                    MAX(E.MarksObtain) AS ""MarksObtain"" 
+                FROM Examination AS E 
+                LEFT JOIN Users AS U ON U.UserID = E.UserID 
+                LEFT JOIN Quiz AS Q ON Q.QuizID = E.QuizID 
+                LEFT JOIN Topics AS T ON T.TopicID = E.ExamTopicID 
+                LEFT JOIN WJ_TeacherAssociates AS WJTA ON WJTA.TeacherID = U.UserID 
+                WHERE E.UserID = WJTA.TeacherID 
+                  AND E.MarksObtain IS NOT NULL 
+                  AND (Q.Name NOT LIKE '%Week%' AND Q.Name NOT LIKE '%Beliefs Survey%' AND Q.Name NOT LIKE '%HEM-Sampark Mega Quiz%') 
+                  AND (@InstituteID = 0 OR WJTA.InstituteID = @InstituteID) 
+                GROUP BY E.UserID, Q.Name, T.TopicName, T.NoOfQuestion 
+                ORDER BY ""Course Name"", ""TopicName"", ""UserID"";
+            ";
+
+                    using (var cmd = new Npgsql.NpgsqlCommand(batchSql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("InstituteID", instituteID);
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            // Read Table 0: TeacherDetails
+                            DataTable dtTeacher = new DataTable("TeacherDetails");
+                            dtTeacher.Load(reader);
+                            essr.Tables.Add(dtTeacher);
+
+                            // Read Table 1: MCQ
+                            DataTable dtMcq = new DataTable("MCQ");
+                            dtMcq.Load(reader);
+                            essr.Tables.Add(dtMcq);
+                        }
+                    }
+                }
+
+                using (XLWorkbook wb = new XLWorkbook())
+                {
+                    if (essr.Tables.Count > 0 && essr.Tables[0].Rows.Count > 0)
+                        wb.Worksheets.Add(essr.Tables[0], "TeacherDetails");
+
+                    if (essr.Tables.Count > 1 && essr.Tables[1].Rows.Count > 0)
+                        wb.Worksheets.Add(essr.Tables[1], "MCQ");
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        wb.SaveAs(stream);
+                        stream.Position = 0; // CRITICAL: Reset stream position to prevent 0 KB file downloads
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "TeacherPerformanceReport.xlsx");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+        [HttpGet("export-creativity-summary")]
+        public async Task<IActionResult> CreativitySummaryReport()
+        {
+            // Retrieve InstituteID from session or claims safely
+            int instituteID = 0;
+            if (HttpContext.Session.GetInt32("UserID") is int sessionId && sessionId > 0)
+            {
+                instituteID = sessionId;
+            }
+            else if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedClaim))
+            {
+                instituteID = parsedClaim;
+            }
+
+            if (instituteID == 0)
+            {
+                return Unauthorized(new { success = false, message = "User session not found or user not logged in." });
+            }
+
+            try
+            {
+                string connString = _configuration.GetConnectionString("DefaultConnection");
+                DataTable dt = new DataTable("CreativitySummary");
+
+                using (var conn = new Npgsql.NpgsqlConnection(connString))
+                {
+                    await conn.OpenAsync();
+
+                    string casQuery = @"
+                SELECT DISTINCT CAS.InstituteID, WJI.institute_name AS ""School Name"", 
+                    (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) AS ""MainCourseName"", 
+                    WJI.firstName || ' ' || WJI.lastName AS ""Co-Ordinator Name"", 
+                    WJI.cityName, WJI.referralcode, WJI.mobileno, 
+                    'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.ImageActivity, POSITION('wwwroot\\' IN CAS.ImageActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""ImageActivity"", 
+                    'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.VideoActivity, POSITION('wwwroot\\' IN CAS.VideoActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""VideoActivity"", 
+                    CAS.ShortDescription, CAS.CreatedDate AS ""Submission Date"", hfrm.GroupName, hfrm.ListStudents, hfrm.MainCourseID, CAS.TeamMembersList, CAS.ActivityType 
+                FROM CreativityActivitesSubmission2021 AS CAS 
+                INNER JOIN vw_school_profile_details AS WJI ON WJI.instituteid = CAS.InstituteID 
+                LEFT JOIN ( 
+                    SELECT DISTINCT MT.GroupName, sq.IsAllocatedBy, sq.MainCourseID, 
+                        STRING_AGG(CAST(sq.StudentID AS varchar), ',') AS ListStudents 
+                    FROM HF_Rel_Manage_Group_List sq 
+                    INNER JOIN HF_Rel_Manage_Group_List MT ON sq.GroupName = MT.GroupName AND sq.MainCourseID = MT.MainCourseID AND sq.IsAllocatedBy = MT.IsAllocatedBy 
+                    GROUP BY MT.GroupName, sq.IsAllocatedBy, sq.MainCourseID 
+                ) AS hfrm ON hfrm.IsAllocatedBy = CAS.InstituteID AND hfrm.MainCourseID = CAS.MainCourseID 
+                WHERE (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) IS NOT NULL 
+                  AND (CAS.TeamMembersList IS NULL OR CAS.TeamMembersList = '') 
+                  AND (CAS.ActivityType IS NULL OR CAS.ActivityType = '') 
+                  AND CAS.ImageActivity IS NOT NULL 
+                  AND CAS.VideoActivity IS NOT NULL 
+                  AND CAS.ShortDescription IS NOT NULL 
+                  AND CAS.InstituteID = @InstituteID 
+                ORDER BY CAS.CreatedDate DESC;
+            ";
+
+                    using (var cmd = new Npgsql.NpgsqlCommand(casQuery, conn))
+                    {
+                        cmd.Parameters.AddWithValue("InstituteID", instituteID);
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            dt.Load(reader);
+                        }
+                    }
+                }
+
+                using (XLWorkbook wb = new XLWorkbook())
+                {
+                    wb.Worksheets.Add(dt, "CreativitySummary");
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        wb.SaveAs(stream);
+                        stream.Position = 0; // CRITICAL: Reset stream position to prevent 0 KB file downloads
+
+                        var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                        var fileName = "CreativitySummary.xlsx";
+
+                        return File(stream.ToArray(), contentType, fileName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
         public class InstituteReportRequestModel
         {
             public string instituteIDstr { get; set; }
