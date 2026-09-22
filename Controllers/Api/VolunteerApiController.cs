@@ -756,8 +756,8 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("admin/filters-data")]
         public async Task<IActionResult> GetAdminFiltersData()
         {
-            var affs = await _context.Affiliates.Where(a => a.IsActive).Select(a => new { a.UserID, a.UserCode, Name = a.FirstName + " " + a.LastName + " (" + a.OrganisationName + ")" }).ToListAsync();
-            var schools = await _context.Institutes.Where(i => i.IsActive).Select(i => new { i.InstituteID, i.Name, i.ReferredByAffiliateId }).ToListAsync();
+            var affs = await _context.Users.Select(a => new { a.UserID, a.UserCode, Name = a.FirstName + " " + a.LastName }).ToListAsync();
+            var schools = await _context.WJ_Institutes.Where(i => i.IsActive).Select(i => new { i.InstituteID, i.Name, i.ReferralCode }).ToListAsync();
 
             return Ok(new { success = true, affiliates = affs, schools = schools });
         }
@@ -795,8 +795,8 @@ namespace HemFoundation.Controllers.Api
                     Name = v.FirstName + " " + v.LastName,
                     v.MobileNo,
                     v.Email,
-                    SchoolName = _context.Institutes.Where(i => i.InstituteID == v.InstituteId).Select(i => i.Name).FirstOrDefault(),
-                    AffiliateName = _context.Affiliates.Where(a => a.UserID == v.AffiliateId).Select(a => a.FirstName + " " + a.LastName).FirstOrDefault(),
+                    SchoolName = _context.WJ_Institutes.Where(i => i.InstituteID == v.InstituteId).Select(i => i.Name).FirstOrDefault(),
+                    AffiliateName = _context.Users.Where(a => a.UserID == v.AffiliateId).Select(a => a.FirstName + " " + a.LastName).FirstOrDefault(),
                     v.IsActive,
                     v.CreatedDate
                 }).ToListAsync();

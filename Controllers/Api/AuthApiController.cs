@@ -42,10 +42,125 @@ namespace HemFoundation.Controllers.Api
 
             string username = model.Email?.Trim() ?? "";
             if (string.IsNullOrEmpty(username))
-                return BadRequest(new { success = false, message = "Username or Mobile Number is required." });
+                return BadRequest(new { success = false, message = "Username or Email is required." });
 
+            // ==========================================
+            // 1. CHECK IN ADMINS TABLE FIRST
+            // ==========================================
+            var adminUser = await _context.Admins
+                .FirstOrDefaultAsync(a => (a.Email == username || a.IdentityUserId == username) && a.IsActive && !a.IsDeleted);
+
+            if (adminUser != null)
+            {
+                if (adminUser.PlainPassword != model.Password)
+                {
+                    return Unauthorized(new { success = false, message = "Invalid username or password." });
+                }
+
+                string primaryRole = "Admin";
+                var roles = new List<string> { primaryRole };
+
+                // Get Menu Rights based on IsSuperAdmin for Admin table user
+                List<HemFoundation.Models.Entities.RoleMenuRight> menuRights;
+                if (adminUser.IsSuperAdmin)
+                {
+                    menuRights = await _context.RoleMenuRights
+                        .Where(rm => rm.CanView == true && rm.IsActive == true && rm.IsDeleted == false)
+                        .ToListAsync();
+                }
+                else
+                {
+                    var roleIds = await _context.Roles
+                        .Where(r => r.Name == primaryRole)
+                        .Select(r => r.Id)
+                        .ToListAsync();
+
+                    menuRights = await _context.RoleMenuRights
+                        .Where(rm => roleIds.Contains(rm.RoleId) && rm.CanView == true && rm.IsActive == true && rm.IsDeleted == false)
+                        .ToListAsync();
+                }
+
+                var menuIds = menuRights.Select(rm => rm.MenuId).Distinct().ToList();
+                string redirectUrl = "/admin/dashboard";
+
+                var dbMenus = await _context.Menus
+                    .Where(m => menuIds.Contains(m.Id) && m.IsActive == true && m.IsDeleted == false)
+                    .OrderBy(m => m.DisplayOrder)
+                    .ToListAsync();
+
+                var menus = dbMenus.Select(m => new {
+                    m.Id,
+                    m.ParentId,
+                    MenuName = m.MenuName,
+                    Controller = m.MenuName == "Dashboard" ? "Admin" : m.Controller,
+                    Action = m.MenuName == "Dashboard" ? "Dashboard" : m.Action,
+                    RouteUrl = m.MenuName == "Dashboard" ? redirectUrl : m.RouteUrl,
+                    m.Icon,
+                    m.DisplayOrder,
+                    m.MenuType
+                }).ToList();
+
+                string fullName = $"{adminUser.FirstName} {adminUser.LastName}".Trim();
+
+                var authClaims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, adminUser.Id.ToString()),
+                    new Claim(ClaimTypes.Email, adminUser.Email ?? ""),
+                    new Claim(ClaimTypes.Name, fullName),
+                    new Claim("UserID", adminUser.Id.ToString()),
+                    new Claim(ClaimTypes.Role, primaryRole)
+                };
+
+                var jwtKey = _configuration["JwtSettings:Secret"] ?? "HemFoundation_Super_Secret_Key_2026_Secure!";
+                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+
+                int expiryHours = model.RememberMe ? (24 * 7) : (int.TryParse(_configuration["JwtSettings:ExpiryHours"], out var hours) ? hours : 8);
+
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["JwtSettings:Issuer"] ?? "HemFoundation",
+                    audience: _configuration["JwtSettings:Audience"] ?? "HemFoundationUsers",
+                    expires: DateTime.Now.AddHours(expiryHours),
+                    claims: authClaims,
+                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                );
+
+                // Set Session
+                HttpContext.Session.SetString("IsAdminLoggedIn", "true");
+                HttpContext.Session.SetString("UserId", adminUser.Id.ToString());
+                HttpContext.Session.SetString("UserEmail", adminUser.Email ?? "");
+                HttpContext.Session.SetString("UserFullName", fullName);
+                HttpContext.Session.SetString("FirstName", adminUser.FirstName ?? "");
+                HttpContext.Session.SetString("LastName", adminUser.LastName ?? "");
+                HttpContext.Session.SetString("UserMobile", adminUser.MobileNo ?? "");
+                HttpContext.Session.SetString("UserRole", primaryRole);
+                HttpContext.Session.SetString("DefaultURL", redirectUrl);
+
+                return Ok(new
+                {
+                    success = true,
+                    token = new JwtSecurityTokenHandler().WriteToken(token),
+                    expiration = token.ValidTo,
+                    redirectUrl = redirectUrl,
+                    user = new
+                    {
+                        Id = adminUser.Id.ToString(),
+                        FullName = fullName,
+                        FirstName = adminUser.FirstName,
+                        LastName = adminUser.LastName,
+                        Email = adminUser.Email,
+                        MobileNo = adminUser.MobileNo,
+                        Roles = roles
+                    },
+                    menus,
+                    rights = menuRights
+                });
+            }
+
+            // ==========================================
+            // 2. FALLBACK TO STANDARD ASPNETUSERS / USERS TABLE LOGIN
+            // ==========================================
             var user = await _context.Set<ApplicationUser>()
-                .FirstOrDefaultAsync(u => u.UserName == username);
+                .FirstOrDefaultAsync(u => u.UserName == username || u.Email == username);
 
             if (user == null)
                 return Unauthorized(new { success = false, message = "Invalid credentials or account inactive." });
@@ -64,89 +179,75 @@ namespace HemFoundation.Controllers.Api
             if (verificationResult == PasswordVerificationResult.Failed)
                 return Unauthorized(new { success = false, message = "Invalid username or password." });
 
-            var roles = await (from ur in _context.UserRoles
-                               join r in _context.Roles on ur.RoleId equals r.Id
-                               where ur.UserId == user.Id
-                               select r.Name!).ToListAsync();
+            // Fetch actual database roles assigned to this user
+            var rolesList = await (from ur in _context.UserRoles
+                                   join r in _context.Roles on ur.RoleId equals r.Id
+                                   where ur.UserId == user.Id
+                                   select r.Name!).ToListAsync();
 
-            string fullName = businessUser != null ? $"{businessUser.FirstName}".Trim() : (user.UserName ?? "");
-            var authClaims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim(ClaimTypes.Email, user.Email ?? ""),
-        new Claim(ClaimTypes.Name, fullName),
-        new Claim("UserID", businessUser?.UserID.ToString() ?? "")
-    };
-
-            foreach (var role in roles)
+            string businessFullName = businessUser != null ? $"{businessUser.FirstName}".Trim() : (user.UserName ?? "");
+            var businessAuthClaims = new List<Claim>
             {
-                authClaims.Add(new Claim(ClaimTypes.Role, role));
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
+                new Claim(ClaimTypes.Name, businessFullName),
+                new Claim("UserID", businessUser?.UserID.ToString() ?? "")
+            };
+
+            foreach (var role in rolesList)
+            {
+                businessAuthClaims.Add(new Claim(ClaimTypes.Role, role));
             }
 
-            var jwtKey = _configuration["JwtSettings:Secret"] ?? "HemFoundation_Super_Secret_Key_2026_Secure!";
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            var bJwtKey = _configuration["JwtSettings:Secret"] ?? "HemFoundation_Super_Secret_Key_2026_Secure!";
+            var bAuthSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(bJwtKey));
 
-            int expiryHours = 8;
-            if (model.RememberMe)
-            {
-                expiryHours = 24 * 7;
-            }
-            else
-            {
-                expiryHours = int.TryParse(_configuration["JwtSettings:ExpiryHours"], out var hours) ? hours : 8;
-            }
+            int bExpiryHours = model.RememberMe ? (24 * 7) : (int.TryParse(_configuration["JwtSettings:ExpiryHours"], out var bHours) ? bHours : 8);
 
-            var token = new JwtSecurityToken(
+            var bToken = new JwtSecurityToken(
                 issuer: _configuration["JwtSettings:Issuer"] ?? "HemFoundation",
                 audience: _configuration["JwtSettings:Audience"] ?? "HemFoundationUsers",
-                expires: DateTime.Now.AddHours(expiryHours),
-                claims: authClaims,
-                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                expires: DateTime.Now.AddHours(bExpiryHours),
+                claims: businessAuthClaims,
+                signingCredentials: new SigningCredentials(bAuthSigningKey, SecurityAlgorithms.HmacSha256)
             );
 
-            var roleIds = await _context.Roles
-                .Where(r => roles.Contains(r.Name!))
+            // Fetch exact Role IDs for the user's roles
+            var bRoleIds = await _context.Roles
+                .Where(r => rolesList.Contains(r.Name!))
                 .Select(r => r.Id)
                 .ToListAsync();
 
-            var menuRights = await _context.RoleMenuRights
-                .Where(rm => roleIds.Contains(rm.RoleId) && rm.CanView == true && rm.IsActive == true && rm.IsDeleted == false)
+            // Fetch menus assigned strictly to user's roles from RoleMenuRights table
+            var bMenuRights = await _context.RoleMenuRights
+                .Where(rm => bRoleIds.Contains(rm.RoleId) && rm.CanView == true && rm.IsActive == true && rm.IsDeleted == false)
                 .ToListAsync();
 
-            var menuIds = menuRights.Select(rm => rm.MenuId).Distinct().ToList();
+            var bMenuIds = bMenuRights.Select(rm => rm.MenuId).Distinct().ToList();
 
-            string primaryRole = roles.FirstOrDefault() ?? "WJ_Admin";
+            string bPrimaryRole = rolesList.FirstOrDefault() ?? "";
 
             var dashboardMapping = await _context.RoleDashboardMappings
-                .FirstOrDefaultAsync(r => r.RoleName == primaryRole && r.IsActive);
+                .FirstOrDefaultAsync(r => r.RoleName == bPrimaryRole && r.IsActive);
 
-            string redirectUrl = "";
+            string bRedirectUrl = dashboardMapping != null && !string.IsNullOrEmpty(dashboardMapping.RedirectUrl) ? dashboardMapping.RedirectUrl : "/Home/Index";
             string dynamicDashboardController = "Home";
 
-            if (dashboardMapping != null && !string.IsNullOrEmpty(dashboardMapping.RedirectUrl))
+            if (!string.IsNullOrEmpty(bRedirectUrl))
             {
-                redirectUrl = dashboardMapping.RedirectUrl;
-            }
-            else
-            {
-                redirectUrl = "/Home/Index";
-            }
-
-            if (!string.IsNullOrEmpty(redirectUrl))
-            {
-                var parts = redirectUrl.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                var parts = bRedirectUrl.Split('/', StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length > 0)
                 {
                     dynamicDashboardController = parts[0];
                 }
             }
 
-            var dbMenus = await _context.Menus
-                .Where(m => menuIds.Contains(m.Id) && m.IsActive == true && m.IsDeleted == false)
+            var bDbMenus = await _context.Menus
+                .Where(m => bMenuIds.Contains(m.Id) && m.IsActive == true && m.IsDeleted == false)
                 .OrderBy(m => m.DisplayOrder)
                 .ToListAsync();
 
-            var menus = dbMenus.Select(m => new {
+            var bMenus = bDbMenus.Select(m => new {
                 m.Id,
                 m.ParentId,
                 MenuName = m.MenuName,
@@ -158,42 +259,41 @@ namespace HemFoundation.Controllers.Api
                 m.MenuType
             }).ToList();
 
-            string firstName = businessUser != null ? (businessUser.FirstName ?? "") : "";
-            string lastName = businessUser != null ? (businessUser.LastName ?? "") : "";
-            string userrealfullName = !string.IsNullOrEmpty(firstName) ? $"{firstName} {lastName}".Trim() : (user.UserName ?? "");
+            string bFirstName = businessUser != null ? (businessUser.FirstName ?? "") : "";
+            string bLastName = businessUser != null ? (businessUser.LastName ?? "") : "";
+            string userrealfullName = !string.IsNullOrEmpty(bFirstName) ? $"{bFirstName} {bLastName}".Trim() : (user.UserName ?? "");
             string mobileNo = businessUser != null ? (businessUser.MobileNo ?? "") : "";
 
             HttpContext.Session.SetString("IsAdminLoggedIn", "true");
             HttpContext.Session.SetString("UserId", user.Id);
             HttpContext.Session.SetString("UserEmail", user.Email ?? "");
-            HttpContext.Session.SetString("UserFullName", fullName);
-            HttpContext.Session.SetString("FirstName", firstName);
-            
-            HttpContext.Session.SetString("LastName", lastName);
+            HttpContext.Session.SetString("UserFullName", businessFullName);
+            HttpContext.Session.SetString("FirstName", bFirstName);
+            HttpContext.Session.SetString("LastName", bLastName);
             HttpContext.Session.SetString("UserMobile", mobileNo);
-            HttpContext.Session.SetString("UserRole", primaryRole);
+            HttpContext.Session.SetString("UserRole", bPrimaryRole);
             HttpContext.Session.SetInt32("UserID", businessUser?.UserID ?? 0);
             HttpContext.Session.SetString("AspNetUserID", user.Id);
-            HttpContext.Session.SetString("DefaultURL", dashboardMapping.RedirectUrl);
+            HttpContext.Session.SetString("DefaultURL", dashboardMapping?.RedirectUrl ?? "/Home/Index");
 
             return Ok(new
             {
                 success = true,
-                token = new JwtSecurityTokenHandler().WriteToken(token),
-                expiration = token.ValidTo,
-                redirectUrl = redirectUrl,
+                token = new JwtSecurityTokenHandler().WriteToken(bToken),
+                expiration = bToken.ValidTo,
+                redirectUrl = bRedirectUrl,
                 user = new
                 {
                     user.Id,
                     FullName = userrealfullName,
-                    FirstName = firstName,
-                    LastName = lastName,
+                    FirstName = bFirstName,
+                    LastName = bLastName,
                     Email = user.Email,
                     MobileNo = mobileNo,
-                    Roles = roles
+                    Roles = rolesList
                 },
-                menus,
-                rights = menuRights
+                menus = bMenus,
+                rights = bMenuRights
             });
         }
 
@@ -292,7 +392,6 @@ namespace HemFoundation.Controllers.Api
                     }
                 }
 
-                // 2. User existence check
                 if (identityUser == null || businessUser == null || string.IsNullOrEmpty(businessUser.MobileNo))
                 {
                     return Ok(new { success = false, message = "User does not exist with this username or valid mobile number!" });
@@ -391,7 +490,7 @@ namespace HemFoundation.Controllers.Api
     {
         public string? Email { get; set; }
         public string? Password { get; set; }
-        public bool RememberMe { get; set; } 
+        public bool RememberMe { get; set; }
     }
 
     public class ForgotPasswordDto

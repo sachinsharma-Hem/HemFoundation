@@ -23,11 +23,9 @@ namespace HemFoundation.Models.Entities
         [StringLength(20)]
         public string? MobileNo { get; set; }
 
-        // Extra Profile Fields for Internal Users / Employees
-        public int? GenderId { get; set; } // Linked with GenderMasters
-        public int? PortalId { get; set; } // Linked with PortalMasters
+        public int? GenderId { get; set; }
+        public int? PortalId { get; set; } 
         public string? PinCode { get; set; }
-
 
         [StringLength(250)]
         public string? Address { get; set; }

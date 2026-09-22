@@ -18,10 +18,7 @@ namespace HemFoundation.Controllers.Api
             _roleManager = roleManager;
         }
 
-        // =========================================================================
-        // 1. GET ACTIVE PORTALS DROPDOWN LIST
-        // URL: GET /api/lookup/portals
-        // =========================================================================
+      
         [HttpGet("portals")]
         public async Task<IActionResult> GetPortals()
         {
@@ -38,10 +35,7 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = portals });
         }
 
-        // =========================================================================
-        // 2. GET ACTIVE GENDERS DROPDOWN LIST
-        // URL: GET /api/lookup/genders
-        // =========================================================================
+
         [HttpGet("genders")]
         public async Task<IActionResult> GetGenders()
         {
@@ -57,10 +51,7 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = genders });
         }
 
-        // =========================================================================
-        // 3. GET ROLES DROPDOWN LIST (From AspNetRoles Table)
-        // URL: GET /api/lookup/roles
-        // =========================================================================
+        
         [HttpGet("roles")]
         public async Task<IActionResult> GetRoles()
         {
@@ -75,10 +66,7 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = roles });
         }
 
-        // =========================================================================
-        // 4. SWAGGER UTILITY: AUTO-CREATE ROLES IN AspNetRoles TABLE
-        // URL: POST /api/lookup/seed-roles
-        // =========================================================================
+      
         [HttpPost("seed-roles")]
         public async Task<IActionResult> SeedRolesFromSwagger()
         {

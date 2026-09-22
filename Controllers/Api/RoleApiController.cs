@@ -26,7 +26,6 @@ namespace HemFoundation.Controllers.Api
             _userManager = userManager;
         }
 
-        // 1. GET ALL ROLES (For Dropdown & Sidebar Selection)
         [HttpGet("list")]
         public async Task<IActionResult> GetRoles()
         {
@@ -37,9 +36,7 @@ namespace HemFoundation.Controllers.Api
 
             return Ok(new { success = true, data = roles });
         }
-
-        // 2. CREATE NEW ROLE
-       
+ 
         [HttpPost("create")]
         public async Task<IActionResult> CreateRole([FromBody] CreateRoleDto model)
         {
@@ -54,7 +51,6 @@ namespace HemFoundation.Controllers.Api
 
             string roleName = model.RoleName.Trim();
 
-            // Check duplicate role
             var existingRole = await _context.AspNetRoles
                 .FirstOrDefaultAsync(x => x.Name == roleName);
 
@@ -104,13 +100,9 @@ namespace HemFoundation.Controllers.Api
 
             return Ok(new { success = true, message = $"Role '{roleName}' created successfully!" });
         }
-
-        // 3. UPDATE / RENAME ROLE BY ID
         
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateRole(
-    string id,
-    [FromBody] CreateRoleDto model)
+        public async Task<IActionResult> UpdateRole( string id, [FromBody] CreateRoleDto model)
         {
             if (string.IsNullOrWhiteSpace(model.RoleName))
             {
@@ -207,9 +199,8 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
-                // Admin role delete nahi hone dena
                 if (string.Equals(role.Name, "Admin", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(role.Name, "WhizClassical-Admin", StringComparison.OrdinalIgnoreCase))
+                    string.Equals(role.Name, "WJ_Admin", StringComparison.OrdinalIgnoreCase))
                 {
                     return BadRequest(new
                     {
@@ -218,7 +209,6 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
-                // 1. Pehle Role Menu Rights delete karo
                 var rightsToRemove = await _context.RoleMenuRights
                     .Where(r => r.RoleId == id)
                     .ToListAsync();
@@ -228,7 +218,6 @@ namespace HemFoundation.Controllers.Api
                     _context.RoleMenuRights.RemoveRange(rightsToRemove);
                 }
 
-                // 2. Is role se jude hue saare Users find karo aur delete karo (Optional / Cascade Clean)
                 var userIdsInRole = await _context.Set<IdentityUserRole<string>>()
                     .Where(x => x.RoleId == id)
                     .Select(x => x.UserId)
@@ -236,7 +225,6 @@ namespace HemFoundation.Controllers.Api
 
                 if (userIdsInRole.Any())
                 {
-                    // Users table se bhi delete karna ho toh ye use karein
                     var usersToDelete = await _context.Users
                         .Where(u => userIdsInRole.Contains(u.AspNetUserID))
                         .ToListAsync();
@@ -246,7 +234,6 @@ namespace HemFoundation.Controllers.Api
                         _context.Users.RemoveRange(usersToDelete);
                     }
 
-                    // Identity User Roles mapping clean karein
                     var userRolesToRemove = await _context.Set<IdentityUserRole<string>>()
                         .Where(x => x.RoleId == id)
                         .ToListAsync();
@@ -256,7 +243,6 @@ namespace HemFoundation.Controllers.Api
 
                 await _context.SaveChangesAsync();
 
-                // 3. Role direct SQL se delete karo taaki Concurrency error na aaye
                 var deletedRows = await _context.Database
                     .ExecuteSqlInterpolatedAsync($"DELETE FROM public.aspnetroles WHERE id = {id}");
 
