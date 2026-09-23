@@ -3,20 +3,20 @@
   "WorkspaceRootPath": "H:\\Sachin\\Project\\HemFoundation\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\shared\\partials\\_herosection.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\shared\\partials\\_herosection.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\dashboard\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\dashboard\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\wwwroot\\css\\home\\home-hero.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:wwwroot\\css\\home\\home-hero.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\dashboard\\partials\\_schooldashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\dashboard\\partials\\_schooldashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\dbmanager\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\dbmanager\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\api\\adminapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\adminapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\dbmanagercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\dbmanagercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\admin\\dashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\admin\\dashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +26,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -42,54 +42,54 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "home-hero.css",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\wwwroot\\css\\home\\home-hero.css",
-              "RelativeDocumentMoniker": "wwwroot\\css\\home\\home-hero.css",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\wwwroot\\css\\home\\home-hero.css",
-              "RelativeToolTip": "wwwroot\\css\\home\\home-hero.css",
-              "ViewState": "AgIAAJsFAAAAAAAAAAAAAKEFAAATAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2026-09-23T05:59:13.05Z",
+              "DocumentIndex": 0,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dashboard\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Dashboard\\Index.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dashboard\\Index.cshtml",
+              "RelativeToolTip": "Views\\Dashboard\\Index.cshtml",
+              "ViewState": "AgIAAN0AAAAAAAAAAAAmwBgBAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-23T09:55:33.822Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "_HeroSection.cshtml",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Shared\\Partials\\_HeroSection.cshtml",
-              "RelativeDocumentMoniker": "Views\\Shared\\Partials\\_HeroSection.cshtml",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Shared\\Partials\\_HeroSection.cshtml",
-              "RelativeToolTip": "Views\\Shared\\Partials\\_HeroSection.cshtml",
-              "ViewState": "AgIAAFACAAAAAAAAAAAmwF8CAAAoAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "_SchoolDashboard.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dashboard\\Partials\\_SchoolDashboard.cshtml",
+              "RelativeDocumentMoniker": "Views\\Dashboard\\Partials\\_SchoolDashboard.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dashboard\\Partials\\_SchoolDashboard.cshtml",
+              "RelativeToolTip": "Views\\Dashboard\\Partials\\_SchoolDashboard.cshtml",
+              "ViewState": "AgIAAEkBAAAAAAAAAAAmwFQBAABUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-23T05:55:53.58Z",
+              "WhenOpened": "2026-09-23T09:52:14.576Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "Index.cshtml",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dbmanager\\Index.cshtml",
-              "RelativeDocumentMoniker": "Views\\Dbmanager\\Index.cshtml",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dbmanager\\Index.cshtml",
-              "RelativeToolTip": "Views\\Dbmanager\\Index.cshtml",
-              "ViewState": "AgIAABIKAAAAAAAAAAAAACMKAAAnAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-23T04:32:29.595Z",
+              "Title": "AdminApiController.cs",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\AdminApiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Api\\AdminApiController.cs",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\AdminApiController.cs",
+              "RelativeToolTip": "Controllers\\Api\\AdminApiController.cs",
+              "ViewState": "AgIAALMDAAAAAAAAAAAmwMQDAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-23T09:13:32.491Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "DbmanagerController.cs",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\DbmanagerController.cs",
-              "RelativeDocumentMoniker": "Controllers\\DbmanagerController.cs",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\DbmanagerController.cs",
-              "RelativeToolTip": "Controllers\\DbmanagerController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-23T04:28:07.37Z",
+              "Title": "Dashboard.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Admin\\Dashboard.cshtml",
+              "RelativeDocumentMoniker": "Views\\Admin\\Dashboard.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Admin\\Dashboard.cshtml",
+              "RelativeToolTip": "Views\\Admin\\Dashboard.cshtml",
+              "ViewState": "AgIAAEMFAAAAAAAAAAAmwGIFAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-23T09:12:47.45Z",
               "EditorCaption": ""
             }
           ]
