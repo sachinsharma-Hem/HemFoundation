@@ -256,6 +256,7 @@ namespace HemFoundation.Controllers.Api
                             {
                                 mobileNo = "9999999999";
                             }
+<<<<<<< Updated upstream
                             if (!string.IsNullOrEmpty(standard))
                             {
                                 standard = standard.Trim();
@@ -269,7 +270,37 @@ namespace HemFoundation.Controllers.Api
                                         standard += "th";
                                 }
                             }
+=======
 
+                            //if (!string.IsNullOrEmpty(standard) && !standard.EndsWith("th", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("st", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("nd", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("rd", StringComparison.OrdinalIgnoreCase))
+                            //{
+                            //    standard += "th";
+                            //}
+                            if (!string.IsNullOrEmpty(standard))
+                            {
+                                // Extract any leading numeric digits from the standard string (e.g., "11th" -> 11, "1" -> 1)
+                                string digits = new string(standard.Where(char.IsDigit).ToArray());
+>>>>>>> Stashed changes
+
+                                if (int.TryParse(digits, out int number))
+                                {
+                                    string suffix = "th";
+
+                                    // Numbers ending in 11, 12, 13 use "th" (e.g., 11th, 12th, 13th)
+                                    int lastTwo = number % 100;
+                                    if (lastTwo < 11 || lastTwo > 13)
+                                    {
+                                        switch (number % 10)
+                                        {
+                                            case 1: suffix = "st"; break;
+                                            case 2: suffix = "nd"; break;
+                                            case 3: suffix = "rd"; break;
+                                        }
+                                    }
+
+                                    standard = number + suffix;
+                                }
+                            }
                             string uniqueUsername = mobileNo;
                             int counter = 1;
                             while (await HemFoundation.Common.Utility.CheckUsernameExistsAsync(_context, uniqueUsername))
@@ -445,10 +476,7 @@ namespace HemFoundation.Controllers.Api
 
 
                 var performanceInstituteIds = await _context.SchoolProfileDetails
-                    .AsNoTracking()
-                    .Where(x =>
-                        x.referralcode != null &&
-                        performanceReferralCodes.Contains(x.referralcode))
+                    .AsNoTracking()                    
                     .Select(x => (int?)x.instituteid)
                     .Distinct()
                     .ToListAsync();
@@ -540,9 +568,7 @@ namespace HemFoundation.Controllers.Api
                     performanceFamilyProjects =
                         await _context.StudentActivityLogs
                             .AsNoTracking()
-                            .CountAsync(x =>
-                                x.InstituteID != null &&
-                                performanceInstituteIds.Contains(x.InstituteID) &&
+                            .CountAsync(x =>                               
                                 x.ActivityType == "Family PBL");
 
 
@@ -550,8 +576,7 @@ namespace HemFoundation.Controllers.Api
                         await _context.StudentActivityLogs
                             .AsNoTracking()
                             .CountAsync(x =>
-                                x.InstituteID != null &&
-                                performanceInstituteIds.Contains(x.InstituteID) &&
+                               
                                 x.ActivityType == "Individual PBL");
 
 
