@@ -509,20 +509,122 @@
     </div>
 </section>
 
-<!-- Bootstrap 5 Video Modal Popup (Page ke end me ya section ke niche) -->
-<div class="modal fade" id="hemVideoModal" tabindex="-1" aria-labelledby="hemVideoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal fade"
+     id="hemVideoModal"
+     tabindex="-1"
+     aria-labelledby="hemVideoModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg hem-video-dialog">
+
         <div class="modal-content bg-transparent border-0 rounded-4 overflow-hidden shadow-lg">
+
             <div class="modal-body p-0 position-relative">
-                <!-- Close Button -->
-                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3 bg-dark p-2 rounded-circle" data-bs-dismiss="modal" aria-label="Close"></button>
-                <!-- Video iframe will be injected via JS -->
-                <div class="ratio ratio-16x9 rounded-4 overflow-hidden bg-black" id="videoContainer"></div>
+
+                <button type="button"
+                        class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3 bg-dark p-2 rounded-circle"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+
+                <div class="ratio ratio-16x9 rounded-4 overflow-hidden bg-black"
+                     id="videoContainer">
+                </div>
+
             </div>
+
         </div>
+
     </div>
 </div>
+<style>
+    /* ==========================================
+       HEM VIDEO MODAL - RESPONSIVE
+    ========================================== */
 
+    #hemVideoModal .modal-dialog {
+        width: calc(100% - 30px);
+        max-width: 1100px;
+        margin: 1rem auto;
+    }
+
+    #hemVideoModal .modal-content {
+        width: 100%;
+        background: transparent;
+    }
+
+    #hemVideoModal .modal-body {
+        width: 100%;
+        padding: 0 !important;
+    }
+
+    #hemVideoModal #videoContainer {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #000;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+        #hemVideoModal #videoContainer iframe,
+        #hemVideoModal #videoContainer video {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+            border: 0;
+        }
+
+    /* Close button */
+    #hemVideoModal .btn-close {
+        z-index: 20;
+        opacity: 1;
+    }
+
+    /* ==========================================
+       MOBILE
+    ========================================== */
+
+    @@media (max-width: 767.98px) {
+
+        #hemVideoModal .modal-dialog {
+            width: calc(100% - 20px);
+            max-width: none;
+            margin: auto;
+        }
+
+        #hemVideoModal .modal-content {
+            width: 100%;
+        }
+
+        #hemVideoModal #videoContainer {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: 12px;
+        }
+
+            #hemVideoModal #videoContainer iframe,
+            #hemVideoModal #videoContainer video {
+                width: 100% !important;
+                height: 100% !important;
+            }
+
+        #hemVideoModal .btn-close {
+            margin: 8px !important;
+            padding: 8px !important;
+        }
+    }
+
+    /* Very small phones */
+    @@media (max-width: 400px) {
+
+        #hemVideoModal .modal-dialog {
+            width: calc(100% - 12px);
+        }
+
+        #hemVideoModal #videoContainer {
+            border-radius: 10px;
+        }
+    }</style>
 <section class="hvt-testimonial-section py-5 bg-light overflow-hidden">
 
     <!-- Testimonial Modal Popup -->

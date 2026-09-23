@@ -913,6 +913,7 @@
             opacity: 1 !important;
             transform: scale(1.08);
         }
+
 @media (max-width: 576px) {
     .hem-partner-card {
         width: 165px;
