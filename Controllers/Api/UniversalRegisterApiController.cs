@@ -504,7 +504,7 @@ namespace HemFoundation.Controllers.Api
             {
                 var student = new Student
                 {
-                    InstituteID = mappedInstituteId, // UPDATE: Changed from null to mappedInstituteId
+                    InstituteID = mappedInstituteId, 
                     Standard = standard,
                     Division = division,
                     GardianName = guardianName,
@@ -523,7 +523,7 @@ namespace HemFoundation.Controllers.Api
             {
                 var teacher = new Teacher
                 {
-                    InstituteID = mappedInstituteId, // UPDATE: Mapping added
+                    InstituteID = mappedInstituteId, 
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     MobileNo = baseMobile,
@@ -624,7 +624,6 @@ namespace HemFoundation.Controllers.Api
             if (institute == null)
                 return BadRequest(new { success = false, message = "Authorized school institute not found." });
 
-            // Folder path: wwwroot/uploads/bulkUploads/
             string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "bulkUploads");
             if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
@@ -636,7 +635,6 @@ namespace HemFoundation.Controllers.Api
                 await excelFile.CopyToAsync(stream);
             }
 
-            // Database log save karna
             var log = new BulkUploadLog
             {
                 InstituteID = institute.instituteid,
@@ -657,16 +655,13 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("download-sample/{fileType}")]
         public IActionResult DownloadSample(string fileType)
         {
-            //string fileName = fileType.Equals("Teacher", StringComparison.OrdinalIgnoreCase)
-            //    ? "SampleTeacherRegistration.xlsx"
-            //    : "SampleStudentRegistration.xlsx";
+            
             string fileName = fileType?.ToLowerInvariant() switch
             {
                 "teacher" => "SampleTeacherRegistration.xlsx",
                 "volunteer" => "SampleVolunteerRegistration.xlsx",
-                _ => "SampleStudentRegistration.xlsx" // Default fallback for Student or invalid values
+                _ => "SampleStudentRegistration.xlsx" 
             };
-            // Path: wwwroot/images/bulkUploadSample/
             var filePath = Path.Combine(_env.WebRootPath, "images", "bulkUploadSample", fileName);
 
             if (!System.IO.File.Exists(filePath))
@@ -680,12 +675,10 @@ namespace HemFoundation.Controllers.Api
         public async Task<IActionResult> GetSchoolLists()
         {
            
-            // 1. Retrieve it as a nullable integer directly from the session
             int? currentUserId = HttpContext.Session.GetInt32("UserID");
 
             if (currentUserId == null || currentUserId == 0)
             {
-                // Fall back to claims if session is missing
                 string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 currentUserId = int.TryParse(claimId, out int parsed) ? parsed : 0;
             }
@@ -701,7 +694,6 @@ namespace HemFoundation.Controllers.Api
             var teachers = await _context.ViewHfTeacherDetails.Where(t => t.InstituteID == institute.instituteid && t.IsActive == true).ToListAsync();
             var logs = await _context.BulkUploadLogs.Where(l => l.InstituteID == institute.instituteid).OrderByDescending(l => l.UploadedDate).ToListAsync();
 
-            // var volunteers = await _context.Volunteers.Where(v => v.InstituteId == institute.instituteid && !v.IsDeleted).ToListAsync();
             var volunteers = new List<VolunteerWithUsernameDto>();
             using (var command = _context.Database.GetDbConnection().CreateCommand())
             {
@@ -711,7 +703,6 @@ namespace HemFoundation.Controllers.Api
                         JOIN public.aspnetusers a ON v.""AspNetUserId"" = a.id
                         WHERE v.""IsDeleted"" = false and v.""InstituteId""=@instituteId";
 
-                // Add parameter safely to prevent SQL injection
                 var parameter = command.CreateParameter();
                 parameter.ParameterName = "@instituteId";
                 parameter.Value = institute.instituteid;

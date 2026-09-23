@@ -131,7 +131,6 @@ namespace HemFoundation.Controllers.Api
                         string colName = headerRow.Cell(c).GetString().Trim();
                         detectedColumns.Add(colName);
 
-                        // Intelligent Mapping Hint for Preview
                         string lower = colName.ToLower();
                         string mappedTo = "Ignored / Extra Column";
                         if (lower.Contains("first") || lower.Contains("fname")) mappedTo = "users.firstname";
@@ -257,10 +256,18 @@ namespace HemFoundation.Controllers.Api
                             {
                                 mobileNo = "9999999999";
                             }
-
-                            if (!string.IsNullOrEmpty(standard) && !standard.EndsWith("th", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("st", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("nd", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("rd", StringComparison.OrdinalIgnoreCase))
+                            if (!string.IsNullOrEmpty(standard))
                             {
-                                standard += "th";
+                                standard = standard.Trim();
+
+                                if (!standard.EndsWith("th", StringComparison.OrdinalIgnoreCase) &&
+                                    !standard.EndsWith("rd", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    if (standard == "3")
+                                        standard += "rd";
+                                    else
+                                        standard += "th";
+                                }
                             }
 
                             string uniqueUsername = mobileNo;
@@ -420,24 +427,14 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, message = "Bulk upload record deleted successfully." });
         }
 
-        // ================================================================
-        // ADMIN DASHBOARD - OVERALL PERFORMANCE + FOCUSED REPORT
-        // ================================================================
+        
 
         [HttpGet("overall-dashboard-counts")]
         public async Task<IActionResult> GetOverallDashboardCounts()
         {
             try
             {
-                // ============================================================
-                // PERFORMANCE REPORT
-                //
-                // Affiliate Report logic:
-                // Users
-                //   -> WJ_ReferralCodes
-                //      -> SchoolProfileDetails
-                //         -> InstituteID
-                // ============================================================
+                
 
                 var performanceReferralCodes = await _context.WJ_ReferralCodes
                     .AsNoTracking()

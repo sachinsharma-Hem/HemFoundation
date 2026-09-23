@@ -1,0 +1,2612 @@
+﻿@{
+    ViewData["Title"] = "Database Manager";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" />
+
+<div class="container-fluid py-4" id="dbManagerRoot">
+
+    <!-- ========================================================= -->
+    <!-- HEADER -->
+    <!-- ========================================================= -->
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+
+        <div>
+            <h3 class="fw-bold text-dark mb-1">
+                <i class="bi bi-database-gear text-primary me-2"></i>
+                Database Manager
+            </h3>
+
+            <p class="text-muted mb-0" id="dbSubtitle">
+                Manage PostgreSQL database objects directly from the admin panel.
+            </p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill bg-success-subtle text-success border px-3 py-2" id="connectionBadge">
+                <i class="bi bi-circle-fill small me-1"></i>
+                Checking...
+            </span>
+
+            <button class="btn btn-light border shadow-sm"
+                    onclick="refreshCurrentSection()">
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                Refresh
+            </button>
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- OVERVIEW CARDS -->
+    <!-- ========================================================= -->
+
+    <div id="overviewSection">
+
+        <div class="row g-3 mb-3" id="dbInfoRow" style="display:none;">
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-3 small text-muted bg-white border rounded-3 px-3 py-2">
+                    <span><strong>Database:</strong> <span id="infoDbName">-</span></span>
+                    <span><strong>Version:</strong> <span id="infoVersion">-</span></span>
+                    <span><strong>Size:</strong> <span id="infoSize">-</span></span>
+                    <span><strong>Schema:</strong> <span id="infoSchema">-</span></span>
+                    <span><strong>Server:</strong> <span id="infoServer">-</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="db-stat-card">
+                    <div class="db-stat-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <div>
+                        <div class="db-stat-label">Schemas</div>
+                        <div class="db-stat-value" id="countSchemas">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="db-stat-card">
+                    <div class="db-stat-icon bg-success-subtle text-success">
+                        <i class="bi bi-table"></i>
+                    </div>
+                    <div>
+                        <div class="db-stat-label">Tables</div>
+                        <div class="db-stat-value" id="countTables">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="db-stat-card">
+                    <div class="db-stat-icon bg-info-subtle text-info">
+                        <i class="bi bi-layout-text-window-reverse"></i>
+                    </div>
+                    <div>
+                        <div class="db-stat-label">Views</div>
+                        <div class="db-stat-value" id="countViews">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="db-stat-card">
+                    <div class="db-stat-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-braces"></i>
+                    </div>
+                    <div>
+                        <div class="db-stat-label">Functions</div>
+                        <div class="db-stat-value" id="countFunctions">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="db-stat-card">
+                    <div class="db-stat-icon bg-danger-subtle text-danger">
+                        <i class="bi bi-terminal"></i>
+                    </div>
+                    <div>
+                        <div class="db-stat-label">Procedures</div>
+                        <div class="db-stat-value" id="countProcedures">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="db-stat-card">
+                    <div class="db-stat-icon bg-secondary-subtle text-secondary">
+                        <i class="bi bi-lightning-charge"></i>
+                    </div>
+                    <div>
+                        <div class="db-stat-label">Triggers</div>
+                        <div class="db-stat-value" id="countTriggers">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="db-stat-card">
+                    <div class="db-stat-icon bg-dark-subtle text-dark">
+                        <i class="bi bi-list-columns-reverse"></i>
+                    </div>
+                    <div>
+                        <div class="db-stat-label">Indexes</div>
+                        <div class="db-stat-value" id="countIndexes">0</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- MAIN CARD -->
+    <!-- ========================================================= -->
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden" id="mainCard">
+
+        <div class="row g-0">
+
+            <!-- SIDEBAR -->
+            <div class="col-lg-2 border-end bg-light" id="dbSidebarCol">
+
+                <div class="db-sidebar p-3">
+
+                    <div class="small fw-bold text-uppercase text-muted px-2 mb-2">Database</div>
+
+                    <button class="db-menu active" data-section="overview" onclick="openSection('overview')">
+                        <i class="bi bi-speedometer2"></i> Overview
+                    </button>
+
+                    <button class="db-menu" data-section="schemas" onclick="openSection('schemas')">
+                        <i class="bi bi-diagram-3"></i> Schemas
+                    </button>
+
+                    <button class="db-menu" data-section="tables" onclick="openSection('tables')">
+                        <i class="bi bi-table"></i> Tables
+                    </button>
+
+                    <button class="db-menu" data-section="views" onclick="openSection('views')">
+                        <i class="bi bi-layout-text-window-reverse"></i> Views
+                    </button>
+
+                    <button class="db-menu" data-section="functions" onclick="openSection('functions')">
+                        <i class="bi bi-braces"></i> Functions
+                    </button>
+
+                    <button class="db-menu" data-section="procedures" onclick="openSection('procedures')">
+                        <i class="bi bi-terminal"></i> Procedures
+                    </button>
+
+                    <button class="db-menu" data-section="triggers" onclick="openSection('triggers')">
+                        <i class="bi bi-lightning-charge"></i> Triggers
+                    </button>
+
+                    <button class="db-menu" data-section="indexes" onclick="openSection('indexes')">
+                        <i class="bi bi-list-columns-reverse"></i> Indexes
+                    </button>
+
+                    <div class="border-top my-3"></div>
+
+                    <div class="small fw-bold text-uppercase text-muted px-2 mb-2">Developer</div>
+
+                    <button class="db-menu" data-section="sql" onclick="openSection('sql')">
+                        <i class="bi bi-code-square"></i> SQL Console
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- CONTENT -->
+            <div class="col-lg-10" id="dbContentCol">
+
+                <div class="p-4" id="dbContentPad">
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2" id="sectionHeaderRow">
+
+                        <div>
+                            <h5 class="fw-bold mb-1" id="sectionTitle">Database Overview</h5>
+                            <p class="text-muted small mb-0" id="sectionDescription">Overview of database objects.</p>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+
+                            <div id="objectSearchContainer" class="d-none">
+                                <input type="text" id="objectSearchInput" class="form-control form-control-sm"
+                                       placeholder="Search..." oninput="debouncedObjectFilter()" style="min-width:200px;" />
+                            </div>
+
+                            <div id="schemaFilterContainer" class="d-none">
+                                <select id="schemaFilter" class="form-select form-select-sm" onchange="loadCurrentSection()">
+                                    <option value="">All Schemas</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div id="contentArea">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary"></div>
+                            <div class="text-muted mt-2">Loading database...</div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ============================================================= -->
+<!-- OBJECT DEFINITION MODAL -->
+<!-- ============================================================= -->
+
+<div class="modal fade" id="objectDefinitionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-dark text-white">
+                <div>
+                    <h5 class="modal-title mb-1" id="definitionTitle">Object Definition</h5>
+                    <small class="text-white-50" id="definitionSubtitle"></small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-outline-light" onclick="copyDefinitionToClipboard()">
+                        <i class="bi bi-clipboard me-1"></i>Copy
+                    </button>
+                    <button class="btn btn-sm btn-outline-light" onclick="openDefinitionInSqlEditor()">
+                        <i class="bi bi-code-square me-1"></i>Open in SQL Editor
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
+            <div class="modal-body p-0">
+                <pre id="definitionContent" class="sql-definition mb-0"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================================================= -->
+<!-- TABLE STRUCTURE MODAL -->
+<!-- ============================================================= -->
+
+<div class="modal fade" id="tableStructureModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-dark text-white">
+                <div>
+                    <h5 class="modal-title mb-1">Table Structure</h5>
+                    <small class="text-white-50" id="structureSubtitle"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0 bg-dark">
+                <ul class="nav nav-tabs px-3 pt-2 border-0" style="border-bottom:1px solid #343a40;">
+                    <li class="nav-item">
+                        <button class="nav-link active text-white" id="structTabColumnsBtn" onclick="switchStructureTab('columns')">Columns</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link text-white-50" id="structTabConstraintsBtn" onclick="switchStructureTab('constraints')">Constraints</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link text-white-50" id="structTabIndexesBtn" onclick="switchStructureTab('indexes')">Indexes</button>
+                    </li>
+                </ul>
+                <div style="max-height:65vh; overflow:auto;">
+                    <div id="structurePaneColumns"></div>
+                    <div id="structurePaneConstraints" style="display:none;"></div>
+                    <div id="structurePaneIndexes" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================================================= -->
+<!-- TABLE DATA MODAL -->
+<!-- ============================================================= -->
+
+<div class="modal fade" id="tableDataModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+
+            <div class="modal-header bg-dark text-white">
+                <div>
+                    <h5 class="modal-title" id="tableDataTitle">Table Data</h5>
+                    <small class="text-white-50" id="tableDataSubtitle"></small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-outline-light" onclick="exportTableDataCsv()">
+                        <i class="bi bi-download me-1"></i>Export CSV
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
+
+            <div class="modal-body bg-light">
+
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-5">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="tableSearch" class="form-control"
+                                           placeholder="Search in table..."
+                                           onkeydown="if(event.key === 'Enter') loadTableData(1)" />
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <select id="pageSize" class="form-select" onchange="loadTableData(1)">
+                                    <option value="25">25 rows</option>
+                                    <option value="50" selected>50 rows</option>
+                                    <option value="100">100 rows</option>
+                                    <option value="250">250 rows</option>
+                                    <option value="500">500 rows</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5 text-md-end">
+                                <span class="text-muted small" id="tableRecordInfo"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="table-responsive table-data-container">
+                        <table class="table table-hover table-sm align-middle mb-0" id="tableDataTable">
+                            <thead class="table-light"></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button class="btn btn-outline-secondary" id="prevPageBtn" onclick="changeTablePage(-1)">
+                        <i class="bi bi-chevron-left"></i> Previous
+                    </button>
+                    <span id="pageInfo" class="text-muted small"></span>
+                    <button class="btn btn-outline-secondary" id="nextPageBtn" onclick="changeTablePage(1)">
+                        Next <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================================================= -->
+<!-- SQL CONFIRM MODAL -->
+<!-- ============================================================= -->
+
+<div class="modal fade" id="sqlConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Confirm execution
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">This statement looks potentially destructive:</p>
+                <div class="alert alert-warning small mb-0" id="sqlConfirmReason">
+                    This can permanently modify or delete data.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmExecuteSql()">
+                    <i class="bi bi-play-fill me-1"></i>Execute anyway
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+
+    .db-stat-card {
+        background: #ffffff;
+        border: 1px solid #e4e8ec;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        height: 100%;
+        transition: all .2s ease;
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.04);
+    }
+
+        .db-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.08);
+        }
+
+    .db-stat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 23px;
+        flex-shrink: 0;
+    }
+
+    .db-stat-label {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 2px;
+    }
+
+    .db-stat-value {
+        font-size: 25px;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .db-menu {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        text-align: left;
+        padding: 10px 12px;
+        border-radius: 10px;
+        color: #495057;
+        font-size: 14px;
+        margin-bottom: 3px;
+        transition: all .15s ease;
+    }
+
+        .db-menu i {
+            width: 22px;
+            margin-right: 7px;
+        }
+
+        .db-menu:hover {
+            background: #e9ecef;
+            color: #212529;
+        }
+
+        .db-menu.active {
+            background: #e8f0ff;
+            color: #0d6efd;
+            font-weight: 600;
+        }
+
+    .db-table th {
+        white-space: nowrap;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .02em;
+    }
+
+    .db-table td {
+        font-size: 13px;
+        vertical-align: middle;
+    }
+
+    .object-row {
+        cursor: pointer;
+    }
+
+        .object-row:hover {
+            background: #f8f9fa;
+        }
+
+    .code-preview {
+        max-width: 500px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+    }
+
+    .sql-definition {
+        background: #111827;
+        color: #e5e7eb;
+        padding: 24px;
+        min-height: 500px;
+        max-height: 75vh;
+        overflow: auto;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+    }
+
+    .table-data-container {
+        max-height: calc(100vh - 260px);
+        overflow: auto;
+    }
+
+    #tableDataTable {
+        min-width: 100%;
+        white-space: nowrap;
+    }
+
+        #tableDataTable th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+
+        #tableDataTable td {
+            font-size: 12px;
+            max-width: 350px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+            #tableDataTable td.is-null {
+                color: #adb5bd;
+                font-style: italic;
+            }
+
+    .schema-badge {
+        font-size: 11px;
+        background: #f1f3f5;
+        color: #495057;
+        border: 1px solid #dee2e6;
+    }
+
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+        color: #6c757d;
+    }
+
+        .empty-state i {
+            font-size: 45px;
+            opacity: .4;
+        }
+
+    /* ---------------- SQL CONSOLE ---------------- */
+
+    .sql-console-shell {
+        background: #0b0f19;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid #1f2937;
+    }
+
+    .sql-console-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: #111827;
+        border-bottom: 1px solid #1f2937;
+    }
+
+        .sql-console-toolbar .btn {
+            font-size: 13px;
+        }
+
+    .sql-console-editor-wrap {
+        position: relative;
+    }
+
+        .sql-console-editor-wrap .CodeMirror {
+            height: 260px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+        }
+
+    #dbManagerRoot.sql-fullscreen-active {
+        position: fixed;
+        inset: 0;
+        z-index: 1080;
+        background: #f8f9fa;
+        overflow: auto;
+        padding: 16px !important;
+    }
+
+        #dbManagerRoot.sql-fullscreen-active .sql-console-editor-wrap .CodeMirror {
+            height: 46vh;
+        }
+
+        #dbManagerRoot.sql-fullscreen-active #overviewSection,
+        #dbManagerRoot.sql-fullscreen-active #dbSidebarCol,
+        #dbManagerRoot.sql-fullscreen-active .d-flex.flex-wrap.align-items-center.justify-content-between.mb-4.gap-3 {
+            display: none !important;
+        }
+
+        #dbManagerRoot.sql-fullscreen-active #dbContentCol {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+    .sql-status-bar {
+        padding: 10px 14px;
+        font-size: 13px;
+        font-family: Consolas, monospace;
+        border-top: 1px solid #1f2937;
+        background: #111827;
+        color: #9ca3af;
+        min-height: 42px;
+    }
+
+        .sql-status-bar.status-success {
+            color: #4ade80;
+        }
+
+        .sql-status-bar.status-error {
+            color: #f87171;
+        }
+
+        .sql-status-bar.status-running {
+            color: #facc15;
+        }
+
+    .sql-result-tabs {
+        background: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 4px 8px 0;
+    }
+
+        .sql-result-tabs .nav-link {
+            font-size: 13px;
+            color: #495057;
+        }
+
+            .sql-result-tabs .nav-link.active {
+                color: #0d6efd;
+                font-weight: 600;
+            }
+
+    .sql-result-panel {
+        max-height: 45vh;
+        overflow: auto;
+        background: #fff;
+    }
+
+        .sql-result-panel table {
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        .sql-result-panel th {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 2;
+        }
+
+        .sql-result-panel td.is-null {
+            color: #adb5bd;
+            font-style: italic;
+        }
+
+        .sql-result-panel td {
+            cursor: pointer;
+            max-width: 320px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+    .sql-history-item {
+        padding: 8px 12px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        font-size: 12.5px;
+    }
+
+        .sql-history-item:hover {
+            background: #f1f3f5;
+        }
+
+        .sql-history-item .hist-sql {
+            font-family: Consolas, monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+    @@media (max-width: 991px) {
+        .db-sidebar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .db-menu {
+            width: auto;
+            flex: 0 0 auto;
+        }
+    }
+
+    /* ---------------- SQL CONSOLE (terminal log + grids) ---------------- */
+
+    kbd {
+        background: #1f2937;
+        color: #e5e7eb;
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 11px;
+        border: 1px solid #374151;
+    }
+
+    .sql-console-resize-handle {
+        height: 12px;
+        background: #111827;
+        border-bottom: 1px solid #1f2937;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: row-resize;
+        color: #4b5563;
+    }
+
+        .sql-console-resize-handle:hover {
+            color: #9ca3af;
+        }
+
+    .sql-empty-state {
+        padding: 48px 20px;
+        text-align: center;
+        color: #6c757d;
+        font-size: 13.5px;
+    }
+
+        .sql-empty-state i {
+            font-size: 32px;
+            opacity: .35;
+        }
+
+    .sql-terminal-entry {
+        border-bottom: 1px solid #eee;
+        padding: 12px 16px;
+    }
+
+        .sql-terminal-entry:first-child {
+            background: #fbfdff;
+        }
+
+    .sql-terminal-echo pre {
+        background: #0b0f19;
+        color: #93c5fd;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-family: Consolas, monospace;
+        font-size: 12.5px;
+        white-space: pre-wrap;
+        margin-top: 4px;
+    }
+
+    .sql-terminal-status {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 13.5px;
+        padding: 8px 4px;
+    }
+
+        .sql-terminal-status.status-success {
+            color: #15803d;
+        }
+
+        .sql-terminal-status.status-error {
+            color: #b91c1c;
+        }
+
+    .sql-terminal-meta {
+        font-weight: 400;
+        color: #6b7280;
+        font-size: 12.5px;
+    }
+
+    .sql-terminal-subheading {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #495057;
+        padding: 8px 4px 4px;
+    }
+
+    .sql-terminal-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin: 4px 0;
+    }
+
+        .sql-terminal-error pre {
+            white-space: pre-wrap;
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            color: #7f1d1d;
+            margin-bottom: 8px;
+        }
+
+    .data-grid-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 4px;
+    }
+
+    .data-grid-scroll {
+        max-height: 320px;
+        overflow: auto;
+        border: 1px solid #eee;
+        border-radius: 8px;
+    }
+
+        .data-grid-scroll table {
+            white-space: nowrap;
+            font-size: 12.5px;
+            margin-bottom: 0;
+        }
+
+        .data-grid-scroll th {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 2;
+        }
+
+        .data-grid-scroll td {
+            cursor: pointer;
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+            .data-grid-scroll td.is-null {
+                color: #adb5bd;
+                font-style: italic;
+            }
+
+            .data-grid-scroll td.bool-true {
+                color: #15803d;
+                font-weight: 600;
+            }
+
+            .data-grid-scroll td.bool-false {
+                color: #b91c1c;
+                font-weight: 600;
+            }
+
+            .data-grid-scroll td.is-json code {
+                font-size: 11.5px;
+                color: #6d28d9;
+            }
+
+    /* ---------------- TOASTS ---------------- */
+
+    .db-toast-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .db-toast {
+        background: #212529;
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        box-shadow: 0 6px 16px rgba(0,0,0,.2);
+        opacity: 0;
+        transform: translateY(8px);
+        transition: all .2s ease;
+    }
+
+        .db-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+</style>
+
+
+@section Scripts {
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql-formatter/4.0.2/sql-formatter.min.js"></script>
+
+    <script>
+
+        // ============================================================
+        // GLOBAL STATE
+        // ============================================================
+
+        let currentSection = "overview";
+
+        let currentTableSchema = "";
+        let currentTableName = "";
+        let currentTablePage = 1;
+        let currentTableData = { columns: [], rows: [] };
+
+        let currentStructureSchema = "";
+        let currentStructureTable = "";
+
+        let objectFilterTimer = null;
+
+        let pendingSql = "";
+
+        let sqlEditor = null;
+        let sqlRunning = false;
+        let sqlHistory = [];
+        const SQL_HISTORY_KEY = "dbmanager_sql_history";
+        const SQL_HISTORY_LIMIT = 100;
+
+
+        // ============================================================
+        // AJAX HELPER (uses the app's existing cookie/session auth)
+        // ============================================================
+
+        function apiGet(url, successCallback, errorCallback) {
+
+            $.ajax({
+                url: url,
+                type: "GET",
+                success: function(response) {
+                    if (response.success) {
+                        successCallback(response);
+                    } else {
+                        if (errorCallback) errorCallback(response.message);
+                        else showError(response.message || "Unable to load data.");
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) {
+                        showError("Your session has expired. Please log in again.");
+                        return;
+                    }
+                    let message = "Something went wrong.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) message = xhr.responseJSON.message;
+                    if (errorCallback) errorCallback(message);
+                    else showError(message);
+                }
+            });
+        }
+
+
+        // ============================================================
+        // DOCUMENT READY
+        // ============================================================
+
+        $(document).ready(function() {
+
+            loadOverview();
+            loadDatabaseInfo();
+            loadSqlHistoryFromStorage();
+
+            document.addEventListener("keydown", function(e) {
+                if (e.key === "Escape" && document.getElementById("dbManagerRoot").classList.contains("sql-fullscreen-active")) {
+                    toggleSqlFullscreen(false);
+                }
+            });
+        });
+
+
+        // ============================================================
+        // DATABASE INFO (Overview header strip + connection badge)
+        // ============================================================
+
+        function loadDatabaseInfo() {
+
+            apiGet("/api/dbmanager/database-info", function(res) {
+
+                const d = res.data;
+
+                $("#connectionBadge").html('<i class="bi bi-circle-fill small me-1"></i> Database Connected');
+                $("#connectionBadge").removeClass("bg-danger-subtle text-danger").addClass("bg-success-subtle text-success");
+
+                $("#infoDbName").text(d.databaseName || "-");
+                $("#infoVersion").text(d.version || "-");
+                $("#infoSize").text(d.size || "-");
+                $("#infoSchema").text(d.currentSchema || "-");
+                $("#infoServer").text(d.server || "-");
+                $("#dbInfoRow").show();
+
+            }, function() {
+
+                $("#connectionBadge").html('<i class="bi bi-circle-fill small me-1"></i> Disconnected');
+                $("#connectionBadge").removeClass("bg-success-subtle text-success").addClass("bg-danger-subtle text-danger");
+            });
+        }
+
+
+        // ============================================================
+        // SECTION NAVIGATION
+        // ============================================================
+
+        function openSection(section) {
+
+            currentSection = section;
+
+            $(".db-menu").removeClass("active");
+            $('.db-menu[data-section="' + section + '"]').addClass("active");
+
+            $("#schemaFilterContainer").addClass("d-none");
+            $("#objectSearchContainer").addClass("d-none");
+            $("#objectSearchInput").val("");
+            $("#sectionHeaderRow").show();
+
+            const needsSchemaFilter = ["tables", "views", "functions", "procedures", "triggers", "indexes"];
+
+            if (needsSchemaFilter.includes(section)) {
+                $("#schemaFilterContainer").removeClass("d-none");
+                $("#objectSearchContainer").removeClass("d-none");
+                loadSchemaFilter();
+            }
+
+            switch (section) {
+
+                case "overview":
+                    $("#sectionTitle").text("Database Overview");
+                    $("#sectionDescription").text("Overview of database objects.");
+                    loadOverview();
+                    loadDatabaseInfo();
+                    break;
+
+                case "schemas":
+                    $("#objectSearchContainer").removeClass("d-none");
+                    $("#sectionTitle").text("Schemas");
+                    $("#sectionDescription").text("Database schemas available in PostgreSQL.");
+                    loadSchemas();
+                    break;
+
+                case "tables":
+                    $("#sectionTitle").text("Tables");
+                    $("#sectionDescription").text("Browse database tables and their records.");
+                    loadTables();
+                    break;
+
+                case "views":
+                    $("#sectionTitle").text("Views");
+                    $("#sectionDescription").text("Manage and inspect database views.");
+                    loadViews();
+                    break;
+
+                case "functions":
+                    $("#sectionTitle").text("Functions");
+                    $("#sectionDescription").text("PostgreSQL functions and their definitions.");
+                    loadFunctions();
+                    break;
+
+                case "procedures":
+                    $("#sectionTitle").text("Procedures");
+                    $("#sectionDescription").text("PostgreSQL stored procedures.");
+                    loadProcedures();
+                    break;
+
+                case "triggers":
+                    $("#sectionTitle").text("Triggers");
+                    $("#sectionDescription").text("Database triggers configured on tables.");
+                    loadTriggers();
+                    break;
+
+                case "indexes":
+                    $("#sectionTitle").text("Indexes");
+                    $("#sectionDescription").text("Database indexes and their definitions.");
+                    loadIndexes();
+                    break;
+
+                case "sql":
+                    $("#sectionHeaderRow").hide();
+                    loadSqlConsole();
+                    break;
+            }
+        }
+
+        function refreshCurrentSection() { loadCurrentSection(); }
+
+        function loadCurrentSection() {
+            switch (currentSection) {
+                case "overview": loadOverview(); loadDatabaseInfo(); break;
+                case "schemas": loadSchemas(); break;
+                case "tables": loadTables(); break;
+                case "views": loadViews(); break;
+                case "functions": loadFunctions(); break;
+                case "procedures": loadProcedures(); break;
+                case "triggers": loadTriggers(); break;
+                case "indexes": loadIndexes(); break;
+                case "sql": break; // console keeps its own state
+            }
+        }
+
+        function debouncedObjectFilter() {
+            clearTimeout(objectFilterTimer);
+            objectFilterTimer = setTimeout(applyObjectFilter, 300);
+        }
+
+        function applyObjectFilter() {
+            const term = ($("#objectSearchInput").val() || "").toLowerCase().trim();
+            $("#contentArea table tbody tr").each(function() {
+                const text = $(this).text().toLowerCase();
+                $(this).toggle(text.indexOf(term) !== -1);
+            });
+        }
+
+
+        // ============================================================
+        // OVERVIEW
+        // ============================================================
+
+        function loadOverview() {
+
+            $("#contentArea").html(`
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary"></div>
+                            <div class="text-muted mt-2">Loading database overview...</div>
+                        </div>
+                    `);
+
+            apiGet("/api/dbmanager/overview", function(res) {
+
+                const d = res.data;
+                $("#countSchemas").text(d.schemas || 0);
+                $("#countTables").text(d.tables || 0);
+                $("#countViews").text(d.views || 0);
+                $("#countFunctions").text(d.functions || 0);
+                $("#countProcedures").text(d.procedures || 0);
+                $("#countTriggers").text(d.triggers || 0);
+                $("#countIndexes").text(d.indexes || 0);
+
+                $("#contentArea").html(`
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="alert alert-primary border-0">
+                                        <div class="fw-semibold mb-1"><i class="bi bi-database me-1"></i> PostgreSQL Database</div>
+                                        <div class="small">Connected using the application's existing ApplicationDbContext.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-warning border-0">
+                                        <div class="fw-semibold mb-1"><i class="bi bi-shield-exclamation me-1"></i> Admin Access</div>
+                                        <div class="small">SQL Console can modify database structure and data.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card border rounded-3">
+                                <div class="card-body">
+                                    <h6 class="fw-bold">Database Manager</h6>
+                                    <p class="text-muted small mb-0">
+                                        Use the left menu to browse schemas, tables, views, functions,
+                                        procedures, triggers and indexes.
+                                    </p>
+                                </div>
+                            </div>
+                        `);
+            });
+        }
+
+
+        // ============================================================
+        // SCHEMA FILTER
+        // ============================================================
+
+        function loadSchemaFilter() {
+            apiGet("/api/dbmanager/schemas", function(res) {
+                const current = $("#schemaFilter").val() || "";
+                let html = `<option value="">All Schemas</option>`;
+                res.data.forEach(function(item) {
+                    const selected = current === item.name ? "selected" : "";
+                    html += `<option value="${escapeHtml(item.name)}" ${selected}>${escapeHtml(item.name)}</option>`;
+                });
+                $("#schemaFilter").html(html);
+            });
+        }
+
+        function selectedSchema() { return $("#schemaFilter").val() || ""; }
+
+
+        // ============================================================
+        // SCHEMAS
+        // ============================================================
+
+        function loadSchemas() {
+            showLoading();
+            apiGet("/api/dbmanager/schemas", function(res) {
+
+                if (!res.data.length) { showEmpty("bi-diagram-3", "No schemas found."); return; }
+
+                let html = `
+                            <div class="table-responsive">
+                                <table class="table db-table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr><th>Schema</th><th>Owner</th><th>Tables</th><th>Views</th><th>Functions</th></tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+
+                res.data.forEach(function(row) {
+                    html += `
+                                <tr>
+                                    <td><span class="badge schema-badge px-2 py-1"><i class="bi bi-diagram-3 me-1"></i>${escapeHtml(row.name)}</span></td>
+                                    <td>${escapeHtml(row.owner || "")}</td>
+                                    <td>${formatNumber(row.tableCount || 0)}</td>
+                                    <td>${formatNumber(row.viewCount || 0)}</td>
+                                    <td>${formatNumber(row.functionCount || 0)}</td>
+                                </tr>
+                            `;
+                });
+
+                html += `</tbody></table></div>`;
+                $("#contentArea").html(html);
+            });
+        }
+
+
+        // ============================================================
+        // TABLES
+        // ============================================================
+
+        function loadTables() {
+            showLoading();
+            const schema = encodeURIComponent(selectedSchema());
+
+            apiGet("/api/dbmanager/tables?schema=" + schema, function(res) {
+
+                if (!res.data.length) { showEmpty("bi-table", "No tables found."); return; }
+
+                let html = `
+                            <div class="table-responsive">
+                                <table class="table db-table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr><th>Schema</th><th>Table</th><th>Estimated Rows</th><th class="text-end">Actions</th></tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+
+                res.data.forEach(function(row) {
+                    html += `
+                                <tr>
+                                    <td><span class="badge schema-badge">${escapeHtml(row.schema)}</span></td>
+                                    <td class="fw-semibold"><i class="bi bi-table text-success me-1"></i>${escapeHtml(row.name)}</td>
+                                    <td>${formatNumber(row.estimatedRows || 0)}</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-primary me-1"
+                                                onclick="openTableData('${jsQuote(row.schema)}','${jsQuote(row.name)}')">
+                                            <i class="bi bi-eye me-1"></i>Data
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary me-1"
+                                                onclick="openTableStructure('${jsQuote(row.schema)}','${jsQuote(row.name)}')">
+                                            <i class="bi bi-layout-text-sidebar-reverse me-1"></i>Structure
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-dark"
+                                                onclick="generateSelectForTable('${jsQuote(row.schema)}','${jsQuote(row.name)}')"
+                                                title="Open SELECT in SQL Console">
+                                            <i class="bi bi-code-square"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                });
+
+                html += `</tbody></table></div>`;
+                $("#contentArea").html(html);
+            });
+        }
+
+        function generateSelectForTable(schema, table) {
+            const sql = `SELECT *\nFROM ${quoteIdentJs(schema)}.${quoteIdentJs(table)}\nLIMIT 100;`;
+            openSection("sql");
+            setTimeout(function() { if (sqlEditor) sqlEditor.setValue(sql); }, 50);
+        }
+
+        function quoteIdentJs(name) {
+            return /^[A-Za-z_][A-Za-z0-9_$]*$/.test(name) ? name : '"' + name.replace(/"/g, '""') + '"';
+        }
+
+
+        // ============================================================
+        // TABLE STRUCTURE (Columns / Constraints / Indexes)
+        // ============================================================
+
+        function openTableStructure(schema, table) {
+
+            currentStructureSchema = schema;
+            currentStructureTable = table;
+
+            $("#structureSubtitle").text(schema + "." + table);
+            $("#structurePaneColumns").html('<div class="text-white-50 p-4">Loading columns...</div>');
+            $("#structurePaneConstraints").html("");
+            $("#structurePaneIndexes").html("");
+            switchStructureTab("columns");
+
+            const modal = new bootstrap.Modal(document.getElementById("tableStructureModal"));
+            modal.show();
+
+            apiGet(
+                "/api/dbmanager/table-structure?schema=" + encodeURIComponent(schema) + "&table=" + encodeURIComponent(table),
+                function(res) {
+
+                    let html = "";
+
+                    if (!res.data.length) {
+                        html = '<div class="text-white-50 p-4">No columns found.</div>';
+                    } else {
+                        html = `
+                                    <table class="table table-dark table-hover mb-0">
+                                        <thead>
+                                            <tr><th>#</th><th>Column</th><th>Data Type</th><th>Nullable</th><th>Default</th><th>Max Length</th></tr>
+                                        </thead>
+                                        <tbody>
+                                `;
+
+                        res.data.forEach(function(row) {
+                            html += `
+                                        <tr>
+                                            <td>${row.ordinal ?? ""}</td>
+                                            <td><strong>${escapeHtml(row.columnName || "")}</strong>
+                                                ${row.comment ? `<div class="text-white-50 small">${escapeHtml(row.comment)}</div>` : ""}
+                                            </td>
+                                            <td>${escapeHtml(row.dataType || "")}
+                                                ${row.udtName ? `<small class="text-white-50 ms-1">(${escapeHtml(row.udtName)})</small>` : ""}
+                                            </td>
+                                            <td>${row.nullable === "YES" ? "YES" : "NO"}</td>
+                                            <td class="code-preview text-white-50">${escapeHtml(row.defaultValue || "")}</td>
+                                            <td>${row.maxLength ?? ""}</td>
+                                        </tr>
+                                    `;
+                        });
+
+                        html += `</tbody></table>`;
+                    }
+
+                    $("#structurePaneColumns").html(html);
+                }
+            );
+
+            apiGet(
+                "/api/dbmanager/table-constraints?schema=" + encodeURIComponent(schema) + "&table=" + encodeURIComponent(table),
+                function(res) {
+
+                    const d = res.data;
+
+                    let cHtml = "";
+                    if (!d.constraints.length) {
+                        cHtml = '<div class="text-white-50 p-4">No primary key, unique or foreign key constraints.</div>';
+                    } else {
+                        cHtml = `
+                                    <table class="table table-dark table-hover mb-0">
+                                        <thead><tr><th>Name</th><th>Type</th><th>Column</th><th>References</th></tr></thead>
+                                        <tbody>
+                                `;
+                        d.constraints.forEach(function(row) {
+                            const ref = row.foreignTable
+                                ? `${escapeHtml(row.foreignSchema)}.${escapeHtml(row.foreignTable)}.${escapeHtml(row.foreignColumn)}`
+                                : "";
+                            cHtml += `
+                                        <tr>
+                                            <td class="font-monospace small">${escapeHtml(row.name)}</td>
+                                            <td><span class="badge bg-secondary">${escapeHtml(row.type)}</span></td>
+                                            <td>${escapeHtml(row.column || "")}</td>
+                                            <td class="text-white-50">${ref}</td>
+                                        </tr>
+                                    `;
+                        });
+                        cHtml += `</tbody></table>`;
+                    }
+
+                    if (d.checks.length) {
+                        cHtml += `<div class="p-3 text-white-50 small fw-bold">CHECK constraints</div>
+                                           <table class="table table-dark table-hover mb-0"><tbody>`;
+                        d.checks.forEach(function(row) {
+                            cHtml += `<tr><td class="font-monospace small">${escapeHtml(row.name)}</td>
+                                               <td class="font-monospace small text-white-50">${escapeHtml(row.definition)}</td></tr>`;
+                        });
+                        cHtml += `</tbody></table>`;
+                    }
+
+                    $("#structurePaneConstraints").html(cHtml);
+
+                    let iHtml = "";
+                    if (!d.indexes.length) {
+                        iHtml = '<div class="text-white-50 p-4">No indexes on this table.</div>';
+                    } else {
+                        iHtml = `<table class="table table-dark table-hover mb-0"><tbody>`;
+                        d.indexes.forEach(function(row) {
+                            iHtml += `<tr><td class="font-monospace small">${escapeHtml(row.name)}</td>
+                                               <td class="font-monospace small text-white-50">${escapeHtml(row.definition)}</td></tr>`;
+                        });
+                        iHtml += `</tbody></table>`;
+                    }
+                    $("#structurePaneIndexes").html(iHtml);
+                }
+            );
+        }
+
+        function switchStructureTab(tab) {
+            ["columns", "constraints", "indexes"].forEach(function(t) {
+                $("#structurePane" + capitalize(t)).toggle(t === tab);
+                $("#structTab" + capitalize(t) + "Btn").toggleClass("active text-white", t === tab);
+                $("#structTab" + capitalize(t) + "Btn").toggleClass("text-white-50", t !== tab);
+            });
+        }
+
+
+        // ============================================================
+        // TABLE DATA
+        // ============================================================
+
+        function openTableData(schema, table) {
+
+            currentTableSchema = schema;
+            currentTableName = table;
+            currentTablePage = 1;
+
+            $("#tableDataTitle").text(table);
+            $("#tableDataSubtitle").text(schema + "." + table);
+            $("#tableSearch").val("");
+
+            const modal = new bootstrap.Modal(document.getElementById("tableDataModal"));
+            modal.show();
+
+            loadTableData(1);
+        }
+
+        function loadTableData(page) {
+
+            currentTablePage = page || 1;
+            const search = $("#tableSearch").val() || "";
+            const pageSize = $("#pageSize").val() || 50;
+
+            $("#tableDataTable tbody").html(`
+                        <tr><td colspan="100" class="text-center py-5">
+                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                            <div class="small text-muted mt-2">Loading records...</div>
+                        </td></tr>
+                    `);
+
+            apiGet(
+                "/api/dbmanager/table-data" +
+                "?schema=" + encodeURIComponent(currentTableSchema) +
+                "&table=" + encodeURIComponent(currentTableName) +
+                "&page=" + currentTablePage +
+                "&pageSize=" + pageSize +
+                "&search=" + encodeURIComponent(search),
+
+                function(res) {
+
+                    const columns = res.columns || [];
+                    const rows = res.data || [];
+
+                    currentTableData = { columns, rows };
+
+                    let head = "<tr>";
+                    columns.forEach(function(column) { head += `<th>${escapeHtml(column)}</th>`; });
+                    head += "</tr>";
+                    $("#tableDataTable thead").html(head);
+
+                    if (!rows.length) {
+                        $("#tableDataTable tbody").html(`
+                                    <tr><td colspan="${columns.length || 1}" class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>No records found.
+                                    </td></tr>
+                                `);
+                    } else {
+                        let body = "";
+                        rows.forEach(function(row) {
+                            body += "<tr>";
+                            columns.forEach(function(column) {
+                                const value = row[column];
+                                const isNull = value === null || value === undefined;
+                                const display = formatCellValue(value);
+                                body += `<td class="${isNull ? "is-null" : ""}" title="${escapeHtml(display)}"
+                                                     onclick="copyToClipboard('${jsQuote(display)}')">${isNull ? "NULL" : escapeHtml(display)}</td>`;
+                            });
+                            body += "</tr>";
+                        });
+                        $("#tableDataTable tbody").html(body);
+                    }
+
+                    const p = res.pagination;
+                    $("#tableRecordInfo").text(formatNumber(p.totalRows) + " total records");
+                    $("#pageInfo").text("Page " + p.page + " of " + Math.max(p.totalPages, 1));
+                    $("#prevPageBtn").prop("disabled", p.page <= 1);
+                    $("#nextPageBtn").prop("disabled", p.page >= p.totalPages);
+                }
+            );
+        }
+
+        function changeTablePage(direction) {
+            const next = currentTablePage + direction;
+            if (next < 1) return;
+            loadTableData(next);
+        }
+
+        function exportTableDataCsv() {
+
+            const { columns, rows } = currentTableData;
+            if (!rows.length) { showToast("Nothing to export."); return; }
+
+            const csvRows = [columns.map(csvEscape).join(",")];
+            rows.forEach(function(row) {
+                csvRows.push(columns.map(function(c) { return csvEscape(formatCellValue(row[c])); }).join(","));
+            });
+
+            downloadTextFile(currentTableName + ".csv", csvRows.join("\n"));
+        }
+
+        function csvEscape(value) {
+            const s = String(value ?? "");
+            if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+            return s;
+        }
+
+        function downloadTextFile(filename, content) {
+            const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+
+        // ============================================================
+        // VIEWS
+        // ============================================================
+
+        function loadViews() {
+            showLoading();
+            const schema = encodeURIComponent(selectedSchema());
+
+            apiGet("/api/dbmanager/views?schema=" + schema, function(res) {
+
+                if (!res.data.length) { showEmpty("bi-layout-text-window-reverse", "No views found."); return; }
+
+                let html = `
+                            <div class="table-responsive">
+                                <table class="table db-table table-hover align-middle">
+                                    <thead class="table-light"><tr><th>Schema</th><th>View</th><th class="text-end">Action</th></tr></thead>
+                                    <tbody>
+                        `;
+
+                res.data.forEach(function(row) {
+                    html += `
+                                <tr class="object-row">
+                                    <td><span class="badge schema-badge">${escapeHtml(row.schema)}</span></td>
+                                    <td class="fw-semibold"><i class="bi bi-layout-text-window-reverse text-info me-1"></i>${escapeHtml(row.name)}</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-dark"
+                                                onclick="showDefinition('view','${jsQuote(row.schema)}','${jsQuote(row.name)}')">
+                                            <i class="bi bi-code-slash me-1"></i>Definition
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                });
+
+                html += `</tbody></table></div>`;
+                $("#contentArea").html(html);
+            });
+        }
+
+
+        // ============================================================
+        // FUNCTIONS
+        // ============================================================
+
+        function loadFunctions() {
+            showLoading();
+            const schema = encodeURIComponent(selectedSchema());
+
+            apiGet("/api/dbmanager/functions?schema=" + schema, function(res) {
+
+                if (!res.data.length) { showEmpty("bi-braces", "No functions found."); return; }
+
+                let html = `
+                            <div class="table-responsive">
+                                <table class="table db-table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr><th>Schema</th><th>Function</th><th>Arguments</th><th>Return Type</th><th class="text-end">Action</th></tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+
+                res.data.forEach(function(row) {
+                    html += `
+                                <tr>
+                                    <td><span class="badge schema-badge">${escapeHtml(row.schema)}</span></td>
+                                    <td class="fw-semibold"><i class="bi bi-braces text-warning me-1"></i>${escapeHtml(row.name)}</td>
+                                    <td class="font-monospace small">${escapeHtml(row.arguments || "")}</td>
+                                    <td>${escapeHtml(row.returnType || "")}</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-dark"
+                                                onclick="showDefinition('function','${jsQuote(row.schema)}','${jsQuote(row.name)}')">
+                                            <i class="bi bi-code-slash me-1"></i>Definition
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                });
+
+                html += `</tbody></table></div>`;
+                $("#contentArea").html(html);
+            });
+        }
+
+
+        // ============================================================
+        // PROCEDURES
+        // ============================================================
+
+        function loadProcedures() {
+            showLoading();
+            const schema = encodeURIComponent(selectedSchema());
+
+            apiGet("/api/dbmanager/procedures?schema=" + schema, function(res) {
+
+                if (!res.data.length) { showEmpty("bi-terminal", "No procedures found."); return; }
+
+                let html = `
+                            <div class="table-responsive">
+                                <table class="table db-table table-hover align-middle">
+                                    <thead class="table-light"><tr><th>Schema</th><th>Procedure</th><th>Arguments</th><th class="text-end">Action</th></tr></thead>
+                                    <tbody>
+                        `;
+
+                res.data.forEach(function(row) {
+                    html += `
+                                <tr>
+                                    <td><span class="badge schema-badge">${escapeHtml(row.schema)}</span></td>
+                                    <td class="fw-semibold"><i class="bi bi-terminal text-danger me-1"></i>${escapeHtml(row.name)}</td>
+                                    <td class="font-monospace small">${escapeHtml(row.arguments || "")}</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-dark"
+                                                onclick="showDefinition('procedure','${jsQuote(row.schema)}','${jsQuote(row.name)}')">
+                                            <i class="bi bi-code-slash me-1"></i>Definition
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                });
+
+                html += `</tbody></table></div>`;
+                $("#contentArea").html(html);
+            });
+        }
+
+
+        // ============================================================
+        // TRIGGERS
+        // ============================================================
+
+        function loadTriggers() {
+            showLoading();
+            const schema = encodeURIComponent(selectedSchema());
+
+            apiGet("/api/dbmanager/triggers?schema=" + schema, function(res) {
+
+                if (!res.data.length) { showEmpty("bi-lightning-charge", "No triggers found."); return; }
+
+                let html = `
+                            <div class="table-responsive">
+                                <table class="table db-table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr><th>Schema</th><th>Trigger</th><th>Table</th><th>Event</th><th>Timing</th><th class="text-end">Action</th></tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+
+                res.data.forEach(function(row) {
+                    html += `
+                                <tr>
+                                    <td><span class="badge schema-badge">${escapeHtml(row.schema)}</span></td>
+                                    <td class="fw-semibold"><i class="bi bi-lightning-charge text-warning me-1"></i>${escapeHtml(row.name)}</td>
+                                    <td>${escapeHtml(row.tableName || "")}</td>
+                                    <td><span class="badge bg-info-subtle text-info">${escapeHtml(row.event || "")}</span></td>
+                                    <td>${escapeHtml(row.timing || "")}</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-dark"
+                                                onclick="showDefinition('trigger','${jsQuote(row.schema)}','${jsQuote(row.name)}')">
+                                            <i class="bi bi-code-slash me-1"></i>Details
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                });
+
+                html += `</tbody></table></div>`;
+                $("#contentArea").html(html);
+            });
+        }
+
+
+        // ============================================================
+        // INDEXES
+        // ============================================================
+
+        function loadIndexes() {
+            showLoading();
+            const schema = encodeURIComponent(selectedSchema());
+
+            apiGet("/api/dbmanager/indexes?schema=" + schema, function(res) {
+
+                if (!res.data.length) { showEmpty("bi-list-columns-reverse", "No indexes found."); return; }
+
+                let html = `
+                            <div class="table-responsive">
+                                <table class="table db-table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr><th>Schema</th><th>Table</th><th>Index</th><th>Type</th><th>Definition</th><th class="text-end">Action</th></tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+
+                res.data.forEach(function(row) {
+                    let badges = "";
+                    if (row.isPrimary) badges += '<span class="badge bg-primary me-1">PK</span>';
+                    else if (row.isUnique) badges += '<span class="badge bg-secondary me-1">UNIQUE</span>';
+                    badges += `<span class="badge bg-light text-dark border">${escapeHtml(row.method || "")}</span>`;
+
+                    html += `
+                                <tr>
+                                    <td><span class="badge schema-badge">${escapeHtml(row.schema)}</span></td>
+                                    <td class="fw-semibold">${escapeHtml(row.tableName)}</td>
+                                    <td><i class="bi bi-list-columns-reverse text-dark me-1"></i>${escapeHtml(row.name)}</td>
+                                    <td>${badges}</td>
+                                    <td><code class="small">${escapeHtml(row.definition || "")}</code></td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-dark"
+                                                onclick="showDefinition('index','${jsQuote(row.schema)}','${jsQuote(row.name)}')">
+                                            <i class="bi bi-code-slash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                });
+
+                html += `</tbody></table></div>`;
+                $("#contentArea").html(html);
+            });
+        }
+
+
+        // ============================================================
+        // OBJECT DEFINITION
+        // ============================================================
+
+        let lastDefinitionText = "";
+
+        function showDefinition(type, schema, name) {
+
+            $("#definitionTitle").text(capitalize(type) + " Definition");
+            $("#definitionSubtitle").text(schema + "." + name);
+            $("#definitionContent").text("Loading definition...");
+
+            const modal = new bootstrap.Modal(document.getElementById("objectDefinitionModal"));
+            modal.show();
+
+            apiGet(
+                "/api/dbmanager/object-definition" +
+                "?type=" + encodeURIComponent(type) +
+                "&schema=" + encodeURIComponent(schema) +
+                "&name=" + encodeURIComponent(name),
+
+                function(res) {
+                    lastDefinitionText = res.data.definition || "No definition available.";
+                    $("#definitionContent").text(lastDefinitionText);
+                }
+            );
+        }
+
+        function copyDefinitionToClipboard() { copyToClipboard(lastDefinitionText); }
+
+        function openDefinitionInSqlEditor() {
+            const modalEl = document.getElementById("objectDefinitionModal");
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            openSection("sql");
+            setTimeout(function() { if (sqlEditor) sqlEditor.setValue(lastDefinitionText); }, 50);
+        }
+
+
+        // ============================================================
+        // SQL CONSOLE
+        // ============================================================
+
+        function loadSqlConsole() {
+
+            $("#contentArea").html(`
+                        <div class="sql-console-shell" id="sqlConsoleShell">
+
+                            <div class="sql-console-toolbar">
+                                <button class="btn btn-sm btn-primary" id="sqlRunBtn" onclick="executeSql()" title="Run (Ctrl+Enter or F5)">
+                                    <i class="bi bi-play-fill me-1"></i>Execute
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" onclick="clearSqlEditor()" title="Clear the editor">
+                                    <i class="bi bi-x-circle me-1"></i>Clear
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" onclick="formatSqlEditor()" title="Format SQL">
+                                    <i class="bi bi-text-indent-left me-1"></i>Format
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" onclick="saveCurrentQuery()" title="Pin this query in History">
+                                    <i class="bi bi-bookmark-plus me-1"></i>Save
+                                </button>
+                                <span class="text-white-50 small ms-2 d-none d-lg-inline">
+                                    <kbd>Ctrl</kbd>+<kbd>Enter</kbd> or <kbd>F5</kbd> to run &middot; select text to run only that
+                                </span>
+                                <div class="ms-auto d-flex gap-2">
+                                    <span class="badge bg-secondary-subtle text-secondary" id="sqlLastRunBadge">No query executed yet</span>
+                                    <button class="btn btn-sm btn-outline-light" onclick="toggleSqlFullscreen()" title="Fullscreen (Esc to exit)">
+                                        <i class="bi bi-arrows-fullscreen me-1"></i>Fullscreen
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="sql-console-editor-wrap" id="sqlEditorWrap">
+                                <textarea id="sqlEditor"></textarea>
+                            </div>
+
+                            <div class="sql-console-resize-handle" id="sqlResizeHandle" title="Drag to resize">
+                                <i class="bi bi-grip-horizontal"></i>
+                            </div>
+
+                            <div class="sql-status-bar" id="sqlExecutionStatus">
+                                <i class="bi bi-terminal me-1"></i>Ready.
+                            </div>
+
+                            <div class="sql-result-tabs">
+                                <ul class="nav nav-tabs border-0">
+                                    <li class="nav-item"><button class="nav-link active" id="sqlTabResultsBtn" onclick="switchSqlTab('results')">
+                                        <i class="bi bi-terminal-split me-1"></i>Terminal
+                                    </button></li>
+                                    <li class="nav-item"><button class="nav-link" id="sqlTabHistoryBtn" onclick="switchSqlTab('history')">
+                                        <i class="bi bi-clock-history me-1"></i>History <span class="badge bg-secondary ms-1" id="sqlHistoryCountBadge">0</span>
+                                    </button></li>
+                                </ul>
+                                <button class="btn btn-sm btn-link text-muted" id="clearTerminalBtn" onclick="clearSqlTerminal()" title="Clear terminal log">
+                                    <i class="bi bi-eraser me-1"></i>Clear log
+                                </button>
+                            </div>
+
+                            <div class="sql-result-panel" id="sqlPaneResults">
+                                <div class="sql-empty-state">
+                                    <i class="bi bi-terminal d-block mb-2"></i>
+                                    No query executed yet. Write some SQL above and hit <strong>Execute</strong>.
+                                </div>
+                            </div>
+                            <div class="sql-result-panel" id="sqlPaneHistory" style="display:none;"></div>
+
+                        </div>
+                    `);
+
+            sqlEditor = CodeMirror.fromTextArea(document.getElementById("sqlEditor"), {
+                mode: "text/x-pgsql",
+                theme: "dracula",
+                lineNumbers: true,
+                matchBrackets: true,
+                styleActiveLine: true,
+                indentUnit: 4,
+                extraKeys: {
+                    "Ctrl-Enter": function() { executeSql(); },
+                    "F5": function() { executeSql(); },
+                    "Cmd-Enter": function() { executeSql(); }
+                }
+            });
+
+            sqlEditor.setValue("SELECT *\nFROM information_schema.tables\nLIMIT 20;");
+
+            setupSqlResizeHandle();
+            renderSqlHistoryPane();
+            updateSqlHistoryBadge();
+        }
+
+        function setupSqlResizeHandle() {
+
+            const handle = document.getElementById("sqlResizeHandle");
+            if (!handle) return;
+
+            let dragging = false;
+            let startY = 0;
+            let startHeight = 0;
+
+            handle.addEventListener("mousedown", function(e) {
+                dragging = true;
+                startY = e.clientY;
+                startHeight = sqlEditor.getWrapperElement().offsetHeight;
+                document.body.style.userSelect = "none";
+            });
+
+            document.addEventListener("mousemove", function(e) {
+                if (!dragging) return;
+                const delta = e.clientY - startY;
+                const newHeight = Math.max(140, Math.min(startHeight + delta, window.innerHeight - 260));
+                sqlEditor.getWrapperElement().style.height = newHeight + "px";
+                sqlEditor.refresh();
+            });
+
+            document.addEventListener("mouseup", function() {
+                if (!dragging) return;
+                dragging = false;
+                document.body.style.userSelect = "";
+            });
+        }
+
+        function switchSqlTab(tab) {
+            ["results", "history"].forEach(function(t) {
+                $("#sqlPane" + capitalize(t)).toggle(t === tab);
+                $("#sqlTab" + capitalize(t) + "Btn").toggleClass("active", t === tab);
+            });
+            $("#clearTerminalBtn").toggle(tab === "results");
+            if (tab === "history") renderSqlHistoryPane();
+        }
+
+        function clearSqlEditor() {
+            if (sqlEditor) sqlEditor.setValue("");
+            setSqlStatus("Ready.", "");
+        }
+
+        function clearSqlTerminal() {
+            $("#sqlPaneResults").html(`
+                        <div class="sql-empty-state">
+                            <i class="bi bi-terminal d-block mb-2"></i>
+                            No query executed yet. Write some SQL above and hit <strong>Execute</strong>.
+                        </div>
+                    `);
+        }
+
+        function formatSqlEditor() {
+            if (!sqlEditor) return;
+            try {
+                const selected = sqlEditor.getSelection();
+                const source = selected && selected.trim() ? selected : sqlEditor.getValue();
+                const formatted = window.sqlFormatter ? sqlFormatter.format(source) : source;
+                if (selected && selected.trim()) sqlEditor.replaceSelection(formatted);
+                else sqlEditor.setValue(formatted);
+                showCopyToast("SQL formatted.");
+            } catch (e) {
+                showCopyToast("Could not format this SQL.");
+            }
+        }
+
+        function toggleSqlFullscreen(force) {
+            const root = document.getElementById("dbManagerRoot");
+            const shouldBeFullscreen = typeof force === "boolean" ? force : !root.classList.contains("sql-fullscreen-active");
+            root.classList.toggle("sql-fullscreen-active", shouldBeFullscreen);
+            if (sqlEditor) setTimeout(function() { sqlEditor.refresh(); }, 50);
+        }
+
+
+        // ------------------------------------------------------------
+        // EXECUTE
+        // ------------------------------------------------------------
+
+        function getSqlToRun() {
+            if (!sqlEditor) return "";
+            const selected = sqlEditor.getSelection();
+            return (selected && selected.trim()) ? selected.trim() : sqlEditor.getValue().trim();
+        }
+
+        function isDestructiveSql(sql) {
+            const trimmed = sql.trim();
+
+            if (/^(DROP|TRUNCATE)\b/i.test(trimmed)) {
+                return "DROP/TRUNCATE statements permanently remove objects or data.";
+            }
+            if (/^DELETE\b/i.test(trimmed) && !/\bWHERE\b/i.test(trimmed)) {
+                return "DELETE without a WHERE clause will remove every row in the table.";
+            }
+            if (/^UPDATE\b/i.test(trimmed) && !/\bWHERE\b/i.test(trimmed)) {
+                return "UPDATE without a WHERE clause will modify every row in the table.";
+            }
+            return null;
+        }
+
+        function executeSql() {
+
+            if (sqlRunning) return;
+
+            const sql = getSqlToRun();
+
+            if (!sql) {
+                setSqlStatus("Please enter a SQL query.", "error");
+                return;
+            }
+
+            pendingSql = sql;
+
+            const reason = isDestructiveSql(sql);
+
+            if (reason) {
+                $("#sqlConfirmReason").text(reason);
+                const modal = new bootstrap.Modal(document.getElementById("sqlConfirmModal"));
+                modal.show();
+                return;
+            }
+
+            runPendingSql();
+        }
+
+        function confirmExecuteSql() {
+            const modalEl = document.getElementById("sqlConfirmModal");
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            runPendingSql();
+        }
+
+        function runPendingSql() {
+
+            if (sqlRunning) return;
+            sqlRunning = true;
+
+            $("#sqlRunBtn").prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1"></span>Running...');
+            setSqlStatus("Executing query...", "running");
+
+            const startedAt = performance.now();
+            const sqlThatRan = pendingSql;
+
+            $.ajax({
+                url: "/api/dbmanager/execute",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ sql: sqlThatRan }),
+
+                success: function(res) {
+
+                    const clientMs = Math.round(performance.now() - startedAt);
+                    const elapsed = res.executionTimeMs !== undefined ? res.executionTimeMs
+                        : (res.elapsedMs !== undefined ? res.elapsedMs : clientMs);
+
+                    if (res.type === "result") {
+
+                        setSqlStatus(`✓ ${res.command || "SELECT"} executed successfully — ${res.rowCount} row(s) returned — ${elapsed} ms`, "success");
+                        appendTerminalEntry(sqlThatRan, buildResultEntryHtml(res, elapsed));
+                        addSqlHistoryEntry(sqlThatRan, true, elapsed, `${res.rowCount} rows`);
+
+                    } else {
+
+                        const label = res.command || "Command";
+                        setSqlStatus(`✓ ${label} executed successfully — ${res.affectedRows} row(s) affected — ${elapsed} ms`, "success");
+                        appendTerminalEntry(sqlThatRan, buildCommandEntryHtml(res, elapsed));
+                        addSqlHistoryEntry(sqlThatRan, true, elapsed, `${res.affectedRows} affected`);
+
+                        refreshAfterWrite(res);
+                    }
+
+                    $("#sqlLastRunBadge").removeClass("bg-danger-subtle text-danger").addClass("bg-success-subtle text-success")
+                        .text(`Last run: ${elapsed} ms`);
+
+                    switchSqlTab("results");
+                },
+
+                error: function(xhr) {
+
+                    const clientMs = Math.round(performance.now() - startedAt);
+                    let message = "SQL execution failed.";
+                    let elapsed = clientMs;
+
+                    if (xhr.responseJSON) {
+                        if (xhr.responseJSON.message) message = xhr.responseJSON.message;
+                        if (xhr.responseJSON.executionTimeMs !== undefined) elapsed = xhr.responseJSON.executionTimeMs;
+                        else if (xhr.responseJSON.elapsedMs !== undefined) elapsed = xhr.responseJSON.elapsedMs;
+                    }
+
+                    if (xhr.status === 401) {
+                        message = "Your session has expired. Please log in again.";
+                    }
+
+                    setSqlStatus(`✕ SQL execution failed — ${elapsed} ms`, "error");
+                    appendTerminalEntry(sqlThatRan, buildErrorEntryHtml(message, elapsed));
+
+                    $("#sqlLastRunBadge").removeClass("bg-success-subtle text-success").addClass("bg-danger-subtle text-danger")
+                        .text("Last run failed");
+
+                    addSqlHistoryEntry(sqlThatRan, false, elapsed, message);
+                    switchSqlTab("results");
+                },
+
+                complete: function() {
+                    sqlRunning = false;
+                    $("#sqlRunBtn").prop("disabled", false).html('<i class="bi bi-play-fill me-1"></i>Execute');
+                }
+            });
+        }
+
+        function setSqlStatus(text, kind) {
+            const el = $("#sqlExecutionStatus");
+            el.removeClass("status-success status-error status-running");
+            if (kind === "success") el.addClass("status-success");
+            if (kind === "error") el.addClass("status-error");
+            if (kind === "running") el.addClass("status-running");
+            const icon = kind === "success" ? "bi-check-circle" : kind === "error" ? "bi-x-circle" : kind === "running" ? "bi-hourglass-split" : "bi-terminal";
+            el.html(`<i class="bi ${icon} me-1"></i>${escapeHtml(text)}`);
+        }
+
+
+        // ------------------------------------------------------------
+        // AFTER-WRITE REFRESH
+        //
+        // Keeps the SQL editor content and history untouched. Only
+        // refreshes the specific section/table that the statement
+        // actually touched, and never reloads the page.
+        // ------------------------------------------------------------
+
+        const SECTION_BY_OBJECT_KIND = {
+            "view": "views",
+            "materialized view": "views",
+            "function": "functions",
+            "procedure": "procedures",
+            "trigger": "triggers",
+            "index": "indexes",
+            "table": "tables",
+            "schema": "schemas"
+        };
+
+        function refreshAfterWrite(res) {
+
+            // Always keep the Overview counters honest.
+            if (currentSection === "overview") loadOverview();
+
+            const kind = (res.objectKind || "").toLowerCase();
+            const targetSection = SECTION_BY_OBJECT_KIND[kind];
+
+            if (targetSection && currentSection === targetSection) {
+                loadCurrentSection();
+            }
+
+            // If a table data modal happens to be open, refresh it too -
+            // covers INSERT/UPDATE/DELETE against the table being browsed.
+            const tableModalEl = document.getElementById("tableDataModal");
+            if (tableModalEl && tableModalEl.classList.contains("show") && currentTableSchema && currentTableName) {
+                loadTableData(currentTablePage);
+            }
+        }
+
+
+        // ------------------------------------------------------------
+        // TERMINAL LOG (Results tab)
+        // ------------------------------------------------------------
+
+        const MAX_TERMINAL_ENTRIES = 25;
+
+        function appendTerminalEntry(sql, bodyHtml) {
+
+            const time = new Date().toLocaleTimeString();
+
+            const entryHtml = `
+                        <div class="sql-terminal-entry">
+                            <div class="sql-terminal-echo">
+                                <span class="text-muted small">${time}</span>
+                                <pre class="mb-0">${escapeHtml(sql)}</pre>
+                            </div>
+                            ${bodyHtml}
+                        </div>
+                    `;
+
+            const pane = document.getElementById("sqlPaneResults");
+
+            if (pane.querySelector(".sql-empty-state")) pane.innerHTML = "";
+
+            pane.insertAdjacentHTML("afterbegin", entryHtml);
+
+            // Cap the DOM so a long session doesn't get sluggish.
+            const entries = pane.querySelectorAll(".sql-terminal-entry");
+            for (let i = MAX_TERMINAL_ENTRIES; i < entries.length; i++) entries[i].remove();
+
+            pane.scrollTop = 0;
+        }
+
+        function buildResultEntryHtml(res, elapsed) {
+
+            const rows = res.data || [];
+            const columns = res.columns || (rows.length ? Object.keys(rows[0]) : []);
+
+            let html = `
+                        <div class="sql-terminal-status status-success">
+                            <i class="bi bi-check-circle-fill me-1"></i>
+                            ${escapeHtml(res.command || "SELECT")} executed successfully
+                            <span class="sql-terminal-meta">Rows returned: <strong>${res.rowCount}</strong> &middot; ${elapsed} ms</span>
+                        </div>
+                    `;
+
+            if (rows.length) {
+                html += renderDataGrid(columns, rows, "sql-" + Date.now());
+            } else {
+                html += `<div class="text-muted small px-3 pb-2">Query executed successfully but returned no rows.</div>`;
+            }
+
+            return html;
+        }
+
+        function buildCommandEntryHtml(res, elapsed) {
+
+            let html = `
+                        <div class="sql-terminal-status status-success">
+                            <i class="bi bi-check-circle-fill me-1"></i>
+                            ${escapeHtml(res.message || (res.command + " executed successfully."))}
+                            <span class="sql-terminal-meta">Rows affected: <strong>${res.affectedRows}</strong> &middot; ${elapsed} ms</span>
+                        </div>
+                    `;
+
+            if (res.verification && res.verification.data && res.verification.data.length) {
+                html += `
+                            <div class="sql-terminal-subheading">
+                                <i class="bi bi-eye me-1"></i>Updated row(s)
+                            </div>
+                        `;
+                html += renderDataGrid(res.verification.columns, res.verification.data, "verify-" + Date.now());
+            }
+
+            return html;
+        }
+
+        function buildErrorEntryHtml(message, elapsed) {
+            return `
+                        <div class="sql-terminal-status status-error">
+                            <i class="bi bi-x-circle-fill me-1"></i>
+                            SQL execution failed
+                            <span class="sql-terminal-meta">${elapsed} ms</span>
+                        </div>
+                        <div class="sql-terminal-error">
+                            <pre class="mb-2">${escapeHtml(message)}</pre>
+                            <button class="btn btn-sm btn-outline-danger" onclick="copyToClipboard('${jsQuote(message)}')">
+                                <i class="bi bi-clipboard me-1"></i>Copy error
+                            </button>
+                        </div>
+                    `;
+        }
+
+
+        // ------------------------------------------------------------
+        // SHARED DATA GRID (used by SQL results + verification rows)
+        // ------------------------------------------------------------
+
+        function renderDataGrid(columns, rows, gridId) {
+
+            window["__grid_" + gridId] = { columns, rows };
+
+            let html = `
+                        <div class="data-grid-toolbar">
+                            <span class="small text-muted">${rows.length} row(s)</span>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="copyGridResult('${gridId}')">
+                                    <i class="bi bi-clipboard me-1"></i>Copy All
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="exportGridCsv('${gridId}')">
+                                    <i class="bi bi-download me-1"></i>Export CSV
+                                </button>
+                            </div>
+                        </div>
+                        <div class="data-grid-scroll">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead><tr>
+                    `;
+
+            columns.forEach(function(c) { html += `<th>${escapeHtml(c)}</th>`; });
+            html += `</tr></thead><tbody>`;
+
+            rows.forEach(function(row) {
+                html += "<tr>";
+                columns.forEach(function(c) {
+                    html += renderGridCell(row[c]);
+                });
+                html += "</tr>";
+            });
+
+            html += `</tbody></table></div>`;
+            return html;
+        }
+
+        function renderGridCell(value) {
+
+            if (value === null || value === undefined) {
+                return `<td class="is-null" onclick="copyToClipboard('')">NULL</td>`;
+            }
+
+            if (typeof value === "boolean") {
+                const cls = value ? "bool-true" : "bool-false";
+                return `<td class="${cls}" onclick="copyToClipboard('${value}')">${value}</td>`;
+            }
+
+            if (typeof value === "object") {
+                let json = "";
+                try { json = JSON.stringify(value); } catch { json = String(value); }
+                const pretty = escapeHtml(JSON.stringify(value, null, 2));
+                return `<td class="is-json" title="${escapeHtml(json)}" onclick="copyToClipboard('${jsQuote(json)}')"><code>${escapeHtml(json)}</code></td>`;
+            }
+
+            const display = String(value);
+            return `<td title="${escapeHtml(display)}" onclick="copyToClipboard('${jsQuote(display)}')">${escapeHtml(display)}</td>`;
+        }
+
+        function copyGridResult(gridId) {
+            const grid = window["__grid_" + gridId];
+            if (!grid || !grid.rows.length) return;
+            const lines = [grid.columns.join("\t")];
+            grid.rows.forEach(function(row) {
+                lines.push(grid.columns.map(function(c) { return formatCellValue(row[c]); }).join("\t"));
+            });
+            copyToClipboard(lines.join("\n"));
+        }
+
+        function exportGridCsv(gridId) {
+            const grid = window["__grid_" + gridId];
+            if (!grid || !grid.rows.length) { showCopyToast("Nothing to export."); return; }
+            const csvRows = [grid.columns.map(csvEscape).join(",")];
+            grid.rows.forEach(function(row) {
+                csvRows.push(grid.columns.map(function(c) { return csvEscape(formatCellValue(row[c])); }).join(","));
+            });
+            downloadTextFile("query_result.csv", csvRows.join("\n"));
+        }
+
+
+        // ------------------------------------------------------------
+        // QUERY HISTORY (localStorage) — with favorites/pins
+        // ------------------------------------------------------------
+
+        function loadSqlHistoryFromStorage() {
+            try {
+                const raw = localStorage.getItem(SQL_HISTORY_KEY);
+                sqlHistory = raw ? JSON.parse(raw) : [];
+            } catch { sqlHistory = []; }
+        }
+
+        function persistSqlHistory() {
+            try { localStorage.setItem(SQL_HISTORY_KEY, JSON.stringify(sqlHistory)); } catch { /* storage may be unavailable */ }
+            updateSqlHistoryBadge();
+        }
+
+        function updateSqlHistoryBadge() {
+            $("#sqlHistoryCountBadge").text(sqlHistory.length);
+        }
+
+        function addSqlHistoryEntry(sql, success, elapsedMs, note) {
+            sqlHistory.unshift({
+                sql,
+                success,
+                elapsedMs,
+                note,
+                favorite: false,
+                at: new Date().toISOString()
+            });
+            if (sqlHistory.length > SQL_HISTORY_LIMIT) sqlHistory = sqlHistory.slice(0, SQL_HISTORY_LIMIT);
+            persistSqlHistory();
+            if ($("#sqlTabHistoryBtn").hasClass("active")) renderSqlHistoryPane();
+        }
+
+        function renderSqlHistoryPane() {
+
+            if (!sqlHistory.length) {
+                $("#sqlPaneHistory").html(`
+                            <div class="sql-empty-state">
+                                <i class="bi bi-clock-history d-block mb-2"></i>
+                                No query history yet — queries you run or save will show up here.
+                            </div>
+                        `);
+                return;
+            }
+
+            const sorted = sqlHistory.map(function(item, index) { return { item, index }; })
+                .sort(function(a, b) { return (b.item.favorite ? 1 : 0) - (a.item.favorite ? 1 : 0); });
+
+            let html = `<div class="d-flex justify-content-end p-2">
+                                    <button class="btn btn-sm btn-outline-danger" onclick="clearSqlHistory()">
+                                        <i class="bi bi-trash me-1"></i>Clear History
+                                    </button>
+                                </div>`;
+
+            sorted.forEach(function(entry) {
+                const item = entry.item;
+                const index = entry.index;
+                const when = new Date(item.at).toLocaleString();
+                const icon = item.success ? '<i class="bi bi-check-circle text-success me-1"></i>' : '<i class="bi bi-x-circle text-danger me-1"></i>';
+                const starClass = item.favorite ? "bi-star-fill text-warning" : "bi-star text-muted";
+
+                html += `
+                            <div class="sql-history-item">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div class="flex-grow-1" style="cursor:pointer;" onclick="loadHistoryEntry(${index})">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="small text-muted">${icon}${when}</span>
+                                            <span class="small text-muted">${item.elapsedMs} ms — ${escapeHtml(item.note || "")}</span>
+                                        </div>
+                                        <span class="hist-sql">${escapeHtml(item.sql)}</span>
+                                    </div>
+                                    <button class="btn btn-sm btn-link p-0" onclick="toggleHistoryFavorite(${index}); event.stopPropagation();" title="Pin to top">
+                                        <i class="bi ${starClass}"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+            });
+
+            $("#sqlPaneHistory").html(html);
+        }
+
+        function toggleHistoryFavorite(index) {
+            if (!sqlHistory[index]) return;
+            sqlHistory[index].favorite = !sqlHistory[index].favorite;
+            persistSqlHistory();
+            renderSqlHistoryPane();
+        }
+
+        function loadHistoryEntry(index) {
+            const item = sqlHistory[index];
+            if (item && sqlEditor) {
+                sqlEditor.setValue(item.sql);
+                switchSqlTab("results");
+                showCopyToast("Query loaded into editor.");
+            }
+        }
+
+        function clearSqlHistory() {
+            sqlHistory = [];
+            persistSqlHistory();
+            renderSqlHistoryPane();
+        }
+
+        function saveCurrentQuery() {
+            if (!sqlEditor) return;
+            const sql = sqlEditor.getValue().trim();
+            if (!sql) { showCopyToast("Nothing to save."); return; }
+            addSqlHistoryEntry(sql, true, 0, "saved");
+            sqlHistory[0].favorite = true;
+            persistSqlHistory();
+            showCopyToast("Query pinned in History.");
+        }
+
+
+
+        // ============================================================
+        // UI HELPERS
+        // ============================================================
+
+        function showLoading() {
+            $("#contentArea").html(`
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary"></div>
+                            <div class="text-muted small mt-2">Loading...</div>
+                        </div>
+                    `);
+        }
+
+        function showEmpty(icon, message) {
+            $("#contentArea").html(`
+                        <div class="empty-state">
+                            <i class="bi ${icon} d-block mb-3"></i>
+                            <div>${escapeHtml(message)}</div>
+                        </div>
+                    `);
+        }
+
+        function showError(message) {
+            $("#contentArea").html(`
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-circle me-1"></i>${escapeHtml(message)}
+                        </div>
+                    `);
+        }
+
+        // A small floating toast, used for copy confirmations and other
+        // quick one-line feedback that doesn't belong in an alert box.
+        function showCopyToast(message) {
+
+            let container = document.getElementById("dbToastContainer");
+
+            if (!container) {
+                container = document.createElement("div");
+                container.id = "dbToastContainer";
+                container.className = "db-toast-container";
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement("div");
+            toast.className = "db-toast";
+            toast.innerHTML = `<i class="bi bi-check2-circle me-2"></i>${escapeHtml(message)}`;
+            container.appendChild(toast);
+
+            requestAnimationFrame(function() { toast.classList.add("show"); });
+
+            setTimeout(function() {
+                toast.classList.remove("show");
+                setTimeout(function() { toast.remove(); }, 200);
+            }, 2200);
+        }
+
+        // Back-compat alias — older calls in this file use showToast().
+        function showToast(message) { showCopyToast(message); }
+
+        function copyToClipboard(text) {
+            if (text === "" || text === null || text === undefined) return;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(function() { showCopyToast("Copied to clipboard."); })
+                    .catch(function() { fallbackCopy(text); });
+            } else {
+                fallbackCopy(text);
+                showCopyToast("Copied to clipboard.");
+            }
+        }
+
+        function fallbackCopy(text) {
+            const el = document.createElement("textarea");
+            el.value = text;
+            el.style.position = "fixed";
+            el.style.opacity = "0";
+            document.body.appendChild(el);
+            el.select();
+            try { document.execCommand("copy"); } catch { /* no-op */ }
+            document.body.removeChild(el);
+        }
+
+        function formatNumber(value) { return Number(value || 0).toLocaleString(); }
+
+        function formatCellValue(value) {
+            if (value === null || value === undefined) return "";
+            if (typeof value === "boolean") return value ? "true" : "false";
+            if (typeof value === "object") {
+                try { return JSON.stringify(value); } catch { return String(value); }
+            }
+            return String(value);
+        }
+
+        function capitalize(value) {
+            if (!value) return "";
+            return value.charAt(0).toUpperCase() + value.slice(1);
+        }
+
+        function escapeHtml(value) {
+            if (value === null || value === undefined) return "";
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function jsQuote(value) {
+            return String(value)
+                .replace(/\\/g, "\\\\")
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '\\"');
+        }
+
+    </script>
+
+}
