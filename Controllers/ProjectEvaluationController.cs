@@ -10,5 +10,11 @@ namespace HemFoundation.Controllers
         {
             return View();
         }
+        [HttpGet]
+        public IActionResult GetAnalyticsPartial()
+        {
+            return PartialView("_EvaluationAnalyticsPartial");
+        }
     }
+
 }
