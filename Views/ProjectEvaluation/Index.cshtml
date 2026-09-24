@@ -1,0 +1,382 @@
+﻿@{
+    ViewData["Title"] = "Project Evaluation";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <h2 class="mb-4">Project Evaluation Dashboard</h2>
+
+    <!-- Dashboard Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-white p-3 shadow-sm" style="background-color: #5850ec !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 id="card-sel" class="mb-0">0</h3>
+                        <p class="mb-0">Total SEL Projects</p>
+                    </div>
+                    <i class="bi bi-file-earmark-text fs-1"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white p-3 shadow-sm eval-card" data-type="family-projects" style="cursor:pointer; background-color: #343a40 !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 id="card-family" class="mb-0">0</h3>
+                        <p class="mb-0">Family Projects</p>
+                    </div>
+                    <i class="bi bi-house fs-1"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-dark bg-light p-3 shadow-sm eval-card" data-type="individual-projects" style="cursor:pointer;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 id="card-individual" class="mb-0">0</h3>
+                        <p class="mb-0">Individual Projects</p>
+                    </div>
+                    <i class="bi bi-person fs-1"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white p-3 shadow-sm eval-card" data-type="group-pbl" style="cursor:pointer; background-color: #495057 !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 id="card-group" class="mb-0">0</h3>
+                        <p class="mb-0">Group PBL</p>
+                    </div>
+                    <i class="bi bi-people fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data List & Inspection Section -->
+    <div class="card shadow-sm mb-4" id="inspection-section" style="display:none;">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0" id="section-title">Project List</h5>
+            <div class="d-flex align-items-center">
+                <input type="text" id="searchBox" class="form-control form-control-sm me-2" placeholder="Search by School/Name..." onkeyup="filterProjects()" style="width: 220px;" />
+                <span id="record-count" class="badge bg-light text-dark">Total: 0</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle" id="projects-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>School Name</th>
+                            <th>Title / Course</th>
+                            <th>Student Name</th>
+                            <th>Evaluation Status</th>
+                            <th>Media Player / File</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <!-- Paging Controls -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <button class="btn btn-secondary btn-sm" id="prev-btn" onclick="changePage(-1)">Previous</button>
+                <span id="page-info" class="fw-bold">Page 1 of 1</span>
+                <button class="btn btn-secondary btn-sm" id="next-btn" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evaluated History Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Recently Evaluated History</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="evaluated-table">
+                    <thead>
+                        <tr>
+                            <th>Project ID</th>
+                            <th>Type</th>
+                            <th>Status Color</th>
+                            <th>Marks</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Evaluation -->
+<div class="modal fade" id="evaluateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Evaluate Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalProjId" />
+                <input type="hidden" id="modalProjType" />
+                <input type="hidden" id="modalStudentId" />
+                <input type="hidden" id="modalInstituteId" />
+                <input type="hidden" id="modalCourseName" />
+
+                <div class="mb-3 text-center" id="media-preview-container"></div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Status Color Marking:</label>
+                    <select class="form-select" id="statusColor" onchange="updateMarksDropdown(this.value)">
+                        <option value="Red">Red (Needs Improvement)</option>
+                        <option value="Orange">Orange (Moderate)</option>
+                        <option value="Green">Green (Excellent)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Marks (Points):</label>
+                    <select class="form-select" id="projectMarks"></select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Remarks / Description:</label>
+                    <textarea class="form-control" id="projectDescription" rows="3" placeholder="Enter review description..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveEvaluation()">Save Evaluation</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentType = "";
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalRecords = 0;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            loadDashboardCounts();
+            loadEvaluatedHistory();
+
+            document.querySelectorAll(".eval-card").forEach(card => {
+                card.addEventListener("click", function() {
+                    currentType = this.getAttribute("data-type");
+                    currentPage = 1;
+                    document.getElementById("searchBox").value = "";
+                    fetchProjects();
+                });
+            });
+        });
+
+        function loadDashboardCounts() {
+            fetch('/api/project-evaluations/dashboard-counts')
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        document.getElementById("card-sel").innerText = res.data.totalSelProjects;
+                        document.getElementById("card-family").innerText = res.data.familyProjects;
+                        document.getElementById("card-individual").innerText = res.data.individualProjects;
+                        document.getElementById("card-group").innerText = res.data.groupPbl;
+                    }
+                });
+        }
+
+        function fetchProjects() {
+            document.getElementById("inspection-section").style.display = "block";
+            document.getElementById("section-title").innerText = "Projects List: " + currentType.toUpperCase();
+            let searchTerm = document.getElementById("searchBox").value;
+
+            fetch(`/api/project-evaluations/list/${currentType}?page=${currentPage}&pageSize=${pageSize}&searchTerm=${encodeURIComponent(searchTerm)}`)
+                .then(res => res.json())
+                .then(res => {
+                    let thead = document.querySelector("#projects-table thead");
+                    let tbody = document.querySelector("#projects-table tbody");
+                    tbody.innerHTML = "";
+
+                    if (currentType === 'group-pbl') {
+                        thead.innerHTML = `<tr>
+                                    <th>ID</th>
+                                    <th>Institute / School Name</th>
+                                    <th>Description / Activity</th>
+                                    <th>Team Members</th>
+                                    <th>Evaluation Status</th>
+                                    <th>Media Player / File</th>
+                                    <th>Action</th>
+                                </tr>`;
+                    } else {
+                        thead.innerHTML = `<tr>
+                                    <th>ID</th>
+                                    <th>School Name</th>
+                                    <th>Course / Title</th>
+                                    <th>Student Name</th>
+                                    <th>Evaluation Status</th>
+                                    <th>Media Player / File</th>
+                                    <th>Action</th>
+                                </tr>`;
+                    }
+
+                    if (res.success && res.data.length > 0) {
+                        totalRecords = res.totalRecords;
+                        document.getElementById("record-count").innerText = `Total: ${totalRecords}`;
+
+                        let totalPages = Math.ceil(totalRecords / pageSize);
+                        document.getElementById("page-info").innerText = `Page ${currentPage} of ${totalPages || 1}`;
+
+                        document.getElementById("prev-btn").disabled = currentPage === 1;
+                        document.getElementById("next-btn").disabled = currentPage >= totalPages;
+
+                        res.data.forEach(item => {
+                            let mediaHtml = item.fileLink ? `<a href="${item.fileLink}" target="_blank" class="btn btn-sm btn-outline-info">View File</a>` : 'No Media';
+
+                            if (currentType === 'group-pbl') {
+                                mediaHtml = '';
+                                if (item.imageActivity) mediaHtml += `<a href="${item.imageActivity}" target="_blank" class="btn btn-sm btn-outline-primary me-1">View Image</a>`;
+                                if (item.videoActivity) mediaHtml += `<a href="${item.videoActivity}" target="_blank" class="btn btn-sm btn-outline-success me-1">Play Video</a>`;
+                                if (!item.imageActivity && !item.videoActivity) mediaHtml = 'No Media';
+                            }
+
+                            let statusBadge = item.isEvaluated
+                                ? `<span class="badge bg-${item.evaluatedColor.toLowerCase()}">${item.evaluatedColor} (${item.evaluatedMarks} Marks)</span>`
+                                : `<span class="badge bg-secondary">Pending</span>`;
+
+                            tbody.innerHTML += `<tr>
+                                        <td>${item.id}</td>
+                                        <td>${item.schoolName}</td>
+                                        <td>${item.title}</td>
+                                        <td>${item.firstName} ${item.lastName}</td>
+                                        <td>${statusBadge}</td>
+                                        <td>${mediaHtml}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-dark" onclick='openModal(${item.id}, ${JSON.stringify(item.fileLink || item.videoActivity || item.imageActivity)}, ${item.studentId || 0}, ${item.instituteId || 0}, ${JSON.stringify(item.courseName || "")})'>Evaluate</button>
+                                        </td>
+                                    </tr>`;
+                        });
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="7" class="text-center">No records found</td></tr>`;
+                        document.getElementById("record-count").innerText = `Total: 0`;
+                        document.getElementById("page-info").innerText = `Page 1 of 1`;
+                    }
+                });
+        }
+
+        function filterProjects() {
+            currentPage = 1;
+            fetchProjects();
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            if (currentPage < 1) currentPage = 1;
+            fetchProjects();
+        }
+
+        function openModal(id, fileLink, studentId, instituteId, courseName) {
+            document.getElementById("modalProjId").value = id;
+            document.getElementById("modalProjType").value = currentType;
+            document.getElementById("modalStudentId").value = studentId;
+            document.getElementById("modalInstituteId").value = instituteId;
+            document.getElementById("modalCourseName").value = courseName;
+
+            let previewContainer = document.getElementById("media-preview-container");
+            previewContainer.innerHTML = "";
+
+            if (fileLink) {
+                let lowerLink = fileLink.toLowerCase();
+                if (lowerLink.endsWith(".mp4")) {
+                    previewContainer.innerHTML = `<video width="100%" height="220" controls><source src="${fileLink}" type="video/mp4"></video>`;
+                } else if (lowerLink.endsWith(".jpg") || lowerLink.endsWith(".png") || lowerLink.endsWith(".jpeg")) {
+                    previewContainer.innerHTML = `<img src="${fileLink}" class="img-fluid rounded shadow-sm" style="max-height:220px;" />`;
+                } else if (lowerLink.endsWith(".pdf")) {
+                    previewContainer.innerHTML = `<iframe src="${fileLink}" width="100%" height="250px"></iframe><br/><a href="${fileLink}" target="_blank" class="btn btn-info btn-sm mt-2">Open PDF in New Tab</a>`;
+                } else {
+                    previewContainer.innerHTML = `<a href="${fileLink}" target="_blank" class="btn btn-info btn-sm">Open File in New Tab</a>`;
+                }
+            } else {
+                previewContainer.innerHTML = `<p class="text-muted">No media file attached</p>`;
+            }
+
+            document.getElementById("statusColor").value = "Green";
+            updateMarksDropdown("Green");
+            document.getElementById("projectDescription").value = "";
+
+            var myModal = new bootstrap.Modal(document.getElementById('evaluateModal'));
+            myModal.show();
+        }
+
+        function updateMarksDropdown(color) {
+            let marksSelect = document.getElementById("projectMarks");
+            marksSelect.innerHTML = "";
+            if (color === "Red") {
+                marksSelect.innerHTML = `<option value="0">0 (Red - Zero Points)</option>`;
+            } else if (color === "Orange") {
+                marksSelect.innerHTML = `<option value="1">1</option><option value="2">2</option><option value="3">3</option>`;
+            } else if (color === "Green") {
+                marksSelect.innerHTML = `<option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>`;
+            }
+        }
+
+        function saveEvaluation() {
+            let sId = document.getElementById("modalStudentId").value;
+            let iId = document.getElementById("modalInstituteId").value;
+            let cName = document.getElementById("modalCourseName").value;
+
+            let payload = {
+                ProjectID: parseInt(document.getElementById("modalProjId").value),
+                ProjectType: document.getElementById("modalProjType").value,
+                StudentID: sId && sId !== "0" ? parseInt(sId) : null,
+                InstituteID: iId && iId !== "0" ? parseInt(iId) : null,
+                CourseName: cName,
+                StatusColor: document.getElementById("statusColor").value,
+                Marks: parseInt(document.getElementById("projectMarks").value),
+                Description: document.getElementById("projectDescription").value
+            };
+
+            fetch('/api/project-evaluations/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        alert(res.message);
+                        location.reload();
+                    } else {
+                        alert("Error saving evaluation");
+                    }
+                });
+        }
+
+        function loadEvaluatedHistory() {
+            fetch('/api/project-evaluations/history')
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        let tbody = document.querySelector("#evaluated-table tbody");
+                        tbody.innerHTML = "";
+                        res.data.forEach(item => {
+                            tbody.innerHTML += `<tr>
+                                        <td>${item.projectID}</td>
+                                        <td>${item.projectType}</td>
+                                        <td><span class="badge bg-${item.statusColor.toLowerCase()}">${item.statusColor}</span></td>
+                                        <td>${item.marks}</td>
+                                        <td>${item.description}</td>
+                                        <td>${new Date(item.evaluatedDate).toLocaleDateString()}</td>
+                                    </tr>`;
+                        });
+                    }
+                });
+        }
+    </script>
+}

@@ -256,37 +256,17 @@ namespace HemFoundation.Controllers.Api
                             {
                                 mobileNo = "9999999999";
                             }
-<<<<<<< Updated upstream
+                            
+
+                           
                             if (!string.IsNullOrEmpty(standard))
                             {
-                                standard = standard.Trim();
-
-                                if (!standard.EndsWith("th", StringComparison.OrdinalIgnoreCase) &&
-                                    !standard.EndsWith("rd", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    if (standard == "3")
-                                        standard += "rd";
-                                    else
-                                        standard += "th";
-                                }
-                            }
-=======
-
-                            //if (!string.IsNullOrEmpty(standard) && !standard.EndsWith("th", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("st", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("nd", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("rd", StringComparison.OrdinalIgnoreCase))
-                            //{
-                            //    standard += "th";
-                            //}
-                            if (!string.IsNullOrEmpty(standard))
-                            {
-                                // Extract any leading numeric digits from the standard string (e.g., "11th" -> 11, "1" -> 1)
                                 string digits = new string(standard.Where(char.IsDigit).ToArray());
->>>>>>> Stashed changes
 
                                 if (int.TryParse(digits, out int number))
                                 {
                                     string suffix = "th";
 
-                                    // Numbers ending in 11, 12, 13 use "th" (e.g., 11th, 12th, 13th)
                                     int lastTwo = number % 100;
                                     if (lastTwo < 11 || lastTwo > 13)
                                     {
@@ -456,9 +436,7 @@ namespace HemFoundation.Controllers.Api
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Bulk upload record deleted successfully." });
-        }
-
-        
+        }      
 
         [HttpGet("overall-dashboard-counts")]
         public async Task<IActionResult> GetOverallDashboardCounts()
@@ -734,11 +712,6 @@ namespace HemFoundation.Controllers.Api
             }
         }
 
-        // ================================================================
-        // ADMIN DASHBOARD DETAILS
-        // category = performance / focused
-        // type = total-schools / total-students / etc.
-        // ================================================================
 
         [HttpGet("overall-details-list/{category}/{type}")]
         public async Task<IActionResult> GetOverallDetailsList(
@@ -750,20 +723,12 @@ namespace HemFoundation.Controllers.Api
                 category = category?.Trim().ToLower() ?? "";
                 type = type?.Trim().ToLower() ?? "";
 
-
-                // ============================================================
-                // GET INSTITUTE IDS
-                // ============================================================
-
                 List<int?> instituteIds;
 
 
                 if (category == "performance")
                 {
-                    // --------------------------------------------------------
-                    // PERFORMANCE
-                    // ReferralCode -> SchoolProfileDetails
-                    // --------------------------------------------------------
+                  
 
                     var referralCodes = await _context.WJ_ReferralCodes
                         .AsNoTracking()
@@ -1002,5 +967,6 @@ namespace HemFoundation.Controllers.Api
             }
         }
 
+      
     }
 }
