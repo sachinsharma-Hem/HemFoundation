@@ -73,15 +73,10 @@
 
                 const file = fileInput.files[0];
                 if (!file) {
-                    alert("Please select a PDF file first.");
+                    alert("Please select a  file first.");
                     return;
                 }
 
-                const extension = file.name.split('.').pop().toLowerCase();
-                if (extension !== 'pdf') {
-                    alert("Only PDF files are allowed.");
-                    return;
-                }
 
                 const maxSize = 10 * 1024 * 1024;
                 if (file.size > maxSize) {

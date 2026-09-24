@@ -4,10 +4,12 @@ using HemFoundation.DTOs;
 using HemFoundation.Models;
 using HemFoundation.Models.Entities;
 using HemFoundation.Models.Identity;
+using Humanizer.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Configuration;
 using System.Security.Claims;
 
 namespace HemFoundation.Controllers.Api
@@ -20,17 +22,18 @@ namespace HemFoundation.Controllers.Api
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _env;
         private readonly SMSManager _smsManager;
-
+        private readonly IConfiguration _configuration;
         public AdminApiController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             IWebHostEnvironment env,
-            SMSManager smsManager)
+            SMSManager smsManager, IConfiguration configuration)
         {
             _context = context;
             _userManager = userManager;
             _env = env;
             _smsManager = smsManager;
+            _configuration = configuration;
         }
 
         [HttpGet("dashboard-stats")]
@@ -256,21 +259,7 @@ namespace HemFoundation.Controllers.Api
                             {
                                 mobileNo = "9999999999";
                             }
-<<<<<<< Updated upstream
-                            if (!string.IsNullOrEmpty(standard))
-                            {
-                                standard = standard.Trim();
 
-                                if (!standard.EndsWith("th", StringComparison.OrdinalIgnoreCase) &&
-                                    !standard.EndsWith("rd", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    if (standard == "3")
-                                        standard += "rd";
-                                    else
-                                        standard += "th";
-                                }
-                            }
-=======
 
                             //if (!string.IsNullOrEmpty(standard) && !standard.EndsWith("th", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("st", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("nd", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("rd", StringComparison.OrdinalIgnoreCase))
                             //{
@@ -280,7 +269,7 @@ namespace HemFoundation.Controllers.Api
                             {
                                 // Extract any leading numeric digits from the standard string (e.g., "11th" -> 11, "1" -> 1)
                                 string digits = new string(standard.Where(char.IsDigit).ToArray());
->>>>>>> Stashed changes
+
 
                                 if (int.TryParse(digits, out int number))
                                 {
@@ -460,8 +449,8 @@ namespace HemFoundation.Controllers.Api
 
         
 
-        [HttpGet("overall-dashboard-counts")]
-        public async Task<IActionResult> GetOverallDashboardCounts()
+        [HttpGet("overall-dashboard-counts1")]
+        public async Task<IActionResult> GetOverallDashboardCounts1()
         {
             try
             {
@@ -734,6 +723,153 @@ namespace HemFoundation.Controllers.Api
             }
         }
 
+
+        [HttpGet("overall-dashboard-counts")]
+        public async Task<IActionResult> GetOverallDashboardCounts()
+        {
+            try
+            {
+                string connString = _configuration.GetConnectionString("DefaultConnection");
+
+                int performanceSchoolCount = 0;
+                int performanceTotalStudents = 0;
+                int performanceActiveStudents = 0;
+                int performanceTotalTeachers = 0;
+                int performanceActiveTeachers = 0;
+                int performanceTotalSelProjects = 0;
+                int performanceFamilyProjects = 0;
+                int performanceIndividualProjects = 0;
+                int performanceGroupPbl = 0;
+
+                int focusedSchoolCount = 0;
+                int focusedTotalStudents = 0;
+                int focusedActiveStudents = 0;
+                int focusedTotalTeachers = 0;
+                int focusedActiveTeachers = 0;
+                int focusedTotalSelProjects = 0;
+                int focusedFamilyProjects = 0;
+                int focusedIndividualProjects = 0;
+                int focusedGroupPbl = 0;
+
+                using (var conn = new Npgsql.NpgsqlConnection(connString))
+                {
+                    await conn.OpenAsync();
+
+                    string dashboardSql = @"
+                WITH PerfInst AS (
+                    SELECT DISTINCT instituteid FROM vw_school_profile_details WHERE instituteid IS NOT NULL
+                ),
+                FocusedInst AS (
+                    SELECT DISTINCT institute_id AS instituteid FROM hf_tbl_affliatefocusedlist WHERE institute_id IS NOT NULL
+                )
+
+                SELECT 
+                    'Performance' AS MetricType,
+                    (SELECT COUNT(*) FROM PerfInst) AS SchoolCount,
+                    (SELECT COUNT(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid IN (SELECT instituteid FROM PerfInst)) AS TotalStudents,
+                    (SELECT COUNT(DISTINCT studentid) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM PerfInst) AND activity_type != 'Survey') AS ActiveStudents,
+                    (SELECT COUNT(DISTINCT teacherid) FROM wj_teacherassociates WHERE instituteid IN (SELECT instituteid FROM PerfInst)) AS TotalTeachers,
+                    (SELECT COUNT(DISTINCT teacherid) FROM hf_view_teacheractivitylog WHERE instituteid IN (SELECT instituteid FROM PerfInst)) AS ActiveTeachers,
+                    (SELECT COUNT(DISTINCT instituteid) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM PerfInst)) AS TotalSelProjects,
+                    (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE activity_type = 'Family PBL') AS FamilyProjects,
+                    (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE activity_type = 'Individual PBL') AS IndividualProjects,
+                    (SELECT COUNT(*) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM PerfInst)) AS GroupPbl
+
+                UNION ALL
+
+                SELECT 
+                    'Focused' AS MetricType,
+                    (SELECT COUNT(*) FROM FocusedInst) AS SchoolCount,
+                    (SELECT COUNT(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid IN (SELECT instituteid FROM FocusedInst)) AS TotalStudents,
+                    (SELECT COUNT(DISTINCT studentid) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM FocusedInst) AND activity_type != 'Survey') AS ActiveStudents,
+                    (SELECT COUNT(DISTINCT teacherid) FROM wj_teacherassociates WHERE instituteid IN (SELECT instituteid FROM FocusedInst)) AS TotalTeachers,
+                    (SELECT COUNT(DISTINCT teacherid) FROM hf_view_teacheractivitylog WHERE instituteid IN (SELECT instituteid FROM FocusedInst)) AS ActiveTeachers,
+                    (SELECT COUNT(DISTINCT instituteid) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM FocusedInst)) AS TotalSelProjects,
+                    (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM FocusedInst) AND activity_type = 'Family PBL') AS FamilyProjects,
+                    (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM FocusedInst) AND activity_type = 'Individual PBL') AS IndividualProjects,
+                    (SELECT COUNT(*) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM FocusedInst)) AS GroupPbl;
+            ";
+
+                    using (var cmd = new Npgsql.NpgsqlCommand(dashboardSql, conn))
+                    {
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            // Correctly awaiting the ValueTask returned by ReadAsync()
+                            while (await reader.ReadAsync())
+                            {
+                                string metricType = reader.GetString(0);
+                                if (metricType == "Performance")
+                                {
+                                    performanceSchoolCount = reader.GetInt32(1);
+                                    performanceTotalStudents = reader.GetInt32(2);
+                                    performanceActiveStudents = reader.GetInt32(3);
+                                    performanceTotalTeachers = reader.GetInt32(4);
+                                    performanceActiveTeachers = reader.GetInt32(5);
+                                    performanceTotalSelProjects = reader.GetInt32(6);
+                                    performanceFamilyProjects = reader.GetInt32(7);
+                                    performanceIndividualProjects = reader.GetInt32(8);
+                                    performanceGroupPbl = reader.GetInt32(9);
+                                }
+                                else if (metricType == "Focused")
+                                {
+                                    focusedSchoolCount = reader.GetInt32(1);
+                                    focusedTotalStudents = reader.GetInt32(2);
+                                    focusedActiveStudents = reader.GetInt32(3);
+                                    focusedTotalTeachers = reader.GetInt32(4);
+                                    focusedActiveTeachers = reader.GetInt32(5);
+                                    focusedTotalSelProjects = reader.GetInt32(6);
+                                    focusedFamilyProjects = reader.GetInt32(7);
+                                    focusedIndividualProjects = reader.GetInt32(8);
+                                    focusedGroupPbl = reader.GetInt32(9);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        performance = new
+                        {
+                            schoolCount = performanceSchoolCount,
+                            totalStudents = performanceTotalStudents,
+                            activeStudents = performanceActiveStudents,
+                            totalTeachers = performanceTotalTeachers,
+                            activeTeachers = performanceActiveTeachers,
+                            totalSelProjects = performanceTotalSelProjects,
+                            familyProjects = performanceFamilyProjects,
+                            individualProjects = performanceIndividualProjects,
+                            groupPbl = performanceGroupPbl
+                        },
+                        focused = new
+                        {
+                            schoolCount = focusedSchoolCount,
+                            totalStudents = focusedTotalStudents,
+                            activeStudents = focusedActiveStudents,
+                            totalTeachers = focusedTotalTeachers,
+                            activeTeachers = focusedActiveTeachers,
+                            totalSelProjects = focusedTotalSelProjects,
+                            familyProjects = focusedFamilyProjects,
+                            individualProjects = focusedIndividualProjects,
+                            groupPbl = focusedGroupPbl
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error loading dashboard counts.",
+                    error = ex.Message,
+                    innerException = ex.InnerException?.Message
+                });
+            }
+        }
         // ================================================================
         // ADMIN DASHBOARD DETAILS
         // category = performance / focused

@@ -1,14 +1,16 @@
-﻿using HemFoundation.Data;
+﻿using ClosedXML.Excel;
+using HemFoundation.Data;
 using HemFoundation.Models.Entities;
 using HemFoundation.Models.Identity;
+using Humanizer.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections;
+using System.Configuration;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-using ClosedXML.Excel;
-using System.Collections;
 
 namespace HemFoundation.Controllers.Api
 {
@@ -22,16 +24,19 @@ namespace HemFoundation.Controllers.Api
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IWebHostEnvironment _env;
 
+        private readonly IConfiguration _configuration;
+
         public VolunteerApiController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env, IConfiguration configuration)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _env = env;
+            _configuration = configuration;
         }
 
         private async Task<Users?> GetCurrentAffiliate()
@@ -1281,9 +1286,119 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
-
         [HttpGet("dashboard-summary-counts")]
         public async Task<IActionResult> GetDashboardSummaryCounts()
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new { success = false, message = "User not authenticated." });
+                }
+
+                string connString = _configuration.GetConnectionString("DefaultConnection");
+
+                int totalStudents = 0;
+                int activeStudents = 0;
+                int totalTeachers = 0;
+                int activeTeachers = 0;
+                int totalSelProjects = 0;
+                int familyProjects = 0;
+                int individualProjects = 0;
+                int groupPbl = 0;
+
+                using (var conn = new Npgsql.NpgsqlConnection(connString))
+                {
+                    await conn.OpenAsync();
+
+                    string summarySql = @"
+                -- 1. Find the active, non-deleted volunteer mapped to this AspNetUserId
+                SELECT id FROM volunteers 
+                WHERE aspnetuserid = @AspNetUserId AND isactive = TRUE AND isdeleted = FALSE 
+                LIMIT 1;
+
+                -- 2. Extract mapped institute IDs and aggregate metrics in a single pass
+                WITH TargetInstitutes AS (
+                    SELECT DISTINCT instituteid 
+                    FROM volunteerinstitutemappings 
+                    WHERE volunteerid = (SELECT id FROM volunteers WHERE aspnetuserid = @AspNetUserId AND isactive = TRUE AND isdeleted = FALSE LIMIT 1)
+                      AND isactive = TRUE AND isdeleted = FALSE
+                      AND instituteid IS NOT NULL
+                ),
+                AggregatedCounts AS (
+                    SELECT 
+                        (SELECT COUNT(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalStudents,
+                        (SELECT COUNT(DISTINCT studentid) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type != 'Survey') AS ActiveStudents,
+                        (SELECT COUNT(DISTINCT teacherid) FROM wj_teacherassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalTeachers,
+                        (SELECT COUNT(DISTINCT teacherid) FROM hf_view_teacheractivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS ActiveTeachers,
+                        (SELECT COUNT(DISTINCT instituteid) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalSelProjects,
+                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Family PBL') AS FamilyProjects,
+                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Individual PBL') AS IndividualProjects,
+                        (SELECT COUNT(*) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS GroupPbl
+                )
+                SELECT TotalStudents, ActiveStudents, TotalTeachers, ActiveTeachers, TotalSelProjects, FamilyProjects, IndividualProjects, GroupPbl 
+                FROM AggregatedCounts;
+            ";
+
+                    using (var cmd = new Npgsql.NpgsqlCommand(summarySql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("AspNetUserId", userId);
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            // First result set: Check if volunteer exists
+                            bool volunteerExists = await reader.ReadAsync();
+                            if (!volunteerExists)
+                            {
+                                return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
+                            }
+
+                            // Move to the second result set (AggregatedCounts)
+                            if (await reader.NextResultAsync() && await reader.ReadAsync())
+                            {
+                                totalStudents = reader.GetInt32(0);
+                                activeStudents = reader.GetInt32(1);
+                                totalTeachers = reader.GetInt32(2);
+                                activeTeachers = reader.GetInt32(3);
+                                totalSelProjects = reader.GetInt32(4);
+                                familyProjects = reader.GetInt32(5);
+                                individualProjects = reader.GetInt32(6);
+                                groupPbl = reader.GetInt32(7);
+                            }
+                        }
+                    }
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        totalStudents,
+                        activeStudents,
+                        totalTeachers,
+                        activeTeachers,
+                        totalSelProjects,
+                        familyProjects,
+                        individualProjects,
+                        groupPbl
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error loading volunteer dashboard summary counts.",
+                    error = ex.Message,
+                    innerException = ex.InnerException?.Message
+                });
+            }
+        }
+        [HttpGet("dashboard-summary-counts1")]
+        public async Task<IActionResult> GetDashboardSummaryCounts1()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var volunteer = await _context.Volunteers.FirstOrDefaultAsync(v => v.AspNetUserId == userId && v.IsActive && !v.IsDeleted);

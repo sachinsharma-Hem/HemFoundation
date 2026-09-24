@@ -1,11 +1,13 @@
 ﻿using HemFoundation.Data;
 using HemFoundation.Models.Entities;
 using HemFoundation.Models.Identity;
+using Humanizer.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Configuration;
 using System.Security.Claims;
 
 namespace HemFoundation.Controllers.Api
@@ -18,10 +20,14 @@ namespace HemFoundation.Controllers.Api
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public AffiliateDashboardApiController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        private readonly IConfiguration _configuration;
+
+        public AffiliateDashboardApiController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IConfiguration configuration)
         {
             _context = context;
             _userManager = userManager;
+
+            _configuration = configuration;
         }
 
         [HttpGet("stats")]
@@ -171,10 +177,132 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
-       
-
         [HttpGet("dashboard-summary-counts")]
         public async Task<IActionResult> GetDashboardSummaryCounts([FromQuery] string? affiliateUserId)
+        {
+            try
+            {
+                Int32 reportaffiliateid = Convert.ToInt32(affiliateUserId);
+
+                if (reportaffiliateid == 0)
+                {
+                    int loggedInUserID = HttpContext.Session.GetInt32("UserID") ?? 0;
+                    reportaffiliateid = loggedInUserID;
+                }
+
+                string connString = _configuration.GetConnectionString("DefaultConnection");
+
+                int totalinstitute = 0;
+                int totalStudents = 0;
+                int activeStudents = 0;
+                int totalTeachers = 0;
+                int activeTeachers = 0;
+                int totalSelProjects = 0;
+                int familyProjects = 0;
+                int individualProjects = 0;
+                int groupPbl = 0;
+
+                using (var conn = new Npgsql.NpgsqlConnection(connString))
+                {
+                    await conn.OpenAsync();
+
+                    // Single unified SQL query using CTEs to validate affiliate, find referral code, gather matched institutes, and aggregate counts instantly
+                    string summarySql = @"
+                -- 1. Check if user/affiliate exists
+                SELECT userid FROM users WHERE userid = @AffiliateId;
+
+                -- 2. Get Referral Code for this Affiliate
+                WITH TargetReferral AS (
+                    SELECT referralcode 
+                    FROM wj_referralcodes 
+                    WHERE userid = @AffiliateId AND referralcode IS NOT NULL 
+                    LIMIT 1
+                ),
+                -- 3. Extract matching institute IDs from school profile details based on referral code
+                TargetInstitutes AS (
+                    SELECT DISTINCT instituteid 
+                    FROM vw_school_profile_details 
+                    WHERE referralcode = (SELECT referralcode FROM TargetReferral) 
+                      AND instituteid IS NOT NULL
+                ),
+                -- 4. Aggregate all required dashboard metrics in a single pass
+                AggregatedCounts AS (
+                    SELECT 
+                        (SELECT COUNT(*) FROM TargetInstitutes) AS TotalInstitute,
+                        (SELECT COUNT(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalStudents,
+                        (SELECT COUNT(DISTINCT studentid) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type != 'Survey') AS ActiveStudents,
+                        (SELECT COUNT(DISTINCT teacherid) FROM wj_teacherassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalTeachers,
+                        (SELECT COUNT(DISTINCT teacherid) FROM hf_view_teacheractivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS ActiveTeachers,
+                        (SELECT COUNT(DISTINCT instituteid) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalSelProjects,
+                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Family PBL') AS FamilyProjects,
+                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Individual PBL') AS IndividualProjects,
+                        (SELECT COUNT(*) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS GroupPbl
+                )
+                SELECT TotalInstitute, TotalStudents, ActiveStudents, TotalTeachers, ActiveTeachers, TotalSelProjects, FamilyProjects, IndividualProjects, GroupPbl 
+                FROM AggregatedCounts;
+            ";
+
+                    using (var cmd = new Npgsql.NpgsqlCommand(summarySql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("AffiliateId", reportaffiliateid);
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            // First result set: Check if the affiliate user exists
+                            bool userExists = await reader.ReadAsync();
+                            if (!userExists)
+                            {
+                                return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
+                            }
+
+                            // Move to the second result set (AggregatedCounts)
+                            if (await reader.NextResultAsync() && await reader.ReadAsync())
+                            {
+                                totalinstitute = reader.GetInt32(0);
+                                totalStudents = reader.GetInt32(1);
+                                activeStudents = reader.GetInt32(2);
+                                totalTeachers = reader.GetInt32(3);
+                                activeTeachers = reader.GetInt32(4);
+                                totalSelProjects = reader.GetInt32(5);
+                                familyProjects = reader.GetInt32(6);
+                                individualProjects = reader.GetInt32(7);
+                                groupPbl = reader.GetInt32(8);
+                            }
+                        }
+                    }
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        totalinstitute,
+                        totalStudents,
+                        activeStudents,
+                        totalTeachers,
+                        activeTeachers,
+                        totalSelProjects,
+                        familyProjects,
+                        individualProjects,
+                        groupPbl
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error loading dashboard summary counts.",
+                    error = ex.Message,
+                    innerException = ex.InnerException?.Message
+                });
+            }
+        }
+
+        [HttpGet("dashboard-summary-counts1")]
+        public async Task<IActionResult> GetDashboardSummaryCounts1([FromQuery] string? affiliateUserId)
         {
 
             Int32 reportaffiliateid = Convert.ToInt32(affiliateUserId);
@@ -331,8 +459,8 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = result });
         }
 
-        [HttpGet("dashboard-focused_summary-counts")]
-        public async Task<IActionResult> GetFocusedDashboardSummaryCounts([FromQuery] string? affiliateUserId)
+        [HttpGet("dashboard-focused_summary-counts1")]
+        public async Task<IActionResult> GetFocusedDashboardSummaryCounts1([FromQuery] string? affiliateUserId)
         {
             // Agar admin ne dropdown se select kiya hai toh woh use hoga, warna logged-in user
             Int32 reportaffiliateid = Convert.ToInt32(affiliateUserId);
@@ -417,7 +545,122 @@ namespace HemFoundation.Controllers.Api
                 }
             });
         }
+        [HttpGet("dashboard-focused_summary-counts")]
+        public async Task<IActionResult> GetFocusedDashboardSummaryCounts([FromQuery] string? affiliateUserId)
+        {
+            try
+            {
+                // Agar admin ne dropdown se select kiya hai toh woh use hoga, warna logged-in user
+                Int32 reportaffiliateid = Convert.ToInt32(affiliateUserId);
 
+                if (reportaffiliateid == 0)
+                {
+                    int loggedInUserID = HttpContext.Session.GetInt32("UserID") ?? 0;
+                    reportaffiliateid = loggedInUserID;
+                }
+
+                string connString = _configuration.GetConnectionString("DefaultConnection");
+
+                int schoolCount = 0;
+                int totalStudents = 0;
+                int activeStudents = 0;
+                int totalTeachers = 0;
+                int activeTeachers = 0;
+                int totalSelProjects = 0;
+                int familyProjects = 0;
+                int individualProjects = 0;
+                int groupPbl = 0;
+
+                using (var conn = new Npgsql.NpgsqlConnection(connString))
+                {
+                    await conn.OpenAsync();
+
+                    // Single unified SQL query that validates affiliate, gets focused institutes, and aggregates all counts simultaneously
+                    string summarySql = @"
+                -- 1. Check if user/affiliate exists
+                SELECT userid FROM users WHERE userid = @AffiliateId;
+
+                -- 2. Extract focused institute IDs for this affiliate
+                WITH TargetInstitutes AS (
+                    SELECT DISTINCT institute_id AS instituteid 
+                    FROM hf_tbl_affliatefocusedlist 
+                    WHERE affliate_id = @AffiliateId AND institute_id IS NOT NULL
+                ),
+                -- 3. Aggregate all required dashboard metrics in a single pass
+                AggregatedCounts AS (
+                    SELECT 
+                        (SELECT COUNT(*) FROM TargetInstitutes) AS SchoolCount,
+                        (SELECT COUNT(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalStudents,
+                        (SELECT COUNT(DISTINCT studentid) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type != 'Survey') AS ActiveStudents,
+                        (SELECT COUNT(DISTINCT teacherid) FROM wj_teacherassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalTeachers,
+                        (SELECT COUNT(DISTINCT teacherid) FROM hf_view_teacheractivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS ActiveTeachers,
+                        (SELECT COUNT(DISTINCT instituteid) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalSelProjects,
+                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Family PBL') AS FamilyProjects,
+                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Individual PBL') AS IndividualProjects,
+                        (SELECT COUNT(*) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS GroupPbl
+                )
+                SELECT SchoolCount, TotalStudents, ActiveStudents, TotalTeachers, ActiveTeachers, TotalSelProjects, FamilyProjects, IndividualProjects, GroupPbl 
+                FROM AggregatedCounts;
+            ";
+
+                    using (var cmd = new Npgsql.NpgsqlCommand(summarySql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("AffiliateId", reportaffiliateid);
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            // First result set: Check if the affiliate user exists
+                            bool userExists = await reader.ReadAsync();
+                            if (!userExists)
+                            {
+                                return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
+                            }
+
+                            // Move to the second result set (AggregatedCounts)
+                            if (await reader.NextResultAsync() && await reader.ReadAsync())
+                            {
+                                schoolCount = reader.GetInt32(0);
+                                totalStudents = reader.GetInt32(1);
+                                activeStudents = reader.GetInt32(2);
+                                totalTeachers = reader.GetInt32(3);
+                                activeTeachers = reader.GetInt32(4);
+                                totalSelProjects = reader.GetInt32(5);
+                                familyProjects = reader.GetInt32(6);
+                                individualProjects = reader.GetInt32(7);
+                                groupPbl = reader.GetInt32(8);
+                            }
+                        }
+                    }
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        schoolcount = schoolCount,
+                        totalStudents,
+                        activeStudents,
+                        totalTeachers,
+                        activeTeachers,
+                        totalSelProjects,
+                        familyProjects,
+                        individualProjects,
+                        groupPbl
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error loading focused summary counts.",
+                    error = ex.Message,
+                    innerException = ex.InnerException?.Message
+                });
+            }
+        }
         [HttpGet("details-list2/{type}")]
         public async Task<IActionResult> GetDetailsList2(string type)
         {

@@ -187,10 +187,44 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
         }
 
 
+        [HttpGet("export-institute-summary")]
         [HttpPost("export-institute-summary")]
-        public IActionResult ExportInstituteSummaryReport([FromBody] InstituteReportRequestModel model)
+        public IActionResult ExportInstituteSummaryReport(string instituteIDstr = null)
         {
-            int instituteID = Convert.ToInt32(model.instituteIDstr);
+            int instituteID = 0;
+
+            // 1. Try query string parameter
+            if (string.IsNullOrEmpty(instituteIDstr))
+            {
+                instituteIDstr = Request.Query["instituteIDstr"];
+            }
+
+            // 2. Try form data or POST body values if sent via form-urlencoded/FormData
+            if (string.IsNullOrEmpty(instituteIDstr) && Request.HasFormContentType)
+            {
+                instituteIDstr = Request.Form["instituteIDstr"];
+            }
+
+            // 3. Parse string to int if available
+            if (!string.IsNullOrEmpty(instituteIDstr) && int.TryParse(instituteIDstr, out int parsedId))
+            {
+                instituteID = parsedId;
+            }
+            // 4. Fallback to Session UserID if not provided
+            else if (HttpContext.Session.GetInt32("UserID") is int sessionId && sessionId > 0)
+            {
+                instituteID = sessionId;
+            }
+            // 5. Fallback to Claims Principal
+            else if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedClaim))
+            {
+                instituteID = parsedClaim;
+            }
+
+            if (instituteID <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid or missing Institute ID." });
+            }
 
             try
             {
@@ -203,12 +237,6 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 {
                     conn.Open();
 
-                    // 1. Execute Student Summary Report stored procedure equivalent in Postgres or your DB
-                    string summaryBatchSql = $"SELECT * FROM \"Export_School_Student_Summary_Report_updated\"({instituteID});";
-                    // Note: If your stored procedures are in Postgres functions, adjust the query accordingly.
-                    // Executing via Npgsql:
-
-                    // Let's execute the school summary datasets
                     string schoolSummaryQuery = @"
                 -- Table 0: Student Details
                 SELECT 
@@ -230,8 +258,8 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 SELECT wjs.studentid AS ""StudentID"", 
                     concat(u.firstname, ' ', u.lastname) AS ""Student_Name"", 
                     wjs.standard AS ""Standard"", 
-                    wji.instituteid AS ""InstituteID"", 
-                    wji.""Name"" AS ""InstituteName"", 
+                    wjist.instituteid AS ""InstituteID"", 
+                    wjist.""Name"" AS ""InstituteName"", 
                     vs.maincoursename AS ""MainCourseName"", 
                     c.coursename AS ""CourseName"", 
                     t.topicname AS ""TopicName"", 
@@ -242,7 +270,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 LEFT JOIN wj_students AS wjs ON e.userid = wjs.studentid 
                 LEFT JOIN users AS u ON u.userid = e.userid 
                 LEFT JOIN wj_studentassociates AS sa ON sa.studentid = u.userid 
-                LEFT JOIN wj_institutes AS wji ON wji.instituteid = sa.instituteid 
+                LEFT JOIN wj_institutes AS wjist ON wjist.instituteid = sa.instituteid 
                 LEFT JOIN topics AS t ON t.topicid = e.examtopicid 
                 LEFT JOIN courses AS c ON c.courseid = t.courseid 
                 LEFT JOIN view_wj_syllabus AS vs ON vs.courseid = t.courseid 
@@ -251,14 +279,14 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                   AND c.coursename <> 'HEM-Sampark Mega Quiz' 
                   AND t.topicname <> 'Belief Survey MCQ' 
                   AND vs.maincoursename NOT LIKE '%Beliefs%' 
-                  AND wji.instituteid = @InstituteID;
+                  AND wjist.instituteid = @InstituteID;
 
                 -- Table 2: Practical Marks
                 SELECT DISTINCT wjs.studentid AS ""StudentID"", 
                     concat(u.firstname, ' ', u.lastname) AS ""Student_Name"", 
                     wjs.standard AS ""Standard"", 
-                    wji.instituteid AS ""InstituteID"", 
-                    wji.""Name"" AS ""InstituteName"", 
+                    wjist.instituteid AS ""InstituteID"", 
+                    wjist.""Name"" AS ""InstituteName"", 
                     vs.maincoursename AS ""MainCourseName"", 
                     c.coursename AS ""CourseName"", 
                     pa.title AS ""Title"", 
@@ -277,11 +305,11 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 LEFT JOIN wj_students AS wjs ON p.studentid = wjs.studentid 
                 LEFT JOIN users AS u ON u.userid = p.studentid 
                 LEFT JOIN wj_studentassociates AS sa ON sa.studentid = p.studentid 
-                LEFT JOIN wj_institutes AS wji ON wji.instituteid = sa.instituteid 
+                LEFT JOIN wj_institutes AS wjist ON wjist.instituteid = sa.instituteid 
                 LEFT JOIN wj_practicals AS pa ON pa.practicalid = p.practicalid 
                 LEFT JOIN courses AS c ON c.courseid = pa.courseid 
                 LEFT JOIN view_wj_syllabus AS vs ON vs.courseid = c.courseid 
-                WHERE wji.instituteid = @InstituteID AND pa.code NOT IN ('G_E_011','G_E_010');
+                WHERE wjist.instituteid = @InstituteID AND pa.code NOT IN ('G_E_011','G_E_010');
             ";
 
                     using (var cmd = new Npgsql.NpgsqlCommand(schoolSummaryQuery, conn))
@@ -303,43 +331,42 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                         }
                     }
 
-                    // 2. Execute PBL Report Institute Updated Query / Function
                     string pblQuery = @"
-                        SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Family PBL' AS ""Title"", FileName, FileExtension, 'https://hemvirtues.com/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
-                        FROM HF_UploadAnubhuti AS HFA    
-                        INNER JOIN Users AS U ON U.UserID = HFA.IsCreatedBy    
-                        INNER JOIN WJ_Students AS WJS ON WJS.StudentID = HFA.IsCreatedBy    
-                        INNER JOIN WJ_StudentAssociates AS WJSA ON WJSA.StudentID = WJS.StudentID    
-                        INNER JOIN WJ_Institutes AS WJI ON WJI.InstituteID = WJSA.InstituteID    
-                        INNER JOIN WJ_Practicals AS p ON p.CourseID = HFA.CourseID    
-                        INNER JOIN View_WJ_Syllabus AS v ON v.CourseID = p.CourseID    
-                        WHERE (@InstituteID IS NULL OR WJI.InstituteID = @InstituteID)    
-                        GROUP BY WJS.StudentID, U.FirstName, U.LastName, WJS.Standard, WJI.""Name"", v.MainCourseName, HFA.CourseName, FileName, FileExtension, IsCreatedDate, WJI.InstituteID    
-    
-                        UNION ALL    
-    
-                        SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Individual PBL' AS ""Title"", FileName, FileExtension, 'https://hemvirtues.com/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
-                        FROM HF_TBL_UploadIndividualProject AS HFA    
-                        INNER JOIN Users AS U ON U.UserID = HFA.IsCreatedBy    
-                        INNER JOIN WJ_Students AS WJS ON WJS.StudentID = HFA.IsCreatedBy    
-                        INNER JOIN WJ_StudentAssociates AS WJSA ON WJSA.StudentID = WJS.StudentID    
-                        INNER JOIN WJ_Institutes AS WJI ON WJI.InstituteID = WJSA.InstituteID    
-                        INNER JOIN WJ_Practicals AS p ON p.CourseID = HFA.MainCourseID    
-                        INNER JOIN View_WJ_Syllabus AS v ON v.CourseID = p.CourseID    
-                        WHERE (@InstituteID IS NULL OR WJI.InstituteID = @InstituteID)    
-                        GROUP BY WJS.StudentID, U.FirstName, U.LastName, WJS.Standard, WJI.""Name"", v.MainCourseName, HFA.CourseName, FileName, FileExtension, IsCreatedDate, WJI.InstituteID    
-    
-                        UNION ALL    
-    
-                        SELECT SU.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", SU.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, '' AS ""CourseName"", 'Group PBL' AS ""Title"", '' AS ""FileName"", '' AS ""FileExtension"", 'https://www.hemvirtues.com' || REPLACE(SUBSTRING(C.VideoActivity, POSITION('wwwroot\\' IN C.VideoActivity) + 7, LENGTH(C.ImageActivity)), '\\', '/') AS ""FileLink"", '10' AS ""TotalMarks"", '10' AS ""MarksObtain"", C.CreatedDate AS ""SubmissionDate""    
-                        FROM CreativityActivitesSubmission2021 C    
-                        LEFT JOIN HF_Rel_Manage_Group_List L ON C.InstituteID = L.IsAllocatedBy AND C.MainCourseID = L.MainCourseID    
-                        LEFT JOIN Users U ON L.StudentID = U.UserID    
-                        LEFT JOIN wj_students SU ON L.StudentID = SU.StudentID    
-                        LEFT JOIN WJ_Institutes WJI ON C.InstituteID = WJI.InstituteID    
-                        LEFT JOIN MainCourses V ON C.MainCourseID = V.MainCourseID    
-                        WHERE (@InstituteID IS NULL OR WJI.InstituteID = @InstituteID);
-                    ";
+                SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Family PBL' AS ""Title"", FileName, FileExtension, 'https://hemvirtues.com/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
+                FROM HF_UploadAnubhuti AS HFA    
+                INNER JOIN Users AS U ON U.UserID = HFA.IsCreatedBy    
+                INNER JOIN WJ_Students AS WJS ON WJS.StudentID = HFA.IsCreatedBy    
+                INNER JOIN WJ_StudentAssociates AS WJSA ON WJSA.StudentID = WJS.StudentID    
+                INNER JOIN WJ_Institutes AS WJI ON WJI.InstituteID = WJSA.InstituteID    
+                INNER JOIN WJ_Practicals AS p ON p.CourseID = HFA.CourseID    
+                INNER JOIN View_WJ_Syllabus AS v ON v.CourseID = p.CourseID    
+                WHERE (@InstituteID IS NULL OR WJI.InstituteID = @InstituteID)    
+                GROUP BY WJS.StudentID, U.FirstName, U.LastName, WJS.Standard, WJI.""Name"", v.MainCourseName, HFA.CourseName, FileName, FileExtension, IsCreatedDate, WJI.InstituteID    
+
+                UNION ALL    
+
+                SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Individual PBL' AS ""Title"", FileName, FileExtension, 'https://hemvirtues.com/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
+                FROM HF_TBL_UploadIndividualProject AS HFA    
+                INNER JOIN Users AS U ON U.UserID = HFA.IsCreatedBy    
+                INNER JOIN WJ_Students AS WJS ON WJS.StudentID = HFA.IsCreatedBy    
+                INNER JOIN WJ_StudentAssociates AS WJSA ON WJSA.StudentID = WJS.StudentID    
+                INNER JOIN WJ_Institutes AS WJI ON WJI.InstituteID = WJSA.InstituteID    
+                INNER JOIN WJ_Practicals AS p ON p.CourseID = HFA.MainCourseID    
+                INNER JOIN View_WJ_Syllabus AS v ON v.CourseID = p.CourseID    
+                WHERE (@InstituteID IS NULL OR WJI.InstituteID = @InstituteID)    
+                GROUP BY WJS.StudentID, U.FirstName, U.LastName, WJS.Standard, WJI.""Name"", v.MainCourseName, HFA.CourseName, FileName, FileExtension, IsCreatedDate, WJI.InstituteID    
+
+                UNION ALL    
+
+                SELECT SU.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", SU.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, '' AS ""CourseName"", 'Group PBL' AS ""Title"", '' AS ""FileName"", '' AS ""FileExtension"", 'https://www.hemvirtues.com' || REPLACE(SUBSTRING(C.VideoActivity, POSITION('wwwroot\\' IN C.VideoActivity) + 7, LENGTH(C.ImageActivity)), '\\', '/') AS ""FileLink"", '10' AS ""TotalMarks"", '10' AS ""MarksObtain"", C.CreatedDate AS ""SubmissionDate""    
+                FROM CreativityActivitesSubmission2021 C    
+                LEFT JOIN HF_Rel_Manage_Group_List L ON C.InstituteID = L.IsAllocatedBy AND C.MainCourseID = L.MainCourseID    
+                LEFT JOIN Users U ON L.StudentID = U.UserID    
+                LEFT JOIN wj_students SU ON L.StudentID = SU.StudentID    
+                LEFT JOIN WJ_Institutes WJI ON C.InstituteID = WJI.InstituteID    
+                LEFT JOIN MainCourses V ON C.MainCourseID = V.MainCourseID    
+                WHERE (@InstituteID IS NULL OR WJI.InstituteID = @InstituteID);
+            ";
 
                     using (var cmd = new Npgsql.NpgsqlCommand(pblQuery, conn))
                     {
@@ -350,33 +377,32 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                         }
                     }
 
-                    // 3. Execute Group Submission Report (CAS Report Institute)
-                      string casQuery = @"
-                        SELECT DISTINCT CAS.InstituteID, WJI.institute_name AS ""School Name"", 
-                            (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) AS ""MainCourseName"", 
-                            WJI.firstName || ' ' || WJI.lastName AS ""Co-Ordinator Name"", 
-                            WJI.cityName, WJI.referralcode, WJI.mobileno, 
-                            'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.ImageActivity, POSITION('wwwroot\\' IN CAS.ImageActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""ImageActivity"", 
-                            'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.VideoActivity, POSITION('wwwroot\\' IN CAS.VideoActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""VideoActivity"", 
-                            CAS.ShortDescription, CAS.CreatedDate AS ""Submission Date"", hfrm.GroupName, hfrm.ListStudents, hfrm.MainCourseID, CAS.TeamMembersList, CAS.ActivityType
-                        FROM CreativityActivitesSubmission2021 AS CAS 
-                        INNER JOIN vw_school_profile_details AS WJI ON WJI.instituteid = CAS.InstituteID 
-                        LEFT JOIN ( 
-                            SELECT DISTINCT MT.GroupName, sq.IsAllocatedBy, sq.MainCourseID, 
-                                STRING_AGG(CAST(sq.StudentID AS varchar), ',') AS ListStudents 
-                            FROM HF_Rel_Manage_Group_List sq 
-                            INNER JOIN HF_Rel_Manage_Group_List MT ON sq.GroupName = MT.GroupName AND sq.MainCourseID = MT.MainCourseID AND sq.IsAllocatedBy = MT.IsAllocatedBy
-                            GROUP BY MT.GroupName, sq.IsAllocatedBy, sq.MainCourseID 
-                        ) AS hfrm ON hfrm.IsAllocatedBy = CAS.InstituteID AND hfrm.MainCourseID = CAS.MainCourseID 
-                        WHERE (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) IS NOT NULL 
-                          AND (CAS.TeamMembersList IS NULL OR CAS.TeamMembersList = '') 
-                          AND (CAS.ActivityType IS NULL OR CAS.ActivityType = '') 
-                          AND CAS.ImageActivity IS NOT NULL 
-                          AND CAS.VideoActivity IS NOT NULL 
-                          AND CAS.ShortDescription IS NOT NULL 
-                          AND CAS.InstituteID = @InstituteID 
-                        ORDER BY CAS.CreatedDate DESC;
-                    ";
+                    string casQuery = @"
+                SELECT DISTINCT CAS.InstituteID, WJI.institute_name AS ""School Name"", 
+                    (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) AS ""MainCourseName"", 
+                    WJI.firstName || ' ' || WJI.lastName AS ""Co-Ordinator Name"", 
+                    WJI.cityName, WJI.referralcode, WJI.mobileno, 
+                    'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.ImageActivity, POSITION('wwwroot\\' IN CAS.ImageActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""ImageActivity"", 
+                    'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.VideoActivity, POSITION('wwwroot\\' IN CAS.VideoActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""VideoActivity"", 
+                    CAS.ShortDescription, CAS.CreatedDate AS ""Submission Date"", hfrm.GroupName, hfrm.ListStudents, hfrm.MainCourseID, CAS.TeamMembersList, CAS.ActivityType
+                FROM CreativityActivitesSubmission2021 AS CAS 
+                INNER JOIN vw_school_profile_details AS WJI ON WJI.instituteid = CAS.InstituteID 
+                LEFT JOIN ( 
+                    SELECT DISTINCT MT.GroupName, sq.IsAllocatedBy, sq.MainCourseID, 
+                        STRING_AGG(CAST(sq.StudentID AS varchar), ',') AS ListStudents 
+                    FROM HF_Rel_Manage_Group_List sq 
+                    INNER JOIN HF_Rel_Manage_Group_List MT ON sq.GroupName = MT.GroupName AND sq.MainCourseID = MT.MainCourseID AND sq.IsAllocatedBy = MT.IsAllocatedBy
+                    GROUP BY MT.GroupName, sq.IsAllocatedBy, sq.MainCourseID 
+                ) AS hfrm ON hfrm.IsAllocatedBy = CAS.InstituteID AND hfrm.MainCourseID = CAS.MainCourseID 
+                WHERE (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) IS NOT NULL 
+                  AND (CAS.TeamMembersList IS NULL OR CAS.TeamMembersList = '') 
+                  AND (CAS.ActivityType IS NULL OR CAS.ActivityType = '') 
+                  AND CAS.ImageActivity IS NOT NULL 
+                  AND CAS.VideoActivity IS NOT NULL 
+                  AND CAS.ShortDescription IS NOT NULL 
+                  AND CAS.InstituteID = @InstituteID 
+                ORDER BY CAS.CreatedDate DESC;
+            ";
 
                     using (var cmd = new Npgsql.NpgsqlCommand(casQuery, conn))
                     {
@@ -388,7 +414,6 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     }
                 }
 
-                // Set table names safely
                 if (essr.Tables.Count > 0) essr.Tables[0].TableName = "StudentDetails";
                 if (essr.Tables.Count > 1) essr.Tables[1].TableName = "MCQ";
                 if (essr.Tables.Count > 2) essr.Tables[2].TableName = "Practical";
@@ -397,12 +422,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
 
                 using (XLWorkbook wb = new XLWorkbook())
                 {
-                    if (essr.Tables.Count > 0) wb.Worksheets.Add(essr.Tables[0], "StudentDetails");
-                    if (essr.Tables.Count > 1) wb.Worksheets.Add(essr.Tables[1], "MCQ");
-                    if (essr.Tables.Count > 2) wb.Worksheets.Add(essr.Tables[2], "Practical");
-                    wb.Worksheets.Add(pblReportDataTable, "PBL");
-                    wb.Worksheets.Add(groupSubmissionDataTable, "Group Submission");
-
+                    // 1. Build and Add Student Summary Table FIRST so it is the first tab
                     DataTable summaryTable = new DataTable();
                     summaryTable.Columns.Add("StudentID");
                     summaryTable.Columns.Add("StudentName");
@@ -432,10 +452,10 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                             MainCourseName = g.Key.MainCourseName,
                             TotalMarks = 100,
                             GainMarks = g.Sum(row => row.Table.Columns.Contains("MarksObtain")
-                                              ? (row["MarksObtain"] != DBNull.Value
-                                                  ? Convert.ToInt32(row["MarksObtain"])
-                                                  : 0)
-                                              : 0)
+                                        ? (row["MarksObtain"] != DBNull.Value
+                                            ? Convert.ToInt32(row["MarksObtain"])
+                                            : 0)
+                                        : 0)
                         }).OrderBy(x => x.Student_Name).ToList();
 
                     foreach (var item in summaryData)
@@ -446,7 +466,14 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     var summarySheet = wb.Worksheets.Add("Student Summary");
                     summarySheet.Cell(1, 1).InsertTable(summaryTable);
 
-                    // Extract distinct MainCourseNames safely
+                    // 2. Add remaining reference data worksheets afterwards
+                    if (essr.Tables.Count > 0) wb.Worksheets.Add(essr.Tables[0], "StudentDetails");
+                    if (essr.Tables.Count > 1) wb.Worksheets.Add(essr.Tables[1], "MCQ");
+                    if (essr.Tables.Count > 2) wb.Worksheets.Add(essr.Tables[2], "Practical");
+                    wb.Worksheets.Add(pblReportDataTable, "PBL");
+                    wb.Worksheets.Add(groupSubmissionDataTable, "Group Submission");
+
+                    // 3. Add individual Main Course dynamic worksheets last
                     var distinctMainCourses = new List<string>();
                     if (essr.Tables.Count > 1)
                         distinctMainCourses.AddRange(essr.Tables[1].AsEnumerable().Select(row => row["MainCourseName"].ToString()));
@@ -512,7 +539,6 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                         }
                     }
 
-                    // Save and return file stream with position reset
                     using (MemoryStream stream = new MemoryStream())
                     {
                         wb.SaveAs(stream);
@@ -526,8 +552,6 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
-
-
         [HttpGet("export-survey-report")]
         public IActionResult ExportStudentSurveyReports()
         {
@@ -636,7 +660,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     WJT.Division AS ""Division"", 
                     U.MobileNo AS ""MobileNo"", 
                     U.CityName AS ""CityName"", 
-                    WJI.Name AS ""SchoolName"" 
+                    WJI.""Name"" AS ""SchoolName"" 
                 FROM WJ_Teacher AS WJT 
                 LEFT JOIN Users AS U ON U.UserID = WJT.TeacherID 
                 INNER JOIN WJ_TeacherAssociates AS WJTA ON WJTA.TeacherID = WJT.TeacherID 
@@ -646,7 +670,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 -- Table 1: MCQ Marks
                 SELECT DISTINCT 
                     E.UserID AS ""UserID"", 
-                    Q.Name AS ""Course Name"", 
+                    Q.""Name"" AS ""Course Name"", 
                     T.TopicName AS ""TopicName"", 
                     T.NoOfQuestion AS ""TotalMarks"", 
                     MAX(E.MarksObtain) AS ""MarksObtain"" 
@@ -657,9 +681,9 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 LEFT JOIN WJ_TeacherAssociates AS WJTA ON WJTA.TeacherID = U.UserID 
                 WHERE E.UserID = WJTA.TeacherID 
                   AND E.MarksObtain IS NOT NULL 
-                  AND (Q.Name NOT LIKE '%Week%' AND Q.Name NOT LIKE '%Beliefs Survey%' AND Q.Name NOT LIKE '%HEM-Sampark Mega Quiz%') 
+                  AND (Q.""Name"" NOT LIKE '%Week%' AND Q.""Name"" NOT LIKE '%Beliefs Survey%' AND Q.""Name"" NOT LIKE '%HEM-Sampark Mega Quiz%') 
                   AND (@InstituteID = 0 OR WJTA.InstituteID = @InstituteID) 
-                GROUP BY E.UserID, Q.Name, T.TopicName, T.NoOfQuestion 
+                GROUP BY E.UserID, Q.""Name"", T.TopicName, T.NoOfQuestion 
                 ORDER BY ""Course Name"", ""TopicName"", ""UserID"";
             ";
 

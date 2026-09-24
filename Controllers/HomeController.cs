@@ -31,9 +31,9 @@ namespace HemFoundation.Controllers
                 {
                     command.CommandText = @"
                 SELECT 
-                    COUNT(CASE WHEN ""UserRoles"" LIKE '%WJ_Students%' THEN 1 END) AS StudentCounts,
-                    COUNT(CASE WHEN ""UserRoles"" LIKE '%WJ_Teacher%' THEN 1 END) AS TeacherCounts,
-                    COUNT(CASE WHEN ""UserRoles"" LIKE '%WJ_School%' THEN 1 END) AS SchoolCounts
+                    COUNT(CASE WHEN ""UserRoles"" LIKE '%WJ_Students%' THEN 1 END)+158782 AS StudentCounts,
+                    COUNT(CASE WHEN ""UserRoles"" LIKE '%WJ_Teacher%' THEN 1 END)+1744 AS TeacherCounts,
+                    COUNT(CASE WHEN ""UserRoles"" LIKE '%WJ_School%' THEN 1 END)+1011 AS SchoolCounts
                 FROM public.hf_view_users;";
 
                     using (var reader = await command.ExecuteReaderAsync())
