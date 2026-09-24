@@ -16,7 +16,7 @@
             <partial name="~/Views/Dashboard/Partials/_SchoolDashboard.cshtml" />
             break;
 
-       case "volunteer":
+        case "volunteer":
             <partial name="~/Views/Dashboard/Partials/_VolunteerDashboard.cshtml" />
             break;
 
@@ -24,7 +24,7 @@
             <partial name="~/Views/Dashboard/Partials/_TeacherDashboard.cshtml" />
             break;
 
-         case "student":
+        case "student":
             <partial name="~/Views/Dashboard/Partials/_StudentDashboard.cshtml" />
             break;
 
@@ -40,11 +40,37 @@
             break;
     }
 </div>
+
+<!-- ================= MODAL FOR UPLOADING LETTER (All file types allowed) ================= -->
+<div class="modal fade" id="uploadLetterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-4 bg-white">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-dark m-0">Upload Partnership Letter</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <form id="frmUploadLetter">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Document <span class="text-danger">*</span></label>
+                        <!-- accept attribute removed to allow all file formats -->
+                        <input type="file" id="letterFileInput" class="form-control rounded-3 shadow-none" required>
+                        <small class="text-muted">You can upload PDF, images, Word documents, or any standard file format.</small>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm mt-3">
+                        <i class="bi bi-upload me-1"></i> Upload & Submit
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @section Scripts {
     <script>
         $(document).ready(function() {
-            
+
             // ==========================================
             // STUDENT SYLLABUS LOGIC
             // ==========================================
@@ -59,28 +85,30 @@
             }
 
             // ==========================================
-            // UPLOAD PARTNERSHIP LETTER LOGIC
+            // UPLOAD PARTNERSHIP LETTER LOGIC (All formats allowed)
             // ==========================================
-            $(document).on('submit', '#frmUploadLetter', function (e) {
+            $(document).on('submit', '#frmUploadLetter', function(e) {
                 e.preventDefault();
                 console.log("Partnership Upload Form Submitted");
 
                 const fileInput = document.getElementById('letterFileInput');
                 if (!fileInput) {
-                    alert("File input not found.");
+                    Swal.fire("Error", "File input not found.", "error");
                     return;
                 }
 
                 const file = fileInput.files[0];
                 if (!file) {
+
                     alert("Please select a  file first.");
                     return;
                 }
 
 
+
                 const maxSize = 10 * 1024 * 1024;
                 if (file.size > maxSize) {
-                    alert("PDF file size must not exceed 10 MB.");
+                    Swal.fire("Warning", "File size must not exceed 10 MB.", "warning");
                     return;
                 }
 
@@ -98,29 +126,33 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function (response) {
+                    success: function(response) {
                         if (response.success) {
-                             //Swal.Fire("Success",response.message|| "Partnership letter uploaded successfully.","sucees");
-                            alert(response.message || "Partnership letter uploaded successfully.");
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: response.message || "Partnership letter uploaded successfully.",
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+
                             const modalElement = document.getElementById('uploadLetterModal');
                             if (modalElement) {
                                 const modalInstance = bootstrap.Modal.getInstance(modalElement);
                                 if (modalInstance) modalInstance.hide();
                             }
-                            setTimeout(function () { window.location.reload(); }, 1000);
+                            setTimeout(function() { window.location.reload(); }, 1500);
                         } else {
-                            //Swal.Fire("Info",response.message,"info");
-                            alert(response.message || "Upload failed.");
+                            Swal.fire("Info", response.message || "Upload failed.", "info");
                             $submitBtn.prop('disabled', false).html(originalHtml);
                         }
                     },
-                    error: function (xhr, status, error) {
+                    error: function(xhr, status, error) {
                         let message = "Error uploading partnership letter.";
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             message = xhr.responseJSON.message;
                         }
-                       // Swal.fire("Info", message, "info");
-                       alert(message);
+                        Swal.fire("Error", message, "error");
                         $submitBtn.prop('disabled', false).html(originalHtml);
                     }
                 });
@@ -131,16 +163,13 @@
         // ==========================================
         // STUDENT FUNCTIONS
         // ==========================================
-        // ==========================================
-        // STUDENT FUNCTIONS (Date Lock Logic & Click Handling)
-        // ==========================================
         function loadStudentSyllabus(stdId) {
             $.get('/api/studentcourse/course-list/' + stdId, function(res) {
                 let html = '';
                 if (res.success && res.data.length > 0) {
-                    
+
                     let today = new Date();
-                    today.setHours(0,0,0,0); // Sirf date compare karne ke liye time zero kiya
+                    today.setHours(0, 0, 0, 0);
 
                     res.data.forEach((c, index) => {
                         let collapseId = 'courseCollapse_' + c.id;
@@ -148,38 +177,36 @@
                         let isActive = index === 0 ? 'active' : '';
 
                         html += `
-                        <div class="mb-3 border rounded-3 overflow-hidden shadow-sm">
-                            <div class="course-header ${isActive} p-3" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
-                                <div class="fw-bolder text-uppercase small" style="letter-spacing: 0.5px; color: var(--bs-${c.themeColor});">${c.courseName}</div>
-                                <div class="small fw-bold text-muted mt-1"><i class="bi bi-star-fill text-warning"></i> ${c.totalPoints} PTS</div>
-                            </div>
-                            <div id="${collapseId}" class="collapse ${isFirst}">
-                                <div class="bg-light p-2 border-top">`;
-                                    
-                                c.modules.forEach(m => {
-                                    let unlockDate = new Date(m.unlockDate);
-                                    let unlockDateOnly = new Date(unlockDate);
-                                    unlockDateOnly.setHours(0,0,0,0);
-                                    
-                                    let isLocked = unlockDateOnly > today;
-                                    let dateStr = unlockDate.toLocaleDateString();
+                              <div class="mb-3 border rounded-3 overflow-hidden shadow-sm">
+                                  <div class="course-header ${isActive} p-3" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                                      <div class="fw-bolder text-uppercase small" style="letter-spacing: 0.5px; color: var(--bs-${c.themeColor});">${c.courseName}</div>
+                                      <div class="small fw-bold text-muted mt-1"><i class="bi bi-star-fill text-warning"></i> ${c.totalPoints} PTS</div>
+                                </div>
+                                  <div id="${collapseId}" class="collapse ${isFirst}">
+                                      <div class="bg-light p-2 border-top">`;
 
-                                    if (isLocked) {
-                                        // LOCKED UI
-                                        html += `
-                                        <div class="p-2 mb-1 bg-light border rounded-3 small text-muted d-flex justify-content-between align-items-center" style="cursor:not-allowed;" title="Unlocks on ${dateStr}">
-                                            <span><i class="bi bi-lock-fill me-1"></i> ${m.moduleName}</span>
-                                            <span class="badge bg-light text-muted border">Unlocks: ${dateStr}</span>
-                                        </div>`;
-                                    } else {
-                                        // UNLOCKED UI (Clickable)
-                                        html += `
-                                        <div class="p-2 mb-1 bg-white border rounded-3 small fw-bold d-flex justify-content-between align-items-center module-item" style="cursor:pointer; transition:0.2s;" onclick="openModuleContent(${m.id}, '${m.moduleName}')">
-                                            <span><span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--bs-${c.themeColor});margin-right:5px;"></span> ${m.moduleName}</span>
-                                            <span class="badge bg-light text-dark border">${m.points} Mks</span>
-                                        </div>`;
-                                    }
-                                });
+                        c.modules.forEach(m => {
+                            let unlockDate = new Date(m.unlockDate);
+                            let unlockDateOnly = new Date(unlockDate);
+                            unlockDateOnly.setHours(0, 0, 0, 0);
+
+                            let isLocked = unlockDateOnly > today;
+                            let dateStr = unlockDate.toLocaleDateString();
+
+                            if (isLocked) {
+                                html += `
+                                              <div class="p-2 mb-1 bg-light border rounded-3 small text-muted d-flex justify-content-between align-items-center" style="cursor:not-allowed;" title="Unlocks on ${dateStr}">
+                                                <span><i class="bi bi-lock-fill me-1"></i> ${m.moduleName}</span>
+                                                <span class="badge bg-light text-muted border">Unlocks: ${dateStr}</span>
+                                            </div>`;
+                            } else {
+                                html += `
+                                            <div class="p-2 mb-1 bg-white border rounded-3 small fw-bold d-flex justify-content-between align-items-center module-item" style="cursor:pointer; transition:0.2s;" onclick="openModuleContent(${m.id}, '${m.moduleName}', this)">
+                                                <span><span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--bs-${c.themeColor});margin-right:5px;"></span> ${m.moduleName}</span>
+                                                <span class="badge bg-light text-dark border">${m.points} Mks</span>
+                                            </div>`;
+                            }
+                        });
 
                         html += `</div></div></div>`;
                     });
@@ -190,76 +217,71 @@
             });
         }
 
-       function openModuleContent(moduleId, moduleName) {
+        function openModuleContent(moduleId, moduleName, element) {
             $('#workspaceDefault').addClass('d-none');
             $('#modulePanel').removeClass('d-none');
             $('#lblSelectedModuleTitle').text(moduleName);
 
-            $('.module-item').removeClass('border-primary bg-primary-subtle');
-            $(event.currentTarget).addClass('border-primary bg-primary-subtle');
+            $('.module-item').removeClass('border-primary bg-primary-subtle'); $(element).addClass('border-primary bg-primary-subtle');
 
             $('#tabLabs, #tabVideos, #tabAssessments').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>');
 
             $.get('/api/studentcourse/module-content/' + moduleId, function(res) {
-                if(res.success) {
+                if (res.success) {
                     let weekPoints = 0;
-                    
-                    // Grouping function by Tab
+
                     function renderTab(items, tabName) {
                         let tabItems = items.filter(i => i.tabCategory === tabName);
-                        if(tabItems.length === 0) return '<p class="text-muted"><i class="bi bi-inbox fs-4 d-block mb-2"></i> No content found.</p>';
+                        if (tabItems.length === 0) return '<p class="text-muted"><i class="bi bi-inbox fs-4 d-block mb-2"></i> No content found.</p>';
 
-                        // Group by Section Heading
                         let grouped = {};
                         tabItems.forEach(i => {
                             let sh = i.sectionHeading || 'MODULE CONTENT';
-                            if(!grouped[sh]) grouped[sh] = [];
+                            if (!grouped[sh]) grouped[sh] = [];
                             grouped[sh].push(i);
                         });
 
                         let html = '';
-                        for(let heading in grouped) {
+                        for (let heading in grouped) {
                             html += `
-                            <div class="mb-5">
-                                <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-2">
-                                    <i class="bi bi-tag-fill me-2"></i>${heading}
-                                </h6>
-                                <hr class="mt-0 mb-4" style="opacity: 0.1;" />
-                                <div class="row g-4">`;
+                                  <div class="mb-5">
+                                      <h6 class="text-uppercase small fw-bold text-muted tracking-wider mb-2">
+                                          <i class="bi bi-tag-fill me-2"></i>${heading}
+                                      </h6>
+                                      <hr class="mt-0 mb-4" style="opacity: 0.1;" />
+                                      <div class="row g-4">`;
 
                             grouped[heading].forEach(item => {
                                 weekPoints += item.points;
 
-                                // Dynamic Buttons Layout
                                 let btnHtml = '';
-                                if(tabName === 'Labs') {
+                                if (tabName === 'Labs') {
                                     btnHtml = `<div class="d-flex gap-2 w-100">
-                                        ${item.resourceFileUrl ? `<a href="${item.resourceFileUrl}" target="_blank" class="btn btn-light rounded-pill fw-bold border btn-sm flex-fill"><i class="bi bi-download text-muted"></i> Resource</a>` : ''}
-                                        <button class="btn btn-info text-white rounded-pill fw-bold btn-sm flex-fill">Start Game</button>
-                                    </div>`;
-                                } else if(tabName === 'Videos') {
+                                              ${item.resourceFileUrl ? `<a href="${item.resourceFileUrl}" target="_blank" class="btn btn-light rounded-pill fw-bold border btn-sm flex-fill"><i class="bi bi-download text-muted"></i> Resource</a>` : ''}
+                                              <button class="btn btn-info text-white rounded-pill fw-bold btn-sm flex-fill">Start Game</button>
+                                          </div>`;
+                                } else if (tabName === 'Videos') {
                                     btnHtml = `<button class="btn btn-danger w-100 rounded-pill fw-bold btn-sm" onclick="window.open('${item.videoUrl}', '_blank')"><i class="bi bi-play-fill"></i> Watch Video</button>`;
-                                } else if(tabName === 'Assessments') {
+                                } else if (tabName === 'Assessments') {
                                     btnHtml = `<button class="btn btn-warning w-100 rounded-pill fw-bold text-dark btn-sm"><i class="bi bi-card-checklist me-1"></i> Start Assessment</button>`;
                                 }
 
-                                // Custom Card UI (Matching Screenshot exactly)
                                 html += `
-                                <div class="col-md-4">
-                                    <div class="card border rounded-4 overflow-hidden h-100 shadow-sm" style="transition: transform 0.2s;">
-                                        <div class="position-relative bg-light" style="height: 180px;">
-                                            ${item.cardTag ? `<span class="badge bg-dark position-absolute top-0 start-0 m-3 rounded-pill px-3 py-2 shadow-sm">${item.cardTag}</span>` : ''}
-                                            ${item.points > 0 ? `<span class="badge bg-warning text-dark position-absolute top-0 end-0 m-3 shadow-sm rounded-pill px-3 py-2">Score : ${item.points} Pts</span>` : ''}
-                                            <img src="${item.thumbnailUrl}" class="w-100 h-100" style="object-fit: cover;">
-                                        </div>
-                                        <div class="card-body p-3 bg-white d-flex flex-column">
-                                            <h6 class="fw-bold mb-3 text-dark lh-base">${item.title}</h6>
-                                            <div class="mt-auto pt-2 border-top border-light">
-                                                ${btnHtml}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>`;
+                                      <div class="col-md-4">
+                                          <div class="card border rounded-4 overflow-hidden h-100 shadow-sm" style="transition: transform 0.2s;">
+                                              <div class="position-relative bg-light" style="height: 180px;">
+                                                  ${item.cardTag ? `<span class="badge bg-dark position-absolute top-0 start-0 m-3 rounded-pill px-3 py-2 shadow-sm">${item.cardTag}</span>` : ''}
+                                                  ${item.points > 0 ? `<span class="badge bg-warning text-dark position-absolute top-0 end-0 m-3 shadow-sm rounded-pill px-3 py-2">Score : ${item.points} Pts</span>` : ''}
+                                                  <img src="${item.thumbnailUrl}" class="w-100 h-100" style="object-fit: cover;">
+                                              </div>
+                                              <div class="card-body p-3 bg-white d-flex flex-column">
+                                                  <h6 class="fw-bold mb-3 text-dark lh-base">${item.title}</h6>
+                                                  <div class="mt-auto pt-2 border-top border-light">
+                                                      ${btnHtml}
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </div>`;
                             });
 
                             html += `</div></div>`;
@@ -276,216 +298,3 @@
         }
     </script>
 }
-
-
-@* @{
-    ViewData["Title"] = "Dashboard";
-    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
-    string portal = ViewData["PortalName"]?.ToString() ?? "User";
-}
-
-<div class="container-fluid py-4">
-
-    <!-- Dynamic Role-Based Content Loading -->
-    @switch (portal.ToLower())
-    {
-        case "affiliate":
-            <partial name="~/Views/Dashboard/Partials/_AffiliateDashboard.cshtml" />
-            break;
-
-        case "school":
-            <partial name="~/Views/Dashboard/Partials/_SchoolDashboard.cshtml" />
-            break;
-       case "volunteer":
-            <partial name="~/Views/Dashboard/Partials/_VolunteerDashboard.cshtml" />
-            break;
-
-        case "teacher":
-            <partial name="~/Views/Dashboard/Partials/_TeacherDashboard.cshtml" />
-            break;
-         case "student":
-            <partial name="~/Views/Dashboard/Partials/_StudentDashboard.cshtml" />
-            break;
-
-        case "testeremployee":
-            // Agar TesterEmployee ka pehle se koi apna view hai, ya partial view banana chahein
-            <partial name="~/Views/Dashboard/Partials/_TesterDashboard.cshtml" />
-            break;
-
-        default:
-            <div class="alert alert-info rounded-4">
-                <h4>Welcome, @portal!</h4>
-                <p class="m-0">Your custom dashboard layout is under construction.</p>
-            </div>
-            break;
-    }
-
-</div>
-@section Scripts {
-    <script>
-
-        $(document).on('submit', '#frmUploadLetter', function (e) {
-
-            e.preventDefault();
-
-            console.log("Partnership Upload Form Submitted");
-
-            const fileInput = document.getElementById('letterFileInput');
-
-            if (!fileInput) {
-                console.error("letterFileInput not found.");
-                alert("File input not found.");
-                return;
-            }
-
-            const file = fileInput.files[0];
-
-            console.log("Selected File:", file);
-
-            if (!file) {
-                alert("Please select a PDF file first.");
-                return;
-            }
-
-            // -----------------------------
-            // Validate PDF
-            // -----------------------------
-
-            const extension = file.name
-                .split('.')
-                .pop()
-                .toLowerCase();
-
-            if (extension !== 'pdf') {
-                alert("Only PDF files are allowed.");
-                return;
-            }
-
-            // -----------------------------
-            // Validate File Size
-            // Maximum 10 MB
-            // -----------------------------
-
-            const maxSize = 10 * 1024 * 1024;
-
-            if (file.size > maxSize) {
-                alert("PDF file size must not exceed 10 MB.");
-                return;
-            }
-
-            // -----------------------------
-            // Create FormData
-            // -----------------------------
-
-            const formData = new FormData();
-
-            formData.append("letterFile", file);
-
-            console.log("FormData created.");
-            console.log("Calling Partnership Letter API...");
-
-            // -----------------------------
-            // Submit Button
-            // -----------------------------
-
-            const $submitBtn =
-                $(this).find('button[type="submit"]');
-
-            const originalHtml =
-                $submitBtn.html();
-
-            $submitBtn
-                .prop('disabled', true)
-                .html(`
-                    <span class="spinner-border spinner-border-sm me-2"></span>
-                    Uploading...
-                `);
-
-            // -----------------------------
-            // API CALL
-            // -----------------------------
-
-            $.ajax({
-
-                url: '/api/school/Dashboard/UploadPartnershipLetter',
-
-                type: 'POST',
-
-                data: formData,
-
-                contentType: false,
-
-                processData: false,
-
-                success: function (response) {
-
-                    console.log("Upload API Success:", response);
-
-                    if (response.success) {
-
-                        alert(
-                            response.message ||
-                            "Partnership letter uploaded successfully."
-                        );
-
-                        // Close Bootstrap Modal
-                        const modalElement =
-                            document.getElementById('uploadLetterModal');
-
-                        if (modalElement) {
-
-                            const modalInstance =
-                                bootstrap.Modal.getInstance(modalElement);
-
-                            if (modalInstance) {
-                                modalInstance.hide();
-                            }
-                        }
-
-                        // Reload Dashboard
-                        setTimeout(function () {
-                            window.location.reload();
-                        }, 500);
-
-                    } else {
-
-                        alert(
-                            response.message ||
-                            "Upload failed."
-                        );
-
-                        $submitBtn
-                            .prop('disabled', false)
-                            .html(originalHtml);
-                    }
-                },
-
-                error: function (xhr, status, error) {
-
-                    console.error("Upload API Error:", xhr);
-                    console.error("Status:", status);
-                    console.error("Error:", error);
-                    console.error("Response:", xhr.responseText);
-
-                    let message =
-                        "Error uploading partnership letter.";
-
-                    if (
-                        xhr.responseJSON &&
-                        xhr.responseJSON.message
-                    ) {
-                        message = xhr.responseJSON.message;
-                    }
-
-                    alert(message);
-
-                    $submitBtn
-                        .prop('disabled', false)
-                        .html(originalHtml);
-                }
-
-            });
-
-        });
-    </script>
-} *@

@@ -145,7 +145,9 @@ namespace HemFoundation.Data
         public DbSet<MasterSetting> mastersettings { get; set; }
         public DbSet<DailySamparkEntry> dailysamparkentries { get; set; }
         public DbSet<DailyQuestion> dailyquestions { get; set; }
-
+        public DbSet<ProjectEvaluation> ProjectEvaluations { get; set; }
+        public DbSet<HfUploadAnubhuti> HfUploadAnubhuti { get; set; }
+        public DbSet<HfTblUploadIndividualProject> HfTblUploadIndividualProject { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
