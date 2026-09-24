@@ -15,14 +15,12 @@ namespace HemFoundation.Controllers
         [HttpGet("Affiliate/Index")]
         public IActionResult Index()
         {
-            // Login Check (Aapke existing logic ke hisaab se)
             var isLoggedIn = HttpContext.Session.GetString("IsAdminLoggedIn");
             if (string.IsNullOrEmpty(isLoggedIn) || isLoggedIn != "true")
             {
                 return RedirectToAction("Index", "Home");
             }
 
-            // Dashboard View Return karega
             return View("~/Views/Affiliate/Index.cshtml");
         }
         [HttpGet("Affiliate/Hub")]

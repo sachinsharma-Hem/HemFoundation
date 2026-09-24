@@ -26,7 +26,6 @@ namespace HemFoundation.Controllers.Api
             return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, istZone);
         }
 
-        // 1. Get Dropdown List of All Active Affiliates
         [HttpGet("affiliates-list")]
         public async Task<IActionResult> GetAffiliatesList()
         {
@@ -45,38 +44,36 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = list });
         }
 
-        // 2. Get Data for Selected Affiliate
         [HttpGet("get-mapping-data/{affiliateId}")]
         public async Task<IActionResult> GetMappingData(long affiliateId)
         {
-            var affIdStr = affiliateId.ToString();
+            int? affIdStr = (int?)affiliateId;
 
-            // Currently Assigned Schools to THIS Affiliate
-            var assignedSchools = await _context.Institutes
-                .Where(i => i.IsActive && i.ReferredByAffiliateId == affIdStr)
+
+            var referralCodeStr = await _context.WJ_ReferralCodes
+               .Where(x => x.UserID == affIdStr)
+               .Select(x => x.ReferralCode)
+               .FirstOrDefaultAsync();
+
+            var assignedSchools = await _context.WJ_Institutes
+                .Where(i => i.IsActive && i.ReferralCode == referralCodeStr)
                 .Select(i => new
                 {
                     i.InstituteID,
-                    i.Name,
-                    i.City,
-                    i.State,
-                    i.Address,
-                    i.MobileNo,
-                    i.EmailID
+                    i.Name
+                   
                 })
                 .OrderBy(i => i.Name)
                 .ToListAsync();
 
-            // Available Schools = All Active Schools EXCEPT those assigned to THIS Affiliate
-            // (Isme Unassigned schools + Other Affiliates ke mapped schools ayenge)
-            var availableSchools = await _context.Institutes
-                .Where(i => i.IsActive && i.ReferredByAffiliateId != affIdStr)
+
+            var availableSchools = await _context.WJ_Institutes
+                .Where(i => i.IsActive && i.ReferralCode != referralCodeStr)
                 .Select(i => new
                 {
                     i.InstituteID,
                     i.Name,
-                    i.City,
-                    i.ReferredByAffiliateId
+                    i.ReferralCode
                 })
                 .OrderBy(i => i.Name)
                 .ToListAsync();
