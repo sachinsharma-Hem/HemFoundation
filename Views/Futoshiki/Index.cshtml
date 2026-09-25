@@ -383,7 +383,16 @@
             success: function(data) {
                 if (data && data[0] === "OK") {
                     if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
-                        Swal.fire({ title: "Congrats!", text: "Record saved successfully..", icon: "success" });
+                        //Swal.fire({ title: "Congrats!", text: "Record saved successfully..", icon: "success" });
+                        Swal.fire({
+                            title: "Success!",
+                            text: "Record saved successfully..",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
                     } else {
                         alert("Record saved successfully..");
                     }

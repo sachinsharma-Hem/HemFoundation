@@ -755,46 +755,12 @@ namespace HemFoundation.Controllers.Api
                 {
                     await conn.OpenAsync();
 
-                    string dashboardSql = @"
-                WITH PerfInst AS (
-                    SELECT DISTINCT instituteid FROM vw_school_profile_details WHERE instituteid IS NOT NULL
-                ),
-                FocusedInst AS (
-                    SELECT DISTINCT institute_id AS instituteid FROM hf_tbl_affliatefocusedlist WHERE institute_id IS NOT NULL
-                )
-
-                SELECT 
-                    'Performance' AS MetricType,
-                    (SELECT COUNT(*) FROM PerfInst) AS SchoolCount,
-                    (SELECT COUNT(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid IN (SELECT instituteid FROM PerfInst)) AS TotalStudents,
-                    (SELECT COUNT(DISTINCT studentid) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM PerfInst) AND activity_type != 'Survey') AS ActiveStudents,
-                    (SELECT COUNT(DISTINCT teacherid) FROM wj_teacherassociates WHERE instituteid IN (SELECT instituteid FROM PerfInst)) AS TotalTeachers,
-                    (SELECT COUNT(DISTINCT teacherid) FROM hf_view_teacheractivitylog WHERE instituteid IN (SELECT instituteid FROM PerfInst)) AS ActiveTeachers,
-                    (SELECT COUNT(DISTINCT instituteid) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM PerfInst)) AS TotalSelProjects,
-                    (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE activity_type = 'Family PBL') AS FamilyProjects,
-                    (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE activity_type = 'Individual PBL') AS IndividualProjects,
-                    (SELECT COUNT(*) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM PerfInst)) AS GroupPbl
-
-                UNION ALL
-
-                SELECT 
-                    'Focused' AS MetricType,
-                    (SELECT COUNT(*) FROM FocusedInst) AS SchoolCount,
-                    (SELECT COUNT(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid IN (SELECT instituteid FROM FocusedInst)) AS TotalStudents,
-                    (SELECT COUNT(DISTINCT studentid) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM FocusedInst) AND activity_type != 'Survey') AS ActiveStudents,
-                    (SELECT COUNT(DISTINCT teacherid) FROM wj_teacherassociates WHERE instituteid IN (SELECT instituteid FROM FocusedInst)) AS TotalTeachers,
-                    (SELECT COUNT(DISTINCT teacherid) FROM hf_view_teacheractivitylog WHERE instituteid IN (SELECT instituteid FROM FocusedInst)) AS ActiveTeachers,
-                    (SELECT COUNT(DISTINCT instituteid) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM FocusedInst)) AS TotalSelProjects,
-                    (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM FocusedInst) AND activity_type = 'Family PBL') AS FamilyProjects,
-                    (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM FocusedInst) AND activity_type = 'Individual PBL') AS IndividualProjects,
-                    (SELECT COUNT(*) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM FocusedInst)) AS GroupPbl;
-            ";
+                    string dashboardSql = "SELECT metric_type, schoolcount, totalstudents, activestudents, totalteachers, activeteachers, totalselprojects, familyprojects, individualprojects, grouppbl FROM public.get_overall_dashboard_summary()";
 
                     using (var cmd = new Npgsql.NpgsqlCommand(dashboardSql, conn))
                     {
                         using (var reader = await cmd.ExecuteReaderAsync())
                         {
-                            // Correctly awaiting the ValueTask returned by ReadAsync()
                             while (await reader.ReadAsync())
                             {
                                 string metricType = reader.GetString(0);

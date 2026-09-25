@@ -95,10 +95,15 @@ namespace HemFoundation.Controllers.Api
                 return BadRequest(new { success = false, message = "Invalid Affiliate selected." });
             }
 
-            var targetAffiliate = await _context.Affiliates.FirstOrDefaultAsync(a => a.UserID == model.AffiliateId);
+            var targetAffiliate = await _context.Users.FirstOrDefaultAsync(a => a.UserID == model.AffiliateId);
             if (targetAffiliate == null)
             {
                 return NotFound(new { success = false, message = "Selected Affiliate not found." });
+            }
+            var reffrelcode = await _context.WJ_ReferralCodes.FirstOrDefaultAsync(a => a.UserID == model.AffiliateId);
+            if (reffrelcode == null)
+            {
+                return NotFound(new { success = false, message = "Selected referrel code not found." });
             }
 
             var newAffName = targetAffiliate.FirstName + " " + targetAffiliate.LastName;
@@ -106,40 +111,40 @@ namespace HemFoundation.Controllers.Api
             var istNow = GetIstTime();
 
             // Get all schools currently assigned to this affiliate
-            var currentAssignedInstitutes = await _context.Institutes
-                .Where(i => i.ReferredByAffiliateId == targetAffIdStr)
+            var currentAssignedInstitutes = await _context.WJ_Institutes
+                .Where(i => i.ReferralCode == reffrelcode.ReferralCode)
                 .ToListAsync();
 
             // Selected Institute IDs sent from UI
             var newSelectedIDs = model.InstituteIDs ?? new List<int>();
 
             // 1) Schools to be ADDED or RE-ASSIGNED
-            var institutesToAdd = await _context.Institutes
-                .Where(i => newSelectedIDs.Contains(i.InstituteID) && i.ReferredByAffiliateId != targetAffIdStr)
+            var institutesToAdd = await _context.WJ_Institutes
+                .Where(i => newSelectedIDs.Contains(i.InstituteID) && i.ReferralCode != reffrelcode.ReferralCode)
                 .ToListAsync();
 
             foreach (var inst in institutesToAdd)
             {
-                string? prevAffIdStr = inst.ReferredByAffiliateId;
+                string? prevAffIdStr = inst.ReferralCode;
                 string? prevAffName = "Unassigned";
 
-                if (!string.IsNullOrEmpty(prevAffIdStr) && long.TryParse(prevAffIdStr, out long prevId))
+                if (!string.IsNullOrEmpty(inst.ReferralCode) )
                 {
-                    var prevAff = await _context.Affiliates.FirstOrDefaultAsync(a => a.UserID == prevId);
-                    if (prevAff != null)
-                    {
-                        prevAffName = prevAff.FirstName + " " + prevAff.LastName;
-                    }
+                    var prevAff = await _context.WJ_ReferralCodes.FirstOrDefaultAsync(a => a.ReferralCode == inst.ReferralCode);
+                    var prevAffdetails = await _context.Users.FirstOrDefaultAsync(a => a.UserID == prevAff.UserID);
+
+                    prevAffName = prevAffdetails.FirstName + " " + prevAffdetails.LastName;
+                    
                 }
 
                 // Update mapping
-                inst.ReferredByAffiliateId = targetAffIdStr;
+                inst.ReferralCode = reffrelcode.ReferralCode;
 
                 // Log audit history
                 _context.AffiliateSchoolMappingHistories.Add(new AffiliateSchoolMappingHistory
                 {
                     InstituteID = inst.InstituteID,
-                    PreviousAffiliateId = !string.IsNullOrEmpty(prevAffIdStr) && long.TryParse(prevAffIdStr, out long pId) ? pId : null,
+                    //PreviousAffiliateId = !string.IsNullOrEmpty(prevAffIdStr) && long.TryParse(prevAffIdStr, out long pId) ? pId : null,
                     PreviousAffiliateName = prevAffName,
                     NewAffiliateId = model.AffiliateId,
                     NewAffiliateName = newAffName,
@@ -155,7 +160,7 @@ namespace HemFoundation.Controllers.Api
 
             foreach (var inst in institutesToRemove)
             {
-                inst.ReferredByAffiliateId = null; // Unassigned
+                inst.ReferralCode = null; // Unassigned
 
                 _context.AffiliateSchoolMappingHistories.Add(new AffiliateSchoolMappingHistory
                 {
