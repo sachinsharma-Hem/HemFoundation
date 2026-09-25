@@ -3,347 +3,566 @@
     Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
 }
 
-<div class="container-fluid py-3">
+<div class="container-fluid py-3 px-3 px-md-4">
 
     <!-- =========================================
          PAGE HEADER
     ========================================== -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div>
-                <h3 class="fw-bold text-dark mb-1">
-                    <i class="bi bi-people-fill text-success me-2"></i>
-                    User Management
-                </h3>
-                <p class="text-muted small m-0">
-                    Manage all registered system users from optimized unified view.
-                </p>
-            </div>
-            <div>
-                <span class="badge bg-success-subtle text-success border px-3 py-2">
-                    <i class="bi bi-database-check me-1"></i>
-                    Unified User View
-                </span>
-            </div>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+
+        <div>
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="bi bi-people-fill text-success me-2"></i>
+                User Management
+            </h2>
+            <p class="text-muted small mb-0">
+                Manage, monitor and control all registered system users
+            </p>
         </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="button"
+                    class="btn btn-outline-success btn-sm rounded-pill px-3"
+                    onclick="loadMasterUsers()"
+                    title="Refresh user list">
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                <span class="d-none d-sm-inline">Refresh</span>
+            </button>
+        </div>
+
     </div>
 
+
     <!-- =========================================
-         ROLE SUMMARY
+         STATISTICS CARDS
     ========================================== -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-3 mb-4">
-        <div class="d-flex align-items-center mb-3">
-            <div class="bg-success-subtle rounded-3 p-2 me-2">
-                <i class="bi bi-bar-chart-fill text-success"></i>
-            </div>
-            <div>
-                <h6 class="fw-bold text-dark mb-0">
-                    User Summary
-                </h6>
-                <small class="text-muted">
-                    Total users grouped by role
-                </small>
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <small class="text-muted d-block mb-1">Total Users</small>
+                        <h4 class="fw-bold text-dark mb-0" id="statTotalUsers">0</h4>
+                    </div>
+                    <div class="bg-primary-subtle rounded-3 p-3">
+                        <i class="bi bi-people-fill text-primary fs-5"></i>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="roleCounts" class="d-flex flex-wrap gap-2">
-            <span class="text-muted small">
-                Loading role statistics...
-            </span>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <small class="text-muted d-block mb-1">Active Users</small>
+                        <h4 class="fw-bold text-success mb-0" id="statActiveUsers">0</h4>
+                    </div>
+                    <div class="bg-success-subtle rounded-3 p-3">
+                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <small class="text-muted d-block mb-1">Inactive Users</small>
+                        <h4 class="fw-bold text-danger mb-0" id="statInactiveUsers">0</h4>
+                    </div>
+                    <div class="bg-danger-subtle rounded-3 p-3">
+                        <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <small class="text-muted d-block mb-1">Selected</small>
+                        <h4 class="fw-bold text-dark mb-0" id="statSelectedUsers">0</h4>
+                    </div>
+                    <div class="bg-light rounded-3 p-3">
+                        <i class="bi bi-check2-square text-secondary fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
+
     <!-- =========================================
-         MASTER USERS TABLE
+         ROLE DISTRIBUTION CARD
     ========================================== -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
 
-        <!-- Filters & Search -->
-        <div class="row mb-3 align-items-end g-3 px-2">
+        <div class="card-body p-3 p-md-4">
 
-            <!-- Role Filter -->
-            <div class="col-md-3">
-                <label class="form-label small fw-bold text-secondary mb-1">
-                    Filter by Role / Portal:
-                </label>
-                <select class="form-select form-select-sm rounded-3 shadow-none border"
-                        id="filterPortal"
-                        onchange="filterMasterUsers()">
-                    <option value="">
-                        -- All Roles --
-                    </option>
-                </select>
-            </div>
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="bi bi-pie-chart-fill text-primary me-2"></i>
+                Role Distribution
+            </h6>
 
-            <!-- Live Text Search Box -->
-            <div class="col-md-4">
-                <label class="form-label small fw-bold text-secondary mb-1">
-                    Search Users:
-                </label>
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-light border-end-0 rounded-start-3 text-muted">
-                        <i class="bi bi-search"></i>
-                    </span>
-                    <input type="text"
-                           class="form-control form-control-sm rounded-end-3 shadow-none border-start-0 bg-light"
-                           id="searchQuery"
-                           placeholder="Search by name, username, mobile..."
-                           onkeyup="filterMasterUsers()">
-                </div>
-            </div>
-
-            <!-- Total -->
-            <div class="col-md-2">
-                <div class="small text-muted mb-1">
-                    Current Result
-                </div>
-                <span class="badge bg-light text-dark border px-3 py-2 fw-bold small"
-                      id="totalUsersCount">
-                    Total Users: 0
-                </span>
-            </div>
-
-            <!-- Page Information -->
-            <div class="col-md-3 text-md-end">
-                <span class="badge bg-light text-secondary border px-3 py-2 small"
-                      id="pageInfo">
-                    Page 1 of 1
-                </span>
+            <div id="roleDistribution" class="d-flex flex-wrap gap-2">
+                <span class="text-muted small">Loading...</span>
             </div>
 
         </div>
 
-        <!-- Table -->
+    </div>
+
+
+    <!-- =========================================
+         FILTER PANEL
+    ========================================== -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+
+        <div class="card-body p-3 p-md-4">
+
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="bi bi-funnel-fill text-secondary me-2"></i>
+                Filters
+            </h6>
+
+            <div class="row g-2 g-md-3 mb-3">
+
+                <!-- Role Filter -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label small fw-bold text-muted mb-2">
+                        Role / Portal
+                    </label>
+                    <select class="form-select form-select-sm rounded-2 shadow-none border"
+                            id="filterRole"
+                            onchange="applyFilters()">
+                        <option value="">-- All Roles --</option>
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label small fw-bold text-muted mb-2">
+                        Status
+                    </label>
+                    <select class="form-select form-select-sm rounded-2 shadow-none border"
+                            id="filterStatus"
+                            onchange="applyFilters()">
+                        <option value="">-- All Status --</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+
+                <!-- Date Filter -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label small fw-bold text-muted mb-2">
+                        Registered Date
+                    </label>
+                    <select class="form-select form-select-sm rounded-2 shadow-none border"
+                            id="filterDate"
+                            onchange="applyFilters()">
+                        <option value="">-- All Dates --</option>
+                        <option value="today">Today</option>
+                        <option value="7days">Last 7 Days</option>
+                        <option value="30days">Last 30 Days</option>
+                    </select>
+                </div>
+
+                <!-- Search -->
+                <div class="col-12 col-lg-3">
+                    <label class="form-label small fw-bold text-muted mb-2">
+                        Search
+                    </label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-0 text-muted rounded-start-2">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control form-control-sm bg-light border-0 rounded-end-2 shadow-none"
+                               id="searchQuery"
+                               placeholder="Name, username, mobile..."
+                               onkeyup="applyFilters()">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary rounded-2"
+                        onclick="resetFilters()">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>
+                    Reset Filters
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================
+         BATCH ACTIONS BAR
+    ========================================== -->
+    <div class="card border-0 shadow-sm rounded-3 bg-light border border-secondary border-opacity-25 mb-3 d-none"
+         id="batchActionsBar">
+
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2 p-3">
+
+            <small class="text-muted">
+                <i class="bi bi-check2-square me-1"></i>
+                <span id="selectedUsersText">0 users selected</span>
+            </small>
+
+            <button type="button"
+                    class="btn btn-sm btn-danger rounded-2"
+                    id="btnDeleteSelected"
+                    onclick="deleteSelectedUsers()"
+                    disabled>
+                <i class="bi bi-trash3-fill me-1"></i>
+                Delete Selected
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================
+         RESULTS INFO
+    ========================================== -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 px-2">
+
+        <small class="text-muted" id="recordInfo">
+            Showing 0 to 0 of 0 users
+        </small>
+
+        <small class="text-muted" id="pageInfo">
+            Page 1 of 1
+        </small>
+
+    </div>
+
+
+    <!-- =========================================
+         TABLE
+    ========================================== -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+
         <div class="table-responsive">
-            <table class="table table-hover table-sm align-middle mb-0"
-                   id="masterUserTable">
-                <thead class="table-light">
+
+            <table class="table table-hover table-sm align-middle mb-0" id="masterUserTable">
+
+                <thead class="table-light border-bottom">
+
                     <tr>
-                        <th class="py-2" style="width: 60px;">S.No.</th>
-                        <th class="py-2">Code / Username</th>
-                        <th class="py-2">Full Name & Role</th>
-                        <th class="py-2">Mobile</th>
-                        <th class="py-2">Password</th>
-                        <th class="py-2">Registered Date</th>
-                        <th class="py-2 text-center" style="width: 80px;">Status</th>
-                        <th class="py-2 text-end pe-3" style="width: 120px;">Actions</th>
+
+                        <th class="text-center ps-3" style="width: 45px;">
+                            <input type="checkbox"
+                                   class="form-check-input shadow-none"
+                                   id="selectAllUsers"
+                                   onchange="toggleSelectAll()">
+                        </th>
+
+                        <th class="py-3" style="width: 50px;">S.No.</th>
+
+                        <th class="py-3">User</th>
+
+                        <th class="py-3 d-none d-lg-table-cell">User Code</th>
+
+                        <th class="py-3">Role</th>
+
+                        <th class="py-3 d-none d-md-table-cell">Mobile</th>
+
+                        <th class="py-3 d-none d-xl-table-cell">Registered</th>
+
+                        <th class="py-3 text-center" style="width: 80px;">Status</th>
+
+                        <th class="py-3 text-end pe-3" style="width: 110px;">Actions</th>
+
                     </tr>
+
                 </thead>
+
                 <tbody id="masterUserTableBody">
+
                     <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">
+                        <td colspan="9" class="text-center py-5 text-muted">
                             <div class="spinner-border spinner-border-sm text-success mb-2" role="status"></div>
-                            <p class="small m-0">Loading master user records from view...</p>
+                            <p class="small m-0">Loading user records...</p>
                         </td>
                     </tr>
+
                 </tbody>
+
             </table>
+
         </div>
 
-        <!-- =========================================
-             PAGINATION
-        ========================================== -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 pt-3 border-top">
-            <div class="small text-muted" id="recordInfo">
-                Showing 0 to 0 of 0 users
-            </div>
-            <nav aria-label="User pagination">
-                <ul class="pagination pagination-sm mb-0" id="pagination">
-                </ul>
-            </nav>
-        </div>
+    </div>
+
+
+    <!-- =========================================
+         PAGINATION
+    ========================================== -->
+    <div class="d-flex flex-wrap justify-content-center justify-content-md-between align-items-center">
+
+        <small class="text-muted d-none d-md-block" id="paginationInfo"></small>
+
+        <nav aria-label="User pagination">
+            <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+        </nav>
 
     </div>
 
 </div>
+
 
 <!-- =========================================
      VIEW DETAILS MODAL
 ========================================== -->
 <div class="modal fade" id="viewDetailModal" tabindex="-1" aria-hidden="true">
+
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-white text-dark">
-            <div class="modal-header bg-success text-white px-4 py-3">
-                <h5 class="fw-bold m-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-person-badge fs-4"></i>
-                    <span>User Complete Details</span>
+
+        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+
+            <div class="modal-header bg-success text-white px-4 py-3 border-0">
+                <h5 class="fw-bold m-0">
+                    <i class="bi bi-person-badge me-2"></i>
+                    User Details
                 </h5>
                 <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4 bg-light text-dark">
+
+            <div class="modal-body p-4">
+
                 <div class="row g-3">
+
+                    <!-- Section: Identity -->
+                    <div class="col-12">
+                        <h6 class="text-muted small fw-bold mb-2">Identity</h6>
+                    </div>
+
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-                            <small class="text-muted">User Code</small>
-                            <div id="detCode" class="fw-bold text-dark mt-1">-</div>
-                        </div>
+                        <small class="text-muted d-block mb-1">User Code</small>
+                        <div id="detCode" class="fw-bold text-dark">-</div>
                     </div>
+
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-                            <small class="text-muted">Full Name</small>
-                            <div id="detName" class="fw-bold text-dark mt-1">-</div>
-                        </div>
+                        <small class="text-muted d-block mb-1">Username</small>
+                        <div id="detUsername" class="fw-bold text-dark">-</div>
                     </div>
+
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-                            <small class="text-muted">Portal / Role</small>
-                            <div class="mt-1">
-                                <span id="detPortal" class="badge bg-primary">-</span>
-                            </div>
-                        </div>
+                        <small class="text-muted d-block mb-1">Full Name</small>
+                        <div id="detName" class="fw-bold text-dark">-</div>
                     </div>
+
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-                            <small class="text-muted">Username</small>
-                            <div id="detUsername" class="fw-bold text-dark mt-1">-</div>
+                        <small class="text-muted d-block mb-1">Role / Portal</small>
+                        <div id="detPortal">
+                            <span class="badge bg-primary">-</span>
                         </div>
                     </div>
+
+                    <!-- Section: Contact -->
+                    <div class="col-12 pt-3">
+                        <h6 class="text-muted small fw-bold mb-2">Contact Information</h6>
+                    </div>
+
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-                            <small class="text-muted">Email</small>
-                            <div id="detEmail" class="text-dark mt-1 text-break">-</div>
-                        </div>
+                        <small class="text-muted d-block mb-1">Email</small>
+                        <div id="detEmail" class="text-dark text-break">-</div>
                     </div>
+
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-                            <small class="text-muted">Mobile</small>
-                            <div id="detMobile" class="text-dark mt-1">-</div>
-                        </div>
+                        <small class="text-muted d-block mb-1">Mobile</small>
+                        <div id="detMobile" class="text-dark">-</div>
                     </div>
-                    <div class="col-md-12">
-                        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-                            <small class="text-muted">Address</small>
-                            <div id="detAddress" class="text-dark mt-1">-</div>
-                        </div>
+
+                    <div class="col-12">
+                        <small class="text-muted d-block mb-1">Address</small>
+                        <div id="detAddress" class="text-dark">-</div>
                     </div>
+
+                    <!-- Section: Account -->
+                    <div class="col-12 pt-3">
+                        <h6 class="text-muted small fw-bold mb-2">Account</h6>
+                    </div>
+
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-                            <small class="text-muted">Registered On</small>
-                            <div id="detDate" class="text-dark mt-1">-</div>
-                        </div>
+                        <small class="text-muted d-block mb-1">Registered On</small>
+                        <div id="detDate" class="text-dark">-</div>
                     </div>
+
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
-                            <small class="text-muted">Status</small>
-                            <div id="detStatus" class="mt-1">-</div>
-                        </div>
+                        <small class="text-muted d-block mb-1">Status</small>
+                        <div id="detStatus">-</div>
                     </div>
+
                 </div>
+
             </div>
-            <div class="modal-footer bg-white border-0">
-                <button type="button" class="btn btn-secondary btn-sm rounded-3" data-bs-dismiss="modal">Close</button>
+
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary btn-sm rounded-2" data-bs-dismiss="modal">
+                    Close
+                </button>
             </div>
+
         </div>
+
     </div>
+
 </div>
 
+
 <!-- =========================================
-     EDIT USER ROLE MODAL
+     EDIT ROLE MODAL
 ========================================== -->
 <div class="modal fade" id="editRoleModal" tabindex="-1" aria-hidden="true">
+
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4 p-3">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold text-dark m-0"><i class="bi bi-shield-lock text-primary me-2"></i> Update User Role</h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+
+        <div class="modal-content border-0 shadow-lg rounded-3">
+
+            <div class="modal-header bg-primary text-white px-4 py-3 border-0">
+                <h5 class="fw-bold m-0">
+                    <i class="bi bi-shield-lock me-2"></i>
+                    Update User Role
+                </h5>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <form id="frmEditRole">
+
+            <div class="modal-body p-4">
+
+                <form id="frmEditRole" onsubmit="submitEditRole(event)">
+
                     <input type="hidden" id="editIdentityId" />
+
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">User</label>
-                        <input type="text" class="form-control bg-light border-0" id="editUserNameDisplay" readonly />
+                        <label class="form-label small fw-bold text-muted">Current User</label>
+                        <input type="text"
+                               class="form-control form-control-sm bg-light border-0"
+                               id="editUserNameDisplay"
+                               readonly />
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Select New Role <span class="text-danger">*</span></label>
-                        <select class="form-select rounded-3 shadow-none border" id="modalRoleSelect" required>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">
+                            Select New Role
+                            <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select form-select-sm rounded-2 shadow-none border"
+                                id="modalRoleSelect"
+                                required>
                             <option value="">-- Select Role --</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm py-2">
-                        <i class="bi bi-check-circle me-1"></i> Save Role Changes
+
+                    <button type="submit" class="btn btn-primary w-100 rounded-2 fw-bold py-2">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Save Role Changes
                     </button>
+
                 </form>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
+
 @section Scripts {
+
     <script>
+
+        // =========================================================
+        // GLOBAL STATE
+        // =========================================================
+
         let allMasterUsers = [];
         let filteredMasterUsers = [];
         let currentPage = 1;
         const pageSize = 50;
         let availableRoles = [];
 
+
+        // =========================================================
+        // DOCUMENT READY
+        // =========================================================
+
         $(document).ready(function() {
+
             loadRolesDropdown();
             loadMasterUsers();
 
-            // Submit Edit Role Form
-            $('#frmEditRole').on('submit', function(e) {
-                e.preventDefault();
-                const identityId = $('#editIdentityId').val();
-                const newRole = $('#modalRoleSelect').val();
-
-                if (!identityId || !newRole) {
-                    alert("Please select a valid role.");
-                    return;
-                }
-
-                const $btn = $(this).find('button[type="submit"]');
-                const origText = $btn.html(); $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Updating...');
-
-                $.ajax({
-                    url: '/api/usermanagement/update-role',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ identityId: identityId, roleName: newRole }),
-                    success: function(res) {
-                        if (res.success) {
-                            $('#editRoleModal').modal('hide');
-                            alert(res.message);
-                            loadMasterUsers(); // Refresh data
-                        } else {
-                            alert(res.message || "Failed to update role.");
-                        }
-                    },
-                    error: function(xhr) {
-                        alert(xhr.responseJSON?.message || "Error updating user role.");
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false).html(origText);
-                    }
-                });
+            // Select All behavior
+            $('#selectAllUsers').on('change', function() {
+                const isChecked = $(this).is(':checked');
+                $('.user-checkbox').prop('checked', isChecked);
+                updateDeleteButtonState();
             });
+
         });
 
+
+        // =========================================================
+        // API: LOAD ROLES
+        // =========================================================
+
         function loadRolesDropdown() {
+
             $.get('/api/usermanagement/roles-list')
                 .done(function(res) {
-                    if (!res || !res.success || !res.data) return;
+
+                    if (!res || !res.success || !res.data) {
+                        return;
+                    }
+
                     availableRoles = res.data;
-                    let opts = `<option value="">-- All Roles --</option>`;
-                    let modalOpts = `<option value="">-- Select Role --</option>`;
+
+                    let filterOpts = '<option value="">-- All Roles --</option>';
+                    let modalOpts = '<option value="">-- Select Role --</option>';
+
                     res.data.forEach(function(r) {
-                        const roleName = r.roleName || '-';
-                        opts += `<option value="${escapeHtml(roleName)}">${escapeHtml(roleName)}</option>`;
-                        modalOpts += `<option value="${escapeHtml(roleName)}">${escapeHtml(roleName)}</option>`;
+                        const roleName = escapeHtml(r.roleName || '-');
+                        filterOpts += `<option value="${roleName}">${roleName}</option>`;
+                        modalOpts += `<option value="${roleName}">${roleName}</option>`;
                     });
-                    $('#filterPortal').html(opts);
+
+                    $('#filterRole').html(filterOpts);
                     $('#modalRoleSelect').html(modalOpts);
+
                 })
                 .fail(function(xhr) {
                     console.error("Roles API Error:", xhr.responseText);
                 });
+
         }
 
+
+        // =========================================================
+        // API: LOAD ALL USERS
+        // =========================================================
+
         function loadMasterUsers() {
-            showTableLoading("Loading master user records from server...");
+
+            showTableLoading("Loading user records...");
 
             $.get('/api/usermanagement/all-users')
                 .done(function(res) {
+
                     if (!res || !res.success) {
                         showTableError("Unable to load user records.");
                         return;
@@ -351,73 +570,197 @@
 
                     allMasterUsers = res.data || [];
                     filteredMasterUsers = [...allMasterUsers];
-
-                    updateTotalCount();
-                    renderRoleCounts(res.roleCounts || {});
-
                     currentPage = 1;
+
+                    resetFilterControls();
+                    updateStatistics();
+                    renderRoleDistribution(res.roleCounts || {});
                     renderMasterTable();
+                    updateDeleteButtonState();
+
                 })
                 .fail(function(xhr) {
                     console.error("Users API Error:", xhr.responseText);
                     showTableError("Failed to load user records.");
                 });
+
         }
 
-        function showTableLoading(message) {
-            $('#masterUserTableBody').html(`
-                        <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
-                                <div class="spinner-border spinner-border-sm text-success mb-2" role="status"></div>
-                                <p class="small m-0">${escapeHtml(message)}</p>
-                            </td>
-                        </tr>
-                    `);
+
+        // =========================================================
+        // FILTERING & SEARCHING
+        // =========================================================
+
+        function applyFilters() {
+
+            const selectedRole = $('#filterRole').val().trim();
+            const selectedStatus = $('#filterStatus').val().trim();
+            const selectedDate = $('#filterDate').val().trim();
+            const searchText = $('#searchQuery').val().toLowerCase().trim();
+
+            filteredMasterUsers = allMasterUsers.filter(function(u) {
+
+                // Role filter
+                let matchesRole = true;
+                if (selectedRole) {
+                    const roles = (u.portalName || '').split(',').map(r => r.trim());
+                    matchesRole = roles.includes(selectedRole);
+                }
+
+                // Status filter
+                let matchesStatus = true;
+                if (selectedStatus) {
+                    const isActive = u.isActive === true || u.isActive === 1 || String(u.isActive).toLowerCase() === 'true';
+                    matchesStatus = selectedStatus === 'active' ? isActive : !isActive;
+                }
+
+                // Date filter
+                let matchesDate = true;
+                if (selectedDate && u.createdDate) {
+                    matchesDate = isDateInRange(u.createdDate, selectedDate);
+                }
+
+                // Search filter
+                let matchesSearch = true;
+                if (searchText) {
+                    const searchFields = [
+                        (u.fullName || '').toLowerCase(),
+                        (u.username || '').toLowerCase(),
+                        (u.userCode || '').toLowerCase(),
+                        (u.phoneNumber || '').toLowerCase(),
+                        (u.email || '').toLowerCase()
+                    ];
+                    matchesSearch = searchFields.some(field => field.includes(searchText));
+                }
+
+                return matchesRole && matchesStatus && matchesDate && matchesSearch;
+
+            });
+
+            currentPage = 1;
+            updateStatistics();
+            renderMasterTable();
+            updateDeleteButtonState();
+            $('#selectAllUsers').prop('checked', false);
+
         }
 
-        function showTableError(message) {
-            $('#masterUserTableBody').html(`
-                        <tr>
-                            <td colspan="8" class="text-center py-5 text-danger">
-                                <i class="bi bi-exclamation-triangle fs-3"></i>
-                                <p class="small mt-2 mb-0">${escapeHtml(message)}</p>
-                                <button type="button" class="btn btn-sm btn-outline-success mt-3" onclick="loadMasterUsers()">
-                                    <i class="bi bi-arrow-clockwise me-1"></i> Retry
-                                </button>
-                            </td>
-                        </tr>
-                    `);
+
+        function resetFilters() {
+
+            $('#filterRole').val('');
+            $('#filterStatus').val('');
+            $('#filterDate').val('');
+            $('#searchQuery').val('');
+
+            filteredMasterUsers = [...allMasterUsers];
+            currentPage = 1;
+
+            updateStatistics();
+            renderMasterTable();
+            updateDeleteButtonState();
+            $('#selectAllUsers').prop('checked', false);
+
         }
 
-        function updateTotalCount() {
-            $('#totalUsersCount').text(`Total Users: ${filteredMasterUsers.length}`);
+
+        function resetFilterControls() {
+            $('#filterRole').val('');
+            $('#filterStatus').val('');
+            $('#filterDate').val('');
+            $('#searchQuery').val('');
         }
 
-        function renderRoleCounts(roleCounts) {
-            const container = $('#roleCounts');
+
+        // =========================================================
+        // DATE FILTERING LOGIC
+        // =========================================================
+
+        function isDateInRange(dateString, rangeType) {
+
+            try {
+
+                const userDate = new Date(dateString);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const daysDiff = Math.floor((today - userDate) / (1000 * 60 * 60 * 24));
+
+                switch (rangeType) {
+                    case 'today':
+                        return daysDiff === 0;
+                    case '7days':
+                        return daysDiff >= 0 && daysDiff < 7;
+                    case '30days':
+                        return daysDiff >= 0 && daysDiff < 30;
+                    default:
+                        return true;
+                }
+
+            } catch (e) {
+                return false;
+            }
+
+        }
+
+
+        // =========================================================
+        // STATISTICS
+        // =========================================================
+
+        function updateStatistics() {
+
+            const total = filteredMasterUsers.length;
+
+            const active = filteredMasterUsers.filter(u => {
+                return u.isActive === true || u.isActive === 1 || String(u.isActive).toLowerCase() === 'true';
+            }).length;
+
+            const inactive = total - active;
+            const selected = $('.user-checkbox:checked').length;
+
+            $('#statTotalUsers').text(total);
+            $('#statActiveUsers').text(active);
+            $('#statInactiveUsers').text(inactive);
+            $('#statSelectedUsers').text(selected);
+
+        }
+
+
+        function renderRoleDistribution(roleCounts) {
+
+            const container = $('#roleDistribution');
             container.empty();
 
             if (!roleCounts || Object.keys(roleCounts).length === 0) {
-                container.html(`<span class="text-muted small">No role information available.</span>`);
+                container.html('<span class="text-muted small">No role information available.</span>');
                 return;
             }
 
             Object.entries(roleCounts)
-                .sort(function(a, b) { return b[1] - a[1]; })
-                .forEach(function([role, count]) {
+                .sort((a, b) => b[1] - a[1])
+                .forEach(([role, count]) => {
+
                     const badge = `
-                                <div class="border rounded-3 bg-light px-3 py-2">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="fw-semibold text-dark small">${escapeHtml(role)}</span>
-                                        <span class="badge bg-primary rounded-pill">${count}</span>
-                                    </div>
+                                <div class="badge bg-light border border-secondary border-opacity-25 text-dark px-3 py-2">
+                                    <span class="small">${escapeHtml(role)}</span>
+                                    <span class="badge bg-primary rounded-pill ms-2">${count}</span>
                                 </div>
                             `;
+
                     container.append(badge);
+
                 });
+
         }
 
+
+        // =========================================================
+        // TABLE RENDERING
+        // =========================================================
+
         function renderMasterTable() {
+
             const tbody = $('#masterUserTableBody');
             const totalRecords = filteredMasterUsers.length;
             const totalPages = Math.ceil(totalRecords / pageSize) || 1;
@@ -430,193 +773,463 @@
             const endIndex = Math.min(startIndex + pageSize, totalRecords);
             const pageData = filteredMasterUsers.slice(startIndex, endIndex);
 
+            // Update pagination info
+            $('#recordInfo').text(`Showing ${totalRecords === 0 ? 0 : startIndex + 1} to ${endIndex} of ${totalRecords} users`);
+            $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
+            $('#paginationInfo').text(`Showing ${totalRecords === 0 ? 0 : startIndex + 1} to ${endIndex} of ${totalRecords} users`);
+
             if (pageData.length === 0) {
+
                 tbody.html(`
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
-                                    <i class="bi bi-inbox fs-2"></i>
-                                    <p class="small mt-2 mb-0">No records found matching your filter or search.</p>
+                                <td colspan="9" class="text-center py-5">
+                                    <i class="bi bi-inbox fs-2 text-muted"></i>
+                                    <p class="text-muted small mt-2 mb-3">No users found matching your filters.</p>
+                                    <button type="button" class="btn btn-sm btn-outline-success rounded-2" onclick="resetFilters()">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>
+                                        Reset Filters
+                                    </button>
                                 </td>
                             </tr>
                         `);
+
                 $('#pagination').empty();
-                $('#recordInfo').text('Showing 0 to 0 of 0 users');
-                $('#pageInfo').text('Page 1 of 1');
                 return;
+
             }
 
-            $('#recordInfo').text(`Showing ${startIndex + 1} to ${endIndex} of ${totalRecords} users`);
-            $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
-
             let html = '';
-            pageData.forEach(function(u, index) {
-                const actualIndex = startIndex + index;
-                let statusIcon = u.isActive
-                    ? `<span class="text-success fs-6" title="Active"><i class="bi bi-check-circle-fill"></i></span>`
-                    : `<span class="text-danger fs-6" title="Deactive"><i class="bi bi-x-circle-fill"></i></span>`;
 
-                let pwdBox = `<span class="text-muted small">-</span>`;
+            pageData.forEach(function(u, index) {
+
+                const actualIndex = startIndex + index;
+
+                // Status
+                const isActive = u.isActive === true || u.isActive === 1 || String(u.isActive).toLowerCase() === 'true';
+                const statusBadge = isActive
+                    ? `<span class="badge bg-success-subtle text-success border border-success border-opacity-50"><i class="bi bi-check-circle me-1"></i>Active</span>`
+                    : `<span class="badge bg-danger-subtle text-danger border border-danger border-opacity-50"><i class="bi bi-x-circle me-1"></i>Inactive</span>`;
+
+                // Password
+                let passwordHtml = '<span class="text-muted small">-</span>';
                 if (u.password && u.password !== '-') {
-                    const cleanPassword = String(u.password).substring(0, 25);
-                    pwdBox = `
-                                <div class="input-group input-group-sm" style="width:130px;">
-                                    <input type="password" class="form-control bg-light border-0 px-1" style="font-size:11px;" id="pwd_${actualIndex}" value="${escapeHtml(cleanPassword)}" readonly />
-                                    <button class="btn btn-outline-secondary border-0 bg-transparent text-muted px-1" type="button" onclick="togglePassword(${actualIndex})" title="Show / Hide">
-                                        <i class="bi bi-eye-slash" id="eye_${actualIndex}" style="font-size:11px;"></i>
+                    const cleanPwd = String(u.password).substring(0, 25);
+                    passwordHtml = `
+                                <div class="input-group input-group-sm" style="max-width: 140px;">
+                                    <input type="password"
+                                           class="form-control form-control-sm bg-light border-0"
+                                           style="font-size: 11px;"
+                                           id="pwd_${actualIndex}"
+                                           value="${escapeHtml(cleanPwd)}"
+                                           readonly />
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-secondary border-0 bg-transparent text-muted"
+                                            onclick="togglePassword(${actualIndex})"
+                                            title="Show / Hide">
+                                        <i class="bi bi-eye-slash" id="eye_${actualIndex}" style="font-size: 11px;"></i>
                                     </button>
                                 </div>
                             `;
                 }
 
+                // User avatar with initials
+                const initials = (u.fullName || 'U')
+                    .split(' ')
+                    .map(n => n[0])
+                    .join('')
+                    .substring(0, 2)
+                    .toUpperCase();
+
                 html += `
                             <tr>
+                                <!-- Checkbox -->
+                                <td class="text-center ps-3">
+                                    <input type="checkbox"
+                                           class="form-check-input user-checkbox shadow-none"
+                                           value="${escapeHtml(u.identityId || '')}"
+                                           onchange="updateDeleteButtonState()">
+                                </td>
+
+                                <!-- Serial -->
                                 <td class="fw-bold text-secondary small">${actualIndex + 1}</td>
+
+                                <!-- User Info -->
                                 <td>
-                                    <div class="fw-bold text-dark small">${escapeHtml(u.username || '-')}</div>
-                                    <small class="text-muted">${escapeHtml(u.userCode || '-')}</small>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-primary-subtle text-primary rounded-2 p-2" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;">
+                                            ${escapeHtml(initials)}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark small">${escapeHtml(u.fullName || 'N/A')}</div>
+                                            <small class="text-muted">${escapeHtml(u.username || '-')}</small>
+                                            <div class="text-muted small d-none d-lg-block">${escapeHtml(u.email || '-')}</div>
+                                        </div>
+                                    </div>
                                 </td>
+
+                                <!-- User Code -->
+                                <td class="small text-muted d-none d-lg-table-cell">${escapeHtml(u.userCode || '-')}</td>
+
+                                <!-- Role -->
                                 <td>
-                                    <div class="fw-bold text-dark small">${escapeHtml(u.fullName || 'N/A')}</div>
-                                    <span class="badge bg-primary-subtle text-primary px-1 py-0" style="font-size:10px;">${escapeHtml(u.portalName || 'User')}</span>
+                                    <span class="badge bg-primary-subtle text-primary px-2 py-1" style="font-size: 10px;">
+                                        ${escapeHtml(u.portalName || 'User')}
+                                    </span>
                                 </td>
-                                <td class="small">${escapeHtml(u.phoneNumber || '-')}</td>
-                                <td>${pwdBox}</td>
-                                <td class="small text-muted">${escapeHtml(u.createdDate || '-')}</td>
-                                <td class="text-center">${statusIcon}</td>
-                                <td class="text-end pe-2">
-                                    <div class="btn-group gap-1">
-                                        <button type="button" class="btn btn-sm btn-outline-info rounded-circle p-1 shadow-none" style="width:28px;height:28px;" onclick="viewUserDetailsByIndex(${actualIndex})" title="View Details">
-                                            <i class="bi bi-eye" style="font-size:12px;"></i>
+
+                                <!-- Mobile -->
+                                <td class="small d-none d-md-table-cell">${escapeHtml(u.phoneNumber || '-')}</td>
+
+                                <!-- Registered Date -->
+                                <td class="small text-muted d-none d-xl-table-cell">${escapeHtml(u.createdDate || '-')}</td>
+
+                                <!-- Status -->
+                                <td class="text-center">${statusBadge}</td>
+
+                                <!-- Actions -->
+                                <td class="text-end pe-3">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-info rounded-2 p-1"
+                                                style="width: 32px; height: 32px;"
+                                                onclick="viewUserDetailsByIndex(${actualIndex})"
+                                                title="View Details">
+                                            <i class="bi bi-eye" style="font-size: 12px;"></i>
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-circle p-1 shadow-none" style="width:28px;height:28px;" onclick="openEditRoleModal(${actualIndex})" title="Edit Role">
-                                            <i class="bi bi-shield-shaded" style="font-size:12px;"></i>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary rounded-2 p-1"
+                                                style="width: 32px; height: 32px;"
+                                                onclick="openEditRoleModal(${actualIndex})"
+                                                title="Edit Role">
+                                            <i class="bi bi-shield" style="font-size: 12px;"></i>
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger rounded-2 p-1"
+                                                style="width: 32px; height: 32px;"
+                                                onclick="deleteUserByIndex(${actualIndex})"
+                                                title="Delete User">
+                                            <i class="bi bi-trash3" style="font-size: 12px;"></i>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                         `;
+
             });
 
             tbody.html(html);
             renderPagination(totalPages);
+            updateDeleteButtonState();
+
         }
 
+
+        // =========================================================
+        // PAGINATION
+        // =========================================================
+
         function renderPagination(totalPages) {
-            const pagination = $('#pagination');
-            pagination.empty();
 
-            if (totalPages <= 1) return;
+            const paginationContainer = $('#pagination');
+            paginationContainer.empty();
 
-            const previousDisabled = currentPage === 1 ? 'disabled' : '';
-            pagination.append(`
-                        <li class="page-item ${previousDisabled}">
-                            <button class="page-link" type="button" onclick="changePage(${currentPage - 1})"><i class="bi bi-chevron-left"></i></button>
+            if (totalPages <= 1) {
+                return;
+            }
+
+            // Previous
+            const prevDisabled = currentPage === 1 ? 'disabled' : '';
+            paginationContainer.append(`
+                        <li class="page-item ${prevDisabled}">
+                            <button class="page-link" type="button" onclick="changePage(${currentPage - 1})">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
                         </li>
                     `);
 
+            // Page numbers
             let pages = [];
+
             if (totalPages <= 7) {
-                for (let i = 1; i <= totalPages; i++) { pages.push(i); }
+                for (let i = 1; i <= totalPages; i++) {
+                    pages.push(i);
+                }
             } else {
                 pages.push(1);
-                if (currentPage > 4) pages.push('...');
+
+                if (currentPage > 4) {
+                    pages.push('...');
+                }
+
                 const start = Math.max(2, currentPage - 2);
                 const end = Math.min(totalPages - 1, currentPage + 2);
-                for (let i = start; i <= end; i++) { pages.push(i); }
-                if (currentPage < totalPages - 3) pages.push('...');
+
+                for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                }
+
+                if (currentPage < totalPages - 3) {
+                    pages.push('...');
+                }
+
                 pages.push(totalPages);
             }
 
             pages.forEach(function(page) {
+
                 if (page === '...') {
-                    pagination.append(`<li class="page-item disabled"><span class="page-link">...</span></li>`);
-                    return;
+                    paginationContainer.append(`
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            `);
+                } else {
+                    const active = page === currentPage ? 'active' : '';
+                    paginationContainer.append(`
+                                <li class="page-item ${active}">
+                                    <button class="page-link" type="button" onclick="changePage(${page})">${page}</button>
+                                </li>
+                            `);
                 }
-                const active = page === currentPage ? 'active' : '';
-                pagination.append(`
-                            <li class="page-item ${active}">
-                                <button class="page-link" type="button" onclick="changePage(${page})">${page}</button>
-                            </li>
-                        `);
+
             });
 
+            // Next
             const nextDisabled = currentPage === totalPages ? 'disabled' : '';
-            pagination.append(`
+            paginationContainer.append(`
                         <li class="page-item ${nextDisabled}">
-                            <button class="page-link" type="button" onclick="changePage(${currentPage + 1})"><i class="bi bi-chevron-right"></i></button>
+                            <button class="page-link" type="button" onclick="changePage(${currentPage + 1})">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
                         </li>
                     `);
+
         }
 
+
         function changePage(page) {
+
             const totalPages = Math.ceil(filteredMasterUsers.length / pageSize);
-            if (page < 1 || page > totalPages) return;
+
+            if (page < 1 || page > totalPages) {
+                return;
+            }
+
             currentPage = page;
             renderMasterTable();
+
             const table = document.getElementById('masterUserTable');
             if (table) {
                 table.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
+
         }
 
-        function filterMasterUsers() {
-            showTableLoading("Filtering user records...");
-            setTimeout(function() {
-                const selectedRole = $('#filterPortal').val();
-                const searchText = $('#searchQuery').val().toLowerCase().trim();
 
-                filteredMasterUsers = allMasterUsers.filter(function(u) {
-                    let matchesRole = true;
-                    if (selectedRole) {
-                        if (!u.portalName) {
-                            matchesRole = false;
+        // =========================================================
+        // SELECTION & BATCH ACTIONS
+        // =========================================================
+
+        function updateDeleteButtonState() {
+
+            const selectedCount = $('.user-checkbox:checked').length;
+            const batchBar = $('#batchActionsBar');
+            const btn = $('#btnDeleteSelected');
+
+            if (selectedCount > 0) {
+                batchBar.removeClass('d-none');
+                btn.prop('disabled', false);
+            } else {
+                batchBar.addClass('d-none');
+                btn.prop('disabled', true);
+            }
+
+            $('#selectedUsersText').text(`${selectedCount} user${selectedCount !== 1 ? 's' : ''} selected`);
+
+            if (selectedCount > 0) {
+                btn.html(`<i class="bi bi-trash3-fill me-1"></i>Delete Selected (${selectedCount})`);
+            } else {
+                btn.html(`<i class="bi bi-trash3-fill me-1"></i>Delete Selected`);
+            }
+
+            // Update select all state
+            const totalCheckboxes = $('.user-checkbox').length;
+            $('#selectAllUsers').prop('checked', totalCheckboxes > 0 && selectedCount === totalCheckboxes);
+
+            // Update statistics
+            updateStatistics();
+
+        }
+
+
+        function toggleSelectAll() {
+            const isChecked = $('#selectAllUsers').is(':checked');
+            $('.user-checkbox').prop('checked', isChecked);
+            updateDeleteButtonState();
+        }
+
+
+        // =========================================================
+        // USER DELETION
+        // =========================================================
+
+        function deleteUserByIndex(index) {
+
+            const user = filteredMasterUsers[index];
+
+            if (!user || !user.identityId) {
+                showUserMessage('error', 'Invalid User', 'Unable to identify selected user.');
+                return;
+            }
+
+            const userName = user.fullName || user.username || user.userCode || 'this user';
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Deactivate User?',
+                html: `<p class="small m-0">This will deactivate <strong>${escapeHtml(userName)}</strong> and lock their account.</p>`,
+                confirmButtonText: 'Yes, Deactivate',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#dc3545',
+                showCancelButton: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                const $buttons = $('#masterUserTableBody').find('button');
+                $buttons.prop('disabled', true);
+
+                $.ajax({
+                    url: `/api/usermanagement/delete/${encodeURIComponent(user.identityId)}`,
+                    type: 'DELETE',
+                    dataType: 'json',
+                    success: function(res) {
+
+                        if (res.success) {
+                            showUserMessage('success', 'User Deactivated', res.message || 'User has been deactivated successfully.');
+                            loadMasterUsers();
                         } else {
-                            const roles = String(u.portalName).split(',').map(function(x) { return x.trim(); });
-                            matchesRole = roles.includes(selectedRole);
+                            showUserMessage('error', 'Deactivation Failed', res.message || 'Unable to deactivate user.');
                         }
+
+                    },
+                    error: function(xhr) {
+
+                        const message = xhr.responseJSON?.message || xhr.responseJSON?.error || 'Error deactivating user.';
+                        showUserMessage('error', 'Deactivation Failed', message);
+
+                    },
+                    complete: function() {
+                        $buttons.prop('disabled', false);
                     }
-
-                    let matchesSearch = true;
-                    if (searchText) {
-                        const fullName = (u.fullName || '').toLowerCase();
-                        const username = (u.username || '').toLowerCase();
-                        const mobile = (u.phoneNumber || '').toLowerCase();
-                        const email = (u.email || '').toLowerCase();
-                        const userCode = (u.userCode || '').toLowerCase();
-
-                        matchesSearch = fullName.includes(searchText) ||
-                            username.includes(searchText) ||
-                            mobile.includes(searchText) ||
-                            email.includes(searchText) ||
-                            userCode.includes(searchText);
-                    }
-
-                    return matchesRole && matchesSearch;
                 });
 
-                currentPage = 1;
-                updateTotalCount();
-                renderMasterTable();
-            }, 50);
+            });
+
         }
 
+
+        function deleteSelectedUsers() {
+
+            const selectedIds = $('.user-checkbox:checked')
+                .map(function() { return $(this).val(); })
+                .get()
+                .filter(x => x && String(x).trim() !== '');
+
+            if (selectedIds.length === 0) {
+                showUserMessage('warning', 'No Users Selected', 'Please select at least one user.');
+                return;
+            }
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Deactivate Selected Users?',
+                html: `<p class="small m-0">This will deactivate <strong>${selectedIds.length}</strong> user(s) and lock their accounts.</p>`,
+                confirmButtonText: 'Yes, Deactivate All',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#dc3545',
+                showCancelButton: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                const $btn = $('#btnDeleteSelected');
+                const originalHtml = $btn.html();
+
+                $btn.prop('disabled', true).html(`
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            Deactivating...
+                        `);
+
+                $.ajax({
+                    url: '/api/usermanagement/delete-batch',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    data: JSON.stringify({ identityIds: selectedIds }),
+                    success: function(res) {
+
+                        if (res.success) {
+                            showUserMessage('success', 'Users Deactivated', res.message || `${selectedIds.length} user(s) deactivated successfully.`);
+                            $('#selectAllUsers').prop('checked', false);
+                            loadMasterUsers();
+                        } else {
+                            showUserMessage('error', 'Deactivation Failed', res.message || 'Unable to deactivate selected users.');
+                        }
+
+                    },
+                    error: function(xhr) {
+
+                        const message = xhr.responseJSON?.message || xhr.responseJSON?.error || 'Error deactivating users.';
+                        showUserMessage('error', 'Deactivation Failed', message);
+
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html(originalHtml);
+                        updateDeleteButtonState();
+                    }
+                });
+
+            });
+
+        }
+
+
+        // =========================================================
+        // VIEW DETAILS MODAL
+        // =========================================================
+
         function viewUserDetailsByIndex(index) {
-            const u = filteredMasterUsers[index];
-            if (!u) return;
 
-            $('#detCode').text(u.userCode || '-');
-            $('#detName').text(u.fullName || '-');
-            $('#detPortal').text(u.portalName || '-');
-            $('#detUsername').text(u.username || '-');
-            $('#detEmail').text(u.email || '-');
-            $('#detMobile').text(u.phoneNumber || '-');
-            $('#detAddress').text(u.address || '-');
-            $('#detDate').text(u.createdDate || '-');
+            const user = filteredMasterUsers[index];
 
-            if (u.isActive) {
-                $('#detStatus').html(`<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Active</span>`);
+            if (!user) {
+                return;
+            }
+
+            $('#detCode').text(user.userCode || '-');
+            $('#detName').text(user.fullName || '-');
+            $('#detUsername').text(user.username || '-');
+            $('#detEmail').text(user.email || '-');
+            $('#detMobile').text(user.phoneNumber || '-');
+            $('#detAddress').text(user.address || '-');
+            $('#detDate').text(user.createdDate || '-');
+
+            $('#detPortal').html(`<span class="badge bg-primary">${escapeHtml(user.portalName || '-')}</span>`);
+
+            const isActive = user.isActive === true || user.isActive === 1 || String(user.isActive).toLowerCase() === 'true';
+            if (isActive) {
+                $('#detStatus').html(`<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Active</span>`);
             } else {
-                $('#detStatus').html(`<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> Deactive</span>`);
+                $('#detStatus').html(`<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Inactive</span>`);
             }
 
             const modalElement = document.getElementById('viewDetailModal');
@@ -624,18 +1237,27 @@
                 const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
                 modal.show();
             }
+
         }
 
+
+        // =========================================================
+        // EDIT ROLE MODAL
+        // =========================================================
+
         function openEditRoleModal(index) {
-            const u = filteredMasterUsers[index];
-            if (!u) return;
 
-            $('#editIdentityId').val(u.identityId);
-            $('#editUserNameDisplay').val(`${u.fullName} (${u.username})`);
+            const user = filteredMasterUsers[index];
 
-            // Pre-select current role if possible
-            if (u.portalName) {
-                const firstRole = u.portalName.split(',')[0].trim();
+            if (!user) {
+                return;
+            }
+
+            $('#editIdentityId').val(user.identityId);
+            $('#editUserNameDisplay').val(`${user.fullName || '-'} (${user.username || '-'})`);
+
+            if (user.portalName) {
+                const firstRole = user.portalName.split(',')[0].trim();
                 $('#modalRoleSelect').val(firstRole);
             } else {
                 $('#modalRoleSelect').val('');
@@ -646,12 +1268,85 @@
                 const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
                 modal.show();
             }
+
         }
 
+
+        function submitEditRole(event) {
+
+            event.preventDefault();
+
+            const identityId = $('#editIdentityId').val();
+            const newRole = $('#modalRoleSelect').val();
+
+            if (!identityId || !newRole) {
+                showUserMessage('warning', 'Invalid Selection', 'Please select a valid role.');
+                return;
+            }
+
+            const $btn = $(event.target).find('button[type="submit"]');
+            const originalText = $btn.html();
+
+            $btn.prop('disabled', true).html(`
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                        Updating...
+                    `);
+
+            $.ajax({
+                url: '/api/usermanagement/update-role',
+                type: 'POST',
+                contentType: 'application/json',
+                dataType: 'json',
+                data: JSON.stringify({
+                    identityId: identityId,
+                    roleName: newRole
+                }),
+                success: function(res) {
+
+                    if (res.success) {
+
+                        const modalElement = document.getElementById('editRoleModal');
+                        if (modalElement && typeof bootstrap !== 'undefined') {
+                            const modal = bootstrap.Modal.getInstance(modalElement);
+                            if (modal) modal.hide();
+                        }
+
+                        showUserMessage('success', 'Role Updated', res.message || 'User role updated successfully.');
+                        loadMasterUsers();
+
+                    } else {
+
+                        showUserMessage('error', 'Update Failed', res.message || 'Failed to update user role.');
+
+                    }
+
+                },
+                error: function(xhr) {
+
+                    const message = xhr.responseJSON?.message || 'Error updating user role.';
+                    showUserMessage('error', 'Update Failed', message);
+
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).html(originalText);
+                }
+            });
+
+        }
+
+
+        // =========================================================
+        // PASSWORD TOGGLE
+        // =========================================================
+
         function togglePassword(index) {
+
             const input = document.getElementById(`pwd_${index}`);
             const eye = document.getElementById(`eye_${index}`);
-            if (!input || !eye) return;
+
+            if (!input || !eye) {
+                return;
+            }
 
             if (input.type === 'password') {
                 input.type = 'text';
@@ -662,16 +1357,88 @@
                 eye.classList.remove('bi-eye');
                 eye.classList.add('bi-eye-slash');
             }
+
         }
 
+
+        // =========================================================
+        // UI HELPERS
+        // =========================================================
+
+        function showTableLoading(message) {
+
+            const tbody = $('#masterUserTableBody');
+            tbody.html(`
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                <div class="spinner-border spinner-border-sm text-success mb-2" role="status"></div>
+                                <p class="small m-0">${escapeHtml(message)}</p>
+                            </td>
+                        </tr>
+                    `);
+
+        }
+
+
+        function showTableError(message) {
+
+            const tbody = $('#masterUserTableBody');
+            tbody.html(`
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <i class="bi bi-exclamation-triangle fs-2 text-danger"></i>
+                                <p class="text-danger small mt-2 mb-3">${escapeHtml(message)}</p>
+                                <button type="button" class="btn btn-sm btn-outline-success rounded-2" onclick="loadMasterUsers()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>
+                                    Retry
+                                </button>
+                            </td>
+                        </tr>
+                    `);
+
+            $('#pagination').empty();
+
+        }
+
+
+        function showUserMessage(type, title, message) {
+
+            if (typeof Swal !== 'undefined') {
+
+                Swal.fire({
+                    icon: type,
+                    title: title,
+                    html: message,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#198754',
+                    allowOutsideClick: true,
+                    allowEscapeKey: true
+                });
+
+            } else {
+
+                alert(`${title}\n\n${message}`);
+
+            }
+
+        }
+
+
         function escapeHtml(value) {
-            if (value === null || value === undefined) return '';
+
+            if (value === null || value === undefined) {
+                return '';
+            }
+
             return String(value)
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
+
         }
+
     </script>
+
 }

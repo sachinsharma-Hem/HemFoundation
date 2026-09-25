@@ -870,17 +870,11 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
-        // ================================================================
-        // ADMIN DASHBOARD DETAILS
-        // category = performance / focused
-        // type = total-schools / total-students / etc.
-        // ================================================================
+     
 
 
         [HttpGet("overall-details-list/{category}/{type}")]
-        public async Task<IActionResult> GetOverallDetailsList(
-            string category,
-            string type)
+        public async Task<IActionResult> GetOverallDetailsList(string category, string type)
         {
             try
             {
