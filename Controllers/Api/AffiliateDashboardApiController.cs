@@ -206,41 +206,7 @@ namespace HemFoundation.Controllers.Api
                 {
                     await conn.OpenAsync();
 
-                    // Single unified SQL query using CTEs to validate affiliate, find referral code, gather matched institutes, and aggregate counts instantly
-                    string summarySql = @"
-                -- 1. Check if user/affiliate exists
-                SELECT userid FROM users WHERE userid = @AffiliateId;
-
-                -- 2. Get Referral Code for this Affiliate
-                WITH TargetReferral AS (
-                    SELECT referralcode 
-                    FROM wj_referralcodes 
-                    WHERE userid = @AffiliateId AND referralcode IS NOT NULL 
-                    LIMIT 1
-                ),
-                -- 3. Extract matching institute IDs from school profile details based on referral code
-                TargetInstitutes AS (
-                    SELECT DISTINCT instituteid 
-                    FROM vw_school_profile_details 
-                    WHERE referralcode = (SELECT referralcode FROM TargetReferral) 
-                      AND instituteid IS NOT NULL
-                ),
-                -- 4. Aggregate all required dashboard metrics in a single pass
-                AggregatedCounts AS (
-                    SELECT 
-                        (SELECT COUNT(*) FROM TargetInstitutes) AS TotalInstitute,
-                        (SELECT COUNT(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalStudents,
-                        (SELECT COUNT(DISTINCT studentid) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type != 'Survey') AS ActiveStudents,
-                        (SELECT COUNT(DISTINCT teacherid) FROM wj_teacherassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalTeachers,
-                        (SELECT COUNT(DISTINCT teacherid) FROM hf_view_teacheractivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS ActiveTeachers,
-                        (SELECT COUNT(DISTINCT instituteid) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalSelProjects,
-                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Family PBL') AS FamilyProjects,
-                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Individual PBL') AS IndividualProjects,
-                        (SELECT COUNT(*) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS GroupPbl
-                )
-                SELECT TotalInstitute, TotalStudents, ActiveStudents, TotalTeachers, ActiveTeachers, TotalSelProjects, FamilyProjects, IndividualProjects, GroupPbl 
-                FROM AggregatedCounts;
-            ";
+                    string summarySql = "SELECT schoolcount, totalstudents, activestudents, totalteachers, activeteachers, totalselprojects, familyprojects, individualprojects, grouppbl FROM public.get_affiliate_dashboard_summary(@AffiliateId)";
 
                     using (var cmd = new Npgsql.NpgsqlCommand(summarySql, conn))
                     {
@@ -248,15 +214,8 @@ namespace HemFoundation.Controllers.Api
 
                         using (var reader = await cmd.ExecuteReaderAsync())
                         {
-                            // First result set: Check if the affiliate user exists
-                            bool userExists = await reader.ReadAsync();
-                            if (!userExists)
-                            {
-                                return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
-                            }
-
-                            // Move to the second result set (AggregatedCounts)
-                            if (await reader.NextResultAsync() && await reader.ReadAsync())
+                            // Read the single returned row from the stored procedure
+                            if (await reader.ReadAsync())
                             {
                                 totalinstitute = reader.GetInt32(0);
                                 totalStudents = reader.GetInt32(1);
@@ -267,6 +226,11 @@ namespace HemFoundation.Controllers.Api
                                 familyProjects = reader.GetInt32(6);
                                 individualProjects = reader.GetInt32(7);
                                 groupPbl = reader.GetInt32(8);
+                            }
+                            else
+                            {
+                                // If no row returned (e.g. invalid affiliate ID), return zeroes
+                                return Ok(new { success = true, data = new { totalinstitute = 0, totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
                             }
                         }
                     }
@@ -575,33 +539,8 @@ namespace HemFoundation.Controllers.Api
                 {
                     await conn.OpenAsync();
 
-                    // Single unified SQL query that validates affiliate, gets focused institutes, and aggregates all counts simultaneously
-                    string summarySql = @"
-                -- 1. Check if user/affiliate exists
-                SELECT userid FROM users WHERE userid = @AffiliateId;
-
-                -- 2. Extract focused institute IDs for this affiliate
-                WITH TargetInstitutes AS (
-                    SELECT DISTINCT institute_id AS instituteid 
-                    FROM hf_tbl_affliatefocusedlist 
-                    WHERE affliate_id = @AffiliateId AND institute_id IS NOT NULL
-                ),
-                -- 3. Aggregate all required dashboard metrics in a single pass
-                AggregatedCounts AS (
-                    SELECT 
-                        (SELECT COUNT(*) FROM TargetInstitutes) AS SchoolCount,
-                        (SELECT COUNT(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalStudents,
-                        (SELECT COUNT(DISTINCT studentid) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type != 'Survey') AS ActiveStudents,
-                        (SELECT COUNT(DISTINCT teacherid) FROM wj_teacherassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalTeachers,
-                        (SELECT COUNT(DISTINCT teacherid) FROM hf_view_teacheractivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS ActiveTeachers,
-                        (SELECT COUNT(DISTINCT instituteid) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalSelProjects,
-                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Family PBL') AS FamilyProjects,
-                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Individual PBL') AS IndividualProjects,
-                        (SELECT COUNT(*) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS GroupPbl
-                )
-                SELECT SchoolCount, TotalStudents, ActiveStudents, TotalTeachers, ActiveTeachers, TotalSelProjects, FamilyProjects, IndividualProjects, GroupPbl 
-                FROM AggregatedCounts;
-            ";
+                    // Call the optimized PostgreSQL stored procedure
+                    string summarySql = "SELECT schoolcount, totalstudents, activestudents, totalteachers, activeteachers, totalselprojects, familyprojects, individualprojects, grouppbl FROM public.get_affiliate_Foccuseddashboard_summary(@AffiliateId)";
 
                     using (var cmd = new Npgsql.NpgsqlCommand(summarySql, conn))
                     {
@@ -609,15 +548,7 @@ namespace HemFoundation.Controllers.Api
 
                         using (var reader = await cmd.ExecuteReaderAsync())
                         {
-                            // First result set: Check if the affiliate user exists
-                            bool userExists = await reader.ReadAsync();
-                            if (!userExists)
-                            {
-                                return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
-                            }
-
-                            // Move to the second result set (AggregatedCounts)
-                            if (await reader.NextResultAsync() && await reader.ReadAsync())
+                            if (await reader.ReadAsync())
                             {
                                 schoolCount = reader.GetInt32(0);
                                 totalStudents = reader.GetInt32(1);
@@ -628,6 +559,11 @@ namespace HemFoundation.Controllers.Api
                                 familyProjects = reader.GetInt32(6);
                                 individualProjects = reader.GetInt32(7);
                                 groupPbl = reader.GetInt32(8);
+                            }
+                            else
+                            {
+                                // If affiliate/user has no data or doesn't exist
+                                return Ok(new { success = true, data = new { schoolcount = 0, totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
                             }
                         }
                     }
