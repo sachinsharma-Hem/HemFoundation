@@ -4,7 +4,7 @@ namespace HemFoundation.Models.Entities
 {
     public class AffiliateAttendance : BaseMasterEntity
     {
-        public long AffiliateId { get; set; } // Matches Affiliate.UserID (long)
+        public long AffiliateId { get; set; } 
 
         [Required, DataType(DataType.Date)]
         public DateTime AttendanceDate { get; set; }

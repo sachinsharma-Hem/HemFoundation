@@ -108,93 +108,71 @@
 
                     </li>
 
-                   @*  <li>
-
-                        <a href="#">
-
-                            <i class="bi bi-chevron-right"></i>
-
-                            Programs
-
-                        </a>
-
-                    </li>
-
-                    <li>
-
-                        <a href="#">
-
-                            <i class="bi bi-chevron-right"></i>
-
-                            Resources
-
-                        </a>
-
-                    </li> *@
 
                 </ul>
 
             </div>
 
-            <!-- ========================= -->
-            <!-- School -->
-            <!-- ========================= -->
+            
 
             <div class="col-lg-2 col-md-6">
 
                 <h5 class="footer-title">
-
                     FOR SCHOOLS
-
                 </h5>
 
                 <ul class="footer-links">
 
                     <li>
-
-                        <a href="Account/Register?portalId=4">
+                        <a asp-controller="Account"
+                           asp-action="Register"
+                           asp-route-portalId="4">
 
                             <i class="bi bi-chevron-right"></i>
-
                             School Registration
 
                         </a>
-
                     </li>
 
                     <li>
-
-                        <a href="Account/Register?portalId=2">
+                        <a asp-controller="Account"
+                           asp-action="Register"
+                           asp-route-portalId="2">
 
                             <i class="bi bi-chevron-right"></i>
-
                             Teacher Registration
 
                         </a>
-
                     </li>
+
                     <li>
-                        <a href="/Account/Register?portalId=3">
+                        <a asp-controller="Account"
+                           asp-action="Register"
+                           asp-route-portalId="3">
+
                             <i class="bi bi-chevron-right"></i>
                             Student Registration
+
                         </a>
                     </li>
+
                     <li>
+                        <a href="javascript:void(0);"
+                           data-bs-toggle="modal"
+                           data-bs-target="#loginModal"
+                           class="btn btn-success rounded-pill px-4">
 
-                        <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#loginModal" class="btn btn-success rounded-pill px-4">
-                            <i class="bi bi-box-arrow-in-right me-1"></i> Login
+                            <i class="bi bi-box-arrow-in-right me-1"></i>
+                            Login
+
                         </a>
-
                     </li>
 
                 </ul>
 
             </div>
 
-            <!-- ========================= -->
-            <!-- Support -->
-            <!-- ========================= -->
-
+     
             <div class="col-lg-2 col-md-6">
 
                 <h5 class="footer-title">
@@ -236,10 +214,7 @@
 
             </div>
 
-            <!-- ========================= -->
-            <!-- Contact -->
-            <!-- ========================= -->
-
+          
             <div class="col-lg-3 col-md-6">
 
                 <h5 class="footer-title">

@@ -82,28 +82,71 @@ namespace HemFoundation.Controllers.Api
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var affiliate = await _context.Users
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
 
             if (affiliate == null)
-                return Unauthorized(new { success = false, message = "Affiliate not found." });
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "Affiliate not found."
+                });
 
             var referralCode = await _context.WJ_ReferralCodes
+                .AsNoTracking()
                 .Where(x => x.UserID == affiliate.UserID)
                 .Select(x => x.ReferralCode)
                 .FirstOrDefaultAsync();
 
-            if (string.IsNullOrEmpty(referralCode))
-                return Ok(new { success = true, data = new List<object>() });
+            if (string.IsNullOrWhiteSpace(referralCode))
+            {
+                return Ok(new
+                {
+                    success = true,
+                    data = new List<object>()
+                });
+            }
 
             var assignedSchools = await _context.SchoolProfileDetails
+                .AsNoTracking()
                 .Where(x => x.referralcode == referralCode)
                 .OrderBy(x => x.institute_name)
                 .Select(x => new
                 {
                     instituteID = x.instituteid,
+                    instituteType = x.institutetype,
                     name = x.institute_name,
+                    profileUrl = x.profileurl,
+                    instituteIsActive = x.institute_isactive,
+                    referralCode = x.referralcode,
+                    isVerify = x.isverify,
+
+                    firstName = x.firstname,
+                    lastName = x.lastname,
+                    mobileNo = x.mobileno,
+                    emailId = x.emailid,
+
+                    addressLine1 = x.addressline1,
+                    addressLine2 = x.addressline2,
+                    addressLine3 = x.addressline3,
                     city = x.cityname,
-                    mobileNo = x.mobileno
+                    pincode = x.pincode,
+
+                    photoUrl = x.photourl,
+
+                    userIsActive = x.user_isactive,
+
+                    createdBy = x.createdby,
+                    createdDate = x.createddate,
+                    modifiedBy = x.modifiedby,
+                    modifiedDate = x.modifieddate,
+
+                    aspNetUserId = x.aspnetuserid,
+
+                    associatedStudents = x.associatedstudents,
+                    activeStudents = x.activestudents,
+                    totalTeachers = x.totalteachers,
+                    activeTeachers = x.activeteachers
                 })
                 .ToListAsync();
 
@@ -113,6 +156,43 @@ namespace HemFoundation.Controllers.Api
                 data = assignedSchools
             });
         }
+        //[HttpGet("associated-schools-details")]
+        //public async Task<IActionResult> GetAssociatedSchoolsDetails()
+        //{
+        //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        //    var affiliate = await _context.Users
+        //        .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
+
+        //    if (affiliate == null)
+        //        return Unauthorized(new { success = false, message = "Affiliate not found." });
+
+        //    var referralCode = await _context.WJ_ReferralCodes
+        //        .Where(x => x.UserID == affiliate.UserID)
+        //        .Select(x => x.ReferralCode)
+        //        .FirstOrDefaultAsync();
+
+        //    if (string.IsNullOrEmpty(referralCode))
+        //        return Ok(new { success = true, data = new List<object>() });
+
+        //    var assignedSchools = await _context.SchoolProfileDetails
+        //        .Where(x => x.referralcode == referralCode)
+        //        .OrderBy(x => x.institute_name)
+        //        .Select(x => new
+        //        {
+        //            instituteID = x.instituteid,
+        //            name = x.institute_name,
+        //            city = x.cityname,
+        //            mobileNo = x.mobileno
+        //        })
+        //        .ToListAsync();
+
+        //    return Ok(new
+        //    {
+        //        success = true,
+        //        data = assignedSchools
+        //    });
+        //}
 
 
         [HttpGet("activity-stats")]
@@ -514,7 +594,6 @@ namespace HemFoundation.Controllers.Api
         {
             try
             {
-                // Agar admin ne dropdown se select kiya hai toh woh use hoga, warna logged-in user
                 Int32 reportaffiliateid = Convert.ToInt32(affiliateUserId);
 
                 if (reportaffiliateid == 0)
@@ -681,173 +760,51 @@ namespace HemFoundation.Controllers.Api
         }
 
         [HttpGet("incentive-dashboard")]
-        public async Task<IActionResult> GetIncentiveDashboardData([FromQuery] int year,[FromQuery] int month)
+        public async Task<IActionResult> GetIncentiveDashboardData(
+       [FromQuery] int year,
+       [FromQuery] int month)
         {
             try
             {
                 if (year < 2000 || month < 1 || month > 12)
                 {
-                    return BadRequest(new { success = false, message = "Invalid year or month." });
-                }
-
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrWhiteSpace(userId))
-                {
-                    return Unauthorized(new { success = false, message = "User is not authenticated." });
-                }
-
-                var affiliate = await _context.Users
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
-
-                if (affiliate == null)
-                {
-                    return Unauthorized(new { success = false, message = "Affiliate not found." });
-                }
-
-                var referralCode = await _context.WJ_ReferralCodes
-                    .AsNoTracking()
-                    .Where(x => x.UserID == affiliate.UserID)
-                    .Select(x => x.ReferralCode)
-                    .FirstOrDefaultAsync();
-
-                var schoolsQuery = await _context.SchoolProfileDetails
-                    .AsNoTracking()
-                    .Where(x => x.referralcode == referralCode && x.instituteid != null)
-                    .Select(m => new {
-                        InstituteId = (int?)m.instituteid,
-                        TotalTeachers = m.totalteachers ?? 0
-                    })
-                    .ToListAsync();
-
-                var instituteIds = schoolsQuery.Select(x => x.InstituteId).Where(x => x != null).Distinct().ToList();
-
-                if (!instituteIds.Any())
-                {
-                    return Ok(new { success = true, data = new { activeStudents = 0, studentIncentive = 0m, activeTeachers = 0, teacherIncentive = 0m, activeSchools = 0, schoolIncentive = 0m, totalCertificates = 0, certificateIncentive = 0m, greenProjects = 0, orangeProjects = 0, totalIncentive = 0m, history = new List<object>() } });
-                }
-
-                var startDate = new DateTime(year, month, 1, 0, 0, 0);
-                var nextMonthDate = startDate.AddMonths(1);
-
-                // 1. Active Students (First Activity in Selected Month)
-                var activeStudentCount = await _context.StudentActivityLogs
-                    .AsNoTracking()
-                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType != "Survey")
-                    .GroupBy(x => x.StudentID)
-                    .Select(g => new { StudentID = g.Key, FirstActivityDate = g.Min(x => x.ActivityDate) })
-                    .CountAsync(x => x.FirstActivityDate >= startDate && x.FirstActivityDate < nextMonthDate);
-
-                // 2. Active Teachers (First Activity in Selected Month)
-                var activeTeacherCount = await _context.TeacherActivityLogs
-                    .AsNoTracking()
-                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
-                    .GroupBy(x => x.TeacherID)
-                    .Select(g => new { TeacherID = g.Key, FirstActivityDate = g.Min(x => x.ActivityDate) })
-                    .CountAsync(x => x.FirstActivityDate >= startDate && x.FirstActivityDate < nextMonthDate);
-
-                // 3. Value Certifications Count (Month-wise based on CreatedOn)
-                var certificateCount = await _context.ValueCertifications
-                    .AsNoTracking()
-                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.CreatedOn >= startDate && x.CreatedOn < nextMonthDate)
-                    .CountAsync();
-
-                // 4. Active Schools Calculation
-                int activeSchoolCount = 0;
-                var students = await _context.Set<ViewWjStudentsDetailsInfo>().AsNoTracking().Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID)).Select(x => new { x.InstituteID, x.StudentId }).ToListAsync();
-                var studentLogCounts = await _context.StudentActivityLogs.AsNoTracking().Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID)).GroupBy(x => new { x.InstituteID, x.StudentID }).Select(g => new { g.Key.InstituteID, g.Key.StudentID, Count = g.Count() }).ToListAsync();
-                var teacherTotals = await _context.Set<ViewHfTeacherDetails>().AsNoTracking().Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID)).GroupBy(x => x.InstituteID).Select(g => new { InstituteID = g.Key, Count = g.Count() }).ToListAsync();
-                var activeTeacherTotals = await _context.TeacherActivityLogs.AsNoTracking().Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID)).Select(x => new { x.InstituteID, x.TeacherID }).Distinct().GroupBy(x => x.InstituteID).Select(g => new { InstituteID = g.Key, Count = g.Count() }).ToListAsync();
-
-                foreach (var instituteIdNullable in instituteIds)
-                {
-                    if (!instituteIdNullable.HasValue) continue;
-                    int schoolId = instituteIdNullable.Value;
-
-                    var schoolStudents = students.Where(x => x.InstituteID == schoolId).Select(x => x.StudentId).ToList();
-                    if (!schoolStudents.Any()) continue;
-
-                    var schoolStudentLogs = studentLogCounts.Where(x => x.InstituteID == schoolId).ToList();
-                    bool allStudentsCompletedPbl = schoolStudentLogs.Count == schoolStudents.Count && schoolStudentLogs.All(x => x.Count >= 15);
-
-                    var totalTeachersInSchool = teacherTotals.FirstOrDefault(x => x.InstituteID == schoolId)?.Count ?? 0;
-                    var activeTeachersInSchool = activeTeacherTotals.FirstOrDefault(x => x.InstituteID == schoolId)?.Count ?? 0;
-                    bool allTeachersAreActive = totalTeachersInSchool > 0 && activeTeachersInSchool >= totalTeachersInSchool;
-
-                    if (allStudentsCompletedPbl && allTeachersAreActive)
+                    return BadRequest(new
                     {
-                        activeSchoolCount++;
-                    }
-                }
-
-                // Green & Orange Projects (Placeholder logic, can be adjusted according to your exact table structure)
-                int greenProjects = 200;
-                int orangeProjects = 300;
-
-                decimal studentIncentive = activeStudentCount * 5m;
-                decimal teacherIncentive = activeTeacherCount * 2m;
-                decimal schoolIncentive = activeSchoolCount * 100m;
-                decimal certificateIncentive = certificateCount * 10m;
-
-                decimal totalIncentive = studentIncentive + teacherIncentive + schoolIncentive + certificateIncentive;
-
-                // Last 3 Months History for Trend Chart
-                var historyList = new List<object>();
-                for (int i = 2; i >= 0; i--)
-                {
-                    var hStart = startDate.AddMonths(-i);
-                    var hEnd = hStart.AddMonths(1);
-
-                    var hStudents = await _context.StudentActivityLogs
-                        .AsNoTracking()
-                        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType != "Survey")
-                        .GroupBy(x => x.StudentID)
-                        .Select(g => new { FirstActivityDate = g.Min(x => x.ActivityDate) })
-                        .CountAsync(x => x.FirstActivityDate >= hStart && x.FirstActivityDate < hEnd);
-
-                    var hTeachers = await _context.TeacherActivityLogs
-                        .AsNoTracking()
-                        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
-                        .GroupBy(x => x.TeacherID)
-                        .Select(g => new { FirstActivityDate = g.Min(x => x.ActivityDate) })
-                        .CountAsync(x => x.FirstActivityDate >= hStart && x.FirstActivityDate < hEnd);
-
-                    var hCerts = await _context.ValueCertifications
-                        .AsNoTracking()
-                        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.CreatedOn >= hStart && x.CreatedOn < hEnd)
-                        .CountAsync();
-
-                    decimal hTotal = (hStudents * 5m) + (hTeachers * 2m) + (hCerts * 10m);
-
-                    historyList.Add(new
-                    {
-                        monthName = hStart.ToString("MMM yyyy"),
-                        activeStudents = hStudents,
-                        activeTeachers = hTeachers,
-                        totalCertificates = hCerts,
-                        totalIncentive = hTotal
+                        success = false,
+                        message = "Invalid year or month."
                     });
                 }
 
-                return Ok(new
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrWhiteSpace(userId))
                 {
-                    success = true,
-                    data = new
+                    return Unauthorized(new
                     {
-                        activeStudents = activeStudentCount,
-                        studentIncentive,
-                        activeTeachers = activeTeacherCount,
-                        teacherIncentive,
-                        activeSchools = activeSchoolCount,
-                        schoolIncentive,
-                        totalCertificates = certificateCount,
-                        certificateIncentive,
-                        greenProjects,
-                        orangeProjects,
-                        totalIncentive,
-                        history = historyList
-                    }
-                });
+                        success = false,
+                        message = "User is not authenticated."
+                    });
+                }
+
+                var result = await _context.Database
+                    .SqlQueryRaw<string>(
+                        """
+                SELECT public.get_incentive_dashboard_fast(
+                    {0},
+                    {1},
+                    {2}
+                )::text AS "Value"
+                """,
+                        userId,
+                        year,
+                        month
+                    )
+                    .SingleAsync();
+
+                return Content(
+                    result,
+                    "application/json"
+                );
             }
             catch (Exception ex)
             {
@@ -859,7 +816,186 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
-        
+        //[HttpGet("incentive-dashboard")]
+        //public async Task<IActionResult> GetIncentiveDashboardData([FromQuery] int year,[FromQuery] int month)
+        //{
+        //    try
+        //    {
+        //        if (year < 2000 || month < 1 || month > 12)
+        //        {
+        //            return BadRequest(new { success = false, message = "Invalid year or month." });
+        //        }
+
+        //        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //        if (string.IsNullOrWhiteSpace(userId))
+        //        {
+        //            return Unauthorized(new { success = false, message = "User is not authenticated." });
+        //        }
+
+        //        var affiliate = await _context.Users
+        //            .AsNoTracking()
+        //            .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
+
+        //        if (affiliate == null)
+        //        {
+        //            return Unauthorized(new { success = false, message = "Affiliate not found." });
+        //        }
+
+        //        var referralCode = await _context.WJ_ReferralCodes
+        //            .AsNoTracking()
+        //            .Where(x => x.UserID == affiliate.UserID)
+        //            .Select(x => x.ReferralCode)
+        //            .FirstOrDefaultAsync();
+
+        //        var schoolsQuery = await _context.SchoolProfileDetails
+        //            .AsNoTracking()
+        //            .Where(x => x.referralcode == referralCode && x.instituteid != null)
+        //            .Select(m => new {
+        //                InstituteId = (int?)m.instituteid,
+        //                TotalTeachers = m.totalteachers ?? 0
+        //            })
+        //            .ToListAsync();
+
+        //        var instituteIds = schoolsQuery.Select(x => x.InstituteId).Where(x => x != null).Distinct().ToList();
+
+        //        if (!instituteIds.Any())
+        //        {
+        //            return Ok(new { success = true, data = new { activeStudents = 0, studentIncentive = 0m, activeTeachers = 0, teacherIncentive = 0m, activeSchools = 0, schoolIncentive = 0m, totalCertificates = 0, certificateIncentive = 0m, greenProjects = 0, orangeProjects = 0, totalIncentive = 0m, history = new List<object>() } });
+        //        }
+
+        //        var startDate = new DateTime(year, month, 1, 0, 0, 0);
+        //        var nextMonthDate = startDate.AddMonths(1);
+
+        //        // 1. Active Students (First Activity in Selected Month)
+        //        var activeStudentCount = await _context.StudentActivityLogs
+        //            .AsNoTracking()
+        //            .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType != "Survey")
+        //            .GroupBy(x => x.StudentID)
+        //            .Select(g => new { StudentID = g.Key, FirstActivityDate = g.Min(x => x.ActivityDate) })
+        //            .CountAsync(x => x.FirstActivityDate >= startDate && x.FirstActivityDate < nextMonthDate);
+
+        //        // 2. Active Teachers (First Activity in Selected Month)
+        //        var activeTeacherCount = await _context.TeacherActivityLogs
+        //            .AsNoTracking()
+        //            .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+        //            .GroupBy(x => x.TeacherID)
+        //            .Select(g => new { TeacherID = g.Key, FirstActivityDate = g.Min(x => x.ActivityDate) })
+        //            .CountAsync(x => x.FirstActivityDate >= startDate && x.FirstActivityDate < nextMonthDate);
+
+        //        // 3. Value Certifications Count (Month-wise based on CreatedOn)
+        //        var certificateCount = await _context.ValueCertifications
+        //            .AsNoTracking()
+        //            .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.CreatedOn >= startDate && x.CreatedOn < nextMonthDate)
+        //            .CountAsync();
+
+        //        // 4. Active Schools Calculation
+        //        int activeSchoolCount = 0;
+        //        var students = await _context.Set<ViewWjStudentsDetailsInfo>().AsNoTracking().Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID)).Select(x => new { x.InstituteID, x.StudentId }).ToListAsync();
+        //        var studentLogCounts = await _context.StudentActivityLogs.AsNoTracking().Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID)).GroupBy(x => new { x.InstituteID, x.StudentID }).Select(g => new { g.Key.InstituteID, g.Key.StudentID, Count = g.Count() }).ToListAsync();
+        //        var teacherTotals = await _context.Set<ViewHfTeacherDetails>().AsNoTracking().Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID)).GroupBy(x => x.InstituteID).Select(g => new { InstituteID = g.Key, Count = g.Count() }).ToListAsync();
+        //        var activeTeacherTotals = await _context.TeacherActivityLogs.AsNoTracking().Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID)).Select(x => new { x.InstituteID, x.TeacherID }).Distinct().GroupBy(x => x.InstituteID).Select(g => new { InstituteID = g.Key, Count = g.Count() }).ToListAsync();
+
+        //        foreach (var instituteIdNullable in instituteIds)
+        //        {
+        //            if (!instituteIdNullable.HasValue) continue;
+        //            int schoolId = instituteIdNullable.Value;
+
+        //            var schoolStudents = students.Where(x => x.InstituteID == schoolId).Select(x => x.StudentId).ToList();
+        //            if (!schoolStudents.Any()) continue;
+
+        //            var schoolStudentLogs = studentLogCounts.Where(x => x.InstituteID == schoolId).ToList();
+        //            bool allStudentsCompletedPbl = schoolStudentLogs.Count == schoolStudents.Count && schoolStudentLogs.All(x => x.Count >= 15);
+
+        //            var totalTeachersInSchool = teacherTotals.FirstOrDefault(x => x.InstituteID == schoolId)?.Count ?? 0;
+        //            var activeTeachersInSchool = activeTeacherTotals.FirstOrDefault(x => x.InstituteID == schoolId)?.Count ?? 0;
+        //            bool allTeachersAreActive = totalTeachersInSchool > 0 && activeTeachersInSchool >= totalTeachersInSchool;
+
+        //            if (allStudentsCompletedPbl && allTeachersAreActive)
+        //            {
+        //                activeSchoolCount++;
+        //            }
+        //        }
+
+        //        // Green & Orange Projects (Placeholder logic, can be adjusted according to your exact table structure)
+        //        int greenProjects = 200;
+        //        int orangeProjects = 300;
+
+        //        decimal studentIncentive = activeStudentCount * 5m;
+        //        decimal teacherIncentive = activeTeacherCount * 2m;
+        //        decimal schoolIncentive = activeSchoolCount * 100m;
+        //        decimal certificateIncentive = certificateCount * 10m;
+
+        //        decimal totalIncentive = studentIncentive + teacherIncentive + schoolIncentive + certificateIncentive;
+
+        //        // Last 3 Months History for Trend Chart
+        //        var historyList = new List<object>();
+        //        for (int i = 2; i >= 0; i--)
+        //        {
+        //            var hStart = startDate.AddMonths(-i);
+        //            var hEnd = hStart.AddMonths(1);
+
+        //            var hStudents = await _context.StudentActivityLogs
+        //                .AsNoTracking()
+        //                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType != "Survey")
+        //                .GroupBy(x => x.StudentID)
+        //                .Select(g => new { FirstActivityDate = g.Min(x => x.ActivityDate) })
+        //                .CountAsync(x => x.FirstActivityDate >= hStart && x.FirstActivityDate < hEnd);
+
+        //            var hTeachers = await _context.TeacherActivityLogs
+        //                .AsNoTracking()
+        //                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+        //                .GroupBy(x => x.TeacherID)
+        //                .Select(g => new { FirstActivityDate = g.Min(x => x.ActivityDate) })
+        //                .CountAsync(x => x.FirstActivityDate >= hStart && x.FirstActivityDate < hEnd);
+
+        //            var hCerts = await _context.ValueCertifications
+        //                .AsNoTracking()
+        //                .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.CreatedOn >= hStart && x.CreatedOn < hEnd)
+        //                .CountAsync();
+
+        //            decimal hTotal = (hStudents * 5m) + (hTeachers * 2m) + (hCerts * 10m);
+
+        //            historyList.Add(new
+        //            {
+        //                monthName = hStart.ToString("MMM yyyy"),
+        //                activeStudents = hStudents,
+        //                activeTeachers = hTeachers,
+        //                totalCertificates = hCerts,
+        //                totalIncentive = hTotal
+        //            });
+        //        }
+
+        //        return Ok(new
+        //        {
+        //            success = true,
+        //            data = new
+        //            {
+        //                activeStudents = activeStudentCount,
+        //                studentIncentive,
+        //                activeTeachers = activeTeacherCount,
+        //                teacherIncentive,
+        //                activeSchools = activeSchoolCount,
+        //                schoolIncentive,
+        //                totalCertificates = certificateCount,
+        //                certificateIncentive,
+        //                greenProjects,
+        //                orangeProjects,
+        //                totalIncentive,
+        //                history = historyList
+        //            }
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new
+        //        {
+        //            success = false,
+        //            message = "Error while loading incentive dashboard.",
+        //            error = ex.Message
+        //        });
+        //    }
+        //}
+
 
     }
 }
