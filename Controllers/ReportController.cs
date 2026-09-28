@@ -1261,5 +1261,242 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
             }
         }
 
+
+        [HttpGet("creativity-combined-report")]
+        public FileResult AffiliateSchoolCreativityCombinedReport(Int32? AffiliateID, string filter = "A")
+        {
+            int userId = AffiliateID ?? HttpContext.Session.GetInt32("UserID") ?? 0;
+
+
+
+            if (userId == 0)
+            {
+                userId = HttpContext.Session.GetInt32("UserID") ?? 0;
+            }
+            if (string.IsNullOrEmpty(filter))
+            {
+                filter = "A";
+            }
+
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+            DataSet essr1 = new DataSet();
+            DataSet essr2 = new DataSet();
+
+            using (var conn = new Npgsql.NpgsqlConnection(connString))
+            {
+                conn.Open();
+
+                // 1. Fetch Standard CAS Report
+                using (var cmd1 = new Npgsql.NpgsqlCommand("SELECT * FROM hf_sp_getschoolscasreport(@UserID, @FilterParameter)", conn))
+                {
+                    cmd1.Parameters.AddWithValue("UserID", userId);
+                    cmd1.Parameters.AddWithValue("FilterParameter", filter);
+                    using (var adapter = new Npgsql.NpgsqlDataAdapter(cmd1))
+                    {
+                        adapter.Fill(essr1);
+                    }
+                }
+
+                // 2. Fetch Higher Education CAS Report
+                using (var cmd2 = new Npgsql.NpgsqlCommand("SELECT * FROM hf_sp_getschoolscasreporthe(@UserID, @FilterParameter)", conn))
+                {
+                    cmd2.Parameters.AddWithValue("UserID", userId);
+                    cmd2.Parameters.AddWithValue("FilterParameter", filter);
+                    using (var adapter = new Npgsql.NpgsqlDataAdapter(cmd2))
+                    {
+                        adapter.Fill(essr2);
+                    }
+                }
+            }
+
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+                bool dataFound = false;
+
+                if (essr1 != null && essr1.Tables.Count > 0)
+                {
+                    for (int i = 0; i < essr1.Tables.Count; i++)
+                    {
+                        DataTable dt = essr1.Tables[i];
+                        if (dt.Rows.Count > 0)
+                        {
+                            wb.Worksheets.Add(dt, "CAS Report " + (i + 1));
+                            dataFound = true;
+                        }
+                    }
+                }
+
+                if (essr2 != null && essr2.Tables.Count > 0)
+                {
+                    for (int i = 0; i < essr2.Tables.Count; i++)
+                    {
+                        DataTable dt = essr2.Tables[i];
+                        if (dt.Rows.Count > 0)
+                        {
+                            wb.Worksheets.Add(dt, "CAS Report HE " + (i + 1));
+                            dataFound = true;
+                        }
+                    }
+                }
+
+                if (!dataFound)
+                {
+                    var ws = wb.Worksheets.Add("No Data Found");
+                    ws.Cell("A1").Value = "No creativity report data found for this user and filter.";
+                }
+
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    wb.SaveAs(stream);
+                    stream.Seek(0, SeekOrigin.Begin);
+
+                    string filterText = (filter == "F") ? "_Focused" : "_All";
+                    var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    var fileName = $"AffiliateSchoolCreativityCombinedReport{filterText}_For_{userId}.xlsx";
+
+                    return File(stream.ToArray(), contentType, fileName);
+                }
+            }
+        }
+
+        [HttpGet("affiliate-individual-project")]
+        public FileResult GetAffiliateWiseIndividualProject(Int32? AffiliateID, string filter = "A")
+        {
+            int userId = AffiliateID ?? HttpContext.Session.GetInt32("UserID") ?? 0;
+
+            if (userId == 0)
+            {
+                userId = HttpContext.Session.GetInt32("UserID") ?? 0;
+            }
+            if (string.IsNullOrEmpty(filter))
+            {
+                filter = "A";
+            }
+
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+            DataSet essr1 = new DataSet();
+
+            using (var conn = new Npgsql.NpgsqlConnection(connString))
+            {
+                conn.Open();
+                using (var cmd = new Npgsql.NpgsqlCommand("SELECT * FROM hf_sp_getaffiliatewiseindividualproject(@UserID, @FilterParameter)", conn))
+                {
+                    cmd.Parameters.AddWithValue("UserID", userId);
+                    cmd.Parameters.AddWithValue("FilterParameter", filter);
+
+                    using (var adapter = new Npgsql.NpgsqlDataAdapter(cmd))
+                    {
+                        adapter.Fill(essr1);
+                    }
+                }
+            }
+
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+                bool dataFound = false;
+
+                if (essr1 != null && essr1.Tables.Count > 0)
+                {
+                    for (int i = 0; i < essr1.Tables.Count; i++)
+                    {
+                        DataTable dt = essr1.Tables[i];
+                        if (dt.Rows.Count > 0)
+                        {
+                            wb.Worksheets.Add(dt, "IndividualProject " + (i + 1));
+                            dataFound = true;
+                        }
+                    }
+                }
+
+                if (!dataFound)
+                {
+                    var ws = wb.Worksheets.Add("No Data Found");
+                    ws.Cell("A1").Value = "No individual project data found for the selected criteria.";
+                }
+
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    wb.SaveAs(stream);
+                    stream.Seek(0, SeekOrigin.Begin);
+
+                    string filterText = (filter == "F") ? "_Focused" : "_All";
+                    var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    var fileName = $"AffiliateWiseIndividualProject{filterText}_For_{userId}.xlsx";
+
+                    return File(stream.ToArray(), contentType, fileName);
+                }
+            }
+        }
+
+        [HttpGet("affiliate-teacher-individual-project")]
+        public FileResult GetAffiliateWiseTeacherIndividualProject(Int32? AffiliateID, string filter = "A")
+        {
+            int userId = AffiliateID ?? HttpContext.Session.GetInt32("UserID") ?? 0;
+
+            if (userId == 0)
+            {
+                userId = HttpContext.Session.GetInt32("UserID") ?? 0;
+            }
+            if (string.IsNullOrEmpty(filter))
+            {
+                filter = "A";
+            }
+
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+            DataSet essr1 = new DataSet();
+
+            using (var conn = new Npgsql.NpgsqlConnection(connString))
+            {
+                conn.Open();
+                using (var cmd = new Npgsql.NpgsqlCommand("SELECT * FROM hf_sp_getaffiliatewiseteacherindividualproject(@UserID, @FilterParameter)", conn))
+                {
+                    cmd.Parameters.AddWithValue("UserID", userId);
+                    cmd.Parameters.AddWithValue("FilterParameter", filter);
+
+                    using (var adapter = new Npgsql.NpgsqlDataAdapter(cmd))
+                    {
+                        adapter.Fill(essr1);
+                    }
+                }
+            }
+
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+                bool dataFound = false;
+
+                if (essr1 != null && essr1.Tables.Count > 0)
+                {
+                    for (int i = 0; i < essr1.Tables.Count; i++)
+                    {
+                        DataTable dt = essr1.Tables[i];
+                        if (dt.Rows.Count > 0)
+                        {
+                            wb.Worksheets.Add(dt, "IndividualProject " + (i + 1));
+                            dataFound = true;
+                        }
+                    }
+                }
+
+                if (!dataFound)
+                {
+                    var ws = wb.Worksheets.Add("No Data Found");
+                    ws.Cell("A1").Value = "No individual project data found for the selected criteria.";
+                }
+
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    wb.SaveAs(stream);
+                    stream.Seek(0, SeekOrigin.Begin);
+
+                    string filterText = (filter == "F") ? "_Focused" : "_All";
+                    var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    var fileName = $"AffiliateWiseIndividualProject{filterText}_For_{userId}.xlsx";
+
+                    return File(stream.ToArray(), contentType, fileName);
+                }
+            }
+        }
+
+
     }
 }

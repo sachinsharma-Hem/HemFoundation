@@ -205,7 +205,7 @@
         <!-- TOTAL SEL PROJECTS -->
         <div class="col-xl-3 col-lg-4 col-md-6">
             <div class="dashboard-card card-performance-primary"
-                 onclick="openDetailsModal('performance','sel-projects')">
+                 id="btn_ExportPerfSelSubmissions">
 
                 <div class="card-body p-4">
 
@@ -234,7 +234,7 @@
         <!-- FAMILY PROJECTS -->
         <div class="col-xl-3 col-lg-4 col-md-6">
             <div class="dashboard-card card-performance-dark"
-                 onclick="openDetailsModal('performance','family-projects')">
+                 id="btn_ExportPerfFamilyPbl">
 
                 <div class="card-body p-4">
 
@@ -263,7 +263,7 @@
         <!-- INDIVIDUAL PROJECTS -->
         <div class="col-xl-3 col-lg-4 col-md-6">
             <div class="dashboard-card card-performance-light"
-                 onclick="openDetailsModal('performance','individual-projects')">
+                 id="btn_ExportPerfIndividualPbl">
 
                 <div class="card-body p-4">
 
@@ -292,7 +292,7 @@
         <!-- GROUP PBL -->
         <div class="col-xl-3 col-lg-4 col-md-6">
             <div class="dashboard-card card-performance-secondary"
-                 onclick="openDetailsModal('performance','group-pbl')">
+                 id="btn_ExportPerfGroupProjects">
 
                 <div class="card-body p-4">
 
@@ -491,7 +491,7 @@
         <!-- FOCUSED SEL PROJECTS -->
         <div class="col-xl-3 col-lg-4 col-md-6">
             <div class="dashboard-card card-focused-primary"
-                 onclick="openDetailsModal('focused','sel-projects')">
+                 id="btn_ExportFocusedSelSubmissions">
 
                 <div class="card-body p-4">
 
@@ -520,7 +520,7 @@
         <!-- FOCUSED FAMILY PROJECTS -->
         <div class="col-xl-3 col-lg-4 col-md-6">
             <div class="dashboard-card card-focused-dark"
-                 onclick="openDetailsModal('focused','family-projects')">
+                 id="btn_ExportFocusedFamilyPbl">
 
                 <div class="card-body p-4">
 
@@ -549,7 +549,7 @@
         <!-- FOCUSED INDIVIDUAL PROJECTS -->
         <div class="col-xl-3 col-lg-4 col-md-6">
             <div class="dashboard-card card-focused-light"
-                 onclick="openDetailsModal('focused','individual-projects')">
+                 id="btn_ExportFocusedIndividualPbl">
 
                 <div class="card-body p-4">
 
@@ -578,7 +578,7 @@
         <!-- FOCUSED GROUP PBL -->
         <div class="col-xl-3 col-lg-4 col-md-6">
             <div class="dashboard-card card-focused-secondary"
-                 onclick="openDetailsModal('focused','group-pbl')">
+                 id="btn_ExportFocusedGroupProjects">
 
                 <div class="card-body p-4">
 
@@ -1540,4 +1540,134 @@
         });
     </script>
 
+    <script>
+        // Helper function to handle the export AJAX call cleanly
+        function exportCreativityReport(filterVal, reportTitle, $card, $iconWrapper) {
+            var originalIconHtml = $iconWrapper.html();
+            var affiliateId = 0;
+
+            $.ajax({
+                type: "GET",
+                url: `/api/Report/creativity-combined-report?AffiliateID=${affiliateId}&filter=${filterVal}`,
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                beforeSend: function() {
+                    showGlobalLoader(`Generating ${reportTitle} Report...`);
+                    $card.addClass("disabled-card");
+                    $iconWrapper.html('<div class="spinner-border text-light fs-4" role="status"><span class="visually-hidden">Loading...</span></div>');
+                },
+                success: function(data) {
+                    var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    var url = window.URL.createObjectURL(blob);
+                    var filename = `AffiliateSchoolCreativityCombinedReport_${filterVal === 'F' ? 'Focused' : 'All'}.xlsx`;
+
+                    var $anchor = $('<a />').attr({
+                        'href': url,
+                        'download': filename
+                    }).appendTo('body');
+
+                    $anchor[0].click();
+
+                    setTimeout(function() {
+                        window.URL.revokeObjectURL(url);
+                        $anchor.remove();
+                    }, 100);
+                },
+                error: function(xhr, status, error) {
+                    alert("Error downloading report: " + error);
+                },
+                complete: function() {
+                    hideGlobalLoader();
+                    $card.removeClass("disabled-card");
+                    $iconWrapper.html(originalIconHtml);
+                }
+            });
+        }
+
+        // 1. Performance - SEL Submissions (Filter 'A')
+        $("#btn_ExportPerfSelSubmissions").off("click").on("click", function() {
+            exportCreativityReport("A", "Performance SEL Submissions", $(this), $("#perfSelIconWrapper"));
+        });
+
+        // 2. Performance - Group Projects (Filter 'A')
+        $("#btn_ExportPerfGroupProjects").off("click").on("click", function() {
+            exportCreativityReport("A", "Performance Group Projects", $(this), $("#perfGroupIconWrapper"));
+        });
+
+        // 3. Focused - SEL Submissions (Filter 'F')
+        $("#btn_ExportFocusedSelSubmissions").off("click").on("click", function() {
+            exportCreativityReport("F", "Focused SEL Submissions", $(this), $("#focusedSelIconWrapper"));
+        });
+
+        // 4. Focused - Group Projects (Filter 'F')
+        $("#btn_ExportFocusedGroupProjects").off("click").on("click", function() {
+            exportCreativityReport("F", "Focused Group Projects", $(this), $("#focusedGroupIconWrapper"));
+        });
+    </script>
+    <script>
+        // Universal helper function for PBL report downloads
+        function exportPblReport(apiEndpoint, filterVal, reportTitle, $card, $iconWrapper) {
+            var originalIconHtml = $iconWrapper.html();
+            var affiliateId = 0;
+
+            $.ajax({
+                type: "GET",
+                url: `${apiEndpoint}?AffiliateID=${affiliateId}&filter=${filterVal}`,
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                beforeSend: function() {
+                    showGlobalLoader(`Generating ${reportTitle} Report...`);
+                    $card.addClass("disabled-card");
+                    $iconWrapper.html('<div class="spinner-border text-light fs-4" role="status"><span class="visually-hidden">Loading...</span></div>');
+                },
+                success: function(data) {
+                    var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    var url = window.URL.createObjectURL(blob);
+                    var filename = `${reportTitle.replace(/\s+/g, '')}_${filterVal === 'F' ? 'Focused' : 'All'}.xlsx`;
+
+                    var $anchor = $('<a />').attr({
+                        'href': url,
+                        'download': filename
+                    }).appendTo('body');
+
+                    $anchor[0].click();
+
+                    setTimeout(function() {
+                        window.URL.revokeObjectURL(url);
+                        $anchor.remove();
+                    }, 100);
+                },
+                error: function(xhr, status, error) {
+                    alert("Error downloading report: " + error);
+                },
+                complete: function() {
+                    hideGlobalLoader();
+                    $card.removeClass("disabled-card");
+                    $iconWrapper.html(originalIconHtml);
+                }
+            });
+        }
+
+        // 1. Performance - Family PBL (Filter 'A')
+        $("#btn_ExportPerfFamilyPbl").off("click").on("click", function() {
+            exportPblReport('/api/Report/affiliate-individual-project', 'A', 'Performance Family PBL', $(this), $("#perfFamilyIconWrapper"));
+        });
+
+        // 2. Performance - Individual PBL (Filter 'A')
+        $("#btn_ExportPerfIndividualPbl").off("click").on("click", function() {
+            exportPblReport('/api/Report/affiliate-teacher-individual-project', 'A', 'Performance Individual PBL', $(this), $("#perfIndividualIconWrapper"));
+        });
+
+        // 3. Focused - Family PBL (Filter 'F')
+        $("#btn_ExportFocusedFamilyPbl").off("click").on("click", function() {
+            exportPblReport('/api/Report/affiliate-individual-project', 'F', 'Focused Family PBL', $(this), $("#focusedFamilyIconWrapper"));
+        });
+
+        // 4. Focused - Individual PBL (Filter 'F')
+        $("#btn_ExportFocusedIndividualPbl").off("click").on("click", function() {
+            exportPblReport('/api/Report/affiliate-teacher-individual-project', 'F', 'Focused Individual PBL', $(this), $("#focusedIndividualIconWrapper"));
+        });
+    </script>
 }
