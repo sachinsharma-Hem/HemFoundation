@@ -7,7 +7,7 @@
 
     <!-- ========================================================= -->
     <!-- WELCOME HEADER -->
-    <!-- ====================Associated Schools Directory===================================== -->
+    <!-- ========================================================= -->
 
     <div class="row mb-4">
         <div class="col-12">
@@ -116,8 +116,7 @@
 
         <!-- ACTIVE STUDENTS -->
         <div class="col-xl-3 col-lg-4 col-md-6">
-            <div class="dashboard-card card-performance-success" id="btn_ExportAdminStudentsReport"
-                 >
+            <div class="dashboard-card card-performance-success" id="btn_ExportAdminStudentsReport">
 
                 <div class="card-body p-4">
 
@@ -134,7 +133,9 @@
                             </p>
                         </div>
 
-                        <i class="bi bi-person-check-fill fs-1 opacity-50"></i>
+                        <div id="exportIconWrapper">
+                            <i class="bi bi-person-check-fill fs-1 opacity-50"></i>
+                        </div>
 
                     </div>
 
@@ -401,8 +402,7 @@
 
         <!-- FOCUSED ACTIVE STUDENTS -->
         <div class="col-xl-3 col-lg-4 col-md-6">
-            <div class="dashboard-card card-focused-success"
-                 onclick="openDetailsModal('focused','active-students')">
+            <div class="dashboard-card card-focused-success" id="btn_ExportAdminFocusedStudentsReport">
 
                 <div class="card-body p-4">
 
@@ -419,7 +419,9 @@
                             </p>
                         </div>
 
-                        <i class="bi bi-person-check-fill fs-1 opacity-50"></i>
+                        <div id="focusedExportIconWrapper">
+                            <i class="bi bi-person-check-fill fs-1 opacity-50"></i>
+                        </div>
 
                     </div>
 
@@ -703,6 +705,19 @@
 
 
 <!-- ========================================================= -->
+<!-- GLOBAL PAGE LOADER OVERLAY -->
+<!-- ========================================================= -->
+<div id="globalLoader" class="global-loader-overlay" style="display: none;">
+    <div class="text-center">
+        <div class="spinner-border text-primary shadow-lg" style="width: 3.5rem; height: 3.5rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="fw-bold text-dark mt-3 fs-5" id="globalLoaderText">Generating Report, Please Wait...</div>
+    </div>
+</div>
+
+
+<!-- ========================================================= -->
 <!-- STYLES -->
 <!-- ========================================================= -->
 
@@ -838,11 +853,26 @@
             height: 2rem;
         }
 
+    .disabled-card {
+        opacity: 0.7;
+        pointer-events: none;
+    }
 
-    /* ================= SECTION ================= */
-
-    .report-section-title {
-        letter-spacing: -0.2px;
+    /* ================= GLOBAL LOADER OVERLAY ================= */
+    .global-loader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+        z-index: 99999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        transition: opacity 0.2s ease-in-out;
     }
 
 </style>
@@ -853,7 +883,19 @@
     <script>
 
         /* =========================================================
-           PAGE LOAD
+            GLOBAL LOADER HELPERS
+        ========================================================= */
+        function showGlobalLoader(message = "Processing your request, please wait...") {
+            $("#globalLoaderText").text(message);
+            $("#globalLoader").fadeIn(150);
+        }
+
+        function hideGlobalLoader() {
+            $("#globalLoader").fadeOut(150);
+        }
+
+        /* =========================================================
+            PAGE LOAD
         ========================================================= */
 
         $(document).ready(function() {
@@ -876,7 +918,7 @@
 
 
         /* =========================================================
-           AUTH TOKEN
+            AUTH TOKEN
         ========================================================= */
 
         function getAuthToken() {
@@ -888,7 +930,7 @@
 
 
         /* =========================================================
-           LOAD DASHBOARD COUNTS
+            LOAD DASHBOARD COUNTS
         ========================================================= */
 
         function loadAdminDashboardCounts() {
@@ -916,14 +958,6 @@
                         return;
                     }
 
-
-                    /*
-                     * Expected response:
-                     *
-                     * data.performance
-                     * data.focused
-                     */
-
                     const performance =
                         res.data.performance || {};
 
@@ -932,8 +966,8 @@
 
 
                     /* ================================
-                       PERFORMANCE
-                       ================================= */
+                        PERFORMANCE
+                    ================================= */
 
                     $('#p_totalSchools').text(
                         performance.schoolCount ?? 0
@@ -973,8 +1007,8 @@
 
 
                     /* ================================
-                       FOCUSED
-                       ================================= */
+                        FOCUSED
+                    ================================= */
 
                     $('#f_totalSchools').text(
                         focused.schoolCount ?? 0
@@ -1029,7 +1063,7 @@
 
 
         /* =========================================================
-           OPEN DETAILS MODAL
+            OPEN DETAILS MODAL
         ========================================================= */
 
         function openDetailsModal(category, type) {
@@ -1077,7 +1111,7 @@
 
             /* ================================
                MODAL TITLE
-               ================================= */
+            ================================= */
 
             $('#modalTitle').text(
                 categoryTitle + ' - ' + detailTitle
@@ -1090,55 +1124,43 @@
 
             /* ================================
                SHOW LOADING STATE
-               ================================= */
+            ================================= */
 
             $('#modalTable thead').html('');
 
             $('#modalTable tbody').html(`
-
                         <tr>
-
                             <td colspan="100%" class="text-center">
-
                                 <div class="modal-loader">
-
                                     <div class="spinner-border text-primary"
                                          role="status">
-
                                         <span class="visually-hidden">
                                             Loading...
                                         </span>
-
                                     </div>
-
                                     <div class="text-muted small mt-3">
                                         Loading records...
                                     </div>
-
                                 </div>
-
                             </td>
-
                         </tr>
-
                     `);
 
 
             /* ================================
                OPEN MODAL
-               ================================= */
+            ================================= */
 
             $('#dashboardDetailsModal').modal('show');
 
 
             /* ================================
                API CALL
-               ================================= */
+            ================================= */
 
             $.ajax({
 
-                url:
-                    `/api/admin/overall-details-list/${category}/${type}`,
+                url: `/api/admin/overall-details-list/${category}/${type}`,
 
                 type: 'GET',
 
@@ -1151,16 +1173,6 @@
 
                 success: function(res) {
 
-                    console.log(
-                        'Details response:',
-                        res
-                    );
-
-
-                    /* ============================
-                       NO DATA
-                       ============================ */
-
                     if (
                         !res ||
                         !res.success ||
@@ -1172,31 +1184,21 @@
                         $('#modalTable thead').html('');
 
                         $('#modalTable tbody').html(`
-
                                     <tr>
-
                                         <td colspan="100%"
                                             class="text-center py-5">
-
                                             <div class="text-muted">
-
                                                 <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-
                                                 <div class="fw-semibold">
                                                     No records found
                                                 </div>
-
                                                 <small>
                                                     There is no data available
                                                     for this section.
                                                 </small>
-
                                             </div>
-
                                         </td>
-
                                     </tr>
-
                                 `);
 
 
@@ -1210,7 +1212,7 @@
 
                     /* ============================
                        GET COLUMN NAMES
-                       ============================ */
+                    ============================ */
 
                     const keys =
                         Object.keys(res.data[0]);
@@ -1218,7 +1220,7 @@
 
                     /* ============================
                        TABLE HEADER
-                       ============================ */
+                    ============================ */
 
                     let thead = '<tr>';
 
@@ -1232,7 +1234,7 @@
                                 `;
 
                     });
-                    // Append Action column header if this is the Associated Schools list
+
                     if (type === 'total-schools') {
                         thead += `<th>Action</th>`;
                     }
@@ -1246,7 +1248,7 @@
 
                     /* ============================
                        TABLE BODY
-                       ============================ */
+                    ============================ */
 
                     let tbody = '';
 
@@ -1273,41 +1275,37 @@
 
 
                             tbody += `
-
                                         <td>
                                             ${escapeHtml(value)}
                                         </td>
-
                                     `;
 
                         });
 
 
-                        tbody += '</tr>';
-
                         if (type === 'total-schools') {
-                            // Extract institute ID dynamically from common property keys
-                            let instId = row.instituteId || row.InstituteID || row.id || row.ID || row.InstituteId || row.instituteID||0;
+                            let instId = row.instituteId || row.InstituteID || row.id || row.ID || row.InstituteId || row.instituteID || 0;
                             tbody += `
-                                                <td>
-                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportSingleInstituteReport(${instId})">
-                                                        <i class="bi bi-file-earmark-excel me-1"></i> Export Report
-                                                    </button>
-                                                </td>
-                                            `;
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportSingleInstituteReport(${instId}, this)">
+                                                <i class="bi bi-file-earmark-excel me-1"></i> Export Report
+                                            </button>
+                                        </td>
+                                    `;
                         }
 
+                        tbody += '</tr>';
 
                     });
-                    // Append Action button cell if this is the Associated Schools list
-                   
+
+
                     $('#modalTable tbody')
                         .html(tbody);
 
 
                     /* ============================
                        RECORD COUNT
-                       ============================ */
+                    ============================ */
 
                     $('#modalSubtitle').text(
 
@@ -1334,30 +1332,20 @@
 
 
                     $('#modalTable tbody').html(`
-
                                 <tr>
-
                                     <td colspan="100%"
                                         class="text-center py-5">
-
                                         <div class="text-danger">
-
                                             <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
-
                                             <div class="fw-semibold">
                                                 Failed to load records
                                             </div>
-
                                             <small>
                                                 Please try again.
                                             </small>
-
                                         </div>
-
                                     </td>
-
                                 </tr>
-
                             `);
 
 
@@ -1370,11 +1358,15 @@
             });
 
         }
-        function exportSingleInstituteReport(instituteId) {
+
+        function exportSingleInstituteReport(instituteId, buttonElement) {
             if (!instituteId || instituteId <= 0) {
                 alert("Invalid Institute ID.");
                 return;
             }
+
+            var $btn = $(buttonElement);
+            var originalHtml = $btn.html();
 
             $.ajax({
                 type: "POST",
@@ -1383,6 +1375,10 @@
                 contentType: "application/json; charset=utf-8",
                 xhrFields: {
                     responseType: 'blob'
+                },
+                beforeSend: function() {
+                    showGlobalLoader("Generating Institute Performance Report...");
+                    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Exporting...');
                 },
                 success: function(data) {
                     var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -1401,12 +1397,17 @@
                 },
                 error: function(xhr, status, error) {
                     alert("Error downloading institute report: " + error);
+                },
+                complete: function() {
+                    hideGlobalLoader();
+                    $btn.prop('disabled', false).html(originalHtml);
                 }
             });
         }
 
+
         /* =========================================================
-           FORMAT TABLE COLUMN NAME
+            FORMAT TABLE COLUMN NAME
         ========================================================= */
 
         function formatColumnName(key) {
@@ -1415,17 +1416,14 @@
                 return '';
             }
 
-
             let result = key
                 .replace(/([a-z])([A-Z])/g, '$1 $2')
                 .replace(/_/g, ' ')
                 .replace(/-/g, ' ');
 
-
             result =
                 result.charAt(0).toUpperCase() +
                 result.slice(1);
-
 
             return result;
 
@@ -1433,7 +1431,7 @@
 
 
         /* =========================================================
-           HTML ESCAPE
+            HTML ESCAPE
         ========================================================= */
 
         function escapeHtml(value) {
@@ -1446,29 +1444,33 @@
 
     </script>
 
+    <!-- ACTIVE STUDENTS REPORT EXPORT SCRIPT WITH LOADER -->
     <script>
         $("#btn_ExportAdminStudentsReport").off("click").on("click", function() {
-            // var InstID = $("#hddInstituteID").val();
+            var $card = $(this);
+            var $iconWrapper = $("#exportIconWrapper");
+            var originalIconHtml = $iconWrapper.html();
 
-            // if (!InstID || InstID === "0") {
-            //     alert("Institute ID not found.");
-            //     return;
-            // }
+            var affiliateId = 0;
+            var filterVal = "A";
 
             $.ajax({
-                type: "POST",
-                url: '/api/Report/export-institute-Admin-summary',
-                data: JSON.stringify({ instituteIDstr: 1 }),
-                contentType: "application/json; charset=utf-8",
+                type: "GET",
+                url: `/api/Report/affiliate-active-students?AffiliateID=${affiliateId}&filter=${filterVal}`,
                 xhrFields: {
-                    responseType: 'blob' // Essential for receiving binary files over AJAX
+                    responseType: 'blob'
+                },
+                beforeSend: function() {
+                    showGlobalLoader("Generating Active Students Report...");
+                    $card.addClass("disabled-card");
+                    $iconWrapper.html('<div class="spinner-border text-light fs-4" role="status"><span class="visually-hidden">Loading...</span></div>');
                 },
                 success: function(data) {
                     var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                     var url = window.URL.createObjectURL(blob);
                     var $anchor = $('<a />').attr({
                         'href': url,
-                        'download': 'StudentPerformanceReport.xlsx'
+                        'download': 'ActiveStudentsReport.xlsx'
                     }).appendTo('body');
 
                     $anchor[0].click();
@@ -1479,47 +1481,63 @@
                     }, 100);
                 },
                 error: function(xhr, status, error) {
-                    alert("Error downloading institute report: " + error);
+                    alert("Error downloading active students report: " + error);
+                },
+                complete: function() {
+                    hideGlobalLoader();
+                    $card.removeClass("disabled-card");
+                    $iconWrapper.html(originalIconHtml);
                 }
             });
-        });</script>
+        });
+    </script>
 
-        <script>
-            $("#btn_ExportInstituteReport").off("click").on("click", function() {
-                var InstID = $("#hddInstituteID").val();
+    <!-- FOCUSED ACTIVE STUDENTS REPORT EXPORT SCRIPT WITH LOADER -->
+    <script>
+        $("#btn_ExportAdminFocusedStudentsReport").off("click").on("click", function() {
+            var $card = $(this);
+            var $iconWrapper = $("#focusedExportIconWrapper");
+            var originalIconHtml = $iconWrapper.html();
 
-                if (!InstID || InstID === "0") {
-                    alert("Institute ID not found.");
-                    return;
+            var affiliateId = 0;
+            var filterVal = "F";
+
+            $.ajax({
+                type: "GET",
+                url: `/api/Report/affiliate-active-students?AffiliateID=${affiliateId}&filter=${filterVal}`,
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                beforeSend: function() {
+                    showGlobalLoader("Generating Focused Active Students Report...");
+                    $card.addClass("disabled-card");
+                    $iconWrapper.html('<div class="spinner-border text-light fs-4" role="status"><span class="visually-hidden">Loading...</span></div>');
+                },
+                success: function(data) {
+                    var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    var url = window.URL.createObjectURL(blob);
+                    var $anchor = $('<a />').attr({
+                        'href': url,
+                        'download': 'FocusedActiveStudentsReport.xlsx'
+                    }).appendTo('body');
+
+                    $anchor[0].click();
+
+                    setTimeout(function() {
+                        window.URL.revokeObjectURL(url);
+                        $anchor.remove();
+                    }, 100);
+                },
+                error: function(xhr, status, error) {
+                    alert("Error downloading focused active students report: " + error);
+                },
+                complete: function() {
+                    hideGlobalLoader();
+                    $card.removeClass("disabled-card");
+                    $iconWrapper.html(originalIconHtml);
                 }
-
-                $.ajax({
-                    type: "POST",
-                    url: '/api/Report/export-institute-summary',
-                    data: JSON.stringify({ instituteIDstr: InstID }),
-                    contentType: "application/json; charset=utf-8",
-                    xhrFields: {
-                        responseType: 'blob' // Essential for receiving binary files over AJAX
-                    },
-                    success: function(data) {
-                        var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                        var url = window.URL.createObjectURL(blob);
-                        var $anchor = $('<a />').attr({
-                            'href': url,
-                            'download': 'StudentPerformanceReport.xlsx'
-                        }).appendTo('body');
-
-                        $anchor[0].click();
-
-                        setTimeout(function() {
-                            window.URL.revokeObjectURL(url);
-                            $anchor.remove();
-                        }, 100);
-                    },
-                    error: function(xhr, status, error) {
-                        alert("Error downloading institute report: " + error);
-                    }
-                });
-            });</script>
+            });
+        });
+    </script>
 
 }

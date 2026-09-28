@@ -1188,5 +1188,78 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
             }
         }
 
+        [HttpGet("affiliate-active-students")]
+        public FileResult GetAffiliateWiseActiveStudentsdetails(int? AffiliateID, string filter = "A")
+        {
+            // Use the AffiliateID if provided, otherwise fallback to session/claims
+            int userId = AffiliateID ?? HttpContext.Session.GetInt32("UserID") ?? 0;
+
+            if (userId == 0)
+            {
+                userId = HttpContext.Session.GetInt32("UserID") ?? 0;
+            }
+            
+            if (string.IsNullOrEmpty(filter))
+            {
+                filter = "A";
+            }
+
+            DataSet essr1 = new DataSet();
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+
+            using (var conn = new Npgsql.NpgsqlConnection(connString))
+            {
+                conn.Open();
+                string sql = "SELECT * FROM hf_sp_getuserwiseactivestudentsdetails(@UserID, @FilterParameter)";
+
+                using (var cmd = new Npgsql.NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("UserID", userId);
+                    cmd.Parameters.AddWithValue("FilterParameter", filter);
+
+                    using (var adapter = new Npgsql.NpgsqlDataAdapter(cmd))
+                    {
+                        adapter.Fill(essr1);
+                    }
+                }
+            }
+
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+                bool dataFound = false;
+
+                if (essr1 != null && essr1.Tables.Count > 0)
+                {
+                    for (int i = 0; i < essr1.Tables.Count; i++)
+                    {
+                        DataTable dt = essr1.Tables[i];
+                        if (dt.Rows.Count > 0)
+                        {
+                            wb.Worksheets.Add(dt, "ActiveStudents " + (i + 1));
+                            dataFound = true;
+                        }
+                    }
+                }
+
+                if (!dataFound)
+                {
+                    var ws = wb.Worksheets.Add("No Data Found");
+                    ws.Cell("A1").Value = "No active student details found for the selected criteria.";
+                }
+
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    wb.SaveAs(stream);
+                    stream.Seek(0, SeekOrigin.Begin);
+
+                    string role = (filter == "A") ? "All" : "Focused";
+                    var fileName = $"ActiveStudents_Details_{role}_{DateTime.Today:yyyy-MM-dd}.xlsx";
+                    var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+                    return File(stream.ToArray(), contentType, fileName);
+                }
+            }
+        }
+
     }
 }

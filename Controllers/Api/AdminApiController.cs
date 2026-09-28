@@ -935,8 +935,8 @@ namespace HemFoundation.Controllers.Api
                         await (
                             from log in _context.StudentActivityLogs.AsNoTracking()
 
-                            //join student in _context.Set<ViewWjStudentsDetailsInfo>()
-                            //    on log.StudentID equals student.StudentId
+                            join student in _context.Set<ViewWjStudentsDetailsInfo>()
+                                on log.StudentID equals student.StudentId
 
                             where
                                 log.InstituteID != null &&
