@@ -931,23 +931,28 @@ namespace HemFoundation.Controllers.Api
                     // ACTIVE STUDENTS
                     // ========================================================
 
-                    "active-students" =>
-                        await (
+                  "active-students" =>
+                       await (
                             from log in _context.StudentActivityLogs.AsNoTracking()
+
 
                             join student in _context.Set<ViewWjStudentsDetailsInfo>()
                                 on log.StudentID equals student.StudentId
 
-                            where
-                                log.InstituteID != null &&
-                                instituteIds.Contains(log.InstituteID) &&
-                                log.ActivityType != "Survey"
+                        join student in _context.Set<ViewWjStudentsDetailsInfo>()
+                      on log.StudentID equals student.StudentId
 
-                            select student
+
+                     where
+                              log.InstituteID != null &&
+                            instituteIds.Contains(log.InstituteID) &&
+                               log.ActivityType != "Survey"
+
+                          select student
                         )
-                        .Distinct()
+                       .Distinct()
                         .Take(1000)
-                        .ToListAsync(),
+                       .ToListAsync(),
 
 
                     // ========================================================

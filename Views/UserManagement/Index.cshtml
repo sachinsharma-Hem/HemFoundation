@@ -5,9 +5,6 @@
 
 <div class="container-fluid py-3 px-3 px-md-4">
 
-    <!-- =========================================
-         PAGE HEADER
-    ========================================== -->
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
 
         <div>
@@ -275,6 +272,7 @@
                         <th class="py-3">User</th>
 
                         <th class="py-3 d-none d-lg-table-cell">User Code</th>
+                        <th class="py-3 d-none d-lg-table-cell">Password</th>
 
                         <th class="py-3">Role</th>
 
@@ -487,20 +485,12 @@
 
     <script>
 
-        // =========================================================
-        // GLOBAL STATE
-        // =========================================================
 
         let allMasterUsers = [];
         let filteredMasterUsers = [];
         let currentPage = 1;
         const pageSize = 50;
         let availableRoles = [];
-
-
-        // =========================================================
-        // DOCUMENT READY
-        // =========================================================
 
         $(document).ready(function() {
 
@@ -516,10 +506,6 @@
 
         });
 
-
-        // =========================================================
-        // API: LOAD ROLES
-        // =========================================================
 
         function loadRolesDropdown() {
 
@@ -551,11 +537,6 @@
 
         }
 
-
-        // =========================================================
-        // API: LOAD ALL USERS
-        // =========================================================
-
         function loadMasterUsers() {
 
             showTableLoading("Loading user records...");
@@ -585,11 +566,6 @@
                 });
 
         }
-
-
-        // =========================================================
-        // FILTERING & SEARCHING
-        // =========================================================
 
         function applyFilters() {
 
@@ -671,11 +647,6 @@
             $('#searchQuery').val('');
         }
 
-
-        // =========================================================
-        // DATE FILTERING LOGIC
-        // =========================================================
-
         function isDateInRange(dateString, rangeType) {
 
             try {
@@ -702,11 +673,6 @@
             }
 
         }
-
-
-        // =========================================================
-        // STATISTICS
-        // =========================================================
 
         function updateStatistics() {
 
@@ -754,14 +720,10 @@
 
         }
 
-
-        // =========================================================
-        // TABLE RENDERING
-        // =========================================================
-
         function renderMasterTable() {
 
             const tbody = $('#masterUserTableBody');
+
             const totalRecords = filteredMasterUsers.length;
             const totalPages = Math.ceil(totalRecords / pageSize) || 1;
 
@@ -769,34 +731,60 @@
                 currentPage = totalPages;
             }
 
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+
             const startIndex = (currentPage - 1) * pageSize;
             const endIndex = Math.min(startIndex + pageSize, totalRecords);
+
             const pageData = filteredMasterUsers.slice(startIndex, endIndex);
 
-            // Update pagination info
-            $('#recordInfo').text(`Showing ${totalRecords === 0 ? 0 : startIndex + 1} to ${endIndex} of ${totalRecords} users`);
-            $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
-            $('#paginationInfo').text(`Showing ${totalRecords === 0 ? 0 : startIndex + 1} to ${endIndex} of ${totalRecords} users`);
+            const showingFrom = totalRecords === 0 ? 0 : startIndex + 1;
+            const showingTo = endIndex;
+
+            $('#recordInfo').text(
+                `Showing ${showingFrom} to ${showingTo} of ${totalRecords} users`
+            );
+
+            $('#pageInfo').text(
+                `Page ${currentPage} of ${totalPages}`
+            );
+
+            $('#paginationInfo').text(
+                `Showing ${showingFrom} to ${showingTo} of ${totalRecords} users`
+            );
 
             if (pageData.length === 0) {
 
                 tbody.html(`
-                            <tr>
-                                <td colspan="9" class="text-center py-5">
-                                    <i class="bi bi-inbox fs-2 text-muted"></i>
-                                    <p class="text-muted small mt-2 mb-3">No users found matching your filters.</p>
-                                    <button type="button" class="btn btn-sm btn-outline-success rounded-2" onclick="resetFilters()">
-                                        <i class="bi bi-arrow-counterclockwise me-1"></i>
-                                        Reset Filters
-                                    </button>
-                                </td>
-                            </tr>
-                        `);
+                    <tr>
+                        <td colspan="10" class="text-center py-5">
+
+                            <i class="bi bi-inbox fs-2 text-muted"></i>
+
+                            <p class="text-muted small mt-2 mb-3">
+                                No users found matching your filters.
+                            </p>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-success rounded-2"
+                                    onclick="resetFilters()">
+
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                                Reset Filters
+
+                            </button>
+
+                        </td>
+                    </tr>
+                `);
 
                 $('#pagination').empty();
-                return;
 
+                return;
             }
+
 
             let html = '';
 
@@ -804,129 +792,272 @@
 
                 const actualIndex = startIndex + index;
 
-                // Status
-                const isActive = u.isActive === true || u.isActive === 1 || String(u.isActive).toLowerCase() === 'true';
-                const statusBadge = isActive
-                    ? `<span class="badge bg-success-subtle text-success border border-success border-opacity-50"><i class="bi bi-check-circle me-1"></i>Active</span>`
-                    : `<span class="badge bg-danger-subtle text-danger border border-danger border-opacity-50"><i class="bi bi-x-circle me-1"></i>Inactive</span>`;
 
-                // Password
-                let passwordHtml = '<span class="text-muted small">-</span>';
-                if (u.password && u.password !== '-') {
-                    const cleanPwd = String(u.password).substring(0, 25);
+                const isActive =
+                    u.isActive === true ||
+                    u.isActive === 1 ||
+                    String(u.isActive).toLowerCase() === 'true';
+
+                const statusBadge = isActive
+
+                    ? `
+                        <span class="badge bg-success-subtle text-success border border-success border-opacity-50">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Active
+                        </span>
+                      `
+
+                    : `
+                        <span class="badge bg-danger-subtle text-danger border border-danger border-opacity-50">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Inactive
+                        </span>
+                      `;
+
+                let passwordHtml = `
+                    <span class="text-muted small">-</span>
+                `;
+
+                if (
+                    u.password !== null &&
+                    u.password !== undefined &&
+                    String(u.password).trim() !== '' &&
+                    String(u.password) !== '-'
+                ) {
+
+                    const password = String(u.password);
+
                     passwordHtml = `
-                                <div class="input-group input-group-sm" style="max-width: 140px;">
-                                    <input type="password"
-                                           class="form-control form-control-sm bg-light border-0"
-                                           style="font-size: 11px;"
-                                           id="pwd_${actualIndex}"
-                                           value="${escapeHtml(cleanPwd)}"
-                                           readonly />
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-secondary border-0 bg-transparent text-muted"
-                                            onclick="togglePassword(${actualIndex})"
-                                            title="Show / Hide">
-                                        <i class="bi bi-eye-slash" id="eye_${actualIndex}" style="font-size: 11px;"></i>
-                                    </button>
-                                </div>
-                            `;
+                        <div class="d-flex align-items-center gap-1">
+
+                            <input type="password"
+                                   class="form-control form-control-sm bg-light border"
+                                   style="
+                                       width: 130px;
+                                       font-size: 11px;
+                                       height: 30px;
+                                   "
+                                   id="pwd_${actualIndex}"
+                                   value="${escapeHtml(password)}"
+                                   readonly />
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary p-1"
+                                    style="
+                                        width: 30px;
+                                        height: 30px;
+                                    "
+                                    onclick="togglePassword(${actualIndex})"
+                                    title="Show / Hide Password">
+
+                                <i class="bi bi-eye-slash"
+                                   id="eye_${actualIndex}"
+                                   style="font-size: 12px;">
+                                </i>
+
+                            </button>
+
+                        </div>
+                    `;
                 }
 
-                // User avatar with initials
-                const initials = (u.fullName || 'U')
+                const fullName = u.fullName || 'U';
+
+                const initials = fullName
                     .split(' ')
+                    .filter(n => n && n.trim() !== '')
                     .map(n => n[0])
                     .join('')
                     .substring(0, 2)
                     .toUpperCase();
 
                 html += `
-                            <tr>
-                                <!-- Checkbox -->
-                                <td class="text-center ps-3">
-                                    <input type="checkbox"
-                                           class="form-check-input user-checkbox shadow-none"
-                                           value="${escapeHtml(u.identityId || '')}"
-                                           onchange="updateDeleteButtonState()">
-                                </td>
+                    <tr>
 
-                                <!-- Serial -->
-                                <td class="fw-bold text-secondary small">${actualIndex + 1}</td>
+                        <!-- Checkbox -->
+                        <td class="text-center ps-3">
 
-                                <!-- User Info -->
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="bg-primary-subtle text-primary rounded-2 p-2" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;">
-                                            ${escapeHtml(initials)}
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold text-dark small">${escapeHtml(u.fullName || 'N/A')}</div>
-                                            <small class="text-muted">${escapeHtml(u.username || '-')}</small>
-                                            <div class="text-muted small d-none d-lg-block">${escapeHtml(u.email || '-')}</div>
-                                        </div>
+                            <input type="checkbox"
+                                   class="form-check-input user-checkbox shadow-none"
+                                   value="${escapeHtml(u.identityId || '')}"
+                                   onchange="updateDeleteButtonState()">
+
+                        </td>
+
+
+                        <!-- Serial -->
+                        <td class="fw-bold text-secondary small">
+                            ${actualIndex + 1}
+                        </td>
+
+
+                        <!-- User Info -->
+                        <td>
+
+                            <div class="d-flex align-items-center gap-2">
+
+                                <!-- Avatar -->
+                                <div class="bg-primary-subtle text-primary rounded-2 p-2"
+                                     style="
+                                         width: 36px;
+                                         height: 36px;
+                                         display: flex;
+                                         align-items: center;
+                                         justify-content: center;
+                                         font-size: 11px;
+                                         font-weight: bold;
+                                     ">
+
+                                    ${escapeHtml(initials)}
+
+                                </div>
+
+
+                                <!-- Details -->
+                                <div>
+
+                                    <div class="fw-bold text-dark small">
+                                        ${escapeHtml(u.fullName || 'N/A')}
                                     </div>
-                                </td>
 
-                                <!-- User Code -->
-                                <td class="small text-muted d-none d-lg-table-cell">${escapeHtml(u.userCode || '-')}</td>
+                                    <small class="text-muted">
+                                        ${escapeHtml(u.username || '-')}
+                                    </small>
 
-                                <!-- Role -->
-                                <td>
-                                    <span class="badge bg-primary-subtle text-primary px-2 py-1" style="font-size: 10px;">
-                                        ${escapeHtml(u.portalName || 'User')}
-                                    </span>
-                                </td>
-
-                                <!-- Mobile -->
-                                <td class="small d-none d-md-table-cell">${escapeHtml(u.phoneNumber || '-')}</td>
-
-                                <!-- Registered Date -->
-                                <td class="small text-muted d-none d-xl-table-cell">${escapeHtml(u.createdDate || '-')}</td>
-
-                                <!-- Status -->
-                                <td class="text-center">${statusBadge}</td>
-
-                                <!-- Actions -->
-                                <td class="text-end pe-3">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-info rounded-2 p-1"
-                                                style="width: 32px; height: 32px;"
-                                                onclick="viewUserDetailsByIndex(${actualIndex})"
-                                                title="View Details">
-                                            <i class="bi bi-eye" style="font-size: 12px;"></i>
-                                        </button>
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-primary rounded-2 p-1"
-                                                style="width: 32px; height: 32px;"
-                                                onclick="openEditRoleModal(${actualIndex})"
-                                                title="Edit Role">
-                                            <i class="bi bi-shield" style="font-size: 12px;"></i>
-                                        </button>
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-danger rounded-2 p-1"
-                                                style="width: 32px; height: 32px;"
-                                                onclick="deleteUserByIndex(${actualIndex})"
-                                                title="Delete User">
-                                            <i class="bi bi-trash3" style="font-size: 12px;"></i>
-                                        </button>
+                                    <div class="text-muted small d-none d-lg-block">
+                                        ${escapeHtml(u.email || '-')}
                                     </div>
-                                </td>
-                            </tr>
-                        `;
 
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- User Code -->
+                        <td class="small text-muted d-none d-lg-table-cell">
+
+                            ${escapeHtml(u.userCode || '-')}
+
+                        </td>
+
+
+                        <!-- PASSWORD -->
+                        <td class="d-none d-lg-table-cell">
+
+                            ${passwordHtml}
+
+                        </td>
+
+
+                        <!-- Role -->
+                        <td>
+
+                            <span class="badge bg-primary-subtle text-primary px-2 py-1"
+                                  style="font-size: 10px;">
+
+                                ${escapeHtml(u.portalName || 'User')}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- Mobile -->
+                        <td class="small d-none d-md-table-cell">
+
+                            ${escapeHtml(u.phoneNumber || '-')}
+
+                        </td>
+
+
+                        <!-- Registered Date -->
+                        <td class="small text-muted d-none d-xl-table-cell">
+
+                            ${escapeHtml(u.createdDate || '-')}
+
+                        </td>
+
+
+                        <!-- Status -->
+                        <td class="text-center">
+
+                            ${statusBadge}
+
+                        </td>
+
+
+                        <!-- Actions -->
+                        <td class="text-end pe-3">
+
+                            <div class="d-flex justify-content-end gap-2">
+
+                                <!-- View -->
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-info rounded-2 p-1"
+                                        style="
+                                            width: 32px;
+                                            height: 32px;
+                                        "
+                                        onclick="viewUserDetailsByIndex(${actualIndex})"
+                                        title="View Details">
+
+                                    <i class="bi bi-eye"
+                                       style="font-size: 12px;">
+                                    </i>
+
+                                </button>
+
+
+                                <!-- Edit Role -->
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary rounded-2 p-1"
+                                        style="
+                                            width: 32px;
+                                            height: 32px;
+                                        "
+                                        onclick="openEditRoleModal(${actualIndex})"
+                                        title="Edit Role">
+
+                                    <i class="bi bi-shield"
+                                       style="font-size: 12px;">
+                                    </i>
+
+                                </button>
+
+
+                                <!-- Delete -->
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger rounded-2 p-1"
+                                        style="
+                                            width: 32px;
+                                            height: 32px;
+                                        "
+                                        onclick="deleteUserByIndex(${actualIndex})"
+                                        title="Delete User">
+
+                                    <i class="bi bi-trash3"
+                                       style="font-size: 12px;">
+                                    </i>
+
+                                </button>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+                `;
             });
 
+
             tbody.html(html);
+
             renderPagination(totalPages);
+
             updateDeleteButtonState();
-
         }
-
-
-        // =========================================================
-        // PAGINATION
-        // =========================================================
 
         function renderPagination(totalPages) {
 
@@ -937,7 +1068,6 @@
                 return;
             }
 
-            // Previous
             const prevDisabled = currentPage === 1 ? 'disabled' : '';
             paginationContainer.append(`
                         <li class="page-item ${prevDisabled}">
@@ -947,7 +1077,6 @@
                         </li>
                     `);
 
-            // Page numbers
             let pages = [];
 
             if (totalPages <= 7) {
