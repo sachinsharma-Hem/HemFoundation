@@ -11,6 +11,15 @@ namespace HemFoundation.Models.Entities
         [Column("studentid")]
         public int StudentId { get; set; }
 
+
+        [Column("firstname")]
+        [StringLength(50)]
+        public string? FirstName { get; set; }
+
+        [Column("lastname")]
+        [StringLength(50)]
+        public string? LastName { get; set; }
+
         [Column("standard")]
         [StringLength(5)]
         public string? Standard { get; set; }
@@ -19,9 +28,54 @@ namespace HemFoundation.Models.Entities
         [StringLength(50)]
         public string? Division { get; set; }
 
+        [Column("instituteid")]
+        public int? InstituteID { get; set; }
+
+        [Column("institutename")]
+        [StringLength(100)]
+        public string? InstituteName { get; set; }
+
+
+        [Column("mobileno")]
+        [StringLength(50)]
+        public string? MobileNo { get; set; }
+
+        [Column("emailid")]
+        [StringLength(50)]
+        public string? EmailId { get; set; }
+
         [Column("gardianname")]
         [StringLength(50)]
         public string? GardianName { get; set; }
+        [Column("gender")]
+        [StringLength(1)]
+        public string? Gender { get; set; }
+
+        [Column("dob")]
+        public DateTime? Dob { get; set; }
+
+        [Column("addressline1")]
+        [StringLength(250)]
+        public string? AddressLine1 { get; set; }
+
+
+
+        [Column("cityname")]
+        [StringLength(50)]
+        public string? CityName { get; set; }
+
+        [Column("pincode")]
+        [StringLength(6)]
+        public string? Pincode { get; set; }
+
+
+        [Column("username")]
+        [StringLength(256)]
+        public string? Username { get; set; }
+
+        [Column("password_")]
+        [StringLength(50)]
+        public string? Password { get; set; }
 
         [Column("referralcode")]
         [StringLength(20)]
@@ -62,24 +116,10 @@ namespace HemFoundation.Models.Entities
         [StringLength(256)]
         public string? GuardianMobileNo { get; set; }
 
-        [Column("instituteid")]
-        public int? InstituteID { get; set; }
+       
 
-        [Column("institutename")]
-        [StringLength(100)]
-        public string? InstituteName { get; set; }
+       
 
-        [Column("firstname")]
-        [StringLength(50)]
-        public string? FirstName { get; set; }
-
-        [Column("lastname")]
-        [StringLength(50)]
-        public string? LastName { get; set; }
-
-        [Column("cityname")]
-        [StringLength(50)]
-        public string? CityName { get; set; }
 
         [Column("coins")]
         public long? Coins { get; set; }
@@ -87,24 +127,8 @@ namespace HemFoundation.Models.Entities
         [Column("rank")]
         public long? Rank { get; set; }
 
-        [Column("gender")]
-        [StringLength(1)]
-        public string? Gender { get; set; }
+       
 
-        [Column("dob")]
-        public DateTime? Dob { get; set; }
-
-        [Column("addressline1")]
-        [StringLength(250)]
-        public string? AddressLine1 { get; set; }
-
-        [Column("pincode")]
-        [StringLength(6)]
-        public string? Pincode { get; set; }
-
-        [Column("mobileno")]
-        [StringLength(50)]
-        public string? MobileNo { get; set; }
 
         [Column("photourl")]
         [StringLength(500)]
@@ -119,9 +143,7 @@ namespace HemFoundation.Models.Entities
         [Column("isuserdeactivated")]
         public bool? IsUserDeactivated { get; set; }
 
-        [Column("emailid")]
-        [StringLength(50)]
-        public string? EmailId { get; set; }
+      
 
         [Column("registrationdate")]
         public DateTime? RegistrationDate { get; set; }
@@ -129,13 +151,6 @@ namespace HemFoundation.Models.Entities
         [Column("registrationdisplaydate")]
         public string? RegistrationDisplayDate { get; set; }
 
-        [Column("username")]
-        [StringLength(256)]
-        public string? Username { get; set; }
-
-        [Column("password_")]
-        [StringLength(50)]
-        public string? Password { get; set; }
 
         [Column("gems")]
         public long? Gems { get; set; }

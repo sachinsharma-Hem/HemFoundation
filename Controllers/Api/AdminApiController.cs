@@ -935,8 +935,8 @@ namespace HemFoundation.Controllers.Api
                         await (
                             from log in _context.StudentActivityLogs.AsNoTracking()
 
-                            join student in _context.Set<ViewWjStudentsDetailsInfo>()
-                                on log.StudentID equals student.StudentId
+                            //join student in _context.Set<ViewWjStudentsDetailsInfo>()
+                            //    on log.StudentID equals student.StudentId
 
                             where
                                 log.InstituteID != null &&
@@ -1060,7 +1060,26 @@ namespace HemFoundation.Controllers.Api
                             .Select(x => new
                             {
                                 InstituteID = x.instituteid,
-                                ReferralCode = x.referralcode
+                                ReferralCode = x.referralcode,
+                                institute_name=x.institute_name,
+                                firstname=x.firstname,
+                                lastname=x.lastname,
+                                mobilno=x.mobileno,
+                                addressline1 = x.addressline1,
+                                addressline3=x.addressline3,
+                                cityname=x.cityname,
+                                pincode=x.pincode,
+                                username=x.username,
+                                password=x.password_,
+                                associatestudents=x.associatedstudents,
+                                activestudents=x.activestudents,
+                                associteteachers=x.totalteachers,
+                                activeteachers=x.activeteachers,
+                                isverfy=x.isverify
+
+
+
+
                             })
                             .Distinct()
                             .Take(1000)

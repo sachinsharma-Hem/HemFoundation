@@ -116,8 +116,8 @@
 
         <!-- ACTIVE STUDENTS -->
         <div class="col-xl-3 col-lg-4 col-md-6">
-            <div class="dashboard-card card-performance-success"
-                 onclick="openDetailsModal('performance','active-students')">
+            <div class="dashboard-card card-performance-success" id="btn_ExportAdminStudentsReport"
+                 >
 
                 <div class="card-body p-4">
 
@@ -1232,7 +1232,10 @@
                                 `;
 
                     });
-
+                    // Append Action column header if this is the Associated Schools list
+                    if (type === 'total-schools') {
+                        thead += `<th>Action</th>`;
+                    }
 
                     thead += '</tr>';
 
@@ -1282,9 +1285,22 @@
 
                         tbody += '</tr>';
 
+                        if (type === 'total-schools') {
+                            // Extract institute ID dynamically from common property keys
+                            let instId = row.instituteId || row.InstituteID || row.id || row.ID || row.InstituteId || row.instituteID||0;
+                            tbody += `
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportSingleInstituteReport(${instId})">
+                                                        <i class="bi bi-file-earmark-excel me-1"></i> Export Report
+                                                    </button>
+                                                </td>
+                                            `;
+                        }
+
+
                     });
-
-
+                    // Append Action button cell if this is the Associated Schools list
+                   
                     $('#modalTable tbody')
                         .html(tbody);
 
@@ -1354,7 +1370,40 @@
             });
 
         }
+        function exportSingleInstituteReport(instituteId) {
+            if (!instituteId || instituteId <= 0) {
+                alert("Invalid Institute ID.");
+                return;
+            }
 
+            $.ajax({
+                type: "POST",
+                url: '/api/Report/export-institute-summary',
+                data: JSON.stringify({ instituteIDstr: instituteId.toString() }),
+                contentType: "application/json; charset=utf-8",
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function(data) {
+                    var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    var url = window.URL.createObjectURL(blob);
+                    var $anchor = $('<a />').attr({
+                        'href': url,
+                        'download': `Institute_${instituteId}_PerformanceReport.xlsx`
+                    }).appendTo('body');
+
+                    $anchor[0].click();
+
+                    setTimeout(function() {
+                        window.URL.revokeObjectURL(url);
+                        $anchor.remove();
+                    }, 100);
+                },
+                error: function(xhr, status, error) {
+                    alert("Error downloading institute report: " + error);
+                }
+            });
+        }
 
         /* =========================================================
            FORMAT TABLE COLUMN NAME
@@ -1396,4 +1445,81 @@
         }
 
     </script>
+
+    <script>
+        $("#btn_ExportAdminStudentsReport").off("click").on("click", function() {
+            // var InstID = $("#hddInstituteID").val();
+
+            // if (!InstID || InstID === "0") {
+            //     alert("Institute ID not found.");
+            //     return;
+            // }
+
+            $.ajax({
+                type: "POST",
+                url: '/api/Report/export-institute-Admin-summary',
+                data: JSON.stringify({ instituteIDstr: 1 }),
+                contentType: "application/json; charset=utf-8",
+                xhrFields: {
+                    responseType: 'blob' // Essential for receiving binary files over AJAX
+                },
+                success: function(data) {
+                    var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    var url = window.URL.createObjectURL(blob);
+                    var $anchor = $('<a />').attr({
+                        'href': url,
+                        'download': 'StudentPerformanceReport.xlsx'
+                    }).appendTo('body');
+
+                    $anchor[0].click();
+
+                    setTimeout(function() {
+                        window.URL.revokeObjectURL(url);
+                        $anchor.remove();
+                    }, 100);
+                },
+                error: function(xhr, status, error) {
+                    alert("Error downloading institute report: " + error);
+                }
+            });
+        });</script>
+
+        <script>
+            $("#btn_ExportInstituteReport").off("click").on("click", function() {
+                var InstID = $("#hddInstituteID").val();
+
+                if (!InstID || InstID === "0") {
+                    alert("Institute ID not found.");
+                    return;
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: '/api/Report/export-institute-summary',
+                    data: JSON.stringify({ instituteIDstr: InstID }),
+                    contentType: "application/json; charset=utf-8",
+                    xhrFields: {
+                        responseType: 'blob' // Essential for receiving binary files over AJAX
+                    },
+                    success: function(data) {
+                        var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                        var url = window.URL.createObjectURL(blob);
+                        var $anchor = $('<a />').attr({
+                            'href': url,
+                            'download': 'StudentPerformanceReport.xlsx'
+                        }).appendTo('body');
+
+                        $anchor[0].click();
+
+                        setTimeout(function() {
+                            window.URL.revokeObjectURL(url);
+                            $anchor.remove();
+                        }, 100);
+                    },
+                    error: function(xhr, status, error) {
+                        alert("Error downloading institute report: " + error);
+                    }
+                });
+            });</script>
+
 }

@@ -25,6 +25,7 @@
         public int? modifiedby { get; set; }
         public DateTime? modifieddate { get; set; }
         public string? aspnetuserid { get; set; }
+        public string? username { get; set; }
         public string? password_ { get; set; }
         public int? associatedstudents { get; set; }
         public int? activestudents { get; set; }

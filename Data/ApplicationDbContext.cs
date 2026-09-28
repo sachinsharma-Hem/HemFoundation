@@ -276,6 +276,10 @@ namespace HemFoundation.Data
 
                 entity.Property(e => e.activeteachers)
                     .HasColumnName("activeteachers");
+                entity.Property(e => e.emailid)
+                    .HasColumnName("emailid");
+                entity.Property(e => e.username)
+                    .HasColumnName("username");
             });
 
             // Identity Configurations
