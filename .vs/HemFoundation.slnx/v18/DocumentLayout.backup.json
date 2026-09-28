@@ -3,6 +3,14 @@
   "WorkspaceRootPath": "H:\\Sachin\\Project\\HemFoundation\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\usermanagement\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\usermanagement\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\affiliate\\partials\\_performancedashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\affiliate\\partials\\_performancedashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
@@ -35,19 +43,44 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "_PerformanceDashboard.cshtml",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
-              "RelativeDocumentMoniker": "Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
-              "RelativeToolTip": "Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
-              "ViewState": "AgIAAHYCAAAAAAAAAAAowIICAAAUAAAAAAAAAA==",
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\UserManagement\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\UserManagement\\Index.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\UserManagement\\Index.cshtml",
+              "RelativeToolTip": "Views\\UserManagement\\Index.cshtml",
+              "ViewState": "AgIAAM8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-09-28T11:54:51.689Z",
+              "WhenOpened": "2026-09-28T13:26:09.783Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Properties\\launchSettings.json",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-09-28T12:27:35.409Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "_PerformanceDashboard.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
+              "RelativeDocumentMoniker": "Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
+              "RelativeToolTip": "Views\\Affiliate\\Partials\\_PerformanceDashboard.cshtml",
+              "ViewState": "AgIAANIBAAAAAAAAAAAiwN0BAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-28T11:54:51.689Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "AffiliateDashboardApiController.cs",
               "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\AffiliateDashboardApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\Api\\AffiliateDashboardApiController.cs",
@@ -55,8 +88,7 @@
               "RelativeToolTip": "Controllers\\Api\\AffiliateDashboardApiController.cs",
               "ViewState": "AgIAABoAAAAAAAAAAAAIwJ0AAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-28T09:08:37.505Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-28T09:08:37.505Z"
             }
           ]
         }
