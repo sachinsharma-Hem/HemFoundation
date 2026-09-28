@@ -814,6 +814,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+
         public class InstituteReportRequestModel
         {
             public string instituteIDstr { get; set; }

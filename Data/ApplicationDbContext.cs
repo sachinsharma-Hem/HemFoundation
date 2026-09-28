@@ -148,6 +148,7 @@ namespace HemFoundation.Data
         public DbSet<ProjectEvaluation> ProjectEvaluations { get; set; }
         public DbSet<HfUploadAnubhuti> HfUploadAnubhuti { get; set; }
         public DbSet<HfTblUploadIndividualProject> HfTblUploadIndividualProject { get; set; }
+        public DbSet<VwUserRoleDetails> VwUserRoleDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -607,16 +608,7 @@ namespace HemFoundation.Data
                 entity.Property(e => e.NoOfQuestion)
                     .HasColumnName("noofquestion");
             });
-            //builder.Entity<Topics>(entity =>
-            //{
-            //    entity.ToTable("topics");
-            //    entity.Property(e => e.IsActive)
-            //          .HasColumnName("isactive")
-            //          .HasConversion(
-            //              v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
-            //              v => v != null ? (bool?)v[0] : null
-            //          );
-            //});
+           
             builder.Entity<View_WJ_Course_Topics>(entity =>
             {
                 entity.HasNoKey();
@@ -633,7 +625,7 @@ namespace HemFoundation.Data
                           v => v != null && v.Count > 0 ? v.Get(0) : (bool?)null          // BitArray -> bool?
                       );
             });
-            //builder.Entity<Game24Solution>().ToTable("\"Game24Solution\"", "public");
+           
 
             builder.Entity<ActivityTypeMaster>(entity =>
             {
@@ -668,12 +660,10 @@ namespace HemFoundation.Data
                 entity.Property(e => e.IsEmailVerified).HasColumnType("boolean");
                 entity.Property(e => e.IsUserDeactivated).HasColumnType("boolean");
             });
-            // Required for BitArray
-
-            // Inside OnModelCreating:
+           
             builder.Entity<WJ_Students>(entity =>
             {
-                // Map C# bool? to BitArray for PostgreSQL 'bit' columns without changing the DB
+               
                 entity.Property(e => e.IsActive)
                       .HasColumnType("bit")
                       .HasConversion(
@@ -736,16 +726,175 @@ namespace HemFoundation.Data
             builder.Entity<WJ_Institutes>()
                 .Property(e => e.IsActive)
                 .HasConversion(
-                    v => new BitArray(new[] { v }),       // C# bool -> DB BitArray
-                    v => v != null && v.Count > 0 && v[0] // DB BitArray -> C# bool
+                    v => new BitArray(new[] { v }),       
+                    v => v != null && v.Count > 0 && v[0]
                 );
 
             builder.Entity<WJ_Institutes>()
                 .Property(e => e.IsVerify)
                 .HasConversion(
-                    v => new BitArray(new[] { v }),       // C# bool -> DB BitArray
-                    v => v != null && v.Count > 0 && v[0] // DB BitArray -> C# bool
+                    v => new BitArray(new[] { v }),       
+                    v => v != null && v.Count > 0 && v[0] 
                 );
+            builder.Entity<VwUserRoleDetails>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("vw_user_role_details", "public");
+
+                entity.Property(e => e.AspnetUserId).HasColumnName("aspnet_user_id");
+                entity.Property(e => e.Username).HasColumnName("username");
+                entity.Property(e => e.LoginEmail).HasColumnName("login_email");
+
+                entity.Property(e => e.Userid).HasColumnName("userid");
+                entity.Property(e => e.Usercode).HasColumnName("usercode");
+                entity.Property(e => e.Title).HasColumnName("title");
+                entity.Property(e => e.Firstname).HasColumnName("firstname");
+                entity.Property(e => e.Lastname).HasColumnName("lastname");
+                entity.Property(e => e.FullName).HasColumnName("full_name");
+                entity.Property(e => e.Gender).HasColumnName("gender");
+                entity.Property(e => e.Maritalstatus).HasColumnName("maritalstatus");
+                entity.Property(e => e.Dob).HasColumnName("dob");
+                entity.Property(e => e.Mobileno).HasColumnName("mobileno");
+                entity.Property(e => e.Phoneno).HasColumnName("phoneno");
+                entity.Property(e => e.Emailid).HasColumnName("emailid");
+
+                entity.Property(e => e.Addressline1).HasColumnName("addressline1");
+                entity.Property(e => e.Addressline2).HasColumnName("addressline2");
+                entity.Property(e => e.Addressline3).HasColumnName("addressline3");
+
+                entity.Property(e => e.City).HasColumnName("city");
+                entity.Property(e => e.Cityname).HasColumnName("cityname");
+                entity.Property(e => e.Pincode).HasColumnName("pincode");
+                entity.Property(e => e.Photourl).HasColumnName("photourl");
+
+                entity.Property(e => e.UserIsActive)
+                    .HasColumnName("user_is_active")
+                    .HasColumnType("bit(1)")
+                    .HasConversion(
+                        v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                        v => v != null && v.Count > 0 ? v[0] : null
+                    );
+
+                entity.Property(e => e.Isuserdeactivated)
+                    .HasColumnName("isuserdeactivated")
+                    .HasColumnType("bit(1)")
+                    .HasConversion(
+                        v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                        v => v != null && v.Count > 0 ? v[0] : null
+                    );
+
+                entity.Property(e => e.Ismobileverified)
+                    .HasColumnName("ismobileverified")
+                    .HasColumnType("bit(1)")
+                    .HasConversion(
+                        v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                        v => v != null && v.Count > 0 ? v[0] : null
+                    );
+
+                entity.Property(e => e.Isemailverified)
+                    .HasColumnName("isemailverified")
+                    .HasColumnType("bit(1)")
+                    .HasConversion(
+                        v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                        v => v != null && v.Count > 0 ? v[0] : null
+                    );
+
+                entity.Property(e => e.Languagepreference).HasColumnName("languagepreference");
+                entity.Property(e => e.UserCreatedDate).HasColumnName("user_created_date");
+                entity.Property(e => e.UserModifiedDate).HasColumnName("user_modified_date");
+                entity.Property(e => e.Registerfrom).HasColumnName("registerfrom");
+
+                entity.Property(e => e.RoleId).HasColumnName("role_id");
+                entity.Property(e => e.RoleName).HasColumnName("role_name");
+
+                entity.Property(e => e.Studentid).HasColumnName("studentid");
+                entity.Property(e => e.StudentStandard).HasColumnName("student_standard");
+                entity.Property(e => e.StudentDivision).HasColumnName("student_division");
+                entity.Property(e => e.Gardianname).HasColumnName("gardianname");
+                entity.Property(e => e.StudentReferralcode).HasColumnName("student_referralcode");
+                entity.Property(e => e.Registrationamount).HasColumnName("registrationamount");
+                entity.Property(e => e.StudentProfileurl).HasColumnName("student_profileurl");
+
+                entity.Property(e => e.StudentIsActive)
+                    .HasColumnName("student_is_active")
+                    .HasColumnType("bit(1)")
+                    .HasConversion(
+                        v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                        v => v != null && v.Count > 0 ? v[0] : null
+                    );
+
+                entity.Property(e => e.Ispaid)
+                    .HasColumnName("ispaid")
+                    .HasColumnType("bit(1)")
+                    .HasConversion(
+                        v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                        v => v != null && v.Count > 0 ? v[0] : null
+                    );
+
+                entity.Property(e => e.Trialperiodtill).HasColumnName("trialperiodtill");
+                entity.Property(e => e.Rollno).HasColumnName("rollno");
+
+                entity.Property(e => e.Sharingpermission)
+                    .HasColumnName("sharingpermission")
+                    .HasColumnType("bit(1)")
+                    .HasConversion(
+                        v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                        v => v != null && v.Count > 0 ? v[0] : null
+                    );
+
+                entity.Property(e => e.Levelpath).HasColumnName("levelpath");
+                entity.Property(e => e.Guardianemailid).HasColumnName("guardianemailid");
+                entity.Property(e => e.Guardianmobileno).HasColumnName("guardianmobileno");
+
+                entity.Property(e => e.Teacherid).HasColumnName("teacherid");
+                entity.Property(e => e.TeacherStandard).HasColumnName("teacher_standard");
+                entity.Property(e => e.TeacherDivision).HasColumnName("teacher_division");
+                entity.Property(e => e.TeacherProfileurl).HasColumnName("teacher_profileurl");
+
+                entity.Property(e => e.Instituteid).HasColumnName("instituteid");
+                entity.Property(e => e.Institutetype).HasColumnName("institutetype");
+                entity.Property(e => e.InstituteName).HasColumnName("institute_name");
+                entity.Property(e => e.Bannerimageurl).HasColumnName("bannerimageurl");
+                entity.Property(e => e.InstituteProfileurl).HasColumnName("institute_profileurl");
+
+                entity.Property(e => e.InstituteIsActive)
+                    .HasColumnName("institute_is_active")
+                    .HasColumnType("bit(1)")
+                    .HasConversion(
+                        v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                        v => v != null && v.Count > 0 ? v[0] : null
+                    );
+
+                entity.Property(e => e.InstituteReferralcode).HasColumnName("institute_referralcode");
+
+                entity.Property(e => e.Isverify)
+                    .HasColumnName("isverify")
+                    .HasColumnType("bit(1)")
+                    .HasConversion(
+                        v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                        v => v != null && v.Count > 0 ? v[0] : null
+                    );
+
+                entity.Property(e => e.Profession).HasColumnName("profession");
+                entity.Property(e => e.Socialorgname).HasColumnName("socialorgname");
+                entity.Property(e => e.Typeoforganisation).HasColumnName("typeoforganisation");
+
+                entity.Property(e => e.VolunteerId).HasColumnName("volunteer_id");
+                entity.Property(e => e.VolunteerFirstName).HasColumnName("volunteer_first_name");
+                entity.Property(e => e.VolunteerLastName).HasColumnName("volunteer_last_name");
+                entity.Property(e => e.VolunteerMobile).HasColumnName("volunteer_mobile");
+                entity.Property(e => e.VolunteerEmail).HasColumnName("volunteer_email");
+                entity.Property(e => e.VolunteerInstituteId).HasColumnName("volunteer_institute_id");
+                entity.Property(e => e.VolunteerAffiliateId).HasColumnName("volunteer_affiliate_id");
+                entity.Property(e => e.VolunteerCreatedDate).HasColumnName("volunteer_created_date");
+                entity.Property(e => e.VolunteerModifiedDate).HasColumnName("volunteer_modified_date");
+
+                entity.Property(e => e.VolunteerIsActive)
+                    .HasColumnName("volunteer_is_active");
+
+                entity.Property(e => e.VolunteerIsDeleted)
+                    .HasColumnName("volunteer_is_deleted");
+            });
 
         }
 

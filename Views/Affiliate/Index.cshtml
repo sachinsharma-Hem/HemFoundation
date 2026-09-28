@@ -204,22 +204,70 @@
         return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // Load Affiliates into Dropdown
     function loadAffiliateDropdown() {
+
         $.ajax({
-            url: `/api/affiliate-attendance/admin/affiliate-list`,
+            url: `/api/affiliate-attendance/admin/affiliates-list`,
             type: 'GET',
-            headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+
+            headers: {
+                'Authorization': 'Bearer ' + getAuthToken()
+            },
+
             success: function(res) {
-                if(res.success && res.data) {
-                    let opts = '<option value="">All Affiliates (Overall)</option>';
+
+                console.log("Affiliate Dropdown API Response:", res);
+
+                if (res.success && Array.isArray(res.data)) {
+
+                    let html =
+                        '<option value="">All Affiliates (Overall)</option>';
+
                     res.data.forEach(a => {
-                        opts += `<option value="${a.userID}">${a.name} (${a.userCode || 'No Code'})</option>`;
+
+                        html += `
+                            <option value="${a.affiliateId}">
+                                ${escapeHtml(a.affiliateName)}
+                            </option>
+                        `;
                     });
-                    $('#filterAffiliate').html(opts);
+
+                    $('#filterAffiliate').html(html);
+
+                } else {
+
+                    $('#filterAffiliate').html(
+                        '<option value="">No affiliates found</option>'
+                    );
                 }
+            },
+
+            error: function(xhr) {
+
+                console.error(
+                    "Affiliate dropdown error:",
+                    xhr.status,
+                    xhr.responseText
+                );
+
+                $('#filterAffiliate').html(
+                    '<option value="">Failed to load affiliates</option>'
+                );
             }
         });
+    }
+    function escapeHtml(value) {
+
+        if (value === null || value === undefined) {
+            return '';
+        }
+
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     function resetFilters() {
@@ -273,17 +321,32 @@
             success: function (res) {
                 if (res.success) {
                     
-                    // --- 1. Populate Summary Table ---
                     if (res.summary && res.summary.length > 0) {
                         let sumRows = res.summary.map(s => `
-                            <tr>
-                                <td class="fw-bold text-dark">${s.affiliateName}</td>
-                                <td><span class="badge bg-light text-dark border">${s.userCode || 'N/A'}</span></td>
-                                <td class="text-center"><span class="badge bg-success-subtle text-success px-3">${s.totalDaysPresent}</span></td>
-                                <td class="text-center"><span class="badge bg-danger-subtle text-danger px-3">${s.totalDaysAbsent}</span></td>
-                                <td class="text-center fw-bold text-primary">${s.totalHours} Hrs</td>
-                            </tr>
-                        `).join('');
+        <tr>
+            <td class="fw-bold text-dark">${s.affiliateName}</td>
+            <td>
+                <span class="badge bg-light text-dark border">
+                    ${s.userCode || 'N/A'}
+                </span>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-success-subtle text-success px-3">
+                    ${s.totalDaysPresent}
+                </span>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-danger-subtle text-danger px-3">
+                    ${s.totalDaysAbsent}
+                </span>
+            </td>
+            <td class="text-center fw-bold text-primary">
+                ${s.totalHours} Hrs
+            </td>
+        </tr>
+    `).join('');
+
+                        $('#summaryTableBody').html(sumRows);
                         $('#summaryTableBody').html(sumRows);
 
                         // If exactly 1 affiliate is selected, show Individual Banner

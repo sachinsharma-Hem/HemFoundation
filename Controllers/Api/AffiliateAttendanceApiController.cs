@@ -19,7 +19,6 @@ namespace HemFoundation.Controllers.Api
             _context = context;
         }
 
-        // Helper Method: Gets Current Indian Standard Time (IST / UTC+5:30)
         private static DateTime GetIstTime()
         {
             TimeZoneInfo istZone = OperatingSystem.IsWindows()
@@ -128,7 +127,6 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, record = attendance });
         }
 
-        // History API with Date-Wise, Month, and Year Filter
         [HttpGet("history")]
         public async Task<IActionResult> GetHistory([FromQuery] int? month, [FromQuery] int? year, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
         {
@@ -159,42 +157,68 @@ namespace HemFoundation.Controllers.Api
 
         #region ADMIN ATTENDANCE ENDPOINTS
 
-        // Helper to get IST
         private static DateTime GetIstTimeForAdmin()
         {
             TimeZoneInfo istZone = OperatingSystem.IsWindows()
                 ? TimeZoneInfo.FindSystemTimeZoneById("India Standard Time")
                 : TimeZoneInfo.FindSystemTimeZoneById("Asia/Kolkata");
+
             return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, istZone);
         }
 
-        // 1. Get Dropdown List of Affiliates
-        [HttpGet("admin/affiliate-list")]
-        public async Task<IActionResult> GetAffiliateList()
+
+        // ============================================================
+        // ADMIN - AFFILIATE DROPDOWN
+        // ============================================================
+        [HttpGet("admin/affiliates-list")]
+        public async Task<IActionResult> GetAffiliatesList()
         {
-            var list = await _context.Users
-                .Select(a => new
+            var list = await _context.View_HF_Affiliate
+                .AsNoTracking()
+                .Where(x => x.SchoolCount >= 5)
+                .Select(x => new
                 {
-                    a.UserID,
-                    Name = a.FirstName + " " + a.LastName,
-                    a.UserCode
+                    AffiliateId = (long)x.InstituteID,
+                    AffiliateName =
+                        ((x.FirstName ?? "") + " " + (x.LastName ?? "")).Trim()
                 })
-                .OrderBy(a => a.Name)
+                .Where(x => x.AffiliateId > 0)
+                .Distinct()
+                .OrderBy(x => x.AffiliateName)
                 .ToListAsync();
 
-            return Ok(new { success = true, data = list });
+            return Ok(new
+            {
+                success = true,
+                data = list
+            });
         }
 
-        // 2. Dashboard Top Stats
+
+        // ============================================================
+        // ADMIN - DASHBOARD STATS
+        // ============================================================
         [HttpGet("admin/dashboard-stats")]
-        public async Task<IActionResult> GetAdminDashboardStats([FromQuery] DateTime? filterDate)
+        public async Task<IActionResult> GetAdminDashboardStats(
+            [FromQuery] DateTime? filterDate)
         {
             var targetDate = filterDate?.Date ?? GetIstTimeForAdmin().Date;
 
-            var totalAffiliates = await _context.Affiliates.CountAsync(a => a.IsActive);
+            var affiliateIds = await _context.View_HF_Affiliate
+                .AsNoTracking()
+                .Where(x => x.SchoolCount >= 5)
+                .Select(x => (long)x.InstituteID)
+                .Distinct()
+                .ToListAsync();
+
+            var totalAffiliates = affiliateIds.Count;
 
             var presentCount = await _context.AffiliateAttendances
-                .Where(a => a.AttendanceDate == targetDate && !a.IsDeleted)
+                .AsNoTracking()
+                .Where(a =>
+                    a.AttendanceDate == targetDate &&
+                    !a.IsDeleted &&
+                    affiliateIds.Contains(a.AffiliateId))
                 .Select(a => a.AffiliateId)
                 .Distinct()
                 .CountAsync();
@@ -204,42 +228,170 @@ namespace HemFoundation.Controllers.Api
             return Ok(new
             {
                 success = true,
-                targetDate = targetDate,
-                totalAffiliates,
+                targetDate = targetDate.ToString("yyyy-MM-dd"),
+                totalAffiliates = totalAffiliates,
                 present = presentCount,
                 absent = absentCount < 0 ? 0 : absentCount
             });
         }
 
-        // 3. Detailed Logs & Custom Summary
+
+        // ============================================================
+        // ADMIN - ATTENDANCE LOGS
+        // ============================================================
         [HttpGet("admin/logs")]
-        public async Task<IActionResult> GetAdminAttendanceLogs([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate, [FromQuery] long? affiliateId)
+        public async Task<IActionResult> GetAdminAttendanceLogs(
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate,
+            [FromQuery] long? affiliateId)
         {
-            var query = _context.AffiliateAttendances.Where(a => !a.IsDeleted);
+            // --------------------------------------------------------
+            // 1. Affiliate master list
+            // --------------------------------------------------------
+            var affiliateQuery = _context.View_HF_Affiliate
+                .AsNoTracking()
+                .Where(x => x.SchoolCount >= 5);
+
+            if (affiliateId.HasValue && affiliateId.Value > 0)
+            {
+                affiliateQuery = affiliateQuery
+                    .Where(x => (long)x.InstituteID == affiliateId.Value);
+            }
+
+            var affiliates = await affiliateQuery
+                .Select(x => new
+                {
+                    AffiliateId = (long)x.InstituteID,
+
+                    AffiliateName =
+                        ((x.FirstName ?? "") + " " + (x.LastName ?? "")).Trim()
+                })
+                .Where(x => x.AffiliateId > 0)
+                .Distinct()
+                .OrderBy(x => x.AffiliateName)
+                .ToListAsync();
+
+
+            // --------------------------------------------------------
+            // 2. Attendance query
+            // --------------------------------------------------------
+            var query = _context.AffiliateAttendances
+                .AsNoTracking()
+                .Where(a => !a.IsDeleted);
+
 
             int totalDaysInRange = 0;
 
             if (fromDate.HasValue && toDate.HasValue)
             {
-                query = query.Where(x => x.AttendanceDate >= fromDate.Value.Date && x.AttendanceDate <= toDate.Value.Date);
-                totalDaysInRange = (int)(toDate.Value.Date - fromDate.Value.Date).TotalDays + 1;
-            }
+                var from = fromDate.Value.Date;
+                var to = toDate.Value.Date;
 
-            if (affiliateId.HasValue && affiliateId > 0)
+                query = query.Where(x =>
+                    x.AttendanceDate >= from &&
+                    x.AttendanceDate <= to);
+
+                totalDaysInRange =
+                    (int)(to - from).TotalDays + 1;
+            }
+            else if (fromDate.HasValue)
             {
-                query = query.Where(x => x.AffiliateId == affiliateId.Value);
+                var from = fromDate.Value.Date;
+
+                query = query.Where(x =>
+                    x.AttendanceDate >= from);
+            }
+            else if (toDate.HasValue)
+            {
+                var to = toDate.Value.Date;
+
+                query = query.Where(x =>
+                    x.AttendanceDate <= to);
             }
 
-            var logs = await query
-                .Join(_context.Affiliates,
-                    att => att.AffiliateId,
-                    aff => aff.UserID,
-                    (att, aff) => new
+
+            if (affiliateId.HasValue && affiliateId.Value > 0)
+            {
+                query = query.Where(x =>
+                    x.AffiliateId == affiliateId.Value);
+            }
+
+
+            // --------------------------------------------------------
+            // 3. Attendance logs
+            // --------------------------------------------------------
+            var attendanceLogs = await query
+                .Select(att => new
+                {
+                    att.Id,
+                    att.AffiliateId,
+                    att.AttendanceDate,
+                    att.PunchInTime,
+                    att.PunchOutTime,
+                    att.PunchInLocation,
+                    att.PunchOutLocation,
+                    att.TotalHoursWorked,
+                    att.Status,
+                    att.PunchOutMode
+                })
+                .OrderByDescending(x => x.AttendanceDate)
+                .ThenByDescending(x => x.PunchInTime)
+                .ToListAsync();
+
+
+            // --------------------------------------------------------
+            // 4. Attach affiliate name + code
+            // --------------------------------------------------------
+            var userIds = attendanceLogs
+     .Select(x => x.AffiliateId)
+     .Distinct()
+     .Where(x => x <= int.MaxValue)
+     .Select(x => (int)x)
+     .ToList();
+
+            var users = await _context.Users
+                .AsNoTracking()
+                .Where(u => userIds.Contains(u.UserID))
+                .Select(u => new
+                {
+                    u.UserID,
+                    u.FirstName,
+                    u.LastName,
+                    u.UserCode
+                })
+                .ToListAsync();
+
+
+            var userDictionary = users.ToDictionary(
+     x => (long)x.UserID,
+     x => new
+     {
+         Name = $"{x.FirstName} {x.LastName}".Trim(),
+         Code = x.UserCode
+     });
+
+
+            // --------------------------------------------------------
+            // 5. Detailed logs with names
+            // --------------------------------------------------------
+            var logs = attendanceLogs
+                .Select(att =>
+                {
+                    userDictionary.TryGetValue(
+                        att.AffiliateId,
+                        out var user);
+
+                    return new
                     {
                         att.Id,
                         att.AffiliateId,
-                        AffiliateName = aff.FirstName + " " + aff.LastName,
-                        aff.UserCode,
+
+                        AffiliateName =
+                            user?.Name ?? "Unknown Affiliate",
+
+                        UserCode =
+                            user?.Code ?? "N/A",
+
                         att.AttendanceDate,
                         att.PunchInTime,
                         att.PunchOutTime,
@@ -248,31 +400,66 @@ namespace HemFoundation.Controllers.Api
                         att.TotalHoursWorked,
                         att.Status,
                         att.PunchOutMode
-                    })
-                .OrderByDescending(x => x.AttendanceDate)
-                .ThenByDescending(x => x.PunchInTime)
-                .ToListAsync();
+                    };
+                })
+                .ToList();
 
-            // Grouping for Affiliate-wise Summary with Absent Calculation
-            var affiliateWiseSummary = logs
-                .GroupBy(x => new { x.AffiliateId, x.AffiliateName, x.UserCode })
-                .Select(g =>
+
+            // --------------------------------------------------------
+            // 6. Summary
+            // --------------------------------------------------------
+            var affiliateWiseSummary = affiliates
+                .Select(affiliate =>
                 {
-                    int presentDays = g.Select(x => x.AttendanceDate).Distinct().Count();
-                    int absentDays = totalDaysInRange > 0 ? (totalDaysInRange - presentDays) : 0;
+                    var userLogs = logs
+                        .Where(l =>
+                            l.AffiliateId == affiliate.AffiliateId)
+                        .ToList();
+
+
+                    int presentDays = userLogs
+                        .Select(x => x.AttendanceDate.Date)
+                        .Distinct()
+                        .Count();
+
+
+                    int absentDays =
+                        totalDaysInRange > 0
+                            ? totalDaysInRange - presentDays
+                            : 0;
+
+
+                    var matchedUser = users
+                        .FirstOrDefault(u =>
+                            u.UserID == affiliate.AffiliateId);
+
 
                     return new
                     {
-                        g.Key.AffiliateId,
-                        g.Key.AffiliateName,
-                        g.Key.UserCode,
+                        AffiliateId = affiliate.AffiliateId,
+
+                        AffiliateName =
+                            !string.IsNullOrWhiteSpace(affiliate.AffiliateName)
+                                ? affiliate.AffiliateName
+                                : "Unknown Affiliate",
+
+                        UserCode =
+                            matchedUser?.UserCode ?? "N/A",
+
                         TotalDaysPresent = presentDays,
-                        TotalDaysAbsent = absentDays < 0 ? 0 : absentDays, // Failsafe
-                        TotalHours = Math.Round(g.Sum(x => x.TotalHoursWorked), 2)
+
+                        TotalDaysAbsent =
+                            absentDays < 0 ? 0 : absentDays,
+
+                        TotalHours = Math.Round(
+                            userLogs.Sum(x =>
+                                x.TotalHoursWorked),
+                            2)
                     };
                 })
                 .OrderByDescending(x => x.TotalHours)
                 .ToList();
+
 
             return Ok(new
             {
@@ -282,161 +469,8 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
-        [HttpPost("leave/apply")]
-        public async Task<IActionResult> ApplyLeave([FromBody] LeaveApplyModel model)
-        {
-            long affId = await GetCurrentAffiliateIdAsync();
-
-            if (affId == 0)
-            {
-                return Unauthorized(new
-                {
-                    success = false,
-                    message = "Affiliate not found."
-                });
-            }
-
-            if (model == null)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "Invalid leave request."
-                });
-            }
-
-            if (string.IsNullOrWhiteSpace(model.Reason))
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "Please enter reason for leave."
-                });
-            }
-
-            var istNow = GetIstTime();
-
-            var todayIST = istNow.Date;
-
-            var fromDate = model.FromDate.Date;
-
-            var toDate = model.ToDate.Date;
-
-
-            // From Date cannot be before today
-            if (fromDate < todayIST)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "From Date cannot be before today."
-                });
-            }
-
-
-            // To Date cannot be before today
-            if (toDate < todayIST)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "To Date cannot be before today."
-                });
-            }
-
-
-            // From cannot be greater than To
-            if (fromDate > toDate)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "From Date cannot be greater than To Date."
-                });
-            }
-
-
-            /*
-               Check existing leave overlap.
-
-               Example:
-               Existing: 20 Aug - 22 Aug
-               New:      21 Aug - 23 Aug
-
-               This should not be allowed.
-            */
-
-            var hasOverlappingLeave =
-                await _context.AffiliateLeaves
-                    .AnyAsync(x =>
-                        x.AffiliateId == affId &&
-                        !x.IsDeleted &&
-                        x.Status != "Rejected" &&
-                        fromDate <= x.ToDate.Date &&
-                        toDate >= x.FromDate.Date
-                    );
-
-
-            if (hasOverlappingLeave)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "You already have a leave request for one or more selected dates."
-                });
-            }
-
-
-            var leave = new AffiliateLeave
-            {
-                AffiliateId = affId,
-
-                FromDate = fromDate,
-
-                ToDate = toDate,
-
-                Reason = model.Reason.Trim(),
-
-                Status = "Pending",
-
-                CreatedDate = istNow
-            };
-
-
-            _context.AffiliateLeaves.Add(leave);
-
-            await _context.SaveChangesAsync();
-
-
-            return Ok(new
-            {
-                success = true,
-                message = "Leave application submitted successfully.",
-                data = new
-                {
-                    leave.Id,
-                    leave.FromDate,
-                    leave.ToDate,
-                    leave.Status
-                }
-            });
-        }
-
-        [HttpGet("leave/history")]
-        public async Task<IActionResult> GetLeaveHistory()
-        {
-            long affId = await GetCurrentAffiliateIdAsync();
-            if (affId == 0) return Unauthorized(new { success = false, message = "Affiliate not found." });
-
-            var leaves = await _context.AffiliateLeaves
-                .Where(x => x.AffiliateId == affId && !x.IsDeleted)
-                .OrderByDescending(x => x.CreatedDate)
-                .ToListAsync();
-
-            return Ok(new { success = true, data = leaves });
-        }
         #endregion
-        // GET: api/affiliate-attendance/my-summary?fromDate=2026-08-01&toDate=2026-08-31
+
         [HttpGet("my-summary")]
         public async Task<IActionResult> GetMySummary([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
         {
@@ -493,7 +527,6 @@ namespace HemFoundation.Controllers.Api
 
         #region ADMIN LEAVE MANAGEMENT ENDPOINTS
 
-        // 1. Get All Leave Requests with Filters (Status, Affiliate, Date)
         [HttpGet("admin/leave/list")]
         public async Task<IActionResult> GetAdminLeaveList([FromQuery] string? status, [FromQuery] long? affiliateId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
         {
@@ -545,7 +578,6 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = list });
         }
 
-        // 2. Admin Dashboard Stats for Leaves (Today's requests, Pending, Total Completed)
         [HttpGet("admin/leave/stats")]
         public async Task<IActionResult> GetAdminLeaveStats()
         {
@@ -568,7 +600,6 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
-        // 3. Update Leave Status (Approve / Reject with remarks)
         [HttpPost("admin/leave/update-status")]
         public async Task<IActionResult> UpdateLeaveStatus([FromBody] AdminLeaveUpdateModel model)
         {

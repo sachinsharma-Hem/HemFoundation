@@ -26,9 +26,7 @@ namespace HemFoundation.Controllers.Api
         }
 
 
-        // ============================================================
-        // GET ALL USERS
-        // ============================================================
+        
 
         [HttpGet("all-users")]
         public async Task<IActionResult> GetAllUsersList()
@@ -140,11 +138,6 @@ namespace HemFoundation.Controllers.Api
             }
         }
 
-
-        // ============================================================
-        // GET ROLES
-        // ============================================================
-
         [HttpGet("roles-list")]
         public async Task<IActionResult> GetAspNetRoles()
         {
@@ -180,11 +173,6 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
-
-
-        // ============================================================
-        // UPDATE USER ROLE
-        // ============================================================
 
         [HttpPost("update-role")]
         public async Task<IActionResult> UpdateUserRole(
@@ -316,9 +304,7 @@ namespace HemFoundation.Controllers.Api
 
             try
             {
-                // ====================================================
-                // 1. CHECK users TABLE
-                // ====================================================
+                
 
                 var userExists =
                     await _context.Database
@@ -332,10 +318,6 @@ namespace HemFoundation.Controllers.Api
                         )
                         .FirstOrDefaultAsync();
 
-
-                // ====================================================
-                // 2. CHECK aspnetusers TABLE
-                // ====================================================
 
                 var aspNetUserExists =
                     await _context.Database
@@ -361,19 +343,6 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
-
-                // ====================================================
-                // 3. UPDATE public.users
-                // ====================================================
-                //
-                // isactive            = bit
-                // isuserdeactivated   = bit
-                //
-                // 0 = false
-                // 1 = true
-                //
-                // ====================================================
-
                 var usersUpdated =
                     await _context.Database
                         .ExecuteSqlInterpolatedAsync(
@@ -387,22 +356,6 @@ namespace HemFoundation.Controllers.Api
                     WHERE aspnetuserid = {identityId}
                     """
                         );
-
-
-                // ====================================================
-                // 4. UPDATE public.aspnetusers
-                // ====================================================
-                //
-                // IMPORTANT:
-                // Actual PostgreSQL table is:
-                //
-                // public.aspnetusers
-                //
-                // NOT:
-                //
-                // public."AspNetUsers"
-                //
-                // ====================================================
 
                 var securityStamp =
                     Guid.NewGuid().ToString();
@@ -423,17 +376,6 @@ namespace HemFoundation.Controllers.Api
                     WHERE id = {identityId}
                     """
                         );
-
-
-                // ====================================================
-                // IMPORTANT
-                // ====================================================
-                //
-                // AspNetRoles      -> NOT TOUCHED
-                // AspNetUserRoles  -> NOT TOUCHED
-                // RoleMenuRights   -> NOT TOUCHED
-                //
-                // ====================================================
 
 
                 await transaction.CommitAsync();
@@ -517,11 +459,6 @@ namespace HemFoundation.Controllers.Api
 
                 int accountsLocked = 0;
 
-
-                // ====================================================
-                // UPDATE users TABLE
-                // ====================================================
-
                 foreach (var identityId in identityIds)
                 {
                     var affected =
@@ -541,10 +478,6 @@ namespace HemFoundation.Controllers.Api
                     usersUpdated += affected;
                 }
 
-
-                // ====================================================
-                // UPDATE aspnetusers TABLE
-                // ====================================================
 
                 foreach (var identityId in identityIds)
                 {
@@ -572,16 +505,6 @@ namespace HemFoundation.Controllers.Api
                     accountsLocked += affected;
                 }
 
-
-                // ====================================================
-                // DO NOT TOUCH ROLES
-                // ====================================================
-                //
-                // AspNetRoles      -> NO CHANGE
-                // AspNetUserRoles  -> NO CHANGE
-                // RoleMenuRights   -> NO CHANGE
-                //
-                // ====================================================
 
 
                 await transaction.CommitAsync();
@@ -622,10 +545,6 @@ namespace HemFoundation.Controllers.Api
         }
     }
 
-
-    // ============================================================
-    // DTOs
-    // ============================================================
 
     public class RoleDto
     {
