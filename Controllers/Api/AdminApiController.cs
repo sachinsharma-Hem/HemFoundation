@@ -934,13 +934,13 @@ namespace HemFoundation.Controllers.Api
                             from log in _context.StudentActivityLogs.AsNoTracking()
 
 
-                            //join student in _context.Set<ViewWjStudentsDetailsInfo>()
-                            //    on log.StudentID equals student.StudentId
-
-                      
+                            join student in _context.Set<ViewWjStudentsDetailsInfo>()
+                                on log.StudentID equals student.StudentId
 
 
-                     where
+
+
+                            where
                               log.InstituteID != null &&
                             instituteIds.Contains(log.InstituteID) &&
                                log.ActivityType != "Survey"

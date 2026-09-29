@@ -35,6 +35,7 @@ namespace HemFoundation.Data
         public DbSet<ViewWjStudentsDetailsInfo> ViewWjStudentsDetailsInfo { get; set; }
 
         public DbSet<hf_view_studentsdetails> hf_view_studentsdetails { get; set; }
+        public DbSet<ErrorLog> ErrorLogs { get; set; }
         public DbSet<StandardMaster> StandardMasters { get; set; }
         public DbSet<WJ_Teacher> WJ_Teachers { get; set; }
         public DbSet<Parent> Parents { get; set; }

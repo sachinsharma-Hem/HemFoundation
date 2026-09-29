@@ -1,5 +1,6 @@
 using HemFoundation.Data; // Apne ApplicationDbContext ka namespace
 using HemFoundation.Models;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
@@ -63,9 +64,54 @@ namespace HemFoundation.Controllers
         public IActionResult Unsubscriber() => View();
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        public async Task<IActionResult> Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var requestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+
+            // Retrieve the exact exception that occurred anywhere in the app
+            var exceptionFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+
+            if (exceptionFeature?.Error != null)
+            {
+                var ex = exceptionFeature.Error;
+
+                var log = new ErrorLog
+                {
+                    RequestId = requestId,
+                    RequestPath = exceptionFeature.Path, // URL where crash happened
+                    HttpMethod = HttpContext.Request.Method,
+                    Message = ex.Message,
+                    ExceptionType = ex.GetType().FullName,
+                    StackTrace = ex.StackTrace,
+                    InnerException = ex.InnerException?.ToString(),
+                    UserIdentifier = User.Identity?.IsAuthenticated == true ? User.Identity.Name : "Anonymous",
+                    CreatedAtUtc = DateTime.UtcNow
+                };
+
+                _context.ErrorLogs.Add(log);
+                await _context.SaveChangesAsync();
+            }
+
+            return View(new ErrorViewModel { RequestId = requestId });
+        }
+
+
+        public async Task<IActionResult> ErrorLogs(string? search)
+        {
+            var query = _context.ErrorLogs.AsNoTracking().OrderByDescending(e => e.CreatedAtUtc).AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim();
+                query = query.Where(e =>
+                    e.RequestId.Contains(search) ||
+                    (e.Message != null && e.Message.Contains(search)) ||
+                    (e.RequestPath != null && e.RequestPath.Contains(search)));
+            }
+
+            var logs = await query.Take(100).ToListAsync();
+            ViewBag.Search = search;
+            return View(logs);
         }
     }
 }
