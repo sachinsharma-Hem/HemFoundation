@@ -938,7 +938,6 @@ namespace HemFoundation.Controllers.Api
                                 on log.StudentID equals student.StudentId
 
 
-
                             where
                               log.InstituteID != null &&
                             instituteIds.Contains(log.InstituteID) &&
