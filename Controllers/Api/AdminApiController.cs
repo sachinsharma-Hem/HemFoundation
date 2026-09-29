@@ -937,8 +937,7 @@ namespace HemFoundation.Controllers.Api
                             //join student in _context.Set<ViewWjStudentsDetailsInfo>()
                             //    on log.StudentID equals student.StudentId
 
-                        join student in _context.Set<ViewWjStudentsDetailsInfo>()
-                      on log.StudentID equals student.StudentId
+                      
 
 
                      where
