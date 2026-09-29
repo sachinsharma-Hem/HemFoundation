@@ -108,7 +108,7 @@ namespace HemFoundation.Controllers
                     .Where(log => log.TeacherID == teacherId)
                     .CountAsync();
 
-                var allStudents = await _context.ViewWjStudentsDetailsInfo
+                var allStudents = await _context.hf_view_studentsdetails
                     .Where(s => s.InstituteID == instituteId)
                     .ToListAsync();
 

@@ -413,21 +413,75 @@
             let ogText = $btn.html();
             $btn.html('<span class="spinner-border spinner-border-sm"></span> Processing...').prop('disabled', true);
 
-            $.ajax({
-                url: '/api/financials/generate-monthly-bill',
-                type: 'POST',
-                contentType: 'application/json',
-                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                data: JSON.stringify(payload),
-                success: function (res) {
-                    if (res.success) {
-                        alert("PDF Generated Successfully!");
-                        showDraftList(); // Wapas list par bhej do!
-                    }
-                },
-                error: function() { alert("Error generating bill."); },
-                complete: function() { $btn.html(ogText).prop('disabled', false); }
-            });
+           $.ajax({
+    url: '/api/financials/generate-monthly-bill',
+    type: 'POST',
+    contentType: 'application/json',
+
+    headers: {
+        'Authorization': 'Bearer ' + getAuthToken()
+    },
+
+    data: JSON.stringify(payload),
+
+    success: function (res) {
+
+        console.log("Generate Bill Response:", res);
+
+        if (res.success) {
+
+            alert("PDF Generated Successfully!");
+
+            showDraftList();
+        }
+        else {
+
+            alert(
+                res.message ||
+                "Unable to generate bill."
+            );
+        }
+    },
+
+    error: function (xhr, status, error) {
+
+        console.error(
+            "Generate Bill Error:",
+            xhr
+        );
+
+        console.error(
+            "Response:",
+            xhr.responseText
+        );
+
+        let message = "Error generating bill.";
+
+        // Backend JSON response
+        if (xhr.responseJSON) {
+
+            message =
+                xhr.responseJSON.message ||
+                xhr.responseJSON.innerMessage ||
+                message;
+        }
+
+        // If response is plain text
+        else if (xhr.responseText) {
+
+            message = xhr.responseText;
+        }
+
+        alert(message);
+    },
+
+    complete: function () {
+
+        $btn
+            .html(ogText)
+            .prop('disabled', false);
+    }
+});
         });
 
         // ================= 6. UPLOAD MODAL =================

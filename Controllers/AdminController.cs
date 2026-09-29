@@ -128,5 +128,7 @@ namespace HemFoundation.Controllers
             }
             return View("~/Views/Admin/UserDetails.cshtml");
         }
+
+
     }
 }

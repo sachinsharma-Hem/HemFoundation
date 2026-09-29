@@ -33,6 +33,9 @@ namespace HemFoundation.Data
         public DbSet<WJ_Institutes> WJ_Institutes { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<ViewWjStudentsDetailsInfo> ViewWjStudentsDetailsInfo { get; set; }
+
+        public DbSet<hf_view_studentsdetails> hf_view_studentsdetails { get; set; }
+        public DbSet<ErrorLog> ErrorLogs { get; set; }
         public DbSet<StandardMaster> StandardMasters { get; set; }
         public DbSet<WJ_Teacher> WJ_Teachers { get; set; }
         public DbSet<Parent> Parents { get; set; }
@@ -664,7 +667,16 @@ namespace HemFoundation.Data
                 entity.Property(e => e.IsEmailVerified).HasColumnType("boolean");
                 entity.Property(e => e.IsUserDeactivated).HasColumnType("boolean");
             });
-           
+            builder.Entity<hf_view_studentsdetails>(entity =>
+            {
+                entity.Property(e => e.IsActive).HasColumnType("boolean");
+                entity.Property(e => e.IsPaid).HasColumnType("boolean");
+                entity.Property(e => e.SharingPermission).HasColumnType("boolean");
+                entity.Property(e => e.IsMobileVerified).HasColumnType("boolean");
+                entity.Property(e => e.IsEmailVerified).HasColumnType("boolean");
+                entity.Property(e => e.IsUserDeactivated).HasColumnType("boolean");
+            });
+            
             builder.Entity<WJ_Students>(entity =>
             {
                

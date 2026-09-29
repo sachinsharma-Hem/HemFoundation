@@ -1,0 +1,139 @@
+﻿@model IEnumerable<HemFoundation.Models.ErrorLog>
+@{
+    ViewData["Title"] = "System Error Logs";
+}
+
+<style>
+    .logs-container {
+        padding: 2rem 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .badge-method {
+        font-weight: 600;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    .badge-get {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .badge-post {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .badge-delete {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .stack-trace-box {
+        background-color: #0f172a;
+        color: #f1f5f9;
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 0.85rem;
+        padding: 1.25rem;
+        border-radius: 8px;
+        white-space: pre-wrap;
+        word-break: break-all;
+        max-height: 380px;
+        overflow-y: auto;
+    }
+
+    .table td, .table th {
+        vertical-align: middle;
+    }
+</style>
+
+<div class="container logs-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Application Error Logs</h2>
+            <p class="text-muted mb-0">Showing latest records from PostgreSQL database</p>
+        </div>
+        <form method="get" class="d-flex gap-2">
+            <input type="text" name="search" class="form-control" placeholder="Search RequestId, Path, Message..." value="@ViewBag.Search" style="min-width: 320px;" />
+            <button type="submit" class="btn btn-primary" style="background-color: #5d2e8c; border-color: #5d2e8c;">Search</button>
+            @if (!string.IsNullOrEmpty(ViewBag.Search))
+            {
+                <a href="@Url.Action("ErrorLogs")" class="btn btn-outline-secondary">Reset</a>
+            }
+        </form>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Time (UTC)</th>
+                        <th>Method</th>
+                        <th>Path</th>
+                        <th>Error Message</th>
+                        <th>User</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-shield-check fs-2 text-success d-block mb-2"></i>
+                                No error logs found.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var log in Model)
+                    {
+                        <tr>
+                            <td class="text-nowrap text-secondary font-monospace" style="font-size: 0.85rem;">
+                                @log.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm:ss")
+                            </td>
+                            <td>
+                                <span class="badge-method @(log.HttpMethod == "POST" ? "badge-post" : log.HttpMethod == "DELETE" ? "badge-delete" : "badge-get")">
+                                    @(log.HttpMethod ?? "N/A")
+                                </span>
+                            </td>
+                            <td class="fw-semibold text-truncate" style="max-width: 180px;" title="@log.RequestPath">
+                                @(log.RequestPath ?? "-")
+                            </td>
+                            <td class="text-danger text-truncate" style="max-width: 350px;" title="@log.Message">
+                                @log.Message
+                            </td>
+                            <td class="text-muted small">
+                                @(log.UserIdentifier ?? "Anonymous")
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#detail-@log.Id">
+                                    View StackTrace
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="collapse bg-light" id="detail-@log.Id">
+                            <td colspan="6" class="p-4">
+                                <div class="mb-3 d-flex flex-wrap gap-4 text-muted small">
+                                    <div><strong>Request ID:</strong> <code class="text-dark">@log.RequestId</code></div>
+                                    <div><strong>Exception Type:</strong> <span>@log.ExceptionType</span></div>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(log.InnerException))
+                                {
+                                    <h6 class="text-danger fw-bold mt-2">Inner Exception:</h6>
+                                    <div class="stack-trace-box mb-3 text-warning">@log.InnerException</div>
+                                }
+
+                                <h6 class="text-secondary fw-bold">Stack Trace:</h6>
+                                <div class="stack-trace-box">@(log.StackTrace ?? "No stack trace available.")</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

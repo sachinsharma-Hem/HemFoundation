@@ -155,10 +155,6 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = list });
         }
 
-        // ============================================================
-        // AFFILIATE - LEAVE HISTORY
-        // ============================================================
-
         [HttpGet("leave/history")]
         public async Task<IActionResult> GetLeaveHistory()
         {
@@ -198,9 +194,7 @@ namespace HemFoundation.Controllers.Api
                 data = leaves
             });
         }
-        // ============================================================
-        // AFFILIATE - APPLY LEAVE
-        // ============================================================
+        
 
         [HttpPost("leave/apply")]
         public async Task<IActionResult> ApplyLeave(

@@ -61,3 +61,8 @@ nunit-*.xml
 .vs/HemFoundation.slnx/FileContentIndex/a69729e6-a786-4103-aad2-d113d6a63dd9.vsidx
 .vs/HemFoundation.slnx/FileContentIndex/c2ba6eee-1a03-4f61-be4b-45b4464d7087.vsidx
 .vs/HemFoundation.slnx/FileContentIndex/eccab907-2916-499f-9ca9-3cc1a0dcaf78.vsidx
+**/Chromium/
+**/chrome-win64/
+**/chrome-headless-shell/
+Properties/launchSettings.json
+Properties/launchSettings.json

@@ -100,9 +100,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
 
-// =========================================================================
-// SWAGGER CONFIGURATION (Add these 2 lines!)
-// =========================================================================
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHostedService<AttendanceBackgroundWorker>();
@@ -122,7 +120,7 @@ else
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
@@ -143,10 +141,27 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     await IdentitySeeder.SeedAdminAsync(services);
 }
-// =========================================================================
-// PUPPETEER SHARP (Download Chrome in Background on Startup)
-// =========================================================================
-var browserFetcher = new PuppeteerSharp.BrowserFetcher();
-await browserFetcher.DownloadAsync();
-Console.WriteLine("Chromium downloaded and ready for PDFs!");
+
+
+var chromiumPath = Path.Combine(
+    app.Environment.ContentRootPath,
+    "Chromium"
+);
+
+if (!Directory.Exists(chromiumPath))
+{
+    Directory.CreateDirectory(chromiumPath);
+}
+
+var browserFetcher = new PuppeteerSharp.BrowserFetcher(
+    new PuppeteerSharp.BrowserFetcherOptions
+    {
+        Path = chromiumPath
+    });
+
+var installedBrowser = await browserFetcher.DownloadAsync();
+
+Console.WriteLine(
+    $"Chromium downloaded: {installedBrowser.GetExecutablePath()}"
+);
 app.Run();
