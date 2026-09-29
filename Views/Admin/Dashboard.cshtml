@@ -928,11 +928,6 @@
                 '';
         }
 
-
-        /* =========================================================
-            LOAD DASHBOARD COUNTS
-        ========================================================= */
-
         function loadAdminDashboardCounts() {
 
             $.ajax({
@@ -964,10 +959,6 @@
                     const focused =
                         res.data.focused || {};
 
-
-                    /* ================================
-                        PERFORMANCE
-                    ================================= */
 
                     $('#p_totalSchools').text(
                         performance.schoolCount ?? 0
@@ -1004,11 +995,6 @@
                     $('#p_groupPbl').text(
                         performance.groupPbl ?? 0
                     );
-
-
-                    /* ================================
-                        FOCUSED
-                    ================================= */
 
                     $('#f_totalSchools').text(
                         focused.schoolCount ?? 0
@@ -1061,11 +1047,6 @@
 
         }
 
-
-        /* =========================================================
-            OPEN DETAILS MODAL
-        ========================================================= */
-
         function openDetailsModal(category, type) {
 
             const titleMap = {
@@ -1108,11 +1089,6 @@
             const detailTitle =
                 titleMap[type] || 'Details';
 
-
-            /* ================================
-               MODAL TITLE
-            ================================= */
-
             $('#modalTitle').text(
                 categoryTitle + ' - ' + detailTitle
             );
@@ -1120,11 +1096,6 @@
             $('#modalSubtitle').text(
                 'Loading records...'
             );
-
-
-            /* ================================
-               SHOW LOADING STATE
-            ================================= */
 
             $('#modalTable thead').html('');
 
@@ -1146,17 +1117,7 @@
                         </tr>
                     `);
 
-
-            /* ================================
-               OPEN MODAL
-            ================================= */
-
             $('#dashboardDetailsModal').modal('show');
-
-
-            /* ================================
-               API CALL
-            ================================= */
 
             $.ajax({
 
@@ -1209,19 +1170,8 @@
                         return;
                     }
 
-
-                    /* ============================
-                       GET COLUMN NAMES
-                    ============================ */
-
                     const keys =
                         Object.keys(res.data[0]);
-
-
-                    /* ============================
-                       TABLE HEADER
-                    ============================ */
-
                     let thead = '<tr>';
 
 
@@ -1244,11 +1194,6 @@
 
                     $('#modalTable thead')
                         .html(thead);
-
-
-                    /* ============================
-                       TABLE BODY
-                    ============================ */
 
                     let tbody = '';
 
@@ -1301,11 +1246,6 @@
 
                     $('#modalTable tbody')
                         .html(tbody);
-
-
-                    /* ============================
-                       RECORD COUNT
-                    ============================ */
 
                     $('#modalSubtitle').text(
 
@@ -1405,11 +1345,6 @@
             });
         }
 
-
-        /* =========================================================
-            FORMAT TABLE COLUMN NAME
-        ========================================================= */
-
         function formatColumnName(key) {
 
             if (!key) {
@@ -1429,11 +1364,6 @@
 
         }
 
-
-        /* =========================================================
-            HTML ESCAPE
-        ========================================================= */
-
         function escapeHtml(value) {
 
             return $('<div>')
@@ -1444,7 +1374,6 @@
 
     </script>
 
-    <!-- ACTIVE STUDENTS REPORT EXPORT SCRIPT WITH LOADER -->
     <script>
         $("#btn_ExportAdminStudentsReport").off("click").on("click", function() {
             var $card = $(this);
@@ -1492,7 +1421,6 @@
         });
     </script>
 
-    <!-- FOCUSED ACTIVE STUDENTS REPORT EXPORT SCRIPT WITH LOADER -->
     <script>
         $("#btn_ExportAdminFocusedStudentsReport").off("click").on("click", function() {
             var $card = $(this);

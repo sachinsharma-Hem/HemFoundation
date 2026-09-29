@@ -156,9 +156,7 @@ namespace HemFoundation.Controllers.Api
                 });
             }
 
-            // ==========================================
-            // 2. FALLBACK TO STANDARD ASPNETUSERS / USERS TABLE LOGIN
-            // ==========================================
+    
             var user = await _context.Set<ApplicationUser>()
                 .FirstOrDefaultAsync(u => u.UserName == username || u.Email == username);
 

@@ -155,6 +155,170 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = list });
         }
 
+        // ============================================================
+        // AFFILIATE - LEAVE HISTORY
+        // ============================================================
+
+        [HttpGet("leave/history")]
+        public async Task<IActionResult> GetLeaveHistory()
+        {
+            long affId = await GetCurrentAffiliateIdAsync();
+
+            if (affId == 0)
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "Affiliate not found."
+                });
+            }
+
+            var leaves = await _context.AffiliateLeaves
+                .AsNoTracking()
+                .Where(x =>
+                    x.AffiliateId == affId &&
+                    !x.IsDeleted)
+                .OrderByDescending(x => x.CreatedDate)
+                .Select(x => new
+                {
+                    id = x.Id,
+                    fromDate = x.FromDate,
+                    toDate = x.ToDate,
+                    reason = x.Reason,
+                    status = x.Status,
+                    adminRemarks = x.AdminRemarks,
+                    createdDate = x.CreatedDate,
+                    actionDate = x.ActionDate
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                success = true,
+                data = leaves
+            });
+        }
+        // ============================================================
+        // AFFILIATE - APPLY LEAVE
+        // ============================================================
+
+        [HttpPost("leave/apply")]
+        public async Task<IActionResult> ApplyLeave(
+            [FromBody] LeaveApplyModel model)
+        {
+            long affId = await GetCurrentAffiliateIdAsync();
+
+            if (affId == 0)
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "Affiliate not found."
+                });
+            }
+
+            if (model == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid request data."
+                });
+            }
+
+            if (model.FromDate.Date < DateTime.Today)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "From Date cannot be before today."
+                });
+            }
+
+            if (model.ToDate.Date < model.FromDate.Date)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "To Date cannot be before From Date."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(model.Reason))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Please enter reason for leave."
+                });
+            }
+
+
+            // ------------------------------------------------------------
+            // Check overlapping leave
+            // ------------------------------------------------------------
+
+            var overlappingLeave =
+                await _context.AffiliateLeaves
+                    .AsNoTracking()
+                    .AnyAsync(x =>
+                        x.AffiliateId == affId &&
+                        !x.IsDeleted &&
+                        x.Status != "Rejected" &&
+                        x.FromDate.Date <= model.ToDate.Date &&
+                        x.ToDate.Date >= model.FromDate.Date);
+
+            if (overlappingLeave)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "A leave request already exists for the selected date range."
+                });
+            }
+
+
+            // ------------------------------------------------------------
+            // Create Leave
+            // ------------------------------------------------------------
+
+            var now = GetIstTime();
+
+            var leave = new AffiliateLeave
+            {
+                AffiliateId = affId,
+                FromDate = model.FromDate.Date,
+                ToDate = model.ToDate.Date,
+                Reason = model.Reason.Trim(),
+                Status = "Pending",
+                AdminRemarks = null,
+                CreatedDate = now,
+                ModifiedDate = now,
+                ActionDate = null,
+                IsDeleted = false
+            };
+
+
+            _context.AffiliateLeaves.Add(leave);
+
+            await _context.SaveChangesAsync();
+
+
+            return Ok(new
+            {
+                success = true,
+                message = "Leave application submitted successfully.",
+                data = new
+                {
+                    id = leave.Id,
+                    fromDate = leave.FromDate,
+                    toDate = leave.ToDate,
+                    reason = leave.Reason,
+                    status = leave.Status,
+                    createdDate = leave.CreatedDate
+                }
+            });
+        }
         #region ADMIN ATTENDANCE ENDPOINTS
 
         private static DateTime GetIstTimeForAdmin()
