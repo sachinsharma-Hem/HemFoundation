@@ -189,41 +189,71 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
 
         [HttpGet("export-institute-summary")]
         [HttpPost("export-institute-summary")]
-        public IActionResult ExportInstituteSummaryReport(string instituteIDstr = null)
+        public async Task<IActionResult> ExportInstituteSummaryReport()
         {
+            string instituteIDstr = null;
             int instituteID = 0;
 
-            // 1. Try query string parameter
-            if (string.IsNullOrEmpty(instituteIDstr))
+            // 1. Try Query String
+            if (Request.Query.TryGetValue("instituteIDstr", out var queryVal) && !string.IsNullOrEmpty(queryVal))
             {
-                instituteIDstr = Request.Query["instituteIDstr"];
+                instituteIDstr = queryVal;
             }
 
-            // 2. Try form data or POST body values if sent via form-urlencoded/FormData
-            if (string.IsNullOrEmpty(instituteIDstr) && Request.HasFormContentType)
+            // 2. Try Form Data (application/x-www-form-urlencoded or multipart/form-data)
+            if (string.IsNullOrEmpty(instituteIDstr) && Request.HasFormContentType && Request.Form.TryGetValue("instituteIDstr", out var formVal) && !string.IsNullOrEmpty(formVal))
             {
-                instituteIDstr = Request.Form["instituteIDstr"];
+                instituteIDstr = formVal;
             }
 
-            // 3. Parse string to int if available
+            // 3. Try Request Body (JSON payload if sent via POST)
+            if (string.IsNullOrEmpty(instituteIDstr) && Request.ContentLength > 0)
+            {
+                try
+                {
+                    Request.EnableBuffering();
+                    Request.Body.Seek(0, SeekOrigin.Begin);
+                    using (var reader = new StreamReader(Request.Body, leaveOpen: true))
+                    {
+                        var bodyJson = await reader.ReadToEndAsync();
+                        Request.Body.Seek(0, SeekOrigin.Begin); // Reset stream position
+
+                        if (!string.IsNullOrEmpty(bodyJson))
+                        {
+                            // Parse JSON dynamically using System.Text.Json
+                            var jsonDoc = System.Text.Json.JsonDocument.Parse(bodyJson);
+                            if (jsonDoc.RootElement.TryGetProperty("instituteIDstr", out var prop) && prop.ValueKind != System.Text.Json.JsonValueKind.Null)
+                            {
+                                instituteIDstr = prop.ToString();
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore JSON parsing exceptions if body isn't a valid JSON object
+                }
+            }
+
+            // 4. Parse string to int if found from any of the above sources
             if (!string.IsNullOrEmpty(instituteIDstr) && int.TryParse(instituteIDstr, out int parsedId))
             {
                 instituteID = parsedId;
             }
-            // 4. Fallback to Session UserID if not provided
-            else if (HttpContext.Session.GetInt32("UserID") is int sessionId && sessionId > 0)
+
+            // 5. Fallback to Session UserID if not provided anywhere else
+            if (instituteID <= 0)
             {
-                instituteID = sessionId;
-            }
-            // 5. Fallback to Claims Principal
-            else if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedClaim))
-            {
-                instituteID = parsedClaim;
+                int? sessionUserId = HttpContext.Session.GetInt32("UserID");
+                if (sessionUserId.HasValue && sessionUserId.Value > 0)
+                {
+                    instituteID = sessionUserId.Value;
+                }
             }
 
             if (instituteID <= 0)
             {
-                return BadRequest(new { success = false, message = "Invalid or missing Institute ID." });
+                return BadRequest("Invalid Institute ID.");
             }
 
             try

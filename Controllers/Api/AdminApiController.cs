@@ -1,4 +1,5 @@
-﻿using HemFoundation.Common;
+﻿using ClosedXML.Excel;
+using HemFoundation.Common;
 using HemFoundation.Data;
 using HemFoundation.DTOs;
 using HemFoundation.Models;
@@ -9,8 +10,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml.Interfaces.SensitivityLabels;
 using System.Configuration;
+using System.Data;
+using System.Reflection;
 using System.Security.Claims;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace HemFoundation.Controllers.Api
 {
@@ -837,8 +842,8 @@ namespace HemFoundation.Controllers.Api
             }
         }
      
-        [HttpGet("overall-details-list/{category}/{type}")]
-        public async Task<IActionResult> GetOverallDetailsList(string category, string type)
+        [HttpGet("overall-details-list1/{category}/{type}")]
+        public async Task<IActionResult> GetOverallDetailsList1(string category, string type)
         {
             try
             {
@@ -1111,6 +1116,448 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
-  
+
+        [HttpGet("overall-details-list/{category}/{type}")]
+        public async Task<IActionResult> GetOverallDetailsList(string category, string type, [FromQuery] int limit = 100)
+        {
+            try
+            {
+                category = category?.Trim().ToLower() ?? "";
+                type = type?.Trim().ToLower() ?? "";
+
+                // Ensure limit bounds are safe (e.g., max 2000 rows)
+                limit = limit > 0 && limit <= 2000 ? limit : 100;
+
+                List<int?> instituteIds;
+
+                if (category == "performance")
+                {
+                    var referralCodes = await _context.WJ_ReferralCodes
+                        .AsNoTracking()
+                        .Where(x => x.ReferralCode != null && x.ReferralCode != "")
+                        .Select(x => x.ReferralCode)
+                        .Distinct()
+                        .ToListAsync();
+
+                    instituteIds = await _context.SchoolProfileDetails
+                        .AsNoTracking()
+                        .Where(x => x.referralcode != null && referralCodes.Contains(x.referralcode))
+                        .Select(x => (int?)x.instituteid)
+                        .Distinct()
+                        .ToListAsync();
+                }
+                else if (category == "focused")
+                {
+                    instituteIds = await _context.HfTblAffliateFocusedLists
+                        .AsNoTracking()
+                        .Where(x => x.InstituteId != null)
+                        .Select(x => (int?)x.InstituteId)
+                        .Distinct()
+                        .ToListAsync();
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = "Invalid report category." });
+                }
+
+                if (!instituteIds.Any())
+                {
+                    return Ok(new { success = true, data = new List<object>() });
+                }
+
+                object result = type switch
+                {
+                    "total-students" => await _context.Set<ViewWjStudentsDetailsInfo>()
+                        .AsNoTracking()
+                        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                        .Take(limit)
+                        .ToListAsync(),
+
+                    "active-students" => await (
+                        from log in _context.StudentActivityLogs.AsNoTracking()
+                        join student in _context.Set<ViewWjStudentsDetailsInfo>()
+                            on log.StudentID equals student.StudentId
+                        where log.InstituteID != null &&
+                              instituteIds.Contains(log.InstituteID) &&
+                              log.ActivityType != "Survey"
+                        select student
+                    ).Distinct().Take(limit).ToListAsync(),
+
+                    "total-teachers" => await _context.Set<ViewHfTeacherDetails>()
+                        .AsNoTracking()
+                        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                        .Take(limit)
+                        .ToListAsync(),
+
+                    "active-teachers" => await (
+                        from log in _context.TeacherActivityLogs.AsNoTracking()
+                        join teacher in _context.Set<ViewHfTeacherDetails>()
+                            on log.TeacherID equals teacher.TeacherID
+                        where log.InstituteID != null &&
+                              instituteIds.Contains(log.InstituteID)
+                        select teacher
+                    ).Distinct().Take(limit).ToListAsync(),
+
+                    "sel-projects" => await _context.creativityActivitiesSubmission2021s
+                        .AsNoTracking()
+                        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                        .Take(limit)
+                        .ToListAsync(),
+
+                    "family-projects" => await _context.StudentActivityLogs
+                        .AsNoTracking()
+                        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Family PBL")
+                        .Take(limit)
+                        .ToListAsync(),
+
+                    "individual-projects" => await _context.StudentActivityLogs
+                        .AsNoTracking()
+                        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Individual PBL")
+                        .Take(limit)
+                        .ToListAsync(),
+
+                    "group-pbl" => await _context.creativityActivitiesSubmission2021s
+                        .AsNoTracking()
+                        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                        .Take(limit)
+                        .ToListAsync(),
+
+                    "total-schools" => await _context.SchoolProfileDetails
+                        .AsNoTracking()
+                        .Where(x => x.instituteid != null && instituteIds.Contains(x.instituteid))
+                        .Select(x => new
+                        {
+                            InstituteID = x.instituteid,
+                            ReferralCode = x.referralcode,
+                            institute_name = x.institute_name,
+                            firstname = x.firstname,
+                            lastname = x.lastname,
+                            mobilno = x.mobileno,
+                            addressline1 = x.addressline1,
+                            addressline3 = x.addressline3,
+                            cityname = x.cityname,
+                            pincode = x.pincode,
+                            username = x.username,
+                            password = x.password_,
+                            associatestudents = x.associatedstudents,
+                            activestudents = x.activestudents,
+                            associteteachers = x.totalteachers,
+                            activeteachers = x.activeteachers,
+                            isverfy = x.isverify
+                        })
+                        .Distinct()
+                        .Take(limit)
+                        .ToListAsync(),
+
+                    _ => new List<object>()
+                };
+
+                return Ok(new
+                {
+                    success = true,
+                    category = category,
+                    type = type,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error loading report details.",
+                    error = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("overall-details-paged")]
+        public async Task<IActionResult> GetOverallDetailsPaged(string category, string type, int page = 1, int pageSize = 100, string search = "")
+        {
+            try
+            {
+                category = category?.Trim().ToLower() ?? "";
+                type = type?.Trim().ToLower() ?? "";
+                page = page < 1 ? 1 : page;
+                pageSize = pageSize <= 0 ? 100 : pageSize;
+                search = search?.Trim() ?? "";
+
+                List<int?> instituteIds = await GetInstituteIdsForCategoryAsync(category);
+                if (!instituteIds.Any())
+                {
+                    return Ok(new { success = true, data = new List<object>(), totalRecords = 0, totalPages = 0, page });
+                }
+
+                var query = BuildDetailsQuery(category, type, instituteIds, search);
+
+                int totalRecords = await query.CountAsync();
+                int totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+
+                var pagedData = await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    page,
+                    pageSize,
+                    totalRecords,
+                    totalPages,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("export-details-excel")]
+        public async Task<IActionResult> ExportDetailsExcel(string category, string type, string search = "")
+        {
+            try
+            {
+                category = category?.Trim().ToLower() ?? "";
+                type = type?.Trim().ToLower() ?? "";
+                search = search?.Trim() ?? "";
+
+                List<int?> instituteIds = await GetInstituteIdsForCategoryAsync(category);
+                if (!instituteIds.Any())
+                {
+                    return BadRequest("No records found to export.");
+                }
+
+                var query = BuildDetailsQuery(category, type, instituteIds, search);
+                var exportList = await query.ToListAsync();
+
+                using (XLWorkbook wb = new XLWorkbook())
+                {
+                    DataTable dt = ConvertListToDataTable(exportList);
+                    wb.Worksheets.Add(dt, $"{type.ToUpper()} Report");
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        wb.SaveAs(stream);
+                        stream.Seek(0, SeekOrigin.Begin);
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{category}_{type}_Report.xlsx");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Export error: {ex.Message}");
+            }
+        }
+
+        // Helper method to build query and apply search filter natively via PostgreSQL ILIKE
+        private IQueryable<object> BuildDetailsQuery(string category, string type, List<int?> instituteIds, string search)
+        {
+            string pattern = $"%{search}%";
+            bool hasSearch = !string.IsNullOrEmpty(search);
+
+            return type switch
+            {
+                "total-students" => _context.Set<hf_view_studentsdetails>()
+                    .AsNoTracking()
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) &&
+                           (!hasSearch ||
+                            EF.Functions.ILike(x.FirstName ?? "", pattern) ||
+                            EF.Functions.ILike(x.LastName ?? "", pattern) ||
+                            EF.Functions.ILike(x.MobileNo ?? "", pattern) ||
+                            EF.Functions.ILike(x.Standard ?? "", pattern) ||
+                            EF.Functions.ILike(x.CityName ?? "", pattern) ||
+                            EF.Functions.ILike(x.EmailId ?? "", pattern) ||
+                            EF.Functions.ILike(x.Username ?? "", pattern))).Select(x => (object)new
+                            {
+                                StudentId = x.StudentId,
+                                FirstName = x.FirstName,
+                                LastName = x.LastName,
+                                InstituteID = x.InstituteID,
+                                Institute_Name = x.InstituteName,
+                                Standard = x.Standard,
+                                Division = x.Division,
+                                MobileNo = x.MobileNo,
+                                EmailId = x.EmailId,
+                                GardianName = x.GardianName,
+                                Gender = x.Gender,
+                                Dob = x.Dob,
+                                AddressLine1 = x.AddressLine1,
+                                RegistrationDate=x.RegistrationDate,
+                                CityName = x.CityName,
+                                Pincode = x.Pincode,
+                                Username = x.Username,
+                                Password = x.Password
+                            }),
+
+                "active-students" => (from log in _context.StudentActivityLogs.AsNoTracking()
+                                      join student in _context.Set<ViewWjStudentsDetailsInfo>() on log.StudentID equals student.StudentId
+                                      where log.InstituteID != null && instituteIds.Contains(log.InstituteID) && log.ActivityType != "Survey" &&
+                                            (!hasSearch ||
+                                             EF.Functions.ILike(student.FirstName ?? "", pattern) ||
+                                             EF.Functions.ILike(student.LastName ?? "", pattern) ||
+                                             EF.Functions.ILike(student.MobileNo ?? "", pattern) ||
+                                             EF.Functions.ILike(student.Standard ?? "", pattern) ||
+                                             EF.Functions.ILike(student.CityName ?? "", pattern) ||
+                                             EF.Functions.ILike(student.EmailId ?? "", pattern) ||
+                                             EF.Functions.ILike(log.ActivityType ?? "", pattern))
+                                      select student).Distinct(),
+
+                "total-teachers" => _context.Set<ViewHfTeacherDetails>()
+                    .AsNoTracking()
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) &&
+                           (!hasSearch ||
+                            EF.Functions.ILike(x.FirstName ?? "", pattern) ||
+                            EF.Functions.ILike(x.LastName ?? "", pattern) ||
+                            EF.Functions.ILike(x.InstituteName ?? "", pattern) ||
+                          //  EF.Functions.ILike(x.EmailId ?? "", pattern) ||
+                            EF.Functions.ILike(x.MobileNo ?? "", pattern) ||
+                            EF.Functions.ILike(x.Standard ?? "", pattern))),
+
+                "active-teachers" => (from log in _context.TeacherActivityLogs.AsNoTracking()
+                                      join teacher in _context.Set<ViewHfTeacherDetails>() on log.TeacherID equals teacher.TeacherID
+                                      where log.InstituteID != null && instituteIds.Contains(log.InstituteID) &&
+                                            (!hasSearch ||
+                                             EF.Functions.ILike(teacher.FirstName ?? "", pattern) ||
+                                             EF.Functions.ILike(teacher.LastName ?? "", pattern) ||
+                                             EF.Functions.ILike(teacher.InstituteName ?? "", pattern) ||
+                                          //   EF.Functions.ILike(teacher.EmailId ?? "", pattern) ||
+                                             EF.Functions.ILike(teacher.MobileNo ?? "", pattern))
+                                      select teacher).Distinct(),
+
+                "sel-projects" => _context.creativityActivitiesSubmission2021s
+                    .AsNoTracking()
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) &&
+                           (!hasSearch ||
+                            EF.Functions.ILike(x.ShortDescription ?? "", pattern) 
+                            //||
+                            //EF.Functions.ILike(x.InstituteName ?? "", pattern) ||
+                            //EF.Functions.ILike(x.CourseName ?? "", pattern)
+                            )),
+
+                "family-projects" => _context.StudentActivityLogs
+                    .AsNoTracking()
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Family PBL" &&
+                           (!hasSearch ||
+                            EF.Functions.ILike(x.StudentName ?? "", pattern) ||
+                            EF.Functions.ILike(x.MainCourseName ?? "", pattern) ||
+                            EF.Functions.ILike(x.InstituteName ?? "", pattern) ||
+                            EF.Functions.ILike(x.CourseName ?? "", pattern))),
+
+                "individual-projects" => _context.StudentActivityLogs
+                    .AsNoTracking()
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Individual PBL" &&
+                           (!hasSearch ||
+                            EF.Functions.ILike(x.StudentName ?? "", pattern) ||
+                            EF.Functions.ILike(x.MainCourseName ?? "", pattern) ||
+                            EF.Functions.ILike(x.InstituteName ?? "", pattern) ||
+                            EF.Functions.ILike(x.CourseName ?? "", pattern))),
+
+                "group-pbl" => _context.creativityActivitiesSubmission2021s
+                    .AsNoTracking()
+                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) &&
+                           (!hasSearch ||
+                            EF.Functions.ILike(x.ShortDescription ?? "", pattern)
+                            //||
+                            //EF.Functions.ILike(x.InstituteName ?? "", pattern) ||
+                            //EF.Functions.ILike(x.CourseName ?? "", pattern)
+                            )),
+
+                "total-schools" => _context.SchoolProfileDetails
+                    .AsNoTracking()
+                    .Where(x => x.instituteid != null && instituteIds.Contains(x.instituteid) &&
+                           (!hasSearch ||
+                            EF.Functions.ILike(x.institute_name ?? "", pattern) ||
+                            EF.Functions.ILike(x.firstname ?? "", pattern) ||
+                            EF.Functions.ILike(x.lastname ?? "", pattern) ||
+                            EF.Functions.ILike(x.cityname ?? "", pattern) ||
+                            EF.Functions.ILike(x.referralcode ?? "", pattern) ||
+                            EF.Functions.ILike(x.mobileno ?? "", pattern) ||
+                            EF.Functions.ILike(x.emailid ?? "", pattern) ||
+                            EF.Functions.ILike(x.username ?? "", pattern)))
+                    .Select(x => (object)new
+                    {
+                        InstituteID = x.instituteid,
+                        ReferralCode = x.referralcode,
+                        Institute_Name = x.institute_name,
+                        FirstName = x.firstname,
+                        LastName = x.lastname,
+                        MobileNo = x.mobileno,
+                        CityName = x.cityname,
+                        Pincode = x.pincode,
+                        username=x.username,
+                        password=x.password_,
+                        AssociatedStudents = x.associatedstudents,
+                        ActiveStudents = x.activestudents,
+                        TotalTeachers = x.totalteachers,
+                        ActiveTeachers = x.activeteachers
+                    }),
+
+                _ => Enumerable.Empty<object>().AsQueryable()
+            };
+        }
+        // Helper for institute lookup
+        private async Task<List<int?>> GetInstituteIdsForCategoryAsync(string category)
+        {
+            if (category == "performance")
+            {
+                var referralCodes = await _context.WJ_ReferralCodes
+                    .AsNoTracking()
+                    .Where(x => x.ReferralCode != null && x.ReferralCode != "")
+                    .Select(x => x.ReferralCode)
+                    .Distinct()
+                    .ToListAsync();
+
+                return await _context.SchoolProfileDetails
+                    .AsNoTracking()
+                   // .Where(x => x.referralcode != null && referralCodes.Contains(x.referralcode))
+                    .Select(x => (int?)x.instituteid)
+                    .Distinct()
+                    .ToListAsync();
+            }
+            else if (category == "focused")
+            {
+                return await _context.HfTblAffliateFocusedLists
+                    .AsNoTracking()
+                    .Where(x => x.InstituteId != null)
+                    .Select(x => (int?)x.InstituteId)
+                    .Distinct()
+                    .ToListAsync();
+            }
+            return new List<int?>();
+        }
+
+        private DataTable ConvertListToDataTable(List<object> items)
+        {
+            DataTable dataTable = new DataTable("ReportData");
+            if (items == null || items.Count == 0 || items[0] == null)
+            {
+                return dataTable;
+            }
+
+            // Get the actual runtime type (handles anonymous types correctly)
+            Type itemType = items[0].GetType();
+            PropertyInfo[] props = itemType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (PropertyInfo prop in props)
+            {
+                dataTable.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+            }
+
+            foreach (var item in items)
+            {
+                if (item == null) continue;
+                var values = new object[props.Length];
+                for (int i = 0; i < props.Length; i++)
+                {
+                    values[i] = props[i].GetValue(item, null) ?? DBNull.Value;
+                }
+                dataTable.Rows.Add(values);
+            }
+
+            return dataTable;
+        }
+
     }
 }

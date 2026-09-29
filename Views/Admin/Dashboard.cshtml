@@ -642,6 +642,12 @@
 <!-- ========================================================= -->
 <!-- DETAILS MODAL -->
 <!-- ========================================================= -->
+<!-- ========================================================= -->
+<!-- DETAILS MODAL -->
+<!-- ========================================================= -->
+<!-- ========================================================= -->
+<!-- DETAILS MODAL WITH SERVER-SIDE PAGINATION & SEARCH -->
+<!-- ========================================================= -->
 
 <div class="modal fade"
      id="dashboardDetailsModal"
@@ -653,48 +659,71 @@
         <div class="modal-content rounded-4 border-0 shadow-lg">
 
             <!-- MODAL HEADER -->
-            <div class="modal-header border-bottom px-4 py-3">
+            <div class="modal-header border-bottom px-4 py-3 flex-wrap gap-3">
 
                 <div>
-
-                    <h5 class="fw-bold text-dark mb-1"
-                        id="modalTitle">
+                    <h5 class="fw-bold text-dark mb-1" id="modalTitle">
                         Records List
                     </h5>
-
-                    <small class="text-muted"
-                           id="modalSubtitle">
+                    <small class="text-muted" id="modalSubtitle">
                         Loading records...
                     </small>
-
                 </div>
 
-                <button type="button"
-                        class="btn-close shadow-none"
-                        data-bs-dismiss="modal">
-                </button>
+                <!-- SEARCH & CONTROLS TOOLBAR -->
+                <div class="d-flex align-items-center gap-3 ms-auto flex-wrap">
+                    <!-- Server-Side Search Bar -->
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="modalTableSearch" class="form-control border-start-0 shadow-none" placeholder="Search database...">
+                        <button class="btn btn-outline-secondary border-start-0" type="button" id="btnClearSearch"><i class="bi bi-x"></i></button>
+                    </div>
+
+                    <!-- Page Size Selector -->
+                    <select id="modalPageSize" class="form-select form-select-sm shadow-none" style="width: 100px;">
+                        <option value="25">25 rows</option>
+                        <option value="50">50 rows</option>
+                        <option value="100" selected>100 rows</option>
+                        <option value="250">250 rows</option>
+                         <option value="250">250 rows</option>
+                        <option value="500">500 rows</option>
+                        <option value="1000">1000 rows</option>
+                        <option value="10000">10000 rows</option>
+                    </select>
+
+                    <!-- Export Button -->
+                    <button type="button" class="btn btn-sm btn-success shadow-sm" id="btnExportModalData">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+                    </button>
+                </div>
+
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
 
             </div>
-
 
             <!-- MODAL BODY -->
             <div class="modal-body p-4">
 
-                <div class="table-responsive border rounded-3 modal-table-wrapper">
-
-                    <table class="table table-hover align-middle mb-0"
-                           id="modalTable">
-
-                        <thead class="table-light">
-                        </thead>
-
-                        <tbody>
-                        </tbody>
-
+                <div class="table-responsive border rounded-3 modal-table-wrapper" style="max-height: 420px;">
+                    <table class="table table-hover align-middle mb-0" id="modalTable">
+                        <thead class="table-light"></thead>
+                        <tbody></tbody>
                     </table>
-
                 </div>
 
+            </div>
+
+            <!-- MODAL FOOTER WITH PAGINATION -->
+            <div class="modal-footer border-top px-4 py-3 justify-content-between align-items-center bg-light rounded-bottom-4">
+                <div class="text-muted small" id="paginationInfo">
+                    Showing 0 to 0 of 0 entries
+                </div>
+
+                <nav aria-label="Modal Pagination">
+                    <ul class="pagination pagination-sm mb-0" id="modalPagination">
+                        <!-- Dynamically injected pagination buttons -->
+                    </ul>
+                </nav>
             </div>
 
         </div>
@@ -702,8 +731,6 @@
     </div>
 
 </div>
-
-
 <!-- ========================================================= -->
 <!-- GLOBAL PAGE LOADER OVERLAY -->
 <!-- ========================================================= -->
@@ -1046,259 +1073,270 @@
             });
 
         }
+        
+            // Global variable to store raw fetched data for filtering and sorting
+        let currentCategory = '';
+        let currentType = '';
+        let currentPage = 1;
+        let totalPages = 1;
+        let searchTimeout = null;
 
         function openDetailsModal(category, type) {
+            currentCategory = category;
+            currentType = type;
+            currentPage = 1;
+            $('#modalTableSearch').val('');
 
             const titleMap = {
-
-                'total-schools':
-                    'Associated Schools',
-
-                'total-students':
-                    'Total Students',
-
-                'active-students':
-                    'Active Students',
-
-                'total-teachers':
-                    'Total Teachers',
-
-                'active-teachers':
-                    'Active Teachers',
-
-                'sel-projects':
-                    'Total SEL Projects',
-
-                'family-projects':
-                    'Family Projects',
-
-                'individual-projects':
-                    'Individual Projects',
-
-                'group-pbl':
-                    'Group PBL'
+                'total-schools': 'Associated Schools',
+                'total-students': 'Total Students',
+                'active-students': 'Active Students',
+                'total-teachers': 'Total Teachers',
+                'active-teachers': 'Active Teachers',
+                'sel-projects': 'Total SEL Projects',
+                'family-projects': 'Family Projects',
+                'individual-projects': 'Individual Projects',
+                'group-pbl': 'Group PBL'
             };
 
+            const categoryTitle = category === 'performance' ? 'Performance Report' : 'Focused Report';
+            $('#modalTitle').text(categoryTitle + ' - ' + (titleMap[type] || 'Details'));
 
-            const categoryTitle =
-                category === 'performance'
-                    ? 'Performance Report'
-                    : 'Focused Report';
-
-
-            const detailTitle =
-                titleMap[type] || 'Details';
-
-            $('#modalTitle').text(
-                categoryTitle + ' - ' + detailTitle
-            );
-
-            $('#modalSubtitle').text(
-                'Loading records...'
-            );
-
-            $('#modalTable thead').html('');
-
-            $('#modalTable tbody').html(`
-                        <tr>
-                            <td colspan="100%" class="text-center">
-                                <div class="modal-loader">
-                                    <div class="spinner-border text-primary"
-                                         role="status">
-                                        <span class="visually-hidden">
-                                            Loading...
-                                        </span>
-                                    </div>
-                                    <div class="text-muted small mt-3">
-                                        Loading records...
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    `);
-
+            showModalLoader();
             $('#dashboardDetailsModal').modal('show');
+            loadModalDataPaged();
+        }
+
+        function showModalLoader() {
+            $('#modalTable thead').html('');
+            $('#modalTable tbody').html(`
+                    <tr>
+                        <td colspan="100%" class="text-center">
+                            <div class="modal-loader">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="text-muted small mt-3">Fetching records from server...</div>
+                            </div>
+                        </td>
+                    </tr>
+                `);
+        }
+
+        function loadModalDataPaged() {
+            let pageSize = parseInt($('#modalPageSize').val()) || 100;
+            let searchTerm = $('#modalTableSearch').val().trim();
 
             $.ajax({
-
-                url: `/api/admin/overall-details-list/${category}/${type}`,
-
+                url: `/api/admin/overall-details-paged`,
                 type: 'GET',
-
+                data: {
+                    category: currentCategory,
+                    type: currentType,
+                    page: currentPage,
+                    pageSize: pageSize,
+                    search: searchTerm
+                },
                 headers: {
-
-                    'Authorization':
-                        'Bearer ' + getAuthToken()
-
+                    'Authorization': 'Bearer ' + getAuthToken()
                 },
-
                 success: function(res) {
-
-                    if (
-                        !res ||
-                        !res.success ||
-                        !res.data ||
-                        !Array.isArray(res.data) ||
-                        res.data.length === 0
-                    ) {
-
+                    if (!res || !res.success || !res.data || res.data.length === 0) {
                         $('#modalTable thead').html('');
-
                         $('#modalTable tbody').html(`
-                                    <tr>
-                                        <td colspan="100%"
-                                            class="text-center py-5">
-                                            <div class="text-muted">
-                                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                                <div class="fw-semibold">
-                                                    No records found
-                                                </div>
-                                                <small>
-                                                    There is no data available
-                                                    for this section.
-                                                </small>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                `);
-
-
-                        $('#modalSubtitle').text(
-                            'No records found'
-                        );
-
-                        return;
-                    }
-
-                    const keys =
-                        Object.keys(res.data[0]);
-                    let thead = '<tr>';
-
-
-                    keys.forEach(function(key) {
-
-                        thead += `
-                                    <th>
-                                        ${formatColumnName(key)}
-                                    </th>
-                                `;
-
-                    });
-
-                    if (type === 'total-schools') {
-                        thead += `<th>Action</th>`;
-                    }
-
-                    thead += '</tr>';
-
-
-                    $('#modalTable thead')
-                        .html(thead);
-
-                    let tbody = '';
-
-
-                    res.data.forEach(function(row) {
-
-                        tbody += '<tr>';
-
-
-                        keys.forEach(function(key) {
-
-                            let value = row[key];
-
-
-                            if (
-                                value === null ||
-                                value === undefined ||
-                                value === ''
-                            ) {
-
-                                value = '-';
-
-                            }
-
-
-                            tbody += `
-                                        <td>
-                                            ${escapeHtml(value)}
-                                        </td>
-                                    `;
-
-                        });
-
-
-                        if (type === 'total-schools') {
-                            let instId = row.instituteId || row.InstituteID || row.id || row.ID || row.InstituteId || row.instituteID || 0;
-                            tbody += `
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportSingleInstituteReport(${instId}, this)">
-                                                <i class="bi bi-file-earmark-excel me-1"></i> Export Report
-                                            </button>
-                                        </td>
-                                    `;
-                        }
-
-                        tbody += '</tr>';
-
-                    });
-
-
-                    $('#modalTable tbody')
-                        .html(tbody);
-
-                    $('#modalSubtitle').text(
-
-                        res.data.length +
-                        (
-                            res.data.length === 1
-                                ? ' record'
-                                : ' records'
-                        )
-
-                    );
-
-                },
-
-                error: function(xhr) {
-
-                    console.error(
-                        'Details API error:',
-                        xhr
-                    );
-
-
-                    $('#modalTable thead').html('');
-
-
-                    $('#modalTable tbody').html(`
                                 <tr>
-                                    <td colspan="100%"
-                                        class="text-center py-5">
-                                        <div class="text-danger">
-                                            <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
-                                            <div class="fw-semibold">
-                                                Failed to load records
-                                            </div>
-                                            <small>
-                                                Please try again.
-                                            </small>
+                                    <td colspan="100%" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                            <div class="fw-semibold">No records found</div>
+                                            <small>No matching data available for your search criteria.</small>
                                         </div>
                                     </td>
                                 </tr>
                             `);
+                        $('#modalSubtitle').text('0 records');
+                        $('#paginationInfo').text('Showing 0 entries');
+                        $('#modalPagination').html('');
+                        return;
+                    }
 
-
-                    $('#modalSubtitle').text(
-                        'Unable to load records'
-                    );
-
+                    totalPages = res.totalPages || 1;
+                    renderTableHeaders(res.data[0]);
+                    renderTableRows(res.data);
+                    renderPagination(res.page, res.totalPages, res.totalRecords);
+                },
+                error: function(xhr) {
+                    console.error('Paged API error:', xhr);
+                    $('#modalTable tbody').html(`<tr><td colspan="100%" class="text-center py-4 text-danger">Failed to load records from server.</td></tr>`);
                 }
-
             });
-
         }
 
+        // Render headers with click-to-sort capability
+        function renderTableHeaders(sampleRow) {
+            if (!sampleRow) return;
+            const keys = Object.keys(sampleRow);
+            let thead = '<tr>';
+            keys.forEach(key => {
+                thead += `<th style="cursor: pointer;" onclick="sortModalTable('${key}')">
+                                ${formatColumnName(key)} <i class="bi bi-arrow-down-up text-muted small ms-1"></i>
+                              </th>`;
+            });
+            if (currentType === 'total-schools') {
+                thead += `<th>Action</th>`;
+            }
+            thead += '</tr>';
+            $('#modalTable thead').html(thead);
+        }
+
+        // Client-side sorting toggle for the currently loaded page items
+        let sortDirection = {};
+        function sortModalTable(key) {
+            sortDirection[key] = !sortDirection[key];
+            let asc = sortDirection[key];
+
+            // Assuming current page data is stored globally or can be sorted from current rows
+            // Let's sort the active rendered table rows directly or maintain a global dataset array.
+            let $rows = $('#modalTable tbody tr').toArray();
+
+            // Find column index
+            let colIndex = -1;
+            $('#modalTable th').each(function(index) {
+                if ($(this).text().trim().toLowerCase().includes(formatColumnName(key).toLowerCase())) {
+                    colIndex = index;
+                }
+            });
+
+            if (colIndex === -1) return;
+
+            $rows.sort((a, b) => {
+                let valA = $(a).children('td').eq(colIndex).text().trim();
+                let valB = $(b).children('td').eq(colIndex).text().trim();
+
+                let numA = parseFloat(valA);
+                let numB = parseFloat(valB);
+
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return asc ? numA - numB : numB - numA;
+                }
+                return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            });
+
+            $('#modalTable tbody').empty().append($rows);
+        }
+
+        function renderTableRows(data) {
+            const keys = Object.keys(data[0]);
+            let tbody = '';
+
+            data.forEach(row => {
+                tbody += '<tr>';
+                keys.forEach(key => {
+                    let value = row[key];
+                    if (value === null || value === undefined || value === '') value = '-';
+                    tbody += `<td>${escapeHtml(value)}</td>`;
+                });
+
+                if (currentType === 'total-schools') {
+                    let instId = row.instituteId || row.InstituteID || row.id || row.ID || row.instituteID||0;
+                    tbody += `<td>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportSingleInstituteReport(${instId}, this)">
+                                        <i class="bi bi-file-earmark-excel me-1"></i> Export
+                                    </button>
+                                  </td>`;
+                }
+                tbody += '</tr>';
+            });
+
+            $('#modalTable tbody').html(tbody);
+        }
+
+        function renderPagination(page, totalP, totalRec) {
+            let startEntry = ((page - 1) * parseInt($('#modalPageSize').val())) + 1;
+            let endEntry = Math.min(page * parseInt($('#modalPageSize').val()), totalRec);
+
+            $('#modalSubtitle').text(`${totalRec} total records`);
+            $('#paginationInfo').text(`Showing ${startEntry} to ${endEntry} of ${totalRec} entries`);
+
+            let paginationHtml = '';
+
+            // Previous Button
+            paginationHtml += `<li class="page-item ${page === 1 ? 'disabled' : ''}">
+                                        <a class="page-link" href="#" onclick="changePage(${page - 1})">Prev</a>
+                                   </li>`;
+
+            // Page Number Windows
+            let maxVisiblePages = 5;
+            let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalP, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `<li class="page-item ${i === page ? 'active' : ''}">
+                                            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                                       </li>`;
+            }
+
+            // Next Button
+            paginationHtml += `<li class="page-item ${page === totalP ? 'disabled' : ''}">
+                                        <a class="page-link" href="#" onclick="changePage(${page + 1})">Next</a>
+                                   </li>`;
+
+            $('#modalPagination').html(paginationHtml);
+        }
+
+        function changePage(targetPage) {
+            if (targetPage < 1 || targetPage > totalPages) return;
+            currentPage = targetPage;
+            showModalLoader();
+            loadModalDataPaged();
+        }
+
+        // Debounced Server-Side Search Input
+        $('#modalTableSearch').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPage = 1;
+                showModalLoader();
+                loadModalDataPaged();
+            }, 400); // 400ms delay to prevent excessive queries while typing
+        });
+
+        $('#btnClearSearch').on('click', function() {
+            $('#modalTableSearch').val('');
+            currentPage = 1;
+            showModalLoader();
+            loadModalDataPaged();
+        });
+
+        $('#modalPageSize').on('change', function() {
+            currentPage = 1;
+            showModalLoader();
+            loadModalDataPaged();
+        });
+
+        // Server-side full data export handler
+        $('#btnExportModalData').on('click', function() {
+            let searchTerm = $('#modalTableSearch').val().trim();
+            let exportUrl = `/api/admin/export-details-excel?category=${currentCategory}&type=${currentType}&search=${encodeURIComponent(searchTerm)}`;
+
+            showGlobalLoader("Generating Excel Export for Filtered Records...");
+
+            // Trigger file download via temporary anchor
+            var $anchor = $('<a />').attr({
+                'href': exportUrl,
+                'download': `${currentCategory}_${currentType}_Export.xlsx`
+            }).appendTo('body');
+
+            $anchor[0].click();
+            setTimeout(() => {
+                $anchor.remove();
+                hideGlobalLoader();
+            }, 1500);
+        });
         function exportSingleInstituteReport(instituteId, buttonElement) {
             if (!instituteId || instituteId <= 0) {
                 alert("Invalid Institute ID.");
