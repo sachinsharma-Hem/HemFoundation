@@ -837,8 +837,6 @@ namespace HemFoundation.Controllers.Api
             }
         }
      
-
-
         [HttpGet("overall-details-list/{category}/{type}")]
         public async Task<IActionResult> GetOverallDetailsList(string category, string type)
         {
@@ -936,8 +934,8 @@ namespace HemFoundation.Controllers.Api
                             from log in _context.StudentActivityLogs.AsNoTracking()
 
 
-                            join student in _context.Set<ViewWjStudentsDetailsInfo>()
-                                on log.StudentID equals student.StudentId
+                            //join student in _context.Set<ViewWjStudentsDetailsInfo>()
+                            //    on log.StudentID equals student.StudentId
 
                         join student in _context.Set<ViewWjStudentsDetailsInfo>()
                       on log.StudentID equals student.StudentId
@@ -1114,7 +1112,6 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
-
-      
+  
     }
 }

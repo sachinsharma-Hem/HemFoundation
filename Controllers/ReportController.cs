@@ -828,38 +828,28 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
         {
             int instituteID = 0;
 
-            // 1. Try query string parameter
             if (string.IsNullOrEmpty(instituteIDstr))
             {
                 instituteIDstr = Request.Query["instituteIDstr"];
             }
 
-            // 2. Try form data or POST body values if sent via form-urlencoded/FormData
             if (string.IsNullOrEmpty(instituteIDstr) && Request.HasFormContentType)
             {
                 instituteIDstr = Request.Form["instituteIDstr"];
             }
 
-            // 3. Parse string to int if available
             if (!string.IsNullOrEmpty(instituteIDstr) && int.TryParse(instituteIDstr, out int parsedId))
             {
                 instituteID = parsedId;
             }
-            // 4. Fallback to Session UserID if not provided
             else if (HttpContext.Session.GetInt32("UserID") is int sessionId && sessionId > 0)
             {
                 instituteID = sessionId;
             }
-            // 5. Fallback to Claims Principal
             else if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedClaim))
             {
                 instituteID = parsedClaim;
             }
-
-            //if (instituteID <= 0)
-            //{
-            //    return BadRequest(new { success = false, message = "Invalid or missing Institute ID." });
-            //}
 
             try
             {
@@ -949,7 +939,6 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
 
                     using (var cmd = new Npgsql.NpgsqlCommand(schoolSummaryQuery, conn))
                     {
-                        //cmd.Parameters.AddWithValue("InstituteID", instituteID);
                         using (var reader = cmd.ExecuteReader())
                         {
                             DataTable dtStudent = new DataTable("StudentDetails");
@@ -1005,7 +994,6 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
 
                     using (var cmd = new Npgsql.NpgsqlCommand(pblQuery, conn))
                     {
-                        ///cmd.Parameters.AddWithValue("InstituteID", instituteID);
                         using (var reader = cmd.ExecuteReader())
                         {
                             pblReportDataTable.Load(reader);
@@ -1041,7 +1029,6 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
 
                     using (var cmd = new Npgsql.NpgsqlCommand(casQuery, conn))
                     {
-                        //cmd.Parameters.AddWithValue("InstituteID", instituteID);
                         using (var reader = cmd.ExecuteReader())
                         {
                             groupSubmissionDataTable.Load(reader);
@@ -1057,7 +1044,6 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
 
                 using (XLWorkbook wb = new XLWorkbook())
                 {
-                    // 1. Build and Add Student Summary Table FIRST so it is the first tab
                     DataTable summaryTable = new DataTable();
                     summaryTable.Columns.Add("StudentID");
                     summaryTable.Columns.Add("StudentName");
@@ -1101,14 +1087,12 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     var summarySheet = wb.Worksheets.Add("Student Summary");
                     summarySheet.Cell(1, 1).InsertTable(summaryTable);
 
-                    // 2. Add remaining reference data worksheets afterwards
                     if (essr.Tables.Count > 0) wb.Worksheets.Add(essr.Tables[0], "StudentDetails");
                     if (essr.Tables.Count > 1) wb.Worksheets.Add(essr.Tables[1], "MCQ");
                     if (essr.Tables.Count > 2) wb.Worksheets.Add(essr.Tables[2], "Practical");
                     wb.Worksheets.Add(pblReportDataTable, "PBL");
                     wb.Worksheets.Add(groupSubmissionDataTable, "Group Submission");
 
-                    // 3. Add individual Main Course dynamic worksheets last
                     var distinctMainCourses = new List<string>();
                     if (essr.Tables.Count > 1)
                         distinctMainCourses.AddRange(essr.Tables[1].AsEnumerable().Select(row => row["MainCourseName"].ToString()));
@@ -1191,7 +1175,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
         [HttpGet("affiliate-active-students")]
         public FileResult GetAffiliateWiseActiveStudentsdetails(int? AffiliateID, string filter = "A")
         {
-            // Use the AffiliateID if provided, otherwise fallback to session/claims
+           
             int userId = AffiliateID ?? HttpContext.Session.GetInt32("UserID") ?? 0;
 
             if (userId == 0)

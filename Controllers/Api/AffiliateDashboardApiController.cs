@@ -76,6 +76,87 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
+        //[HttpGet("associated-schools-details")]
+        //public async Task<IActionResult> GetAssociatedSchoolsDetails()
+        //{
+        //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        //    var affiliate = await _context.Users
+        //        .AsNoTracking()
+        //        .FirstOrDefaultAsync(x => x.AspNetUserID == userId);
+
+        //    if (affiliate == null)
+        //        return Unauthorized(new
+        //        {
+        //            success = false,
+        //            message = "Affiliate not found."
+        //        });
+
+        //    var referralCode = await _context.WJ_ReferralCodes
+        //        .AsNoTracking()
+        //        .Where(x => x.UserID == affiliate.UserID)
+        //        .Select(x => x.ReferralCode)
+        //        .FirstOrDefaultAsync();
+
+        //    if (string.IsNullOrWhiteSpace(referralCode))
+        //    {
+        //        return Ok(new
+        //        {
+        //            success = true,
+        //            data = new List<object>()
+        //        });
+        //    }
+
+        //    var assignedSchools = await _context.SchoolProfileDetails
+        //        .AsNoTracking()
+        //        .Where(x => x.referralcode == referralCode)
+        //        .OrderBy(x => x.institute_name)
+        //        .Select(x => new
+        //        {
+        //            instituteID = x.instituteid,
+        //            instituteType = x.institutetype,
+        //            name = x.institute_name,
+        //            profileUrl = x.profileurl,
+        //            instituteIsActive = x.institute_isactive,
+        //            referralCode = x.referralcode,
+        //            isVerify = x.isverify,
+
+        //            firstName = x.firstname,
+        //            lastName = x.lastname,
+        //            mobileNo = x.mobileno,
+        //            emailId = x.emailid,
+
+        //            addressLine1 = x.addressline1,
+        //            addressLine2 = x.addressline2,
+        //            addressLine3 = x.addressline3,
+        //            city = x.cityname,
+        //            pincode = x.pincode,
+
+        //            photoUrl = x.photourl,
+
+        //            userIsActive = x.user_isactive,
+
+        //            createdBy = x.createdby,
+        //            createdDate = x.createddate,
+        //            modifiedBy = x.modifiedby,
+        //            modifiedDate = x.modifieddate,
+
+        //            aspNetUserId = x.aspnetuserid,
+
+        //            associatedStudents = x.associatedstudents,
+        //            activeStudents = x.activestudents,
+        //            totalTeachers = x.totalteachers,
+        //            activeTeachers = x.activeteachers
+        //        })
+        //        .ToListAsync();
+
+        //    return Ok(new
+        //    {
+        //        success = true,
+        //        data = assignedSchools
+        //    });
+        //}
+
         [HttpGet("associated-schools-details")]
         public async Task<IActionResult> GetAssociatedSchoolsDetails()
         {
