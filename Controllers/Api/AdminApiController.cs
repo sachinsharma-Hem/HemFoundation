@@ -943,8 +943,6 @@ namespace HemFoundation.Controllers.Api
                                 on log.StudentID equals student.StudentId
 
 
-
-
                             where
                               log.InstituteID != null &&
                             instituteIds.Contains(log.InstituteID) &&
@@ -957,9 +955,7 @@ namespace HemFoundation.Controllers.Api
                        .ToListAsync(),
 
 
-                    // ========================================================
-                    // TOTAL TEACHERS
-                    // ========================================================
+                   
 
                     "total-teachers" =>
                         await _context.Set<ViewHfTeacherDetails>()
@@ -971,9 +967,7 @@ namespace HemFoundation.Controllers.Api
                             .ToListAsync(),
 
 
-                    // ========================================================
-                    // ACTIVE TEACHERS
-                    // ========================================================
+                   
 
                     "active-teachers" =>
                         await (
@@ -993,9 +987,7 @@ namespace HemFoundation.Controllers.Api
                         .ToListAsync(),
 
 
-                    // ========================================================
-                    // SEL PROJECTS
-                    // ========================================================
+                   
 
                     "sel-projects" =>
                         await _context.creativityActivitiesSubmission2021s
@@ -1007,9 +999,7 @@ namespace HemFoundation.Controllers.Api
                             .ToListAsync(),
 
 
-                    // ========================================================
-                    // FAMILY PROJECTS
-                    // ========================================================
+                  
 
                     "family-projects" =>
                         await _context.StudentActivityLogs
@@ -1022,9 +1012,7 @@ namespace HemFoundation.Controllers.Api
                             .ToListAsync(),
 
 
-                    // ========================================================
-                    // INDIVIDUAL PROJECTS
-                    // ========================================================
+                   
 
                     "individual-projects" =>
                         await _context.StudentActivityLogs
@@ -1037,9 +1025,7 @@ namespace HemFoundation.Controllers.Api
                             .ToListAsync(),
 
 
-                    // ========================================================
-                    // GROUP PBL
-                    // ========================================================
+                    
 
                     "group-pbl" =>
                         await _context.creativityActivitiesSubmission2021s
@@ -1051,12 +1037,7 @@ namespace HemFoundation.Controllers.Api
                             .ToListAsync(),
 
 
-                    // ========================================================
-                    // TOTAL SCHOOLS
-                    //
-                    // We only use fields already confirmed in your
-                    // SchoolProfileDetails usage.
-                    // ========================================================
+                   
 
                     "total-schools" =>
                         await _context.SchoolProfileDetails
