@@ -284,36 +284,47 @@ namespace HemFoundation.Controllers.Api
             else if (roleName == "HF_Volunteers")
             {
                 messagerolename = "Volunteer";
-                Int32 associateintid = 0;Int32 associateaffiliate = 0;
-               
-                if(roleNAME == "WJ_School")
+
+                int associateintid = 0;
+                int associateaffiliate = 0;
+
+                if (roleNAME == "WJ_School")
                 {
-                    associateintid = currentUserId??0;
+                    associateintid = currentUserId ?? 0;
                 }
-                else if(roleNAME == "WJ_Affiliate")
+                else if (roleNAME == "WJ_Affiliate")
                 {
-                    associateaffiliate = currentUserId??0;
+                    associateaffiliate = currentUserId ?? 0;
                 }
 
-
+                // If AffiliateId is not directly available,
+                // get AffiliateId using InstituteId -> ReferralCode -> UserID
+                if (associateaffiliate == 0 && associateintid > 0)
+                {
+                    associateaffiliate =
+                        (from institute in _context.WJ_Institutes
+                         join referral in _context.WJ_ReferralCodes
+                             on institute.ReferralCode equals referral.ReferralCode
+                         where institute.InstituteID == associateintid
+                         select referral.UserID)
+                        .FirstOrDefault() ?? 0;
+                }
 
                 var volunteer = new Volunteer
                 {
                     Id = generatedUserId,
 
                     FirstName = model.FirstName,
-
                     LastName = model.LastName,
-
                     MobileNo = model.MobileNo,
-
-                    Email =model.EmailID,
+                    Email = model.EmailID,
 
                     InstituteId = associateintid,
-
                     AffiliateId = associateaffiliate,
+
                     AspNetUserId = aspNetUserId,
                     Password_ = model.MobileNo,
+
                     IsActive = true,
                     IsDeleted = false
                 };
@@ -687,10 +698,14 @@ namespace HemFoundation.Controllers.Api
             {
                 return Unauthorized(new { success = false, message = "User not logged in." });
             }
-            var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
+            //var institute = await _context.view_wj_institutes.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
+
+            var institutes = await _context.view_wj_instituteslist.AsNoTracking().Where(i => i.instituteid == currentUserId).Take(1).ToListAsync();
+
+            var institute = institutes.FirstOrDefault();
             if (institute == null) return BadRequest(new { success = false, message = "Unauthorized school user." });
 
-            var students = await _context.ViewWjStudentsDetailsInfo.Where(s => s.InstituteID == institute.instituteid && s.IsActive == true).ToListAsync();
+            var students = await _context.hf_view_studentsdetails.Where(s => s.InstituteID == institute.instituteid && s.IsActive == true).ToListAsync();
             var teachers = await _context.ViewHfTeacherDetails.Where(t => t.InstituteID == institute.instituteid && t.IsActive == true).ToListAsync();
             var logs = await _context.BulkUploadLogs.Where(l => l.InstituteID == institute.instituteid).OrderByDescending(l => l.UploadedDate).ToListAsync();
 

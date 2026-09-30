@@ -98,42 +98,73 @@
 
         function getAuthToken() { return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || ''; }
 
-        // ================= FILTERS LOGIC =================
-        function loadFiltersData() {
-            $.ajax({
-                url: '/api/volunteer/admin/filters-data',
-                type: 'GET',
-                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                success: function(res) {
-                    if(res.success) {
-                        allSchools = res.schools;
-                        allAffiliates = res.affiliates;
+       function loadFiltersData() {
+    $.ajax({
+        url: '/api/volunteer/admin/filters-data',
+        type: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + getAuthToken()
+        },
+        success: function (res) {
 
-                        let affHtml = '<option value="">All Affiliates</option>';
-                        allAffiliates.forEach(a => affHtml += `<option value="${a.userID}" data-code="${a.userCode}">${a.name}</option>`);
-                        $('#fltAffiliate').html(affHtml);
+            if (res.success) {
 
-                        populateSchoolsDropdown('');
-                    }
-                }
-            });
+                allSchools = res.schools || [];
+                allAffiliates = res.affiliates || [];
+
+                let affHtml = '<option value="">All Affiliates</option>';
+
+                allAffiliates.forEach(a => {
+                    affHtml += `
+                        <option value="${a.id}" data-code="${a.referralCode || ''}">
+                            ${a.name}
+                        </option>`;
+                });
+
+                $('#fltAffiliate').html(affHtml);
+
+                populateSchoolsDropdown('');
+            }
+        },
+        error: function (xhr) {
+            console.error('Error loading filters:', xhr);
         }
+    });
+}
 
-        function onAffiliateChange() {
-            let selectedCode = $('#fltAffiliate').find(':selected').attr('data-code');
-            populateSchoolsDropdown(selectedCode || '');
-            loadTableData(1);
-        }
+       function onAffiliateChange() {
 
-        function populateSchoolsDropdown(affiliateCode) {
-            let filteredSchools = affiliateCode 
-                ? allSchools.filter(s => s.referredByAffiliateId === affiliateCode) 
-                : allSchools;
+    let selectedCode = $('#fltAffiliate')
+        .find(':selected')
+        .attr('data-code');
 
-            let schHtml = '<option value="">All Schools</option>';
-            filteredSchools.forEach(s => schHtml += `<option value="${s.id}">${s.name}</option>`);
-            $('#fltSchool').html(schHtml);
-        }
+    populateSchoolsDropdown(selectedCode || '');
+
+    loadTableData(1);
+}
+
+
+function populateSchoolsDropdown(affiliateReferralCode) {
+
+    let filteredSchools = affiliateReferralCode
+        ? allSchools.filter(s =>
+            s.referralCode === affiliateReferralCode
+        )
+        : allSchools;
+
+    let schHtml = '<option value="">All Schools</option>';
+
+    filteredSchools.forEach(s => {
+        schHtml += `
+            <option value="${s.id}">
+                ${s.name}
+            </option>`;
+    });
+
+    $('#fltSchool').html(schHtml);
+}
+
+      
 
         // ================= TABLE & PAGINATION =================
         function loadTableData(page) {
