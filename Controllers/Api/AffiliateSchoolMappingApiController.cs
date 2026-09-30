@@ -130,10 +130,18 @@ namespace HemFoundation.Controllers.Api
                 if (!string.IsNullOrEmpty(inst.ReferralCode) )
                 {
                     var prevAff = await _context.WJ_ReferralCodes.FirstOrDefaultAsync(a => a.ReferralCode == inst.ReferralCode);
-                    var prevAffdetails = await _context.Users.FirstOrDefaultAsync(a => a.UserID == prevAff.UserID);
-
-                    prevAffName = prevAffdetails.FirstName + " " + prevAffdetails.LastName;
                     
+                    var prevAffdetails = await _context.Users
+    .FirstOrDefaultAsync(a => a.UserID == prevAff.UserID);
+
+                    if (prevAffdetails != null)
+                    {
+                        prevAffName = $"{prevAffdetails.FirstName} {prevAffdetails.LastName}".Trim();
+                    }
+                    else
+                    {
+                        prevAffName = "";
+                    }
                 }
 
                 // Update mapping

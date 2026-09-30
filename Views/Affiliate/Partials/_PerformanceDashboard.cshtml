@@ -15,7 +15,7 @@
     <div class="row g-3 mb-4">
 
         <!-- Card 1: Associated School (Primary Blue) -->
-        <div class="col-xl-3 col-lg-4 col-md-6"  onclick="openDetailsModal('performance','total-schools')">
+        <div class="col-xl-3 col-lg-4 col-md-6"  >
             <div class="card text-white bg-primary border-0 shadow-sm h-100 rounded-3 overflow-hidden cursor-pointer" >
                 <div class="card-body p-3 d-flex flex-column justify-content-between">
                     <div>
@@ -23,7 +23,7 @@
                         <p class="card-text small mb-2">Associated School</p>
                     </div>
                     <div>
-                        <button type="button" id="btnOpenassociatedSchools" onclick="event.stopPropagation(); openAssociatedSchoolsModal();" class="btn btn-sm btn-light text-primary fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" id="btnOpenassociatedSchools" onclick="event.stopPropagation(); openDetailsModal('performance','total-schools');" class="btn btn-sm btn-light text-primary fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -220,7 +220,92 @@
         </div>
     </div>
 </div>
+<!-- DETAILS MODAL WITH SERVER-SIDE PAGINATION & SEARCH -->
+<!-- ========================================================= -->
 
+<div class="modal fade"
+     id="dashboardDetailsModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-fullscreen">
+
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+
+            <!-- MODAL HEADER -->
+            <div class="modal-header border-bottom px-4 py-3 flex-wrap gap-3">
+
+                <div>
+                    <h5 class="fw-bold text-dark mb-1" id="modalTitle">
+                        Records List
+                    </h5>
+                    <small class="text-muted" id="modalSubtitle">
+                        Loading records...
+                    </small>
+                </div>
+
+                <!-- SEARCH & CONTROLS TOOLBAR -->
+                <div class="d-flex align-items-center gap-3 ms-auto flex-wrap">
+                    <!-- Server-Side Search Bar -->
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="modalTableSearch" class="form-control border-start-0 shadow-none" placeholder="Search database...">
+                        <button class="btn btn-outline-secondary border-start-0" type="button" id="btnClearSearch"><i class="bi bi-x"></i></button>
+                    </div>
+
+                    <!-- Page Size Selector -->
+                    <select id="modalPageSize" class="form-select form-select-sm shadow-none" style="width: 100px;">
+                        <option value="25">25 rows</option>
+                        <option value="50">50 rows</option>
+                        <option value="100" selected>100 rows</option>
+                        <option value="250">250 rows</option>
+                         <option value="250">250 rows</option>
+                        <option value="500">500 rows</option>
+                        <option value="1000">1000 rows</option>
+                        <option value="10000">10000 rows</option>
+                    </select>
+
+                    <!-- Export Button -->
+                    <button type="button" class="btn btn-sm btn-success shadow-sm" id="btnExportModalData">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+                    </button>
+                </div>
+
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+
+            </div>
+
+            <!-- MODAL BODY -->
+            <div class="modal-body p-4">
+
+                <div class="table-responsive border rounded-3 modal-table-wrapper" style="max-height: 420px;">
+                    <table class="table table-hover align-middle mb-0" id="modalTable">
+                        <thead class="table-light"></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- MODAL FOOTER WITH PAGINATION -->
+            <div class="modal-footer border-top px-4 py-3 justify-content-between align-items-center bg-light rounded-bottom-4">
+                <div class="text-muted small" id="paginationInfo">
+                    Showing 0 to 0 of 0 entries
+                </div>
+
+                <nav aria-label="Modal Pagination">
+                    <ul class="pagination pagination-sm mb-0" id="modalPagination">
+                        <!-- Dynamically injected pagination buttons -->
+                    </ul>
+                </nav>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- ========================================================= -->
 <!-- =============================================================
      ASSOCIATED SCHOOLS DETAILS MODAL
      ============================================================= -->
@@ -230,7 +315,7 @@
      tabindex="-1"
      aria-hidden="true">
 
-    <div class="modal-dialog modal-dialog-centered modal-xl"
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down"
          style="max-width: 98vw !important;">
 
         <div class="modal-content rounded-4 border-0 shadow-lg bg-white"
@@ -552,7 +637,23 @@
         scrollbar-width: auto;
         scrollbar-color: #adb5bd #f1f3f5;
     }
-
+    
+    /* ================= GLOBAL LOADER OVERLAY ================= */
+    .global-loader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+        z-index: 99999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        transition: opacity 0.2s ease-in-out;
+    }
 </style>
 
 
@@ -562,7 +663,7 @@
 <script>
     const affiliateId = '@affiliateId';
 
-    console.log("Affiliate ID from Session:", affiliateId);
+    //console.log("Affiliate ID from Session:", affiliateId);
 </script>
 <script>
 (function () {
@@ -1192,328 +1293,281 @@
        GENERIC DETAIL MODAL
        ============================================================ */
 
-    window.openDetailsModal = function (category, type) {
+     let currentCategory = '';
+        let currentType = '';
+        let currentPage = 1;
+        let totalPages = 1;
+        let searchTimeout = null;
 
-        const titleMap = {
+        window.openDetailsModal = function (category, type) {
 
-            "total-schools":
-                "Associated Schools",
+    currentCategory = category;
+    currentType = type;
+    currentPage = 1;
 
-            "total-students":
-                "Total Students",
+    $('#modalTableSearch').val('');
 
-            "active-students":
-                "Active Students",
+    const titleMap = {
+        'total-schools': 'Associated Schools',
+        'total-students': 'Total Students',
+        'active-students': 'Active Students',
+        'total-teachers': 'Total Teachers',
+        'active-teachers': 'Active Teachers',
+        'sel-projects': 'Total SEL Projects',
+        'family-projects': 'Family Projects',
+        'individual-projects': 'Individual Projects',
+        'group-pbl': 'Group PBL'
+    };
 
-            "total-teachers":
-                "Total Teachers",
+    const categoryTitle =
+        category === 'performance'
+            ? 'Performance Report'
+            : 'Focused Report';
 
-            "active-teachers":
-                "Active Teachers",
+    $('#modalTitle').text(
+        categoryTitle + ' - ' + (titleMap[type] || 'Details')
+    );
 
-            "sel-projects":
-                "Total SEL Projects",
+    showModalLoader();
 
-            "family-projects":
-                "Family Projects",
+    $('#dashboardDetailsModal').modal('show');
 
-            "individual-projects":
-                "Individual Projects",
+    loadModalDataPaged();
+};
 
-            "group-pbl":
-                "Group PBL"
-        };
-
-        const detailTitle =
-            titleMap[type] || "Details";
-
-        const modalElement =
-            document.getElementById(
-                "genericDetailModal"
-            );
-
-        if (!modalElement) {
-            console.error("genericDetailModal not found.");
-            return;
-        }
-
-        const modal =
-            bootstrap.Modal.getOrCreateInstance(
-                modalElement
-            );
-
-        $("#genericModalTitle").html(`
-            <i class="bi bi-list-task text-primary me-2"></i>
-            ${escapeHtml(detailTitle)}
-        `);
-
-        $("#genericModalSubtitle")
-            .text("Loading records...");
-
-        $("#genericTableHead").html(`
-            <tr>
-                <th style="width:60px;">#</th>
-                <th>Details</th>
-            </tr>
-        `);
-
-        $("#genericTableBody").html(`
-            <tr>
-                <td colspan="100%"
-                    class="text-center py-5">
-
-                    <div class="spinner-border text-primary"
-                         role="status">
-                    </div>
-
-                    <div class="text-muted small mt-3">
-                        Loading records...
-                    </div>
-
-                </td>
-            </tr>
-        `);
-
-        $("#genericModalCount").text("0");
-
-        modal.show();
-
-        const token = getAuthToken();
-
-        if (!token) {
-
-            $("#genericTableBody").html(`
-                <tr>
-                    <td colspan="100%"
-                        class="text-center py-5 text-danger">
-
-                        <i class="bi bi-shield-exclamation fs-2 d-block mb-2"></i>
-
-                        Login session expired.
-                        Please login again.
-
-                    </td>
-                </tr>
-            `);
-
-            $("#genericModalSubtitle")
-                .text("Authentication required");
-
-            return;
-        }
-
-        $.ajax({
-
-            url:
-                `/api/admin/overall-details-list/` +
-                `${encodeURIComponent(category)}/` +
-                `${encodeURIComponent(type)}`,
-
-            type: "GET",
-
-            headers: {
-                "Authorization": "Bearer " + token,
-                "Accept": "application/json"
-            },
-
-            success: function (res) {
-
-                if (
-                    !res ||
-                    !res.success ||
-                    !Array.isArray(res.data) ||
-                    res.data.length === 0
-                ) {
-
-                    $("#genericTableHead").html(`
-                        <tr>
-                            <th class="text-center">
-                                Details
-                            </th>
-                        </tr>
-                    `);
-
-                    $("#genericTableBody").html(`
-                        <tr>
-                            <td class="text-center py-5 text-muted">
-
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-
-                                <div class="fw-semibold">
-                                    No records found
+        function showModalLoader() {
+            $('#modalTable thead').html('');
+            $('#modalTable tbody').html(`
+                    <tr>
+                        <td colspan="100%" class="text-center">
+                            <div class="modal-loader">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
                                 </div>
-
-                                <small>
-                                    There is no data available
-                                    for this section.
-                                </small>
-
-                            </td>
-                        </tr>
-                    `);
-
-                    $("#genericModalCount").text("0");
-
-                    $("#genericModalSubtitle")
-                        .text("No records found");
-
-                    return;
-                }
-
-                const rows = res.data;
-                const keys = Object.keys(rows[0]);
-
-                let thead = `
-                    <tr>
-                        <th style="width:60px;">#</th>
-                `;
-
-                keys.forEach(function (key) {
-
-                    thead += `
-                        <th class="text-nowrap">
-                            ${escapeHtml(
-                                formatColumnName(key)
-                            )}
-                        </th>
-                    `;
-                });
-
-                if (type === "total-schools") {
-
-                    thead += `
-                        <th class="text-center text-nowrap">
-                            Action
-                        </th>
-                    `;
-                }
-
-                thead += "</tr>";
-
-                $("#genericTableHead")
-                    .html(thead);
-
-                let tbody = "";
-
-                rows.forEach(function (row, index) {
-
-                    tbody += "<tr>";
-
-                    tbody += `
-                        <td class="fw-bold text-muted">
-                            ${index + 1}
-                        </td>
-                    `;
-
-                    keys.forEach(function (key) {
-
-                        let value = row[key];
-
-                        if (
-                            value === null ||
-                            value === undefined ||
-                            value === ""
-                        ) {
-                            value = "-";
-                        }
-
-                        if (typeof value === "boolean") {
-
-                            tbody += `
-                                <td>
-                                    ${getStatusBadge(value)}
-                                </td>
-                            `;
-
-                            return;
-                        }
-
-                        tbody += `
-                            <td>
-                                ${escapeHtml(value)}
-                            </td>
-                        `;
-                    });
-
-                    if (type === "total-schools") {
-
-                        const instituteId =
-                            row.instituteId ??
-                            row.InstituteId ??
-                            row.InstituteID ??
-                            row.instituteID ??
-                            row.id ??
-                            row.ID ??
-                            0;
-
-                        tbody += `
-                            <td class="text-center">
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-outline-primary rounded-pill"
-                                    onclick="exportSingleInstituteReport(${Number(instituteId)}, this)">
-
-                                    <i class="bi bi-file-earmark-excel me-1"></i>
-                                    Export Report
-
-                                </button>
-                            </td>
-                        `;
-                    }
-
-                    tbody += "</tr>";
-                });
-
-                $("#genericTableBody")
-                    .html(tbody);
-
-                $("#genericModalCount")
-                    .text(rows.length);
-
-                $("#genericModalSubtitle").text(
-                    rows.length === 1
-                        ? "1 record found"
-                        : `${rows.length} records found`
-                );
-            },
-
-            error: function (xhr) {
-
-                console.error(
-                    "Details API error:",
-                    xhr.status,
-                    xhr.responseText
-                );
-
-                $("#genericTableHead").html("");
-
-                $("#genericTableBody").html(`
-                    <tr>
-                        <td colspan="100%"
-                            class="text-center py-5 text-danger">
-
-                            <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
-
-                            <div class="fw-semibold">
-                                Failed to load records
+                                <div class="text-muted small mt-3">Fetching records from server...</div>
                             </div>
-
-                            <small>
-                                Please try again.
-                            </small>
-
                         </td>
                     </tr>
                 `);
+        }
 
-                $("#genericModalCount").text("0");
+         window.loadModalDataPaged=function() {
+              const affiliateId = '@affiliateId';
+            let pageSize = parseInt($('#modalPageSize').val()) || 100;
+            let searchTerm = $('#modalTableSearch').val().trim();
 
-                $("#genericModalSubtitle")
-                    .text("Unable to load records");
+            $.ajax({
+                url: `/api/admin/overall-details-paged`,
+                type: 'GET',
+                data: {
+                    category: currentCategory,
+                    type: currentType,
+                    page: currentPage,
+                    pageSize: pageSize,
+                    search: searchTerm,
+                    affiliateid:affiliateId
+                },
+                headers: {
+                    'Authorization': 'Bearer ' + getAuthToken()
+                },
+                success: function(res) {
+                    if (!res || !res.success || !res.data || res.data.length === 0) {
+                        $('#modalTable thead').html('');
+                        $('#modalTable tbody').html(`
+                                <tr>
+                                    <td colspan="100%" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                            <div class="fw-semibold">No records found</div>
+                                            <small>No matching data available for your search criteria.</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `);
+                        $('#modalSubtitle').text('0 records');
+                        $('#paginationInfo').text('Showing 0 entries');
+                        $('#modalPagination').html('');
+                        return;
+                    }
+
+                    totalPages = res.totalPages || 1;
+                    renderTableHeaders(res.data[0]);
+                    renderTableRows(res.data);
+                    renderPagination(res.page, res.totalPages, res.totalRecords);
+                },
+                error: function(xhr) {
+                    console.error('Paged API error:', xhr);
+                    $('#modalTable tbody').html(`<tr><td colspan="100%" class="text-center py-4 text-danger">Failed to load records from server.</td></tr>`);
+                }
+            });
+        }
+
+        // Render headers with click-to-sort capability
+         window.renderTableHeaders=function (sampleRow) {
+            if (!sampleRow) return;
+            const keys = Object.keys(sampleRow);
+            let thead = '<tr>';
+            keys.forEach(key => {
+                thead += `<th style="cursor: pointer;" onclick="sortModalTable('${key}')">
+                                ${formatColumnName(key)} <i class="bi bi-arrow-down-up text-muted small ms-1"></i>
+                              </th>`;
+            });
+            if (currentType === 'total-schools') {
+                thead += `<th>Action</th>`;
             }
-        });
-    };
+            thead += '</tr>';
+            $('#modalTable thead').html(thead);
+        }
 
+        // Client-side sorting toggle for the currently loaded page items
+        let sortDirection = {};
+         window.sortModalTable=function (key) {
+            sortDirection[key] = !sortDirection[key];
+            let asc = sortDirection[key];
+
+            // Assuming current page data is stored globally or can be sorted from current rows
+            // Let's sort the active rendered table rows directly or maintain a global dataset array.
+            let $rows = $('#modalTable tbody tr').toArray();
+
+            // Find column index
+            let colIndex = -1;
+            $('#modalTable th').each(function(index) {
+                if ($(this).text().trim().toLowerCase().includes(formatColumnName(key).toLowerCase())) {
+                    colIndex = index;
+                }
+            });
+
+            if (colIndex === -1) return;
+
+            $rows.sort((a, b) => {
+                let valA = $(a).children('td').eq(colIndex).text().trim();
+                let valB = $(b).children('td').eq(colIndex).text().trim();
+
+                let numA = parseFloat(valA);
+                let numB = parseFloat(valB);
+
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return asc ? numA - numB : numB - numA;
+                }
+                return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            });
+
+            $('#modalTable tbody').empty().append($rows);
+        }
+
+         window.renderTableRows=function(data) {
+            const keys = Object.keys(data[0]);
+            let tbody = '';
+
+            data.forEach(row => {
+                tbody += '<tr>';
+                keys.forEach(key => {
+                    let value = row[key];
+                    if (value === null || value === undefined || value === '') value = '-';
+                    tbody += `<td>${escapeHtml(value)}</td>`;
+                });
+
+                if (currentType === 'total-schools') {
+                    let instId = row.instituteId || row.InstituteID || row.id || row.ID || row.instituteID||0;
+                    tbody += `<td>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportSingleInstituteReport(${instId}, this)">
+                                        <i class="bi bi-file-earmark-excel me-1"></i> Export
+                                    </button>
+                                  </td>`;
+                }
+                tbody += '</tr>';
+            });
+
+            $('#modalTable tbody').html(tbody);
+        }
+
+         window.renderPagination=function (page, totalP, totalRec) {
+            let startEntry = ((page - 1) * parseInt($('#modalPageSize').val())) + 1;
+            let endEntry = Math.min(page * parseInt($('#modalPageSize').val()), totalRec);
+
+            $('#modalSubtitle').text(`${totalRec} total records`);
+            $('#paginationInfo').text(`Showing ${startEntry} to ${endEntry} of ${totalRec} entries`);
+
+            let paginationHtml = '';
+
+            // Previous Button
+            paginationHtml += `<li class="page-item ${page === 1 ? 'disabled' : ''}">
+                                        <a class="page-link" href="#" onclick="changePage(${page - 1})">Prev</a>
+                                   </li>`;
+
+            // Page Number Windows
+            let maxVisiblePages = 5;
+            let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalP, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `<li class="page-item ${i === page ? 'active' : ''}">
+                                            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                                       </li>`;
+            }
+
+            // Next Button
+            paginationHtml += `<li class="page-item ${page === totalP ? 'disabled' : ''}">
+                                        <a class="page-link" href="#" onclick="changePage(${page + 1})">Next</a>
+                                   </li>`;
+
+            $('#modalPagination').html(paginationHtml);
+        }
+
+         window.changePage=function (targetPage) {
+            if (targetPage < 1 || targetPage > totalPages) return;
+            currentPage = targetPage;
+            showModalLoader();
+            loadModalDataPaged();
+        }
+
+        // Debounced Server-Side Search Input
+        $('#modalTableSearch').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPage = 1;
+                showModalLoader();
+                loadModalDataPaged();
+            }, 400); // 400ms delay to prevent excessive queries while typing
+        });
+
+        $('#btnClearSearch').on('click', function() {
+            $('#modalTableSearch').val('');
+            currentPage = 1;
+            showModalLoader();
+            loadModalDataPaged();
+        });
+
+        $('#modalPageSize').on('change', function() {
+            currentPage = 1;
+            showModalLoader();
+            loadModalDataPaged();
+        });
+
+        // Server-side full data export handler
+        $('#btnExportModalData').on('click', function() {
+            let searchTerm = $('#modalTableSearch').val().trim();
+            let exportUrl = `/api/admin/export-details-excel?category=${currentCategory}&type=${currentType}&search=${encodeURIComponent(searchTerm)}`;
+
+            showGlobalLoader("Generating Excel Export for Filtered Records...");
+
+            // Trigger file download via temporary anchor
+            var $anchor = $('<a />').attr({
+                'href': exportUrl,
+                'download': `${currentCategory}_${currentType}_Export.xlsx`
+            }).appendTo('body');
+
+            $anchor[0].click();
+            setTimeout(() => {
+                $anchor.remove();
+                hideGlobalLoader();
+            }, 1500);
+        });
+       
 
     /* ============================================================
        SINGLE INSTITUTE REPORT
@@ -1694,122 +1748,125 @@
     }
 
 
-    function exportActiveStudentsReport(
-        filterVal,
-        reportTitle,
-        $button
-    ) {
+   function exportActiveStudentsReport(
+    filterVal,
+    reportTitle,
+    $button
+) {
     const affiliateId = '@affiliateId';
+    const token = getAuthToken();
 
-        if (!affiliateId || affiliateId === "0") {
-
-            alert(
-                "Logged-in user ID not found."
-            );
-
-            return;
-        }
-
-        const originalHtml =
-            $button.html();
-
-        $.ajax({
-
-            type: "GET",
-
-            url:
-                `/api/Report/affiliate-active-students` +
-                `?AffiliateID=${encodeURIComponent(affiliateId)}` +
-                `&filter=${encodeURIComponent(filterVal)}`,
-
-            headers: {
-                "Authorization":
-                    "Bearer " + token
-            },
-
-            xhrFields: {
-                responseType: "blob"
-            },
-
-            beforeSend: function () {
-
-                showGlobalLoader(
-                    `Generating ${reportTitle} Report...`
-                );
-
-                $button
-                    .prop("disabled", true)
-                    .html(`
-                        <span
-                            class="spinner-border spinner-border-sm me-1"
-                            role="status">
-                        </span>
-                        Generating...
-                    `);
-            },
-
-            success: function (data) {
-
-                const blob =
-                    new Blob(
-                        [data],
-                        {
-                            type:
-                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        }
-                    );
-
-                const url =
-                    window.URL.createObjectURL(blob);
-
-                const filename =
-                    filterVal === "F"
-                        ? "FocusedActiveStudentsReport.xlsx"
-                        : "ActiveStudentsReport.xlsx";
-
-                const anchor =
-                    $("<a />")
-                        .attr({
-                            href: url,
-                            download: filename
-                        })
-                        .appendTo("body");
-
-                anchor[0].click();
-
-                setTimeout(function () {
-
-                    window.URL.revokeObjectURL(url);
-                    anchor.remove();
-
-                }, 100);
-            },
-
-            error: function (xhr, status, error) {
-
-                console.error(
-                    reportTitle + " export error:",
-                    xhr.responseText || error
-                );
-
-                alert(
-                    "Error downloading " +
-                    reportTitle.toLowerCase() +
-                    " report."
-                );
-            },
-
-            complete: function () {
-
-                hideGlobalLoader();
-
-                $button
-                    .prop("disabled", false)
-                    .html(originalHtml);
-            }
-        });
+    // Validate Affiliate/User ID
+    if (!affiliateId || affiliateId === "0") {
+        alert("Logged-in user ID not found.");
+        return;
     }
 
+    // Validate token
+    if (!token) {
+        alert("Login session expired. Please login again.");
+        return;
+    }
+
+    // Default filter
+    filterVal = filterVal || "A";
+
+    // Save original button HTML
+    const originalHtml = $button.html();
+
+    $.ajax({
+        type: "GET",
+
+        url:
+            `/api/Report/affiliate-active-students` +
+            `?AffiliateID=${encodeURIComponent(affiliateId)}` +
+            `&filter=${encodeURIComponent(filterVal)}`,
+
+        headers: {
+            "Authorization": "Bearer " + token
+        },
+
+        xhrFields: {
+            responseType: "blob"
+        },
+
+        beforeSend: function () {
+
+            showGlobalLoader(
+                `Generating ${reportTitle || "Active Students"} Report...`
+            );
+
+            $button
+                .prop("disabled", true)
+                .addClass("disabled")
+                .html(`
+                    <span
+                        class="spinner-border spinner-border-sm me-1"
+                        role="status"
+                        aria-hidden="true">
+                    </span>
+                    Generating...
+                `);
+        },
+
+        success: function (data) {
+
+            const blob = new Blob(
+                [data],
+                {
+                    type:
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                }
+            );
+
+            const url =
+                window.URL.createObjectURL(blob);
+
+            const filename =
+                filterVal === "F"
+                    ? "FocusedActiveStudentsReport.xlsx"
+                    : "ActiveStudentsReport.xlsx";
+
+            const $anchor = $("<a />")
+                .attr({
+                    href: url,
+                    download: filename
+                })
+                .appendTo("body");
+
+            $anchor[0].click();
+
+            setTimeout(function () {
+
+                window.URL.revokeObjectURL(url);
+                $anchor.remove();
+
+            }, 100);
+        },
+
+        error: function (xhr, status, error) {
+
+            console.error(
+                "Active Students Report Error:",
+                xhr.responseText || error
+            );
+
+            alert(
+                "Error downloading active students report."
+            );
+        },
+
+        complete: function () {
+
+            hideGlobalLoader();
+
+            $button
+                .prop("disabled", false)
+                .removeClass("disabled")
+                .html(originalHtml);
+        }
+    });
+}
 
     /* ============================================================
        CREATIVITY REPORT
@@ -2084,7 +2141,7 @@
                 e.preventDefault();
                 e.stopPropagation();
 
-                openAssociatedSchoolsModal();
+                //openAssociatedSchoolsModal();
             });
 
 

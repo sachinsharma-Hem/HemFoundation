@@ -1293,7 +1293,7 @@ namespace HemFoundation.Controllers.Api
                 )
                 {
                     Int32 userId =
-                        HttpContext.Session.GetInt32("UserID") ?? "0";
+                        HttpContext.Session.GetInt32("UserID") ?? 0;
 
                     instituteIds =
                         await GetInstituteIdsForCategoryAsyncwithaffiliateid(
@@ -1607,52 +1607,50 @@ namespace HemFoundation.Controllers.Api
                         .Distinct()
                         .ToListAsync();
 
-                    return await _context.SchoolProfileDetails
+                    return await _context.WJ_Institutes
                         .AsNoTracking()
-                        .Where(x => x.referralcode != null && referralCodes.Contains(x.referralcode))
-                        .Select(x => (int?)x.instituteid)
+                        .Where(x => x.ReferralCode != null && referralCodes.Contains(x.ReferralCode))
+                        .Select(x => (int?)x.InstituteID)
                         .Distinct()
                         .ToListAsync();
                 }
                 else if (category == "focused")
                 {
                     return await _context.HfTblAffliateFocusedLists
-                        .AsNoTracking()
-                        .Where(x => x.InstituteId != null)
-                        .Select(x => (int?)x.InstituteId)
-                        .Distinct()
-                        .ToListAsync();
-                }
-            }
-            else
-            {
-                if (category == "performance")
-                {
-                    var referralCodes = await _context.WJ_ReferralCodes
-                        .AsNoTracking()
-                        .Where(x => x.ReferralCode != null && x.ReferralCode != "")
-                        .Select(x => x.ReferralCode)
-                        .Distinct()
-                        .ToListAsync();
+                         .AsNoTracking()
+                         .Where(f => f.InstituteId != null)
+                         .Join(
+                             _context.WJ_Institutes,
+                             f => f.InstituteId,
+                             i => i.InstituteID,
+                             (f, i) => new { f, i }
+                         )
+                         .Join(
+                             _context.WJ_ReferralCodes.Where(r => r.UserID == userid),
+                             x => x.i.ReferralCode,
+                             r => r.ReferralCode,
+                             (x, r) => x.f.InstituteId
+                        )
+                     .Distinct()
+                     .ToListAsync();
+                                }
+                     }
+                    else
+                    {
+                        if (category == "performance")
+                        {
+                    
 
-                    return await _context.SchoolProfileDetails
-                        .AsNoTracking()
-                        // .Where(x => x.referralcode != null && referralCodes.Contains(x.referralcode))
-                        .Select(x => (int?)x.instituteid)
-                        .Distinct()
-                        .ToListAsync();
-                }
-                else if (category == "focused")
-                {
-                    return await _context.HfTblAffliateFocusedLists
-                        .AsNoTracking()
-                        .Where(x => x.InstituteId != null)
-                        .Select(x => (int?)x.InstituteId)
-                        .Distinct()
-                        .ToListAsync();
-                }
+                            return await _context.VolunteerInstituteMappings
+                                .AsNoTracking()
+                                 .Where(x => x.InstituteId == userid)
+                                .Select(x => (int?)x.InstituteId)
+                                .Distinct()
+                                .ToListAsync();
+                        }
+                
 
-            }
+                    }
 
 
                
