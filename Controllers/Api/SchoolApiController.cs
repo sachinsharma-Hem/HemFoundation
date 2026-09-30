@@ -504,7 +504,7 @@ namespace HemFoundation.Controllers.Api
             try
             {
                 // Example execution using Entity Framework Core Database facade for PostgreSQL parameters:
-                _context.Database.ExecuteSqlRaw("CALL public.pro_wj_teacherdelete({0}, {1})", teacherID, DBNull.Value);
+                _context.Database.ExecuteSqlRaw("CALL public.pro_wj_teacherdelete({0}, NULL)", teacherID, DBNull.Value);
 
                 return Ok(new
                 {

@@ -1,4 +1,8 @@
-﻿<div class="card shadow-sm rounded-4 bg-white p-4 animate-fade-in" style="border: 1px solid #d9dfe5 !important;">
+﻿@using Microsoft.AspNetCore.Http
+@{
+    var affiliateId = Context.Session.GetInt32("UserID") ?? 0;
+}
+<div class="card shadow-sm rounded-4 bg-white p-4 animate-fade-in" style="border: 1px solid #d9dfe5 !important;">
     <!-- Header Section -->
     <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
         <div>
@@ -11,15 +15,15 @@
     <div class="row g-3 mb-4">
 
         <!-- Card 1: Associated School (Primary Blue) -->
-        <div class="col-xl-3 col-lg-4 col-md-6">
-            <div class="card text-white bg-primary border-0 shadow-sm h-100 rounded-3 overflow-hidden cursor-pointer" onclick="openAssociatedSchoolsModal()">
+        <div class="col-xl-3 col-lg-4 col-md-6"  >
+            <div class="card text-white bg-primary border-0 shadow-sm h-100 rounded-3 overflow-hidden cursor-pointer" >
                 <div class="card-body p-3 d-flex flex-column justify-content-between">
                     <div>
-                        <h2 class="fw-bold mb-1" id="cntAssociatedSchools">0</h2>
+                        <h2 class="fw-bold mb-1" id="lblTotalAssociatedSchool">0</h2>
                         <p class="card-text small mb-2">Associated School</p>
                     </div>
                     <div>
-                        <button type="button" id="btnOpenassociatedSchools" class="btn btn-sm btn-light text-primary fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" id="btnOpenassociatedSchools" onclick="event.stopPropagation(); openDetailsModal('performance','total-schools');" class="btn btn-sm btn-light text-primary fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -34,7 +38,7 @@
                         <p class="card-text small mb-2">Associated Student</p>
                     </div>
                     <div>
-                        <button type="button" id="btnOpenTotalStudents" class="btn btn-sm btn-light text-success fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" id="btnOpenTotalStudentss" onclick="event.stopPropagation(); openDetailsModal('performance','total-students')" class="btn btn-sm btn-light text-success fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -49,7 +53,7 @@
                         <p class="card-text small mb-2">Active Student</p>
                     </div>
                     <div>
-                        <button type="button" id="btnOpenActiveStudents" class="btn btn-sm btn-dark text-warning fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" id="btn_ExportAdminStudentsReport" onclick="event.stopPropagation();"  class="btn btn-sm btn-dark text-warning fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -64,7 +68,7 @@
                         <p class="card-text small mb-2">Associated Teacher</p>
                     </div>
                     <div>
-                        <button type="button" id="btnOpenTotalTeachers" class="btn btn-sm btn-light text-info fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" id="btnOpenTotalTeacherss" onclick="event.stopPropagation(); openDetailsModal('performance','total-teachers')" class="btn btn-sm btn-light text-info fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -79,7 +83,7 @@
                         <p class="card-text small mb-2">Active Teacher</p>
                     </div>
                     <div>
-                        <button type="button" id="btnOpenActiveTeachers" class="btn btn-sm btn-light text-danger fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" id="btnOpenActiveTeacherss" onclick="event.stopPropagation(); openDetailsModal('performance','active-teachers')" class="btn btn-sm btn-light text-danger fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -94,7 +98,7 @@
                         <p class="card-text small mb-2">No. Of SEL Submission School</p>
                     </div>
                     <div>
-                        <button type="button" id="btnOpenSelProjects" class="btn btn-sm btn-light text-secondary fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" id="btn_ExportPerfSelSubmissions" class="btn btn-sm btn-light text-secondary fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -124,7 +128,7 @@
                         <p class="card-text small mb-2">No. Of Family Project Submission</p>
                     </div>
                     <div>
-                        <button type="button" id="btnOpenFamilyProjects" class="btn btn-sm btn-light fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem; color: #6610f2 !important;">More Info <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" id="btn_ExportPerfFamilyPbl" class="btn btn-sm btn-light fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem; color: #6610f2 !important;">More Info <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -139,7 +143,7 @@
                         <p class="card-text small mb-2 text-muted">No. Of Individual Project Submission</p>
                     </div>
                     <div>
-                        <button type="button" id="btnOpenIndividualProjects" class="btn btn-sm btn-dark text-white fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" id="btn_ExportPerfIndividualPbl" class="btn btn-sm btn-dark text-white fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;">More Info <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -216,7 +220,92 @@
         </div>
     </div>
 </div>
+<!-- DETAILS MODAL WITH SERVER-SIDE PAGINATION & SEARCH -->
+<!-- ========================================================= -->
 
+<div class="modal fade"
+     id="dashboardDetailsModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-fullscreen">
+
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+
+            <!-- MODAL HEADER -->
+            <div class="modal-header border-bottom px-4 py-3 flex-wrap gap-3">
+
+                <div>
+                    <h5 class="fw-bold text-dark mb-1" id="modalTitle">
+                        Records List
+                    </h5>
+                    <small class="text-muted" id="modalSubtitle">
+                        Loading records...
+                    </small>
+                </div>
+
+                <!-- SEARCH & CONTROLS TOOLBAR -->
+                <div class="d-flex align-items-center gap-3 ms-auto flex-wrap">
+                    <!-- Server-Side Search Bar -->
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="modalTableSearch" class="form-control border-start-0 shadow-none" placeholder="Search database...">
+                        <button class="btn btn-outline-secondary border-start-0" type="button" id="btnClearSearch"><i class="bi bi-x"></i></button>
+                    </div>
+
+                    <!-- Page Size Selector -->
+                    <select id="modalPageSize" class="form-select form-select-sm shadow-none" style="width: 100px;">
+                        <option value="25">25 rows</option>
+                        <option value="50">50 rows</option>
+                        <option value="100" selected>100 rows</option>
+                        <option value="250">250 rows</option>
+                         <option value="250">250 rows</option>
+                        <option value="500">500 rows</option>
+                        <option value="1000">1000 rows</option>
+                        <option value="10000">10000 rows</option>
+                    </select>
+
+                    <!-- Export Button -->
+                    <button type="button" class="btn btn-sm btn-success shadow-sm" id="btnExportModalData">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+                    </button>
+                </div>
+
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+
+            </div>
+
+            <!-- MODAL BODY -->
+            <div class="modal-body p-4">
+
+                <div class="table-responsive border rounded-3 modal-table-wrapper" style="max-height: 420px;">
+                    <table class="table table-hover align-middle mb-0" id="modalTable">
+                        <thead class="table-light"></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- MODAL FOOTER WITH PAGINATION -->
+            <div class="modal-footer border-top px-4 py-3 justify-content-between align-items-center bg-light rounded-bottom-4">
+                <div class="text-muted small" id="paginationInfo">
+                    Showing 0 to 0 of 0 entries
+                </div>
+
+                <nav aria-label="Modal Pagination">
+                    <ul class="pagination pagination-sm mb-0" id="modalPagination">
+                        <!-- Dynamically injected pagination buttons -->
+                    </ul>
+                </nav>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- ========================================================= -->
 <!-- =============================================================
      ASSOCIATED SCHOOLS DETAILS MODAL
      ============================================================= -->
@@ -226,7 +315,7 @@
      tabindex="-1"
      aria-hidden="true">
 
-    <div class="modal-dialog modal-dialog-centered modal-xl"
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down"
          style="max-width: 98vw !important;">
 
         <div class="modal-content rounded-4 border-0 shadow-lg bg-white"
@@ -268,26 +357,39 @@
                 <!-- INFORMATION BAR -->
                 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
 
-                    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex align-items-center gap-2">
 
-                        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">
-                            <i class="bi bi-buildings me-1"></i>
-                            Associated Schools
-                        </span>
+        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">
+            <i class="bi bi-buildings me-1"></i>
+            Associated Schools
+        </span>
 
-                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
-                            Total:
-                            <strong id="associatedSchoolsTotalCount">0</strong>
-                        </span>
+        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+            Total:
+            <strong id="associatedSchoolsTotalCount">0</strong>
+        </span>
 
-                    </div>
+    </div>
 
-                    <small class="text-muted">
-                        <i class="bi bi-arrows-expand me-1"></i>
-                        Use the horizontal scrollbar below to view all columns
-                    </small>
+    <div class="d-flex align-items-center gap-2">
 
-                </div>
+        <small class="text-muted d-none d-lg-inline">
+            <i class="bi bi-arrows-expand me-1"></i>
+            Use the horizontal scrollbar below to view all columns
+        </small>
+
+        <button type="button"
+                id="btnExportAssociatedSchools"
+                class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">
+
+            <i class="bi bi-file-earmark-excel me-1"></i>
+            Export Excel
+
+        </button>
+
+    </div>
+
+</div>
 
                 <!-- TABLE SCROLL CONTAINER -->
                 <div class="associated-schools-table-wrapper">
@@ -362,11 +464,16 @@
         </div>
     </div>
 </div>
+<div id="globalLoader" class="global-loader-overlay" style="display: none;">
+    <div class="text-center">
+        <div class="spinner-border text-primary shadow-lg" style="width: 3.5rem; height: 3.5rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="fw-bold text-dark mt-3 fs-5" id="globalLoaderText">Generating Report, Please Wait...</div>
+    </div>
+</div>
 
 
-<!-- =============================================================
-     ASSOCIATED SCHOOLS CSS
-     ============================================================= -->
 
 <style>
 
@@ -530,795 +637,1933 @@
         scrollbar-width: auto;
         scrollbar-color: #adb5bd #f1f3f5;
     }
-
+    
+    /* ================= GLOBAL LOADER OVERLAY ================= */
+    .global-loader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+        z-index: 99999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        transition: opacity 0.2s ease-in-out;
+    }
 </style>
 
 
 <!-- =============================================================
-     ASSOCIATED SCHOOLS JAVASCRIPT
+     CONSOLIDATED DASHBOARD JAVASCRIPT
      ============================================================= -->
-
 <script>
+    const affiliateId = '@affiliateId';
 
+    //console.log("Affiliate ID from Session:", affiliateId);
+</script>
+<script>
 (function () {
-
     "use strict";
 
+    /* ============================================================
+       COMMON HELPERS
+       ============================================================ */
 
-    function getAuthToken() {
-
+    window.getAuthToken = function () {
         return localStorage.getItem("jwt_token") ||
                sessionStorage.getItem("jwt_token") ||
                "";
+    };
 
-    }
-
-
-    function escapeHtml(value) {
-
+    window.escapeHtml = function (value) {
         if (value === null || value === undefined) {
             return "";
         }
 
-        var div = document.createElement("div");
+        return $("<div>")
+            .text(String(value))
+            .html();
+    };
 
-        div.textContent = String(value);
-
-        return div.innerHTML;
-
-    }
-
-
-    function displayValue(value) {
-
-        if (value === null ||
-            value === undefined ||
-            value === "") {
-
-            return '<span class="text-muted">-</span>';
-
+    window.formatColumnName = function (key) {
+        if (!key) {
+            return "";
         }
 
-        return escapeHtml(value);
+        let result = String(key)
+            .replace(/([a-z])([A-Z])/g, "$1 $2")
+            .replace(/_/g, " ")
+            .replace(/-/g, " ");
 
-    }
+        return result.charAt(0).toUpperCase() + result.slice(1);
+    };
 
-
-    function formatDate(value) {
-
+    window.formatDate = function (value) {
         if (!value) {
             return "-";
         }
 
+        const date = new Date(value);
+
+        if (isNaN(date.getTime())) {
+            return escapeHtml(value);
+        }
+
+        return date.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
+    };
+
+    window.getStatusBadge = function (value) {
+        const active =
+            value === true ||
+            value === 1 ||
+            value === "1" ||
+            value === "true" ||
+            value === "True";
+
+        return active
+            ? '<span class="badge bg-success-subtle text-success school-status-badge">Active</span>'
+            : '<span class="badge bg-secondary-subtle text-secondary school-status-badge">Inactive</span>';
+    };
+
+    window.showGlobalLoader = window.showGlobalLoader || function (message) {
+        $("#globalLoaderText").text(message || "Please Wait...");
+        $("#globalLoader").stop(true, true).fadeIn(150);
+    };
+
+    window.hideGlobalLoader = window.hideGlobalLoader || function () {
+        $("#globalLoader").stop(true, true).fadeOut(150);
+    };
+
+
+    /* ============================================================
+       DASHBOARD SUMMARY
+       ============================================================ */
+
+    async function loadSummaryCounts() {
         try {
+            const token = getAuthToken();
 
-            var date = new Date(value);
+            const response = await fetch(
+                "/api/affiliate-dashboard/dashboard-summary-counts",
+                {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "Authorization": token ? "Bearer " + token : ""
+                    },
+                    credentials: "same-origin",
+                    cache: "no-store"
+                }
+            );
 
-            if (isNaN(date.getTime())) {
-                return escapeHtml(value);
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
             }
 
-            return date.toLocaleString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
-            });
+            const json = await response.json();
 
+            if (!json || !json.success || !json.data) {
+                return;
+            }
+
+            const data = json.data;
+
+            $("#lblTotalAssociatedSchool").text(data.totalinstitute ?? 0);
+            $("#lblTotalStudentCount").text(data.totalStudents ?? 0);
+            $("#lblActiveStudentCount").text(data.activeStudents ?? 0);
+            $("#lblTotalTeacherCount").text(data.totalTeachers ?? 0);
+            $("#lblActiveTeacherCount").text(data.activeTeachers ?? 0);
+            $("#lblTotalSelProjectCount").text(data.totalSelProjects ?? 0);
+            $("#lblFamilyProjectCount").text(data.familyProjects ?? 0);
+            $("#lblIndividualProjectCount").text(data.individualProjects ?? 0);
+            $("#lblGroupPblCount").text(data.groupPbl ?? 0);
+
+        } catch (error) {
+            console.error("Failed to load dashboard summary counts:", error);
         }
-        catch (error) {
-
-            return escapeHtml(value);
-
-        }
-
     }
 
 
-    function formatBoolean(value) {
+    /* ============================================================
+       ASSOCIATED SCHOOLS
+       ============================================================ */
 
-        if (value === true ||
-            value === "true" ||
-            value === "True" ||
-            value === 1 ||
-            value === "1") {
+    async function fetchAssignedSchools() {
+        try {
+            const token = getAuthToken();
 
-            return `
-                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 school-status-badge">
-                    <i class="bi bi-check-circle me-1"></i>
-                    Yes
-                </span>
+            const response = await fetch(
+                "/api/affiliate-dashboard/my-assigned-schools",
+                {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "Authorization": token ? "Bearer " + token : ""
+                    },
+                    credentials: "same-origin",
+                    cache: "no-store"
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+
+            const result = await response.json();
+
+            return (
+                result &&
+                result.success &&
+                Array.isArray(result.data)
+            )
+                ? result.data
+                : [];
+
+        } catch (error) {
+            console.error("Assigned schools fetch error:", error);
+            return [];
+        }
+    }
+
+
+    async function loadVolunteerAssignedSchoolCount() {
+        const schools = await fetchAssignedSchools();
+        const count = schools.length;
+
+        // Keep compatibility with any existing assigned-school elements.
+        $("#lblActiveSchoolCount").text(count);
+        $("#modalAssignedSchoolCount").text(count);
+
+        const tableBody =
+            document.getElementById("tblAssignedSchoolsList");
+
+        if (!tableBody) {
+            return;
+        }
+
+        if (count === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4"
+                        class="text-center py-4 text-muted">
+                        No schools assigned.
+                    </td>
+                </tr>
             `;
-
+            return;
         }
 
+        let rows = "";
 
-        if (value === false ||
-            value === "false" ||
-            value === "False" ||
-            value === 0 ||
-            value === "0") {
+        schools.forEach(function (school, index) {
 
-            return `
-                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 school-status-badge">
-                    <i class="bi bi-x-circle me-1"></i>
-                    No
-                </span>
+            const name =
+                school.name ??
+                school.Name ??
+                school.schoolName ??
+                school.SchoolName ??
+                "-";
+
+            const instituteId =
+                school.instituteID ??
+                school.InstituteID ??
+                school.instituteId ??
+                school.InstituteId ??
+                "-";
+
+            const assignedDate =
+                school.assignedDate ??
+                school.AssignedDate;
+
+            const assignedBy =
+                school.assignedBy ??
+                school.AssignedBy ??
+                "-";
+
+            rows += `
+                <tr>
+                    <td class="fw-bold text-muted">
+                        ${index + 1}
+                    </td>
+
+                    <td>
+                        <div class="fw-semibold text-dark">
+                            ${escapeHtml(name)}
+                        </div>
+
+                        <small class="text-muted">
+                            ID: ${escapeHtml(instituteId)}
+                        </small>
+                    </td>
+
+                    <td>
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3">
+                            ${formatDate(assignedDate)}
+                        </span>
+                    </td>
+
+                    <td>
+                        ${escapeHtml(assignedBy)}
+                    </td>
+                </tr>
             `;
+        });
 
-        }
-
-
-        return `
-            <span class="text-muted">-</span>
-        `;
-
+        tableBody.innerHTML = rows;
     }
 
 
-    function formatCount(value) {
+    window.openAssignedSchoolsModal = function () {
+        const modalElement =
+            document.getElementById("volunteerSchoolsModal");
 
-        if (value === null ||
-            value === undefined ||
-            value === "") {
-
-            value = 0;
-
+        if (!modalElement) {
+            return;
         }
 
-        return `
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 school-count-badge">
-                ${escapeHtml(value)}
-            </span>
-        `;
+        const modal =
+            bootstrap.Modal.getOrCreateInstance(modalElement);
 
-    }
+        modal.show();
+
+        loadVolunteerAssignedSchoolCount();
+    };
 
 
-    function formatUrl(value, label) {
-
-        if (!value) {
-            return '<span class="text-muted">-</span>';
-        }
-
-        var safeUrl = escapeHtml(value);
-
-        return `
-            <a href="${safeUrl}"
-               target="_blank"
-               rel="noopener noreferrer"
-               class="text-primary text-decoration-none school-url"
-               title="${safeUrl}">
-
-                <i class="bi bi-box-arrow-up-right me-1"></i>
-                ${escapeHtml(label || value)}
-
-            </a>
-        `;
-
-    }
-
+    /* ============================================================
+       ASSOCIATED SCHOOLS DETAILS MODAL
+       ============================================================ */
 
     window.openAssociatedSchoolsModal = function () {
 
-        var modalEl =
+        const modalElement =
             document.getElementById("associatedSchoolsModal");
 
-
-        if (!modalEl) {
+        if (!modalElement) {
             console.error("associatedSchoolsModal not found.");
             return;
         }
 
-
-        var modal =
-            bootstrap.Modal.getOrCreateInstance(modalEl);
+        const modal =
+            bootstrap.Modal.getOrCreateInstance(modalElement);
 
         modal.show();
 
+        loadAssociatedSchoolsDetails();
+    };
 
-        var tbody =
-            $("#associatedSchoolsTableBody");
 
+    async function loadAssociatedSchoolsDetails() {
 
-        tbody.html(`
+        const tbody =
+            document.getElementById(
+                "associatedSchoolsTableBody"
+            );
+
+        if (!tbody) {
+            return;
+        }
+
+        tbody.innerHTML = `
             <tr>
-                <td colspan="27" class="text-center py-5">
-
-                    <div class="spinner-border text-success spinner-border-sm me-2"
-                         role="status">
-                    </div>
+                <td colspan="20" class="text-center py-5">
+                    <span
+                        class="spinner-border spinner-border-sm text-success me-2"
+                        role="status">
+                    </span>
 
                     <span class="text-muted fw-semibold">
                         Loading associated schools...
                     </span>
-
                 </td>
             </tr>
-        `);
+        `;
 
+        try {
 
-        $("#associatedSchoolsTotalCount").text("0");
+            const token = getAuthToken();
 
+            const response = await fetch(
+                "/api/affiliate-dashboard/associated-schools-details",
+                {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "Authorization": token ? "Bearer " + token : ""
+                    },
+                    credentials: "same-origin",
+                    cache: "no-store"
+                }
+            );
 
-        var token = getAuthToken();
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
 
+            const result = await response.json();
 
-        $.ajax({
-
-            url: "/api/affiliate-dashboard/associated-schools-details",
-
-            type: "GET",
-
-            headers: {
-                "Authorization":
-                    token ? "Bearer " + token : ""
-            },
-
-            cache: false,
-
-
-            success: function (res) {
-
-                console.log(
-                    "Associated Schools Response:",
-                    res
+            if (!result || result.success === false) {
+                throw new Error(
+                    result?.message ||
+                    "Unable to load associated schools."
                 );
+            }
 
+            const data =
+                Array.isArray(result.data)
+                    ? result.data
+                    : [];
 
-                if (!res || !res.success) {
+            $("#associatedSchoolsTotalCount")
+                .text(data.length);
 
-                    tbody.html(`
-                        <tr>
-                            <td colspan="27"
-                                class="text-center text-danger py-5">
+            if (data.length === 0) {
 
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-
-                                ${
-                                    escapeHtml(
-                                        res && res.message
-                                            ? res.message
-                                            : "Failed to load associated school details."
-                                    )
-                                }
-
-                            </td>
-                        </tr>
-                    `);
-
-                    return;
-
-                }
-
-
-                var schools =
-                    Array.isArray(res.data)
-                        ? res.data
-                        : [];
-
-
-                $("#associatedSchoolsTotalCount")
-                    .text(schools.length);
-
-
-                if (schools.length === 0) {
-
-                    tbody.html(`
-                        <tr>
-                            <td colspan="27"
-                                class="text-center text-muted py-5">
-
-                                <i class="bi bi-building-x fs-4 d-block mb-2"></i>
-
-                                No associated schools found.
-
-                            </td>
-                        </tr>
-                    `);
-
-                    return;
-
-                }
-
-
-                var html = "";
-
-
-                schools.forEach(function (s) {
-
-                    html += `
-                        <tr>
-
-                            <!-- 1 School ID -->
-                            <td>
-                                <span class="badge bg-light text-dark border">
-                                    #${displayValue(s.instituteID)}
-                                </span>
-                            </td>
-
-
-                            <!-- 2 Institute Type -->
-                            <td>
-                                ${displayValue(s.instituteType)}
-                            </td>
-
-
-                            <!-- 3 School Name -->
-                            <td>
-                                <div class="fw-bold text-dark">
-                                    ${displayValue(s.name)}
-                                </div>
-                            </td>
-
-
-                           
-
-
-                            <!-- 5 Institute Active -->
-                            <td>
-                                ${formatBoolean(
-                                    s.instituteIsActive
-                                )}
-                            </td>
-
-
-                            <!-- 6 Referral Code -->
-                            <td>
-                                <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
-                                    ${displayValue(s.referralCode)}
-                                </span>
-                            </td>
-
-
-                          
-
-                            <!-- 8 First Name -->
-                            <td>
-                                ${displayValue(s.firstName)}
-                            </td>
-
-
-                            <!-- 9 Last Name -->
-                            <td>
-                                ${displayValue(s.lastName)}
-                            </td>
-
-
-                            <!-- 10 Mobile -->
-                            <td>
-                                ${
-                                    s.mobileNo
-                                        ? `
-                                            <a href="tel:${escapeHtml(s.mobileNo)}"
-                                               class="text-decoration-none text-dark">
-
-                                                <i class="bi bi-telephone me-1"></i>
-
-                                                ${escapeHtml(s.mobileNo)}
-
-                                            </a>
-                                          `
-                                        : "-"
-                                }
-                            </td>
-
-
-                            <!-- 11 Email -->
-                            <td>
-                                ${
-                                    s.emailId
-                                        ? `
-                                            <a href="mailto:${escapeHtml(s.emailId)}"
-                                               class="text-decoration-none text-primary">
-
-                                                <i class="bi bi-envelope me-1"></i>
-
-                                                ${escapeHtml(s.emailId)}
-
-                                            </a>
-                                          `
-                                        : "-"
-                                }
-                            </td>
-
-
-                            <!-- 12 Address Line 1 -->
-                            <td>
-                                ${displayValue(s.addressLine1)}
-                            </td>
-
-
-
-                            <!-- 14 Address Line 3 -->
-                            <td>
-                                ${displayValue(s.addressLine3)}
-                            </td>
-
-
-                            <!-- 15 City -->
-                            <td>
-                                ${displayValue(s.city)}
-                            </td>
-
-
-                            <!-- 16 Pincode -->
-                            <td>
-                                ${displayValue(s.pincode)}
-                            </td>
-
-
-                           
-
-
-                            <!-- 18 User Active -->
-                            <td>
-                                ${formatBoolean(
-                                    s.userIsActive
-                                )}
-                            </td>
-
-
-
-
-                            <!-- 20 Created Date -->
-                            <td>
-                                <span class="text-nowrap">
-                                    ${formatDate(
-                                        s.createdDate
-                                    )}
-                                </span>
-                            </td>
-
-
-                           
-
-
-                            <!-- 22 Modified Date -->
-                            <td>
-                                <span class="text-nowrap">
-                                    ${formatDate(
-                                        s.modifiedDate
-                                    )}
-                                </span>
-                            </td>
-
-
-                          
-
-                            <!-- 24 Associated Students -->
-                            <td class="text-center">
-                                ${formatCount(
-                                    s.associatedStudents
-                                )}
-                            </td>
-
-
-                            <!-- 25 Active Students -->
-                            <td class="text-center">
-                                ${formatCount(
-                                    s.activeStudents
-                                )}
-                            </td>
-
-
-                            <!-- 26 Total Teachers -->
-                            <td class="text-center">
-                                ${formatCount(
-                                    s.totalTeachers
-                                )}
-                            </td>
-
-
-                            <!-- 27 Active Teachers -->
-                            <td class="text-center">
-                                ${formatCount(
-                                    s.activeTeachers
-                                )}
-                            </td>
-
-                        </tr>
-                    `;
-
-                });
-
-
-                tbody.html(html);
-
-            },
-
-
-            error: function (xhr) {
-
-                console.error(
-                    "Associated Schools API Error:",
-                    xhr
-                );
-
-
-                var message =
-                    "Failed to load school details.";
-
-
-                if (xhr.responseJSON &&
-                    xhr.responseJSON.message) {
-
-                    message =
-                        xhr.responseJSON.message;
-
-                }
-
-
-                tbody.html(`
+                tbody.innerHTML = `
                     <tr>
-                        <td colspan="27"
-                            class="text-center text-danger py-5">
+                        <td colspan="20"
+                            class="text-center py-5 text-muted">
 
-                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
 
-                            ${escapeHtml(message)}
+                            <div class="fw-semibold">
+                                No associated schools found.
+                            </div>
 
                         </td>
                     </tr>
-                `);
+                `;
 
-
-                $("#associatedSchoolsTotalCount")
-                    .text("0");
-
+                return;
             }
 
-        });
+            let html = "";
 
+            data.forEach(function (school) {
+
+                const schoolId =
+                    school.schoolID ??
+                    school.SchoolID ??
+                    school.instituteID ??
+                    school.InstituteID ??
+                    school.instituteId ??
+                    "-";
+
+                const instituteType =
+                    school.instituteType ??
+                    school.InstituteType ??
+                    "-";
+
+                const schoolName =
+                    school.schoolName ??
+                    school.SchoolName ??
+                    school.name ??
+                    school.Name ??
+                    "-";
+
+                const instituteActive =
+                    school.instituteActive ??
+                    school.InstituteActive;
+
+                const referralCode =
+                    school.referralCode ??
+                    school.ReferralCode ??
+                    "-";
+
+                const firstName =
+                    school.firstName ??
+                    school.FirstName ??
+                    "-";
+
+                const lastName =
+                    school.lastName ??
+                    school.LastName ??
+                    "-";
+
+                const mobile =
+                    school.mobileNo ??
+                    school.MobileNo ??
+                    school.mobile ??
+                    school.Mobile ??
+                    "-";
+
+                const email =
+                    school.emailID ??
+                    school.EmailID ??
+                    school.email ??
+                    school.Email ??
+                    "-";
+
+                const address =
+                    school.address ??
+                    school.Address ??
+                    "-";
+
+                const address2 =
+                    school.address2 ??
+                    school.Address2 ??
+                    "-";
+
+                const city =
+                    school.city ??
+                    school.City ??
+                    "-";
+
+                const pincode =
+                    school.pincode ??
+                    school.Pincode ??
+                    "-";
+
+                const userActive =
+                    school.userActive ??
+                    school.UserActive;
+
+                const createdDate =
+                    school.createdDate ??
+                    school.CreatedDate;
+
+                const modifiedDate =
+                    school.modifiedDate ??
+                    school.ModifiedDate;
+
+                const associatedStudents =
+                    school.associatedStudents ??
+                    school.AssociatedStudents ??
+                    school.totalStudents ??
+                    school.TotalStudents ??
+                    0;
+
+                const activeStudents =
+                    school.activeStudents ??
+                    school.ActiveStudents ??
+                    0;
+
+                const totalTeachers =
+                    school.totalTeachers ??
+                    school.TotalTeachers ??
+                    0;
+
+                const activeTeachers =
+                    school.activeTeachers ??
+                    school.ActiveTeachers ??
+                    0;
+
+                html += `
+                    <tr>
+
+                        <td>
+                            ${escapeHtml(schoolId)}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(instituteType)}
+                        </td>
+
+                        <td>
+                            <div class="fw-semibold">
+                                ${escapeHtml(schoolName)}
+                            </div>
+                        </td>
+
+                        <td>
+                            ${getStatusBadge(instituteActive)}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(referralCode)}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(firstName)}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(lastName)}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(mobile)}
+                        </td>
+
+                        <td>
+                            <span class="school-url"
+                                  title="${escapeHtml(email)}">
+                                ${escapeHtml(email)}
+                            </span>
+                        </td>
+
+                        <td>
+                            ${escapeHtml(address)}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(address2)}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(city)}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(pincode)}
+                        </td>
+
+                        <td>
+                            ${getStatusBadge(userActive)}
+                        </td>
+
+                        <td>
+                            ${formatDate(createdDate)}
+                        </td>
+
+                        <td>
+                            ${formatDate(modifiedDate)}
+                        </td>
+
+                        <td class="text-center">
+                            <span class="badge bg-primary-subtle text-primary school-count-badge">
+                                ${Number(associatedStudents)}
+                            </span>
+                        </td>
+
+                        <td class="text-center">
+                            <span class="badge bg-success-subtle text-success school-count-badge">
+                                ${Number(activeStudents)}
+                            </span>
+                        </td>
+
+                        <td class="text-center">
+                            <span class="badge bg-info-subtle text-info school-count-badge">
+                                ${Number(totalTeachers)}
+                            </span>
+                        </td>
+
+                        <td class="text-center">
+                            <span class="badge bg-danger-subtle text-danger school-count-badge">
+                                ${Number(activeTeachers)}
+                            </span>
+                        </td>
+
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+
+        } catch (error) {
+
+            console.error(
+                "Associated schools details error:",
+                error
+            );
+
+            $("#associatedSchoolsTotalCount").text("0");
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="20"
+                        class="text-center py-5 text-danger">
+
+                        <i class="bi bi-exclamation-triangle fs-2 d-block mb-2"></i>
+
+                        <div class="fw-semibold">
+                            Failed to load associated schools.
+                        </div>
+
+                        <small>
+                            Please try again.
+                        </small>
+
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+
+    /* ============================================================
+       GENERIC DETAIL MODAL
+       ============================================================ */
+
+     let currentCategory = '';
+        let currentType = '';
+        let currentPage = 1;
+        let totalPages = 1;
+        let searchTimeout = null;
+
+        window.openDetailsModal = function (category, type) {
+
+    currentCategory = category;
+    currentType = type;
+    currentPage = 1;
+
+    $('#modalTableSearch').val('');
+
+    const titleMap = {
+        'total-schools': 'Associated Schools',
+        'total-students': 'Total Students',
+        'active-students': 'Active Students',
+        'total-teachers': 'Total Teachers',
+        'active-teachers': 'Active Teachers',
+        'sel-projects': 'Total SEL Projects',
+        'family-projects': 'Family Projects',
+        'individual-projects': 'Individual Projects',
+        'group-pbl': 'Group PBL'
     };
 
+    const categoryTitle =
+        category === 'performance'
+            ? 'Performance Report'
+            : 'Focused Report';
 
-    $(document)
-        .off(
-            "click.associatedSchools",
-            "#btnOpenassociatedSchools"
-        )
-        .on(
-            "click.associatedSchools",
-            "#btnOpenassociatedSchools",
-            function (e) {
+    $('#modalTitle').text(
+        categoryTitle + ' - ' + (titleMap[type] || 'Details')
+    );
 
-                e.preventDefault();
-                e.stopPropagation();
+    showModalLoader();
 
-                window.openAssociatedSchoolsModal();
+    $('#dashboardDetailsModal').modal('show');
 
-            }
-        );
+    loadModalDataPaged();
+};
 
-
-})();
-
-</script>
-
-
-<script>
-    (function() {
-        "use strict";
-
-        function getAuthToken() {
-            return localStorage.getItem("jwt_token") || sessionStorage.getItem("jwt_token") || "";
+        function showModalLoader() {
+            $('#modalTable thead').html('');
+            $('#modalTable tbody').html(`
+                    <tr>
+                        <td colspan="100%" class="text-center">
+                            <div class="modal-loader">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="text-muted small mt-3">Fetching records from server...</div>
+                            </div>
+                        </td>
+                    </tr>
+                `);
         }
 
-        function escapeHtml(value) {
-            if (value === null || value === undefined) return "";
-            var div = document.createElement("div");
-            div.textContent = String(value);
-            return div.innerHTML;
-        }
+         window.loadModalDataPaged=function() {
+              const affiliateId = '@affiliateId';
+            let pageSize = parseInt($('#modalPageSize').val()) || 100;
+            let searchTerm = $('#modalTableSearch').val().trim();
 
-        async function fetchAssignedSchools() {
-            try {
-                var token = getAuthToken();
-                var response = await fetch("/api/affiliate-dashboard/my-assigned-schools", { 
-                    method: "GET",
-                    headers: {
-                        "Accept": "application/json",
-                        "Authorization": token ? "Bearer " + token : ""
-                    },
-                    credentials: "same-origin",
-                    cache: "no-store"
-                });
+            $.ajax({
+                url: `/api/admin/overall-details-paged`,
+                type: 'GET',
+                data: {
+                    category: currentCategory,
+                    type: currentType,
+                    page: currentPage,
+                    pageSize: pageSize,
+                    search: searchTerm,
+                    affiliateid:affiliateId
+                },
+                headers: {
+                    'Authorization': 'Bearer ' + getAuthToken()
+                },
+                success: function(res) {
+                    if (!res || !res.success || !res.data || res.data.length === 0) {
+                        $('#modalTable thead').html('');
+                        $('#modalTable tbody').html(`
+                                <tr>
+                                    <td colspan="100%" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                            <div class="fw-semibold">No records found</div>
+                                            <small>No matching data available for your search criteria.</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `);
+                        $('#modalSubtitle').text('0 records');
+                        $('#paginationInfo').text('Showing 0 entries');
+                        $('#modalPagination').html('');
+                        return;
+                    }
 
-                if (!response.ok) {
-                    console.error("API Error Status:", response.status);
-                    return [];
+                    totalPages = res.totalPages || 1;
+                    renderTableHeaders(res.data[0]);
+                    renderTableRows(res.data);
+                    renderPagination(res.page, res.totalPages, res.totalRecords);
+                },
+                error: function(xhr) {
+                    console.error('Paged API error:', xhr);
+                    $('#modalTable tbody').html(`<tr><td colspan="100%" class="text-center py-4 text-danger">Failed to load records from server.</td></tr>`);
                 }
-
-                var result = await response.json();
-                return (result && result.success && Array.isArray(result.data)) ? result.data : [];
-            } catch (error) {
-                console.error("Fetch error:", error);
-                return [];
-            }
-        }
-
-        async function loadVolunteerAssignedSchoolCount() {
-            var schools = await fetchAssignedSchools();
-            var count = schools ? schools.length : 0;
-
-            var schoolCountEl = document.getElementById("lblActiveSchoolCount");
-            var modalCountEl = document.getElementById("modalAssignedSchoolCount");
-
-            if (schoolCountEl) schoolCountEl.textContent = count;
-            if (modalCountEl) modalCountEl.textContent = count;
-
-            var tableBody = document.getElementById("tblAssignedSchoolsList");
-            if (tableBody) {
-                if (count === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">No schools assigned.</td></tr>`;
-                    return;
-                }
-                let rows = "";
-                schools.forEach((school, index) => {
-                    rows += `<tr>
-                                <td class="fw-bold text-muted">${index + 1}</td>
-                                <td><div class="fw-semibold text-dark">${escapeHtml(school.name || "-")}</div><small class="text-muted">ID: ${escapeHtml(school.instituteID || school.InstituteID || "-")}</small></td>
-                                <td><span class="badge bg-primary-subtle text-primary rounded-pill px-3">${escapeHtml(school.assignedDate ? new Date(school.assignedDate).toLocaleDateString() : "-")}</span></td>
-                                <td>${escapeHtml(school.assignedBy || "-")}</td>
-                            </tr>`;
-                });
-                tableBody.innerHTML = rows;
-            }
-        }
-
-        async function loadSummaryCounts() {
-            try {
-                var token = getAuthToken();
-                const res = await fetch("/api/affiliate-dashboard/dashboard-summary-counts", {
-                    method: "GET",
-                    headers: {
-                        "Accept": "application/json",
-                        "Authorization": token ? "Bearer " + token : ""
-                    },
-                    credentials: "same-origin",
-                    cache: "no-store"
-                });
-                const json = await res.json();
-                if (json.success && json.data) {
-                    document.getElementById("lblTotalStudentCount").textContent = json.data.totalStudents || 0;
-                    document.getElementById("lblActiveStudentCount").textContent = json.data.activeStudents || 0;
-                    document.getElementById("lblTotalTeacherCount").textContent = json.data.totalTeachers || 0;
-                    document.getElementById("lblActiveTeacherCount").textContent = json.data.activeTeachers || 0;
-                    document.getElementById("lblTotalSelProjectCount").textContent = json.data.totalSelProjects || 0;
-                    document.getElementById("lblFamilyProjectCount").textContent = json.data.familyProjects || 0;
-                    document.getElementById("lblIndividualProjectCount").textContent = json.data.individualProjects || 0;
-                    document.getElementById("lblGroupPblCount").textContent = json.data.groupPbl || 0;
-                }
-            } catch (err) {
-                console.error("Failed to load summary counts", err);
-            }
-        }
-
-        var btnSchools = document.getElementById("btnOpenAssignedSchools");
-        if (btnSchools) {
-            btnSchools.addEventListener("click", () => {
-                var modalEl = document.getElementById("volunteerSchoolsModal");
-                if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
             });
         }
 
-        loadVolunteerAssignedSchoolCount();
-        loadSummaryCounts();
+        // Render headers with click-to-sort capability
+         window.renderTableHeaders=function (sampleRow) {
+            if (!sampleRow) return;
+            const keys = Object.keys(sampleRow);
+            let thead = '<tr>';
+            keys.forEach(key => {
+                thead += `<th style="cursor: pointer;" onclick="sortModalTable('${key}')">
+                                ${formatColumnName(key)} <i class="bi bi-arrow-down-up text-muted small ms-1"></i>
+                              </th>`;
+            });
+            if (currentType === 'total-schools') {
+                thead += `<th>Action</th>`;
+            }
+            thead += '</tr>';
+            $('#modalTable thead').html(thead);
+        }
 
-    })();
-</script>
+        // Client-side sorting toggle for the currently loaded page items
+        let sortDirection = {};
+         window.sortModalTable=function (key) {
+            sortDirection[key] = !sortDirection[key];
+            let asc = sortDirection[key];
 
-    <script>
-            $("#btnOpenActiveStudents").off("click").on("click", function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+            // Assuming current page data is stored globally or can be sorted from current rows
+            // Let's sort the active rendered table rows directly or maintain a global dataset array.
+            let $rows = $('#modalTable tbody tr').toArray();
 
-                var $card = $(this);
-                var originalHtml = $card.html();
-
-                var token = localStorage.getItem("jwt_token") ||
-                    sessionStorage.getItem("jwt_token") ||
-                    "";
-
-                if (!token) {
-                    alert("Login session expired. Please login again.");
-                    return;
+            // Find column index
+            let colIndex = -1;
+            $('#modalTable th').each(function(index) {
+                if ($(this).text().trim().toLowerCase().includes(formatColumnName(key).toLowerCase())) {
+                    colIndex = index;
                 }
+            });
 
-                var affiliateId = 0;
+            if (colIndex === -1) return;
 
-                try {
-                    var payload = JSON.parse(atob(token.split('.')[1]));
+            $rows.sort((a, b) => {
+                let valA = $(a).children('td').eq(colIndex).text().trim();
+                let valB = $(b).children('td').eq(colIndex).text().trim();
 
-                    affiliateId =
-                        payload.nameid ||
-                        payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] ||
-                        payload.sub ||
-                        0;
+                let numA = parseFloat(valA);
+                let numB = parseFloat(valB);
+
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return asc ? numA - numB : numB - numA;
                 }
-                catch (error) {
-                    console.error("Unable to read user ID from token:", error);
-                    alert("Unable to identify logged-in user.");
-                    return;
+                return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            });
+
+            $('#modalTable tbody').empty().append($rows);
+        }
+
+         window.renderTableRows=function(data) {
+            const keys = Object.keys(data[0]);
+            let tbody = '';
+
+            data.forEach(row => {
+                tbody += '<tr>';
+                keys.forEach(key => {
+                    let value = row[key];
+                    if (value === null || value === undefined || value === '') value = '-';
+                    tbody += `<td>${escapeHtml(value)}</td>`;
+                });
+
+                if (currentType === 'total-schools') {
+                    let instId = row.instituteId || row.InstituteID || row.id || row.ID || row.instituteID||0;
+                    tbody += `<td>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportSingleInstituteReport(${instId}, this)">
+                                        <i class="bi bi-file-earmark-excel me-1"></i> Export
+                                    </button>
+                                  </td>`;
                 }
+                tbody += '</tr>';
+            });
 
-                if (!affiliateId || affiliateId === "0") {
-                    alert("Logged-in user ID not found.");
-                    return;
-                }
+            $('#modalTable tbody').html(tbody);
+        }
 
-                var filterVal = "A";
+         window.renderPagination=function (page, totalP, totalRec) {
+            let startEntry = ((page - 1) * parseInt($('#modalPageSize').val())) + 1;
+            let endEntry = Math.min(page * parseInt($('#modalPageSize').val()), totalRec);
 
-                $.ajax({
-                    type: "GET",
-                    url: `/api/Report/affiliate-active-students?AffiliateID=${encodeURIComponent(affiliateId)}&filter=${encodeURIComponent(filterVal)}`,
+            $('#modalSubtitle').text(`${totalRec} total records`);
+            $('#paginationInfo').text(`Showing ${startEntry} to ${endEntry} of ${totalRec} entries`);
 
-                    headers: {
-                        "Authorization": "Bearer " + token
-                    },
+            let paginationHtml = '';
 
-                    xhrFields: {
-                        responseType: "blob"
-                    },
+            // Previous Button
+            paginationHtml += `<li class="page-item ${page === 1 ? 'disabled' : ''}">
+                                        <a class="page-link" href="#" onclick="changePage(${page - 1})">Prev</a>
+                                   </li>`;
 
-                    beforeSend: function() {
+            // Page Number Windows
+            let maxVisiblePages = 5;
+            let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalP, startPage + maxVisiblePages - 1);
 
-                        showGlobalLoader("Generating Active Students Report...");
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
 
-                        $card.prop("disabled", true);
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `<li class="page-item ${i === page ? 'active' : ''}">
+                                            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                                       </li>`;
+            }
 
-                        $card.html(
-                            '<span class="spinner-border spinner-border-sm me-1" role="status"></span>' +
-                            'Generating...'
-                        );
-                    },
+            // Next Button
+            paginationHtml += `<li class="page-item ${page === totalP ? 'disabled' : ''}">
+                                        <a class="page-link" href="#" onclick="changePage(${page + 1})">Next</a>
+                                   </li>`;
 
-                    success: function(data, status, xhr) {
+            $('#modalPagination').html(paginationHtml);
+        }
 
-                        var blob = new Blob(
+         window.changePage=function (targetPage) {
+            if (targetPage < 1 || targetPage > totalPages) return;
+            currentPage = targetPage;
+            showModalLoader();
+            loadModalDataPaged();
+        }
+
+        // Debounced Server-Side Search Input
+        $('#modalTableSearch').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPage = 1;
+                showModalLoader();
+                loadModalDataPaged();
+            }, 400); // 400ms delay to prevent excessive queries while typing
+        });
+
+        $('#btnClearSearch').on('click', function() {
+            $('#modalTableSearch').val('');
+            currentPage = 1;
+            showModalLoader();
+            loadModalDataPaged();
+        });
+
+        $('#modalPageSize').on('change', function() {
+            currentPage = 1;
+            showModalLoader();
+            loadModalDataPaged();
+        });
+
+        // Server-side full data export handler
+        $('#btnExportModalData').on('click', function() {
+            let searchTerm = $('#modalTableSearch').val().trim();
+            let exportUrl = `/api/admin/export-details-excel?category=${currentCategory}&type=${currentType}&search=${encodeURIComponent(searchTerm)}`;
+
+            showGlobalLoader("Generating Excel Export for Filtered Records...");
+
+            // Trigger file download via temporary anchor
+            var $anchor = $('<a />').attr({
+                'href': exportUrl,
+                'download': `${currentCategory}_${currentType}_Export.xlsx`
+            }).appendTo('body');
+
+            $anchor[0].click();
+            setTimeout(() => {
+                $anchor.remove();
+                hideGlobalLoader();
+            }, 1500);
+        });
+       
+
+    /* ============================================================
+       SINGLE INSTITUTE REPORT
+       ============================================================ */
+
+    window.exportSingleInstituteReport =
+        function (instituteId, buttonElement) {
+
+            if (!instituteId || Number(instituteId) <= 0) {
+
+                alert("Invalid Institute ID.");
+                return;
+            }
+
+            const $button =
+                $(buttonElement);
+
+            const originalHtml =
+                $button.html();
+
+            const token =
+                getAuthToken();
+
+            if (!token) {
+                alert(
+                    "Login session expired. Please login again."
+                );
+                return;
+            }
+
+            $.ajax({
+
+                type: "POST",
+
+                url:
+                    "/api/Report/export-institute-summary",
+
+                data:
+                    JSON.stringify({
+                        instituteIDstr:
+                            String(instituteId)
+                    }),
+
+                contentType:
+                    "application/json; charset=utf-8",
+
+                headers: {
+                    "Authorization":
+                        "Bearer " + token
+                },
+
+                xhrFields: {
+                    responseType: "blob"
+                },
+
+                beforeSend: function () {
+
+                    showGlobalLoader(
+                        "Generating Institute Performance Report..."
+                    );
+
+                    $button
+                        .prop("disabled", true)
+                        .html(`
+                            <span
+                                class="spinner-border spinner-border-sm me-1"
+                                role="status">
+                            </span>
+                            Exporting...
+                        `);
+                },
+
+                success: function (data) {
+
+                    const blob =
+                        new Blob(
                             [data],
                             {
-                                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                type:
+                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             }
                         );
 
-                        var url = window.URL.createObjectURL(blob);
+                    const url =
+                        window.URL.createObjectURL(blob);
 
-                        var $anchor = $("<a />")
+                    const anchor =
+                        $("<a />")
                             .attr({
                                 href: url,
-                                download: "ActiveStudentsReport.xlsx"
+                                download:
+                                    `Institute_${instituteId}_PerformanceReport.xlsx`
                             })
                             .appendTo("body");
 
-                        $anchor[0].click();
+                    anchor[0].click();
 
-                        setTimeout(function() {
-                            window.URL.revokeObjectURL(url);
-                            $anchor.remove();
-                        }, 100);
-                    },
+                    setTimeout(function () {
 
-                    error: function(xhr, status, error) {
+                        window.URL.revokeObjectURL(url);
+                        anchor.remove();
 
-                        console.error("Active Students Export Error:", xhr);
+                    }, 100);
+                },
 
-                        alert(
-                            "Error downloading active students report: " +
-                            (error || "Unknown error")
-                        );
-                    },
+                error: function (xhr, status, error) {
 
-                    complete: function() {
+                    console.error(
+                        "Institute report export error:",
+                        xhr.responseText || error
+                    );
 
-                        hideGlobalLoader();
+                    alert(
+                        "Error downloading institute report."
+                    );
+                },
 
-                        $card.prop("disabled", false);
+                complete: function () {
 
-                        $card.html(originalHtml);
-                    }
-                });
+                    hideGlobalLoader();
+
+                    $button
+                        .prop("disabled", false)
+                        .html(originalHtml);
+                }
             });
-    </script>
+        };
+
+
+    /* ============================================================
+       ACTIVE STUDENTS EXPORT
+       ============================================================ */
+
+    function getAffiliateIdFromToken() {
+
+        const token =
+            getAuthToken();
+
+        if (!token) {
+            return 0;
+        }
+
+        try {
+
+            const parts =
+                token.split(".");
+
+            if (parts.length < 2) {
+                return 0;
+            }
+
+            const base64 =
+                parts[1]
+                    .replace(/-/g, "+")
+                    .replace(/_/g, "/");
+
+            const payload =
+                JSON.parse(atob(base64));
+
+            return (
+                payload.nameid ||
+                payload[
+                    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+                ] ||
+                payload.sub ||
+                0
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Unable to read affiliate ID:",
+                error
+            );
+
+            return 0;
+        }
+    }
+
+
+   function exportActiveStudentsReport(
+    filterVal,
+    reportTitle,
+    $button
+) {
+    const affiliateId = '@affiliateId';
+    const token = getAuthToken();
+
+    // Validate Affiliate/User ID
+    if (!affiliateId || affiliateId === "0") {
+        alert("Logged-in user ID not found.");
+        return;
+    }
+
+    // Validate token
+    if (!token) {
+        alert("Login session expired. Please login again.");
+        return;
+    }
+
+    // Default filter
+    filterVal = filterVal || "A";
+
+    // Save original button HTML
+    const originalHtml = $button.html();
+
+    $.ajax({
+        type: "GET",
+
+        url:
+            `/api/Report/affiliate-active-students` +
+            `?AffiliateID=${encodeURIComponent(affiliateId)}` +
+            `&filter=${encodeURIComponent(filterVal)}`,
+
+        headers: {
+            "Authorization": "Bearer " + token
+        },
+
+        xhrFields: {
+            responseType: "blob"
+        },
+
+        beforeSend: function () {
+
+            showGlobalLoader(
+                `Generating ${reportTitle || "Active Students"} Report...`
+            );
+
+            $button
+                .prop("disabled", true)
+                .addClass("disabled")
+                .html(`
+                    <span
+                        class="spinner-border spinner-border-sm me-1"
+                        role="status"
+                        aria-hidden="true">
+                    </span>
+                    Generating...
+                `);
+        },
+
+        success: function (data) {
+
+            const blob = new Blob(
+                [data],
+                {
+                    type:
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                }
+            );
+
+            const url =
+                window.URL.createObjectURL(blob);
+
+            const filename =
+                filterVal === "F"
+                    ? "FocusedActiveStudentsReport.xlsx"
+                    : "ActiveStudentsReport.xlsx";
+
+            const $anchor = $("<a />")
+                .attr({
+                    href: url,
+                    download: filename
+                })
+                .appendTo("body");
+
+            $anchor[0].click();
+
+            setTimeout(function () {
+
+                window.URL.revokeObjectURL(url);
+                $anchor.remove();
+
+            }, 100);
+        },
+
+        error: function (xhr, status, error) {
+
+            console.error(
+                "Active Students Report Error:",
+                xhr.responseText || error
+            );
+
+            alert(
+                "Error downloading active students report."
+            );
+        },
+
+        complete: function () {
+
+            hideGlobalLoader();
+
+            $button
+                .prop("disabled", false)
+                .removeClass("disabled")
+                .html(originalHtml);
+        }
+    });
+}
+
+    /* ============================================================
+       CREATIVITY REPORT
+       ============================================================ */
+
+    function exportCreativityReport(
+        filterVal,
+        reportTitle,
+        $button
+    ) {
+
+        const token =
+            getAuthToken();
+
+        if (!token) {
+            alert(
+                "Login session expired. Please login again."
+            );
+            return;
+        }
+
+       const affiliateId = '@affiliateId';
+
+        if (!affiliateId || affiliateId === "0") {
+
+            alert(
+                "Logged-in user ID not found."
+            );
+
+            return;
+        }
+
+        const originalHtml =
+            $button.html();
+
+        $.ajax({
+
+            type: "GET",
+
+            url:
+                `/api/Report/creativity-combined-report` +
+                `?AffiliateID=${encodeURIComponent(affiliateId)}` +
+                `&filter=${encodeURIComponent(filterVal)}`,
+
+            headers: {
+                "Authorization":
+                    "Bearer " + token
+            },
+
+            xhrFields: {
+                responseType: "blob"
+            },
+
+            beforeSend: function () {
+
+                showGlobalLoader(
+                    `Generating ${reportTitle} Report...`
+                );
+
+                $button
+                    .prop("disabled", true)
+                    .html(`
+                        <span
+                            class="spinner-border spinner-border-sm me-1"
+                            role="status">
+                        </span>
+                        Generating...
+                    `);
+            },
+
+            success: function (data) {
+
+                const blob =
+                    new Blob(
+                        [data],
+                        {
+                            type:
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        }
+                    );
+
+                const url =
+                    window.URL.createObjectURL(blob);
+
+                const filename =
+                    `AffiliateSchoolCreativityCombinedReport_` +
+                    `${filterVal === "F" ? "Focused" : "All"}.xlsx`;
+
+                const anchor =
+                    $("<a />")
+                        .attr({
+                            href: url,
+                            download: filename
+                        })
+                        .appendTo("body");
+
+                anchor[0].click();
+
+                setTimeout(function () {
+
+                    window.URL.revokeObjectURL(url);
+                    anchor.remove();
+
+                }, 100);
+            },
+
+            error: function (xhr, status, error) {
+
+                console.error(
+                    reportTitle + " export error:",
+                    xhr.responseText || error
+                );
+
+                alert(
+                    "Error downloading report."
+                );
+            },
+
+            complete: function () {
+
+                hideGlobalLoader();
+
+                $button
+                    .prop("disabled", false)
+                    .html(originalHtml);
+            }
+        });
+    }
+
+
+    /* ============================================================
+       PBL REPORT
+       ============================================================ */
+
+    function exportPblReport(
+        apiEndpoint,
+        filterVal,
+        reportTitle,
+        $button
+    ) {
+
+        const token =
+            getAuthToken();
+
+        if (!token) {
+            alert(
+                "Login session expired. Please login again."
+            );
+            return;
+        }
+
+       const affiliateId = '@affiliateId';
+
+        if (!affiliateId || affiliateId === "0") {
+
+            alert(
+                "Logged-in user ID not found."
+            );
+
+            return;
+        }
+
+        const originalHtml =
+            $button.html();
+
+        $.ajax({
+
+            type: "GET",
+
+            url:
+                `${apiEndpoint}` +
+                `?AffiliateID=${encodeURIComponent(affiliateId)}` +
+                `&filter=${encodeURIComponent(filterVal)}`,
+
+            headers: {
+                "Authorization":
+                    "Bearer " + token
+            },
+
+            xhrFields: {
+                responseType: "blob"
+            },
+
+            beforeSend: function () {
+
+                showGlobalLoader(
+                    `Generating ${reportTitle} Report...`
+                );
+
+                $button
+                    .prop("disabled", true)
+                    .html(`
+                        <span
+                            class="spinner-border spinner-border-sm me-1"
+                            role="status">
+                        </span>
+                        Generating...
+                    `);
+            },
+
+            success: function (data) {
+
+                const blob =
+                    new Blob(
+                        [data],
+                        {
+                            type:
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        }
+                    );
+
+                const url =
+                    window.URL.createObjectURL(blob);
+
+                const filename =
+                    `${reportTitle.replace(/\s+/g, "")}_` +
+                    `${filterVal === "F" ? "Focused" : "All"}.xlsx`;
+
+                const anchor =
+                    $("<a />")
+                        .attr({
+                            href: url,
+                            download: filename
+                        })
+                        .appendTo("body");
+
+                anchor[0].click();
+
+                setTimeout(function () {
+
+                    window.URL.revokeObjectURL(url);
+                    anchor.remove();
+
+                }, 100);
+            },
+
+            error: function (xhr, status, error) {
+
+                console.error(
+                    reportTitle + " export error:",
+                    xhr.responseText || error
+                );
+
+                alert(
+                    "Error downloading report."
+                );
+            },
+
+            complete: function () {
+
+                hideGlobalLoader();
+
+                $button
+                    .prop("disabled", false)
+                    .html(originalHtml);
+            }
+        });
+    }
+
+
+    /* ============================================================
+       BUTTON EVENTS
+       ============================================================ */
+
+    $(document).ready(function () {
+
+        /* Associated Schools */
+        $("#btnOpenassociatedSchools")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                //openAssociatedSchoolsModal();
+            });
+
+
+        /* Assigned Schools - compatibility */
+        $("#btnOpenAssignedSchools")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                openAssignedSchoolsModal();
+            });
+
+
+        /* Active Students */
+        $("#btn_ExportAdminStudentsReport")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                exportActiveStudentsReport(
+                    "A",
+                    "Active Students",
+                    $(this)
+                );
+            });
+
+
+        /* Focused Active Students - only if button exists */
+        $("#btn_ExportAdminFocusedStudentsReport")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                exportActiveStudentsReport(
+                    "F",
+                    "Focused Active Students",
+                    $(this)
+                );
+            });
+
+
+        /* SEL */
+        $("#btn_ExportPerfSelSubmissions")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                exportCreativityReport(
+                    "A",
+                    "Performance SEL Submissions",
+                    $(this)
+                );
+            });
+
+
+        /* Group Project */
+        $("#btnOpenGroupPbl")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                exportCreativityReport(
+                    "A",
+                    "Performance Group Projects",
+                    $(this)
+                );
+            });
+
+
+        $("#btn_ExportPerfGroupProjects")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                exportCreativityReport(
+                    "A",
+                    "Performance Group Projects",
+                    $(this)
+                );
+            });
+
+
+        /* Family Project */
+        $("#btn_ExportPerfFamilyPbl")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                exportPblReport(
+                    "/api/Report/affiliate-individual-project",
+                    "A",
+                    "Performance Family PBL",
+                    $(this)
+                );
+            });
+
+
+        /* Individual Project */
+        $("#btn_ExportPerfIndividualPbl")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                exportPblReport(
+                    "/api/Report/affiliate-teacher-individual-project",
+                    "A",
+                    "Performance Individual PBL",
+                    $(this)
+                );
+            });
+
+
+        /* Optional Focused buttons */
+        $("#btn_ExportFocusedSelSubmissions")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                exportCreativityReport(
+                    "F",
+                    "Focused SEL Submissions",
+                    $(this)
+                );
+            });
+
+
+        $("#btn_ExportFocusedGroupProjects")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                exportCreativityReport(
+                    "F",
+                    "Focused Group Projects",
+                    $(this)
+                );
+            });
+
+
+        $("#btn_ExportFocusedFamilyPbl")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                exportPblReport(
+                    "/api/Report/affiliate-individual-project",
+                    "F",
+                    "Focused Family PBL",
+                    $(this)
+                );
+            });
+
+
+        $("#btn_ExportFocusedIndividualPbl")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                exportPblReport(
+                    "/api/Report/affiliate-teacher-individual-project",
+                    "F",
+                    "Focused Individual PBL",
+                    $(this)
+                );
+            });
+
+
+        /* Associated Schools Excel */
+        $("#btnExportAssociatedSchools")
+            .off("click.dashboard")
+            .on("click.dashboard", function (e) {
+
+                e.preventDefault();
+
+                exportAssociatedSchoolsExcel(
+                    $(this)
+                );
+            });
+
+
+        /* Initial dashboard data */
+        loadSummaryCounts();
+        //loadVolunteerAssignedSchoolCount();
+    });
+
+
+    /* ============================================================
+       ASSOCIATED SCHOOLS EXCEL EXPORT
+       ============================================================ */
+
+    function exportAssociatedSchoolsExcel($button) {
+
+        const token =
+            getAuthToken();
+
+        if (!token) {
+
+            alert(
+                "Login session expired. Please login again."
+            );
+
+            return;
+        }
+
+        const originalHtml =
+            $button.html();
+
+        $.ajax({
+
+            type: "GET",
+
+            url:
+                "/api/affiliate-dashboard/export-associated-schools",
+
+            headers: {
+                "Authorization":
+                    "Bearer " + token
+            },
+
+            xhrFields: {
+                responseType: "blob"
+            },
+
+            beforeSend: function () {
+
+                showGlobalLoader(
+                    "Generating Associated Schools Report..."
+                );
+
+                $button
+                    .prop("disabled", true)
+                    .html(`
+                        <span
+                            class="spinner-border spinner-border-sm me-1">
+                        </span>
+                        Exporting...
+                    `);
+            },
+
+            success: function (data, status, xhr) {
+
+                const blob =
+                    new Blob(
+                        [data],
+                        {
+                            type:
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        }
+                    );
+
+                const url =
+                    window.URL.createObjectURL(blob);
+
+                let filename =
+                    "AssociatedSchoolsReport.xlsx";
+
+                const disposition =
+                    xhr.getResponseHeader(
+                        "Content-Disposition"
+                    );
+
+                if (disposition) {
+
+                    const match =
+                        disposition.match(
+                            /filename\*?=(?:UTF-8''|")?([^;"']+)/i
+                        );
+
+                    if (match && match[1]) {
+                        filename =
+                            decodeURIComponent(
+                                match[1]
+                                    .replace(/"/g, "")
+                            );
+                    }
+                }
+
+                const anchor =
+                    $("<a />")
+                        .attr({
+                            href: url,
+                            download: filename
+                        })
+                        .appendTo("body");
+
+                anchor[0].click();
+
+                setTimeout(function () {
+
+                    window.URL.revokeObjectURL(url);
+                    anchor.remove();
+
+                }, 100);
+            },
+
+            error: function (xhr, status, error) {
+
+                console.error(
+                    "Associated schools export error:",
+                    xhr.responseText || error
+                );
+
+                alert(
+                    "Error downloading associated schools report."
+                );
+            },
+
+            complete: function () {
+
+                hideGlobalLoader();
+
+                $button
+                    .prop("disabled", false)
+                    .html(originalHtml);
+            }
+        });
+    }
+
+})();
+</script>
+
+
+<!-- =============================================================
+     SMALL CSS FIXES
+     ============================================================= -->
+
+<style>
+
+    .disabled-card {
+        pointer-events: none;
+        opacity: 0.75;
+    }
+
+    #genericDetailModal .modal-dialog {
+        max-width: 96vw;
+    }
+
+    #genericDetailModal .modal-body {
+        overflow: hidden;
+    }
+
+    #genericDetailModal .table-responsive {
+        overflow-x: auto !important;
+    }
+
+    #genericTableHead th {
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: #f8f9fa !important;
+    }
+
+    #genericTableBody td {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    #associatedSchoolsDetailsTable th,
+    #associatedSchoolsDetailsTable td {
+        vertical-align: middle;
+    }
+
+    #associatedSchoolsDetailsTable td:nth-child(9) {
+        min-width: 230px;
+    }
+
+    #associatedSchoolsDetailsTable td:nth-child(10),
+    #associatedSchoolsDetailsTable td:nth-child(11) {
+        min-width: 220px;
+        max-width: 320px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    #associatedSchoolsDetailsTable th:nth-child(n+17),
+    #associatedSchoolsDetailsTable td:nth-child(n+17) {
+        min-width: 135px;
+        text-align: center;
+    }
+
+    #associatedSchoolsDetailsTable thead th {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background-color: #f8f9fa !important;
+        color: #495057;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        padding: 12px 10px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    #associatedSchoolsDetailsTable tbody td {
+        font-size: 13px;
+        padding: 10px;
+        white-space: nowrap;
+    }
+
+</style>
