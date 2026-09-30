@@ -559,13 +559,11 @@
                             else $('#modalAddVolunteer').modal('hide');
                             loadSchoolHubData();
                         } else {
-                            // Re-enable button if server returned a logical failure
                             $submitBtn.prop('disabled', false);
                             $submitBtn.html(originalBtnText);
                         }
                     },
                     error: function(xhr) {
-                        // Re-enable button on error so the user can try again
                         $submitBtn.prop('disabled', false);
                         $submitBtn.html(originalBtnText);
                         alert(xhr.responseJSON?.message || "Registration failed.");

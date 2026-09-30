@@ -1058,7 +1058,7 @@ namespace HemFoundation.Controllers
                    COALESCE(s.firstname, '') || ' ' || COALESCE(s.lastname, '') AS ""FullName"", 
                    s.institutename AS ""InstituteName"", 
                    standard 
-            FROM view_wj_students_details_info s 
+            FROM hf_view_studentsdetails s 
             WHERE s.studentID = @StudentID";
                 using (var cmd = new Npgsql.NpgsqlCommand(studentSql, conn))
                 {

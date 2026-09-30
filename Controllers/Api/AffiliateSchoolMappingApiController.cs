@@ -31,7 +31,7 @@ namespace HemFoundation.Controllers.Api
         {
             var list = await _context.View_HF_Affiliate
                 .AsNoTracking()
-                .Where(x => x.SchoolCount >= 5)
+                //.Where(x => x.SchoolCount >= 5)   
                 .Select(x => new
                 {
                     id = x.InstituteID,

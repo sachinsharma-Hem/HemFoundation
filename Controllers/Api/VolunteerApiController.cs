@@ -761,10 +761,35 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("admin/filters-data")]
         public async Task<IActionResult> GetAdminFiltersData()
         {
-            var affs = await _context.Users.Select(a => new { a.UserID, a.UserCode, Name = a.FirstName + " " + a.LastName }).ToListAsync();
-            var schools = await _context.WJ_Institutes.Where(i => i.IsActive).Select(i => new { i.InstituteID, i.Name, i.ReferralCode }).ToListAsync();
+            var affiliates = await _context.View_HF_Affiliate
+                .AsNoTracking()
+                .Select(x => new
+                {
+                    id = x.InstituteID,
+                    name = ((x.FirstName ?? "") + " " + (x.LastName ?? "")).Trim(),
+                    referralCode = x.ReferralCode
+                })
+                .Distinct()
+                .OrderBy(x => x.name)
+                .ToListAsync();
 
-            return Ok(new { success = true, affiliates = affs, schools = schools });
+            var schools = await _context.WJ_Institutes
+                .AsNoTracking()
+                .Where(x => x.IsActive)
+                .Select(x => new
+                {
+                    id = x.InstituteID,
+                    name = x.Name,
+                    referralCode = x.ReferralCode
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                success = true,
+                affiliates = affiliates,
+                schools = schools
+            });
         }
 
         [HttpGet("admin/list")]
