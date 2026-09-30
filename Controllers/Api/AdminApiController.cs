@@ -9,6 +9,7 @@ using Humanizer.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml.Interfaces.SensitivityLabels;
 using System.Configuration;
@@ -1253,7 +1254,7 @@ namespace HemFoundation.Controllers.Api
         }
 
         [HttpGet("overall-details-paged")]
-        public async Task<IActionResult> GetOverallDetailsPaged(string category, string type, int page = 1, int pageSize = 100, string search = "")
+        public async Task<IActionResult> GetOverallDetailsPaged(string category, string type, int page = 1, int pageSize = 100, string search = "",int affiliateid=0)
         {
             try
             {
@@ -1263,7 +1264,57 @@ namespace HemFoundation.Controllers.Api
                 pageSize = pageSize <= 0 ? 100 : pageSize;
                 search = search?.Trim() ?? "";
 
-                List<int?> instituteIds = await GetInstituteIdsForCategoryAsync(category);
+                List<int?> instituteIds = new List<int?>();
+
+                string role = HttpContext.Session.GetString("UserRole") ?? "";
+               
+
+                if (affiliateid != 0)
+                {
+                    instituteIds =
+                        await GetInstituteIdsForCategoryAsyncwithaffiliateid(
+                            category,
+                            affiliateid,
+                            role
+                        );
+                }
+                else if (
+                    role == "WJ_Admin" ||
+                    role == "Admin" ||
+                    role == "Management"
+                )
+                {
+                    instituteIds =
+                        await GetInstituteIdsForCategoryAsync(category);
+                }
+                else if (
+                    role == "WJ_Affiliate" ||
+                    role == "HF_Volunteers"
+                )
+                {
+                    Int32 userId =
+                        HttpContext.Session.GetInt32("UserID") ?? "0";
+
+                    instituteIds =
+                        await GetInstituteIdsForCategoryAsyncwithaffiliateid(
+                            category,
+                            userId,
+                            role
+                        );
+                }
+                else
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new List<object>(),
+                        totalRecords = 0,
+                        totalPages = 0,
+                        page = page,
+                        message = "Unauthorised User"
+                    });
+                }
+
                 if (!instituteIds.Any())
                 {
                     return Ok(new { success = true, data = new List<object>(), totalRecords = 0, totalPages = 0, page });
@@ -1539,6 +1590,73 @@ namespace HemFoundation.Controllers.Api
 
             return dataTable;
         }
+        private async Task<List<int?>> GetInstituteIdsForCategoryAsyncwithaffiliateid(string category,Int32 userid,string role)
+        {
+            if (
+                    role == "WJ_Affiliate" 
+                )
+            {
 
+
+                if (category == "performance")
+                {
+                    var referralCodes = await _context.WJ_ReferralCodes
+                        .AsNoTracking()
+                        .Where(x => x.UserID==userid)
+                        .Select(x => x.ReferralCode)
+                        .Distinct()
+                        .ToListAsync();
+
+                    return await _context.SchoolProfileDetails
+                        .AsNoTracking()
+                        .Where(x => x.referralcode != null && referralCodes.Contains(x.referralcode))
+                        .Select(x => (int?)x.instituteid)
+                        .Distinct()
+                        .ToListAsync();
+                }
+                else if (category == "focused")
+                {
+                    return await _context.HfTblAffliateFocusedLists
+                        .AsNoTracking()
+                        .Where(x => x.InstituteId != null)
+                        .Select(x => (int?)x.InstituteId)
+                        .Distinct()
+                        .ToListAsync();
+                }
+            }
+            else
+            {
+                if (category == "performance")
+                {
+                    var referralCodes = await _context.WJ_ReferralCodes
+                        .AsNoTracking()
+                        .Where(x => x.ReferralCode != null && x.ReferralCode != "")
+                        .Select(x => x.ReferralCode)
+                        .Distinct()
+                        .ToListAsync();
+
+                    return await _context.SchoolProfileDetails
+                        .AsNoTracking()
+                        // .Where(x => x.referralcode != null && referralCodes.Contains(x.referralcode))
+                        .Select(x => (int?)x.instituteid)
+                        .Distinct()
+                        .ToListAsync();
+                }
+                else if (category == "focused")
+                {
+                    return await _context.HfTblAffliateFocusedLists
+                        .AsNoTracking()
+                        .Where(x => x.InstituteId != null)
+                        .Select(x => (int?)x.InstituteId)
+                        .Distinct()
+                        .ToListAsync();
+                }
+
+            }
+
+
+               
+            return new List<int?>();
+        }
     }
 }

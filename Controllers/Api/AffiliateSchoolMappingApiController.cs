@@ -86,7 +86,6 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
-        // 3. Assign / Transfer / Remove Bulk Schools
         [HttpPost("assign-schools")]
         public async Task<IActionResult> AssignSchools([FromBody] AssignSchoolsModel model)
         {

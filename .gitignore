@@ -66,3 +66,4 @@ nunit-*.xml
 **/chrome-headless-shell/
 Properties/launchSettings.json
 Properties/launchSettings.json
+Properties/launchSettings.json
