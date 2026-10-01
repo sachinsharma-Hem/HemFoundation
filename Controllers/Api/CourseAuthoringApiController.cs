@@ -254,6 +254,7 @@ namespace HemFoundation.Controllers
                 if (hasSubTopics) return BadRequest(new { success = false, message = "This topic has sub-topics. Please remove or deactivate them first." });
 
                 topic.IsActive = "0";
+                topic.ModifiedDate = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
                 return Ok(new { success = true, message = "Topic deleted successfully." });
