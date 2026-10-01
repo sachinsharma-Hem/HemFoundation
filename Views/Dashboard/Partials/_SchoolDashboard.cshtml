@@ -226,18 +226,13 @@
     var finalLetterUrl = string.IsNullOrEmpty(rawUrl) ? "#" : 
                          (rawUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) || rawUrl.StartsWith("//") 
                              ? rawUrl 
-                             : "https://www.hemvirtues.com" + (rawUrl.StartsWith("/") ? "" : "/") + rawUrl);
+                                                 : "https://hv.hemafoundation.org:96" + (rawUrl.StartsWith("/") ? "" : "/") + rawUrl);
 }
 
 <a href="@finalLetterUrl" target="_blank" class="btn btn-light btn-sm rounded-pill px-4 fw-bold text-success border-0">
     <i class="bi bi-eye-fill me-1"></i> View Letter
 </a>
-                 @*    <a href="@ViewBag.PartnershipLetterPath" target="_blank" class="btn btn-light btn-sm rounded-pill px-4 fw-bold text-success border-0">
-                        <i class="bi bi-eye-fill me-1"></i> View Letter
-                    </a> *@
-                   @*  <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#uploadLetterModal">
-                        <i class="bi bi-arrow-repeat me-1"></i> Re-upload
-                    </button> *@
+                
                 </div>
             </div>
         </div>
@@ -311,7 +306,7 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <!-- LINK UPDATED -->
-                <a href="/Registration/Index?tab=bulk" class="card border border-info shadow-none rounded-4 p-3 text-decoration-none bg-white h-100 transition-hover d-flex flex-row align-items-center justify-content-between">
+                <a href="/Registration/Index?tab=bulk&type=Student" class="card border border-info shadow-none rounded-4 p-3 text-decoration-none bg-white h-100 transition-hover d-flex flex-row align-items-center justify-content-between">
                     <div class="d-flex align-items-center gap-3">
                         <div class="bg-info-subtle text-info p-3 rounded-3 fs-4"><i class="bi bi-file-earmark-spreadsheet-fill"></i></div>
                         <div>
@@ -324,7 +319,7 @@
             </div>
             <div class="col-md-6">
                 <!-- LINK UPDATED -->
-                <a href="/Registration/Index?tab=bulk" class="card border shadow-none rounded-4 p-3 text-decoration-none bg-white h-100 transition-hover d-flex flex-row align-items-center justify-content-between" style="border-color: #6f42c1 !important;">
+                <a href="/Registration/Index?tab=bulk&type=Teacher" class="card border shadow-none rounded-4 p-3 text-decoration-none bg-white h-100 transition-hover d-flex flex-row align-items-center justify-content-between" style="border-color: #6f42c1 !important;">
                     <div class="d-flex align-items-center gap-3">
                         <div class="p-3 rounded-3 fs-4" style="background-color: #f3e8ff; color: #6f42c1;"><i class="bi bi-file-earmark-spreadsheet-fill"></i></div>
                         <div>
@@ -350,7 +345,6 @@
                     <form id="frmUploadLetter">
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Select Document <span class="text-danger">*</span></label>
-                            <!-- Removed accept=".pdf" to allow all file types -->
                             <input type="file" id="letterFileInput" class="form-control rounded-3 shadow-none" required>
                             <small class="text-muted">You can upload PDF, images, Word documents, or any standard file format.</small>
                         </div>

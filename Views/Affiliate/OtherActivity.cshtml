@@ -293,7 +293,6 @@
             const token = getAuthToken();
             const headers = { "Authorization": "Bearer " + token };
             
-            // FormData ke liye Content-Type explicitly set nahi karte taaki browser boundary set kar sake
             if (!(options.body instanceof FormData)) {
                 headers["Content-Type"] = "application/json";
             }

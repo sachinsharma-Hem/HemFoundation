@@ -3,6 +3,7 @@ using HemFoundation.DTOs;
 using HemFoundation.Models;
 using HemFoundation.Models.DTOs;
 using HemFoundation.Models.Entities;
+using HemFoundation.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -14,11 +15,17 @@ namespace HemFoundation.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
-
-        public DashboardController(ApplicationDbContext context, IWebHostEnvironment env)
+        private readonly IFileStorageService _fileStorage;
+        private readonly IConfiguration _configuration;
+        public DashboardController(
+            ApplicationDbContext context,
+            IWebHostEnvironment env,
+            IFileStorageService fileStorage, IConfiguration configuration)
         {
             _context = context;
-             _env = env;
+            _env = env;
+            _fileStorage = fileStorage;
+            _configuration = configuration;
         }
 
         [HttpGet("{portal}/Dashboard")]
@@ -384,19 +391,45 @@ namespace HemFoundation.Controllers
         }
 
         [HttpGet("Dashboard/DownloadSampleLetter")]
-        public IActionResult DownloadSampleLetter()
+        public async Task<IActionResult> DownloadSampleLetter()
         {
-            var filePath = Path.Combine(_env.WebRootPath, "images", "Partnership_Letter.pdf");
-
-            if (!System.IO.File.Exists(filePath))
+            try
             {
-                return NotFound("Sample partnership letter not found on server.");
-            }
+                string filePath =
+                    _configuration["FileSettings:SamplePartnershipLetterPath"];
 
-            var mimeType = "application/pdf";
-            return PhysicalFile(filePath, mimeType, "Partnership_Letter.pdf");
+                if (string.IsNullOrWhiteSpace(filePath))
+                {
+                    return NotFound(
+                        "Sample partnership letter path is not configured."
+                    );
+                }
+
+                var file = await _fileStorage.DownloadAsync(filePath);
+
+                if (file == null || file.FileBytes == null || file.FileBytes.Length == 0)
+                {
+                    return NotFound(
+                        "Sample partnership letter not found on central file server."
+                    );
+                }
+
+                return File(
+                    file.FileBytes,
+                    "application/pdf",
+                    "Partnership_Letter.pdf"
+                );
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.InnerException?.Message ?? ex.Message
+                });
+            }
         }
 
-       
+
     }
 }
