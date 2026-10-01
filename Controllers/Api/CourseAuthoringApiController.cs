@@ -1,190 +1,539 @@
-﻿using HemFoundation.Data;
+﻿using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Wordprocessing;
+using HemFoundation.Data;
 using HemFoundation.Models.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
-namespace HemFoundation.Controllers.Api
+namespace HemFoundation.Controllers
 {
-    [Route("api/course-authoring")]
     [ApiController]
-    public class CourseAuthoringApiController : ControllerBase
+    [Route("api/course-authoring")]
+    public class CourseAuthoringController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IWebHostEnvironment _environment;
+        private readonly IConfiguration _configuration;
 
-        public CourseAuthoringApiController(ApplicationDbContext context, IWebHostEnvironment env)
+        public CourseAuthoringController(
+            ApplicationDbContext context,
+            IWebHostEnvironment environment,
+            IConfiguration configuration)
         {
             _context = context;
-            _env = env;
+            _environment = environment;
+            _configuration = configuration;
         }
 
-        [HttpGet("search-courses")]
-        public async Task<IActionResult> SearchCourses([FromQuery] string query)
-        {
-            var q = query?.ToLower() ?? "";
-            var courses = await _context.CourseRegistrations
-                .Where(x => !x.IsDeleted && x.IsActive && x.CourseName.ToLower().Contains(q))
-                .Take(10)
-                .Select(x => new { x.Id, x.CourseName, x.CreatedDate, x.ExpectedDeliveryDate, x.Description, x.FromAge, x.ToAge, x.NumberOfSessions })
-                .ToListAsync();
-            return Ok(new { success = true, data = courses });
-        }
-
+        // ============================================================
+        // COURSE DROPDOWNS
+        // ============================================================
         [HttpGet("dropdowns/{courseId}")]
         public async Task<IActionResult> GetCourseDropdowns(int courseId)
         {
-            return Ok(new
+            try
             {
-                success = true,
-                orderNumbers = await _context.CourseOrderNumbers.Where(x => !x.IsDeleted && x.IsActive).OrderBy(x => x.DisplayOrder).ToListAsync(),
-                topics = await _context.CourseTopics.Where(x => !x.IsDeleted && x.CourseRegistrationId == courseId).ToListAsync(),
-                subTopics = await _context.CourseSubTopics.Where(x => !x.IsDeleted && x.CourseRegistrationId == courseId).ToListAsync(),
-                mcqLevels = await _context.CourseMcqLevels.Where(x => !x.IsDeleted && x.IsActive).ToListAsync(),
-                standards = await _context.StandardMasters.Where(x => x.IsActive).ToListAsync()
-            });
+                var topics = await _context.Topics
+                    .AsNoTracking()
+                    .Where(x => x.CourseID == courseId && x.ParentTopicID == null && x.IsActive == "1")
+                    .OrderBy(x => x.Order)
+                    .Select(x => new { id = x.TopicID, topicName = x.TopicName })
+                    .ToListAsync();
+
+                var subTopics = await _context.Topics
+                    .AsNoTracking()
+                    .Where(x => x.CourseID == courseId && x.ParentTopicID != null && x.IsActive == "1")
+                    .OrderBy(x => x.Order)
+                    .Select(x => new { id = x.TopicID, subTopicName = x.TopicName, courseTopicId = x.ParentTopicID, orderNo = x.Order })
+                    .ToListAsync();
+
+                var standards = await _context.StandardMasters
+                    .AsNoTracking()
+                    .Where(x => x.IsActive)
+                    .OrderBy(x => x.StandardName)
+                    .Select(x => new { id = x.Id, name = x.StandardName })
+                    .ToListAsync();
+
+                var languages = await _context.Languages
+                    .AsNoTracking()
+                    .OrderBy(x => x.LanguageName)
+                    .Select(x => new { id = x.LanguageID, name = x.LanguageName })
+                    .ToListAsync();
+
+                return Ok(new { success = true, topics, subTopics, standards, languages });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
 
-        // ================= 1. TOPIC ENDPOINTS =================
+        [HttpGet("search-courses")]
+        public async Task<IActionResult> SearchCourses([FromQuery] string? query)
+        {
+            try
+            {
+                query = query?.Trim();
+                if (string.IsNullOrWhiteSpace(query))
+                {
+                    return Ok(new { success = true, data = new List<object>() });
+                }
+
+                var courses = await _context.Courses
+                    .AsNoTracking()
+                    .Where(x => x.CourseName != null && x.CourseName.ToLower().Contains(query.ToLower()))
+                    .OrderBy(x => x.CourseName)
+                    .Take(50)
+                    .Select(x => new { courseID = x.CourseID, courseName = x.CourseName })
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = courses });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        // ============================================================
+        // TOPIC LIST
+        // ============================================================
         [HttpGet("topic/list/{courseId}")]
-        public async Task<IActionResult> GetTopics(int courseId) => Ok(new { success = true, data = await _context.CourseTopics.Where(x => !x.IsDeleted && x.CourseRegistrationId == courseId).ToListAsync() });
+        public async Task<IActionResult> GetTopics(int courseId)
+        {
+            try
+            {
+                var topics = await _context.Topics
+                    .AsNoTracking()
+                    .Where(x => x.CourseID == courseId && x.ParentTopicID == null && x.IsActive == "1")
+                    .OrderBy(x => x.Order)
+                    .ThenBy(x => x.TopicID)
+                    .Select(x => new
+                    {
+                        id = x.TopicID,
+                        topicName = x.TopicName,
+                        description = x.Description,
+                        orderNo = x.Order,
+                        languageID = x.languageID,
+                        trainerResource = x.TrainerResource,
+                        trainerExercise = x.TrainerExercise,
+                        subTopicCount = _context.Topics.Count(st => st.CourseID == courseId && st.ParentTopicID == x.TopicID && st.IsActive == "1")
+                    })
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = topics });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("subtopic/list/{courseId}")]
+        public async Task<IActionResult> GetSubTopics(int courseId)
+        {
+            try
+            {
+                var subTopics = await _context.Topics
+                    .AsNoTracking()
+                    .Where(x => x.CourseID == courseId && x.ParentTopicID != null)
+                    .OrderBy(x => x.Order)
+                    .ThenBy(x => x.TopicID)
+                    .Select(x => new
+                    {
+                        id = x.TopicID,
+                        subTopicName = x.TopicName,
+                        courseTopicId = x.ParentTopicID,
+                        orderNo = x.Order,
+                        description = x.Description,
+                        languageID = x.languageID,
+                        isActive = x.IsActive,
+                        trainerResource = x.TrainerResource,
+                        trainerExercise = x.TrainerExercise,
+                        trainerVideo = x.TrainerVideo,
+                        numberOfQuestions = x.NoOfQuestion
+                    })
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = subTopics });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        // ============================================================
+        // SAVE TOPIC
+        // ============================================================
+        public class SaveTopicRequest
+        {
+            public int Id { get; set; }
+            public int CourseId { get; set; }
+            public string TopicName { get; set; } = string.Empty;
+            public string? Description { get; set; }
+            public int OrderNo { get; set; }
+            public int? LanguageID { get; set; }
+            public IFormFile? ResourceFile { get; set; }
+            public IFormFile? ExerciseFile { get; set; }
+        }
 
         [HttpPost("topic/save")]
-        public async Task<IActionResult> SaveTopic([FromBody] CourseTopic model)
+        [RequestSizeLimit(100 * 1024 * 1024)]
+        public async Task<IActionResult> SaveTopic([FromForm] SaveTopicRequest model)
         {
-            if (model.Id == 0) { model.CreatedDate = DateTime.UtcNow; _context.CourseTopics.Add(model); }
-            else { var item = await _context.CourseTopics.FindAsync(model.Id); if (item == null) return NotFound(); item.TopicName = model.TopicName; item.Description = model.Description; item.DisplayOrderId = model.DisplayOrderId; item.Language = model.Language; item.ModifiedDate = DateTime.UtcNow; }
-            await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "Topic saved successfully!" });
+            try
+            {
+                if (model.CourseId <= 0) return BadRequest(new { success = false, message = "Invalid Course." });
+                if (string.IsNullOrWhiteSpace(model.TopicName)) return BadRequest(new { success = false, message = "Topic name is required." });
+                if (model.OrderNo <= 0) return BadRequest(new { success = false, message = "Order number must be greater than 0." });
+
+                Topics topic;
+                if (model.Id > 0)
+                {
+                    topic = await _context.Topics.FirstOrDefaultAsync(x => x.TopicID == model.Id && x.CourseID == model.CourseId);
+                    if (topic == null) return NotFound(new { success = false, message = "Topic not found." });
+                    topic.ModifiedDate = DateTime.UtcNow;
+                }
+                else
+                {
+                    topic = new Topics { CourseID = model.CourseId, ParentTopicID = null, IsActive = "1", CreatedDate = DateTime.UtcNow };
+                    _context.Topics.Add(topic);
+                }
+
+                topic.TopicName = model.TopicName.Trim();
+                topic.Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim();
+                topic.Order = model.OrderNo;
+                topic.languageID = model.LanguageID;
+
+                if (model.ResourceFile != null && model.ResourceFile.Length > 0)
+                {
+                    topic.TrainerResource = await SaveTopicFileAsync(model.ResourceFile, "resource");
+                }
+
+                if (model.ExerciseFile != null && model.ExerciseFile.Length > 0)
+                {
+                    topic.TrainerExercise = await SaveTopicFileAsync(model.ExerciseFile, "exercise");
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = model.Id > 0 ? "Topic updated successfully." : "Topic created successfully.", id = topic.TopicID });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        private async Task<string> SaveTopicFileAsync(IFormFile file, string type)
+        {
+            var extension = Path.GetExtension(file.FileName);
+            var folder = Path.Combine(_environment.WebRootPath, "uploads", "topics", type);
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+            var uniqueFileName = $"{Guid.NewGuid():N}{extension}";
+            var physicalPath = Path.Combine(folder, uniqueFileName);
+
+            await using var stream = new FileStream(physicalPath, FileMode.Create);
+            await file.CopyToAsync(stream);
+
+            return $"/uploads/topics/{type}/{uniqueFileName}";
         }
 
         [HttpDelete("topic/delete/{id}")]
         public async Task<IActionResult> DeleteTopic(int id)
         {
-            var item = await _context.CourseTopics.FindAsync(id);
-            if (item != null) { item.IsDeleted = true; await _context.SaveChangesAsync(); }
-            return Ok(new { success = true, message = "Deleted successfully!" });
+            try
+            {
+                var topic = await _context.Topics.FirstOrDefaultAsync(x => x.TopicID == id && x.ParentTopicID == null);
+                if (topic == null) return NotFound(new { success = false, message = "Topic not found." });
+
+                var hasSubTopics = await _context.Topics.AnyAsync(x => x.ParentTopicID == id && x.IsActive == "1");
+                if (hasSubTopics) return BadRequest(new { success = false, message = "This topic has sub-topics. Please remove or deactivate them first." });
+
+                topic.IsActive = "0";
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Topic deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
 
-        // ================= 2. SUB-TOPIC ENDPOINTS =================
-        [HttpGet("subtopic/list/{courseId}")]
-        public async Task<IActionResult> GetSubTopics(int courseId) => Ok(new { success = true, data = await _context.CourseSubTopics.Where(x => !x.IsDeleted && x.CourseRegistrationId == courseId).ToListAsync() });
-
-        [HttpPost("subtopic/save")]
-        public async Task<IActionResult> SaveSubTopic([FromForm] int id, [FromForm] int courseRegistrationId, [FromForm] int courseTopicId, [FromForm] string subTopicName, [FromForm] int displayOrderId, [FromForm] string? videoLink, [FromForm] int numberOfQuestions, [FromForm] IFormFile? mcqThumbFile, [FromForm] IFormFile? videoThumbFile)
-        {
-            string mcqThumbUrl = null, videoThumbUrl = null;
-            string uploadDir = Path.Combine(_env.WebRootPath, "uploads", "subtopics");
-            if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
-
-            if (mcqThumbFile != null)
-            {
-                string name = Guid.NewGuid() + "_" + mcqThumbFile.FileName;
-                using (var s = new FileStream(Path.Combine(uploadDir, name), FileMode.Create)) await mcqThumbFile.CopyToAsync(s);
-                mcqThumbUrl = $"/uploads/subtopics/{name}";
-            }
-            if (videoThumbFile != null)
-            {
-                string name = Guid.NewGuid() + "_" + videoThumbFile.FileName;
-                using (var s = new FileStream(Path.Combine(uploadDir, name), FileMode.Create)) await videoThumbFile.CopyToAsync(s);
-                videoThumbUrl = $"/uploads/subtopics/{name}";
-            }
-
-            if (id == 0)
-            {
-                var st = new CourseSubTopic { CourseRegistrationId = courseRegistrationId, CourseTopicId = courseTopicId, SubTopicName = subTopicName, DisplayOrderId = displayOrderId, VideoLink = videoLink, NumberOfQuestions = numberOfQuestions, McqThumbnail = mcqThumbUrl, VideoThumbnail = videoThumbUrl, CreatedDate = DateTime.UtcNow };
-                _context.CourseSubTopics.Add(st);
-            }
-            else
-            {
-                var st = await _context.CourseSubTopics.FindAsync(id);
-                if (st == null) return NotFound();
-                st.CourseTopicId = courseTopicId; st.SubTopicName = subTopicName; st.DisplayOrderId = displayOrderId; st.VideoLink = videoLink; st.NumberOfQuestions = numberOfQuestions;
-                if (mcqThumbUrl != null) st.McqThumbnail = mcqThumbUrl;
-                if (videoThumbUrl != null) st.VideoThumbnail = videoThumbUrl;
-                st.ModifiedDate = DateTime.UtcNow;
-            }
-            await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "Sub-Topic saved successfully!" });
-        }
-
-        [HttpDelete("subtopic/delete/{id}")]
-        public async Task<IActionResult> DeleteSubTopic(int id)
-        {
-            var item = await _context.CourseSubTopics.FindAsync(id);
-            if (item != null) { item.IsDeleted = true; await _context.SaveChangesAsync(); }
-            return Ok(new { success = true, message = "Deleted successfully!" });
-        }
-
-        // ================= 3. MCQ ENDPOINTS =================
+        // ============================================================
+        // MCQ LIST
+        // ============================================================
         [HttpGet("mcq/list/{courseId}")]
-        public async Task<IActionResult> GetMcqs(int courseId) => Ok(new { success = true, data = await _context.CourseMcqQuestions.Where(x => !x.IsDeleted && x.CourseRegistrationId == courseId).ToListAsync() });
-
-        [HttpPost("mcq/save")]
-        public async Task<IActionResult> SaveMcq([FromBody] CourseMcqQuestion model)
+        public async Task<IActionResult> GetMcqs(int courseId)
         {
-            if (model.Id == 0) { model.CreatedDate = DateTime.UtcNow; _context.CourseMcqQuestions.Add(model); }
-            else { var item = await _context.CourseMcqQuestions.FindAsync(model.Id); if (item == null) return NotFound(); item.CourseTopicId = model.CourseTopicId; item.CourseSubTopicId = model.CourseSubTopicId; item.CourseMcqLevelId = model.CourseMcqLevelId; item.Question = model.Question; item.OptionA = model.OptionA; item.OptionB = model.OptionB; item.OptionC = model.OptionC; item.OptionD = model.OptionD; item.RightAnswer = model.RightAnswer; item.ModifiedDate = DateTime.UtcNow; }
-            await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "MCQ saved successfully!" });
+            try
+            {
+                var mcqs = await _context.Questions
+                    .AsNoTracking()
+                    .Where(q => q.CourseID == courseId && (q.isDeleted == false || q.isDeleted == null))
+                    .OrderBy(q => q.QuestionID)
+                    .Join(_context.Topics, q => q.TopicID, t => t.TopicID, (q, t) => new { q, t })
+                    .Join(_context.Topics, qt => qt.q.SubTopicID, st => st.TopicID, (qt, st) => new { qt.q, qt.t, st })
+                    .GroupJoin(_context.Languages, qst => qst.q.languageID, l => l.LanguageID, (qst, l) => new { qst.q, qst.t, qst.st, Languages = l })
+                    .SelectMany(x => x.Languages.DefaultIfEmpty(), (x, l) => new
+                    {
+                        id = x.q.QuestionID,
+                        questionName = x.q.QuestionName,
+                        topicName = x.t.TopicName,
+                        subTopicName = x.st.TopicName,
+                        createdDate = x.q.CreatedDate,
+                        createdBy = x.q.CreatedBy,
+                        modifiedDate = x.q.ModifiedDate,
+                        modifiedBy = x.q.ModifiedBy,
+                        questionLevel = x.q.QuestionLevel,
+                        complexityLevel = x.q.ComplexityLevel,
+                        languageName = l != null ? l.LanguageName : "-",
+                        answerDescription = x.q.AnswerDescription,
+                        topicId = x.q.TopicID,
+                        subTopicId = x.q.SubTopicID,
+                        languageId = x.q.languageID,
+                        options = x.q.QuestionOption.Where(o => o.Options != null && o.Options.Trim() != "").Select(o => new
+                        {
+                            optionId = o.OptionID,
+                            optionText = o.Options,
+                            isAnswer = o.IsAnswer ?? false
+                        }).ToList()
+                    })
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = mcqs });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
 
-        [HttpDelete("mcq/delete/{id}")]
-        public async Task<IActionResult> DeleteMcq(int id)
-        {
-            var item = await _context.CourseMcqQuestions.FindAsync(id);
-            if (item != null) { item.IsDeleted = true; await _context.SaveChangesAsync(); }
-            return Ok(new { success = true, message = "Deleted successfully!" });
-        }
-
-        // ================= 4. PRACTICAL LAB ENDPOINTS =================
+        // ============================================================
+        // PRACTICAL LABS LIST & SAVE
+        // ============================================================
         [HttpGet("lab/list/{courseId}")]
-        public async Task<IActionResult> GetLabs(int courseId) => Ok(new { success = true, data = await _context.CoursePracticalLabs.Where(x => !x.IsDeleted && x.CourseRegistrationId == courseId).ToListAsync() });
+        public async Task<IActionResult> GetPracticals(int courseId)
+        {
+            try
+            {
+                var practicals = await _context.WJ_Practicals
+                    .AsNoTracking()
+                    .Where(x => x.CourseID == courseId)
+                    .OrderBy(x => x.OrderNo)
+                    .ThenBy(x => x.PracticalID)
+                    .Select(x => new
+                    {
+                        id = x.PracticalID,
+                        courseId = x.CourseID,
+                        title = x.Title,
+                        practicalName = x.Title,
+                        description = x.Description,
+                        orderNo = x.OrderNo,
+                        coins = x.Coins,
+                        gems = x.Gems,
+                        fileType = x.FileType,
+                        videoLink = x.VideoLink,
+                        thumbnail = x.Thumbnail,
+                        practicalLevel = x.PracticalLevel,
+                        code = x.Code,
+                        student_Group = x.Student_Group,
+                        resources = x.Resources,
+                        practicalTopicID = x.PracticalTopicID,
+                        practicalSubtopicID = x.PracticalSubtopicID,
+                        practicalStandard = x.PracticalStandard,
+                        isTask = x.isTask ?? false, // Fixed: safely maps bit/int to boolean
+                        languageID = x.languageID,
+                        type = x.Type
+                    })
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = practicals });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        public class SavePracticalRequest
+        {
+            public int Id { get; set; }
+            public int CourseRegistrationId { get; set; }
+            public string Title { get; set; } = string.Empty;
+            public string? Description { get; set; }
+            public int OrderNo { get; set; }
+            public int Coins { get; set; } = 10;
+            public int Gems { get; set; } = 5;
+            public string? FileType { get; set; }
+            public string? VideoLink { get; set; }
+            public int? PracticalLevel { get; set; }
+            public string? Code { get; set; }
+            public string? Student_Group { get; set; }
+            public int? PracticalTopicID { get; set; }
+            public int? PracticalSubtopicID { get; set; }
+            public string? PracticalStandard { get; set; }
+            public bool IsTask { get; set; }
+            public string? Type { get; set; }
+            public IFormFile? ThumbnailFile { get; set; }
+            public IFormFile? ResourceFile { get; set; }
+        }
+
+        public class InHouseUploadResponse
+        {
+            public bool success { get; set; }
+            public string message { get; set; }
+            public string filePath { get; set; }
+            public string fileName { get; set; }
+        }
+
+        private async Task<string> UploadFileToInHouseServerAsync(IFormFile uploadDoc, string dynamicFolderPath)
+        {
+            if (uploadDoc == null || uploadDoc.Length == 0)
+                return string.Empty;
+
+            string apiKey = _configuration["FileSettings:ApiKey"] ?? "YOUR_API_KEY";
+            string inHouseApiUrl = _configuration["FileSettings:InHouseUploadUrl"] ?? "https://your-inhouse-server-url/api/upload";
+
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true;
+
+            using (var client = new HttpClient(handler))
+            {
+                client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+
+                using var content = new MultipartFormDataContent();
+                using var fileStream = uploadDoc.OpenReadStream();
+                using var streamContent = new StreamContent(fileStream);
+
+                content.Add(streamContent, "file", uploadDoc.FileName);
+                content.Add(new StringContent(dynamicFolderPath), "folderPath");
+
+                var response = await client.PostAsync(inHouseApiUrl, content);
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Failed to upload file to the in-house server storage.");
+                }
+
+                var apiResult = await response.Content.ReadFromJsonAsync<InHouseUploadResponse>();
+                if (apiResult == null || !apiResult.success)
+                {
+                    throw new Exception("In-house server returned an unsuccessful upload response.");
+                }
+
+                return apiResult.filePath;
+            }
+        }
 
         [HttpPost("lab/save")]
-        public async Task<IActionResult> SaveLab([FromForm] int id, [FromForm] int courseRegistrationId, [FromForm] string title, [FromForm] string? description, [FromForm] int coins, [FromForm] int gems, [FromForm] string practicalTopic, [FromForm] int standardMasterId, [FromForm] int displayOrderId, [FromForm] string? videoLink, [FromForm] IFormFile? thumbnailFile, [FromForm] IFormFile? resourceFile)
+        [RequestSizeLimit(100 * 1024 * 1024)]
+        public async Task<IActionResult> SavePracticalLab([FromForm] SavePracticalRequest model)
         {
-            string thumbUrl = null, resUrl = null;
-            string uploadDir = Path.Combine(_env.WebRootPath, "uploads", "labs");
-            if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+            try
+            {
+                if (model.CourseRegistrationId <= 0)
+                {
+                    return BadRequest(new { success = false, message = "Invalid Course ID." });
+                }
 
-            if (thumbnailFile != null)
-            {
-                string tName = Guid.NewGuid() + "_" + thumbnailFile.FileName;
-                using (var s = new FileStream(Path.Combine(uploadDir, tName), FileMode.Create)) await thumbnailFile.CopyToAsync(s);
-                thumbUrl = $"/uploads/labs/{tName}";
-            }
-            if (resourceFile != null)
-            {
-                string rName = Guid.NewGuid() + "_" + resourceFile.FileName;
-                using (var s = new FileStream(Path.Combine(uploadDir, rName), FileMode.Create)) await resourceFile.CopyToAsync(s);
-                resUrl = $"/uploads/labs/{rName}";
-            }
+                if (string.IsNullOrWhiteSpace(model.Title))
+                {
+                    return BadRequest(new { success = false, message = "Title is required." });
+                }
 
-            if (id == 0)
-            {
-                var lab = new CoursePracticalLab { CourseRegistrationId = courseRegistrationId, Title = title, Description = description, Coins = coins, Gems = gems, PracticalTopic = practicalTopic, StandardMasterId = standardMasterId, DisplayOrderId = displayOrderId, VideoLink = videoLink, ThumbnailImageUrl = thumbUrl, ResourceFileUrl = resUrl, CreatedDate = DateTime.UtcNow };
-                _context.CoursePracticalLabs.Add(lab);
+                WJ_Practicals lab;
+
+                if (model.Id > 0)
+                {
+                    lab = await _context.WJ_Practicals
+                        .FirstOrDefaultAsync(x => x.PracticalID == model.Id && x.CourseID == model.CourseRegistrationId);
+
+                    if (lab == null)
+                    {
+                        return NotFound(new { success = false, message = "Practical lab not found." });
+                    }
+
+                    lab.ModifiedDate = DateTime.UtcNow;
+                    lab.ModifiedBy = 1;
+                }
+                else
+                {
+                    lab = new WJ_Practicals
+                    {
+                        CourseID = model.CourseRegistrationId,
+                        CreatedDate = DateTime.UtcNow,
+                        CreatedBy = 1
+                    };
+                    _context.WJ_Practicals.Add(lab);
+                }
+
+                lab.Title = model.Title.Trim();
+                lab.Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim();
+                lab.OrderNo = model.OrderNo;
+                lab.Coins = model.Coins;
+                lab.Gems = model.Gems;
+                lab.FileType = model.FileType;
+                lab.VideoLink = model.VideoLink;
+                lab.PracticalLevel = model.PracticalLevel;
+                lab.Code = model.Code;
+                lab.Student_Group = string.IsNullOrWhiteSpace(model.Student_Group) ? "All" : model.Student_Group;
+                lab.PracticalTopicID = model.PracticalTopicID;
+                lab.PracticalSubtopicID = model.PracticalSubtopicID;
+                lab.PracticalStandard = model.PracticalStandard;
+                lab.isTask = model.IsTask;
+                lab.Type = string.IsNullOrWhiteSpace(model.Type) ? "0" : model.Type;
+
+                if (model.ThumbnailFile != null && model.ThumbnailFile.Length > 0)
+                {
+                    string thumbFolder = "Upload/Image/practical/Thumbnail";
+                    lab.Thumbnail = await UploadFileToInHouseServerAsync(model.ThumbnailFile, thumbFolder);
+                }
+
+                if (model.ResourceFile != null && model.ResourceFile.Length > 0)
+                {
+                    string resFolder = "Upload/Practical/Resources";
+                    lab.Resources = await UploadFileToInHouseServerAsync(model.ResourceFile, resFolder);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = model.Id > 0 ? "Practical lab updated successfully." : "Practical lab created successfully.",
+                    id = lab.PracticalID
+                });
             }
-            else
+            catch (Exception ex)
             {
-                var lab = await _context.CoursePracticalLabs.FindAsync(id);
-                if (lab == null) return NotFound();
-                lab.Title = title; lab.Description = description; lab.Coins = coins; lab.Gems = gems; lab.PracticalTopic = practicalTopic; lab.StandardMasterId = standardMasterId; lab.DisplayOrderId = displayOrderId; lab.VideoLink = videoLink;
-                if (thumbUrl != null) lab.ThumbnailImageUrl = thumbUrl;
-                if (resUrl != null) lab.ResourceFileUrl = resUrl;
-                lab.ModifiedDate = DateTime.UtcNow;
+                return StatusCode(500, new { success = false, message = ex.Message });
             }
-            await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "Practical Lab saved successfully!" });
         }
 
         [HttpDelete("lab/delete/{id}")]
-        public async Task<IActionResult> DeleteLab(int id)
+        public async Task<IActionResult> DeletePractical(int id)
         {
-            var item = await _context.CoursePracticalLabs.FindAsync(id);
-            if (item != null) { item.IsDeleted = true; await _context.SaveChangesAsync(); }
-            return Ok(new { success = true, message = "Deleted successfully!" });
+            try
+            {
+                var lab = await _context.WJ_Practicals.FirstOrDefaultAsync(x => x.PracticalID == id);
+                if (lab == null)
+                {
+                    return NotFound(new { success = false, message = "Practical lab not found." });
+                }
+
+                _context.WJ_Practicals.Remove(lab);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Practical lab deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
     }
 }

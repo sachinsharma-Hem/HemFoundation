@@ -4,387 +4,3918 @@
 }
 
 <div class="container-fluid py-4">
+
+    <!-- PAGE HEADER -->
     <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-        <h3 class="fw-bold text-dark mb-1"><i class="bi bi-journal-code text-success me-2"></i> Manage Courses & Curriculum Authoring</h3>
-        <p class="text-muted small m-0">Search and select a course below to manage its Topics, Sub-Topics, MCQs, and Practical Labs sequentially.</p>
+        <h3 class="fw-bold text-dark mb-1">
+            <i class="bi bi-journal-code text-success me-2"></i>
+            Manage Courses & Curriculum Authoring
+        </h3>
+
+        <p class="text-muted small m-0">
+            Search and select a course below to manage its Topics, Sub-Topics,
+            MCQs, and Practical Labs sequentially.
+        </p>
     </div>
 
+
+    <!-- COURSE SEARCH -->
     <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-        <label class="form-label fw-bold small text-secondary">Search & Select Course</label>
+
+        <label class="form-label fw-bold small text-secondary">
+            Search & Select Course
+        </label>
+
         <div class="position-relative">
-            <input type="text" id="courseSearchInput" class="form-control rounded-3 shadow-none" placeholder="Type course name to search..." autocomplete="off">
-            <div id="searchResults" class="list-group position-absolute w-100 shadow-lg rounded-3 mt-1 d-none" style="z-index: 1000; max-height: 250px; overflow-y: auto;"></div>
+
+            <input type="text"
+                   id="courseSearchInput"
+                   class="form-control rounded-3 shadow-none"
+                   placeholder="Type course name to search..."
+                   autocomplete="off">
+
+            <div id="searchResults"
+                 class="list-group position-absolute w-100 shadow-lg rounded-3 mt-1 d-none"
+                 style="z-index:1000; max-height:250px; overflow-y:auto;">
+            </div>
+
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4 d-none" id="selectedCourseCard">
+
+    <!-- SELECTED COURSE -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4 d-none"
+         id="selectedCourseCard">
+
         <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
-            <h5 class="fw-bold text-success m-0" id="selectedCourseName">Course Name</h5>
-            <button class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="clearSelectedCourse()"><i class="bi bi-x-lg me-1"></i> Change Course</button>
+
+            <h5 class="fw-bold text-success m-0"
+                id="selectedCourseName">
+                Course Name
+            </h5>
+
+            <button type="button"
+                    class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                    onclick="clearSelectedCourse()">
+
+                <i class="bi bi-x-lg me-1"></i>
+                Change Course
+
+            </button>
+
         </div>
+
         <div class="row g-3 small">
-            <div class="col-md-3"><b>Description:</b> <span id="lblDesc" class="text-muted"></span></div>
-            <div class="col-md-3"><b>Age Group:</b> <span id="lblAge" class="text-muted"></span></div>
-            <div class="col-md-3"><b>Sessions:</b> <span id="lblSessions" class="text-muted"></span></div>
-            <div class="col-md-3"><b>Delivery Date:</b> <span id="lblDate" class="text-muted"></span></div>
+
+            <div class="col-md-3">
+                <b>Description:</b>
+                <span id="lblDesc" class="text-muted"></span>
+            </div>
+
+            <div class="col-md-3">
+                <b>Age Group:</b>
+                <span id="lblAge" class="text-muted"></span>
+            </div>
+
+            <div class="col-md-3">
+                <b>Sessions:</b>
+                <span id="lblSessions" class="text-muted"></span>
+            </div>
+
+            <div class="col-md-3">
+                <b>Delivery Date:</b>
+                <span id="lblDate" class="text-muted"></span>
+            </div>
+
         </div>
     </div>
 
-    <div id="authoringTabsWrapper" class="opacity-50 pointer-events-none">
-        <ul class="nav nav-pills mb-4 gap-2" id="authoringTabs" role="tablist">
+
+    <!-- AUTHORING -->
+    <div id="authoringTabsWrapper"
+         class="opacity-50 pointer-events-none">
+
+        <!-- TABS -->
+        <ul class="nav nav-pills mb-4 gap-2"
+            id="authoringTabs"
+            role="tablist">
+
             <li class="nav-item">
-                <button class="nav-link active rounded-pill px-4 fw-semibold shadow-sm" id="tab-topic" data-bs-toggle="pill" data-bs-target="#pane-topic" type="button" disabled>
-                    <i class="bi bi-list-check me-2"></i> 1. Topics
+                <button class="nav-link active rounded-pill px-4 fw-semibold shadow-sm"
+                        id="tab-topic"
+                        data-bs-toggle="pill"
+                        data-bs-target="#pane-topic"
+                        type="button"
+                        disabled>
+
+                    <i class="bi bi-list-check me-2"></i>
+                    1. Topics
+
                 </button>
             </li>
+
             <li class="nav-item">
-                <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm text-dark bg-white border" id="tab-subtopic" data-bs-toggle="pill" data-bs-target="#pane-subtopic" type="button" disabled>
-                    <i class="bi bi-diagram-3 me-2"></i> 2. Sub-Topics
+                <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm text-dark bg-white border"
+                        id="tab-subtopic"
+                        data-bs-toggle="pill"
+                        data-bs-target="#pane-subtopic"
+                        type="button"
+                        disabled>
+
+                    <i class="bi bi-diagram-3 me-2"></i>
+                    2. Sub-Topics
+
                 </button>
             </li>
+
             <li class="nav-item">
-                <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm text-dark bg-white border" id="tab-mcq" data-bs-toggle="pill" data-bs-target="#pane-mcq" type="button" disabled>
-                    <i class="bi bi-ui-checks me-2"></i> 3. MCQ Questions
+                <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm text-dark bg-white border"
+                        id="tab-mcq"
+                        data-bs-toggle="pill"
+                        data-bs-target="#pane-mcq"
+                        type="button"
+                        disabled>
+
+                    <i class="bi bi-ui-checks me-2"></i>
+                    3. MCQ Questions
+
                 </button>
             </li>
+
             <li class="nav-item">
-                <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm text-dark bg-white border" id="tab-lab" data-bs-toggle="pill" data-bs-target="#pane-lab" type="button" disabled>
-                    <i class="bi bi-laptop me-2"></i> 4. Practical Lab
+                <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm text-dark bg-white border"
+                        id="tab-lab"
+                        data-bs-toggle="pill"
+                        data-bs-target="#pane-lab"
+                        type="button"
+                        disabled>
+
+                    <i class="bi bi-laptop me-2"></i>
+                    4. Practical Lab
+
                 </button>
             </li>
+
         </ul>
+
 
         <div class="tab-content" id="authoringTabContent">
 
-            <div class="tab-pane fade show active" id="pane-topic" role="tabpanel">
+
+            <!-- ========================================================= -->
+            <!-- TOPICS -->
+            <!-- ========================================================= -->
+
+            <div class="tab-pane fade show active"
+                 id="pane-topic"
+                 role="tabpanel">
+
+                <!-- TOPIC FORM -->
                 <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                    <h6 class="fw-bold text-success mb-3" id="topicFormTitle"><i class="bi bi-plus-circle me-1"></i> Add Topic</h6>
-                    <form id="topicForm">
-                        <input type="hidden" id="topicId" value="0">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+
+                        <div>
+                            <h6 class="fw-bold text-success mb-1"
+                                id="topicFormTitle">
+
+                                <i class="bi bi-plus-circle me-1"></i>
+                                Add Topic
+
+                            </h6>
+
+                            <small class="text-muted">
+                                Create or update a main course topic
+                            </small>
+                        </div>
+
+                        <button type="button"
+                                class="btn btn-outline-secondary btn-sm rounded-pill"
+                                onclick="resetTopicForm()">
+
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>
+                            Reset
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- IMPORTANT:
+                         enctype is required for file upload
+                    -->
+                    <form id="topicForm"
+                          enctype="multipart/form-data">
+
+                        <input type="hidden"
+                               id="topicId"
+                               name="id"
+                               value="0">
+
+                        <input type="hidden"
+                               id="topicCourseId"
+                               name="courseId"
+                               value="0">
+
+
                         <div class="row g-3">
-                            <div class="col-md-5"><label class="form-label small fw-semibold">Topic Name</label><input type="text" id="tp_name" class="form-control form-control-sm rounded-3 shadow-none" required></div>
-                            <div class="col-md-3"><label class="form-label small fw-semibold">Order Number</label><select id="tp_order" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
-                            <div class="col-md-4"><label class="form-label small fw-semibold">Language</label><select id="tp_lang" class="form-select form-select-sm rounded-3 shadow-none"><option value="English">English</option><option value="Hindi">Hindi</option></select></div>
-                            <div class="col-md-12"><label class="form-label small fw-semibold">Description</label><textarea id="tp_desc" class="form-control form-control-sm rounded-3 shadow-none" rows="2"></textarea></div>
+
+                            <!-- TOPIC NAME -->
+                            <div class="col-md-6">
+
+                                <label class="form-label small fw-semibold">
+                                    Topic Name
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                <input type="text"
+                                       id="tp_name"
+                                       name="topicName"
+                                       class="form-control form-control-sm rounded-3 shadow-none"
+                                       placeholder="Enter topic name"
+                                       maxlength="500"
+                                       required>
+
+                            </div>
+
+
+                            <!-- ORDER NO -->
+                            <!-- THIS IS NOW AN INPUT, NOT DROPDOWN -->
+                            <div class="col-md-3">
+
+                                <label class="form-label small fw-semibold">
+                                    Order No
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                <input type="number"
+                                       id="tp_order"
+                                       name="orderNo"
+                                       class="form-control form-control-sm rounded-3 shadow-none"
+                                       placeholder="Enter order no"
+                                       min="1"
+                                       step="1"
+                                       required>
+
+                            </div>
+
+
+                            <!-- LANGUAGE -->
+                            <!-- POPULATED FROM LANGUAGE TABLE -->
+                            <div class="col-md-3">
+
+                                <label class="form-label small fw-semibold">
+                                    Language
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                <select id="tp_lang"
+                                        name="languageID"
+                                        class="form-select form-select-sm rounded-3 shadow-none"
+                                        required>
+
+                                    <option value="">
+                                        Select Language
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- DESCRIPTION -->
+                            <div class="col-md-12">
+
+                                <label class="form-label small fw-semibold">
+                                    Description
+                                </label>
+
+                                <textarea id="tp_desc"
+                                          name="description"
+                                          class="form-control form-control-sm rounded-3 shadow-none"
+                                          rows="3"
+                                          maxlength="5000"
+                                          placeholder="Enter topic description"></textarea>
+
+                            </div>
+
+
+                            <!-- RESOURCE FILE -->
+                            <div class="col-md-6">
+
+                                <label class="form-label small fw-semibold">
+                                    Upload Resource File
+                                </label>
+
+                                <input type="file"
+                                       id="tp_resourceFile"
+                                       name="resourceFile"
+                                       class="form-control form-control-sm rounded-3 shadow-none"
+                                       accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt,.png,.jpg,.jpeg">
+
+                                <div id="tp_resourceCurrent"
+                                     class="mt-2">
+                                </div>
+
+                            </div>
+
+
+                            <!-- EXERCISE FILE -->
+                            <div class="col-md-6">
+
+                                <label class="form-label small fw-semibold">
+                                    Upload Exercise File
+                                </label>
+
+                                <input type="file"
+                                       id="tp_exerciseFile"
+                                       name="exerciseFile"
+                                       class="form-control form-control-sm rounded-3 shadow-none"
+                                       accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt,.png,.jpg,.jpeg">
+
+                                <div id="tp_exerciseCurrent"
+                                     class="mt-2">
+                                </div>
+
+                            </div>
+
                         </div>
-                        <div class="d-flex justify-content-end gap-2 mt-3">
-                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Save Topic</button>
+
+
+                        <!-- BUTTONS -->
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+
+                            <button type="button"
+                                    class="btn btn-outline-secondary btn-sm rounded-pill px-4"
+                                    onclick="resetTopicForm()">
+
+                                Reset
+
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-success btn-sm rounded-pill px-4 fw-bold"
+                                    id="btnSaveTopic">
+
+                                <i class="bi bi-save me-1"></i>
+                                Save Topic
+
+                            </button>
+
                         </div>
+
                     </form>
+
                 </div>
+
+
+                <!-- TOPIC LIST -->
                 <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
-                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-table me-2 text-primary"></i> Topics List</h6>
-                    <div class="table-responsive"><table class="table table-hover align-middle small"><thead class="table-light"><tr><th>#</th><th>Topic Name</th><th>Language</th><th>Order</th><th class="text-end">Actions</th></tr></thead><tbody id="topicTableBody"><tr><td colspan="5" class="text-center text-muted">No topics added</td></tr></tbody></table></div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+
+                        <h6 class="fw-bold text-dark mb-0">
+
+                            <i class="bi bi-table me-2 text-primary"></i>
+                            Topics List
+
+                        </h6>
+
+                        <span class="badge bg-primary rounded-pill"
+                              id="topicCount">
+                            0
+                        </span>
+
+                    </div>
+
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover table-bordered align-middle small">
+
+                            <thead class="table-light">
+
+                                <tr>
+
+                                    <th style="width:80px;">
+                                        Topic ID
+                                    </th>
+
+                                    <th style="min-width:220px;">
+                                        Topic Name
+                                    </th>
+
+                                    <th style="width:110px;">
+                                        Sub-Topics
+                                    </th>
+
+                                    <th style="width:100px;">
+                                        Order No
+                                    </th>
+
+                                    <th style="width:140px;">
+                                        Language
+                                    </th>
+
+                                    <th style="width:130px;">
+                                        Resource File
+                                    </th>
+
+                                    <th style="width:130px;">
+                                        Exercise File
+                                    </th>
+
+                                    <th style="min-width:300px;">
+                                        Description
+                                    </th>
+
+                                    <th style="width:130px;"
+                                        class="text-end">
+                                        Actions
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="topicTableBody">
+
+                                <tr>
+
+                                    <td colspan="9"
+                                        class="text-center text-muted py-4">
+
+                                        Select a course to load topics.
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
                 </div>
+
             </div>
 
-            <div class="tab-pane fade" id="pane-subtopic" role="tabpanel">
-                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                    <h6 class="fw-bold text-success mb-3" id="subTopicFormTitle"><i class="bi bi-plus-circle me-1"></i> Add Sub-Topic</h6>
-                    <form id="subTopicForm" enctype="multipart/form-data">
-                        <input type="hidden" id="subTopicId" value="0">
-                        <div class="row g-3">
-                            <div class="col-md-4"><label class="form-label small fw-semibold">Select Topic</label><select id="st_topic" name="courseTopicId" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
-                            <div class="col-md-4"><label class="form-label small fw-semibold">Sub-Topic Name</label><input type="text" id="st_name" name="subTopicName" class="form-control form-control-sm rounded-3 shadow-none" required></div>
-                            <div class="col-md-4"><label class="form-label small fw-semibold">Order Number</label><select id="st_order" name="displayOrderId" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
-                            <div class="col-md-6"><label class="form-label small fw-semibold">Video Link (YouTube/URL)</label><input type="url" id="st_video" name="videoLink" class="form-control form-control-sm rounded-3 shadow-none"></div>
-                            <div class="col-md-6"><label class="form-label small fw-semibold">Number of Questions</label><input type="number" id="st_qCount" name="numberOfQuestions" class="form-control form-control-sm rounded-3 shadow-none" value="0" required></div>
 
-                            <div class="col-md-6"><label class="form-label small fw-semibold">MCQ Thumbnail</label><input type="file" id="st_mcqThumb" name="mcqThumbFile" class="form-control form-control-sm rounded-3 shadow-none" accept="image/*"></div>
-                            <div class="col-md-6"><label class="form-label small fw-semibold">Video Thumbnail</label><input type="file" id="st_videoThumb" name="videoThumbFile" class="form-control form-control-sm rounded-3 shadow-none" accept="image/*"></div>
+            <!-- ========================================================= -->
+            <!-- SUB TOPICS -->
+            <!-- ========================================================= -->
+
+            <div class="tab-pane fade"
+                 id="pane-subtopic"
+                 role="tabpanel">
+
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+
+                    <h6 class="fw-bold text-success mb-3"
+                        id="subTopicFormTitle">
+
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Add Sub-Topic
+
+                    </h6>
+
+                    <form id="subTopicForm"
+                          enctype="multipart/form-data">
+
+                        <input type="hidden"
+                               id="subTopicId"
+                               value="0">
+
+                        <div class="row g-3">
+
+                            <div class="col-md-4">
+
+                                <label class="form-label small fw-semibold">
+                                    Select Topic
+                                </label>
+
+                                <select id="st_topic"
+                                        name="courseTopicId"
+                                        class="form-select form-select-sm rounded-3 shadow-none"
+                                        required>
+
+                                    <option value="">
+                                        -- Select Topic --
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-4">
+
+                                <label class="form-label small fw-semibold">
+                                    Sub-Topic Name
+                                </label>
+
+                                <input type="text"
+                                       id="st_name"
+                                       name="subTopicName"
+                                       class="form-control form-control-sm rounded-3 shadow-none"
+                                       required>
+
+                            </div>
+
+                            <div class="col-md-4">
+
+                                <label class="form-label small fw-semibold">
+                                    Order Number
+                                </label>
+
+                                <input type="number"
+                                       id="st_order"
+                                       name="displayOrderId"
+                                       class="form-control form-control-sm rounded-3 shadow-none"
+                                       min="1"
+                                       step="1"
+                                       required>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label class="form-label small fw-semibold">
+                                    Video Link (YouTube/URL)
+                                </label>
+
+                                <input type="url"
+                                       id="st_video"
+                                       name="videoLink"
+                                       class="form-control form-control-sm rounded-3 shadow-none">
+
+                            </div>
+                             <div class="col-md-3">
+
+                                <label class="form-label small fw-semibold">
+                                    Language
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                <select id="st_lang"
+                                        name="languageID"
+                                        class="form-select form-select-sm rounded-3 shadow-none"
+                                        required>
+
+                                    <option value="">
+                                        Select Language
+                                    </option>
+
+                                </select>
+
+                            </div>
+                            <div class="col-md-3">
+
+                                <label class="form-label small fw-semibold">
+                                    Number of Questions
+                                </label>
+
+                                <input type="number"
+                                       id="st_qCount"
+                                       name="numberOfQuestions"
+                                       class="form-control form-control-sm rounded-3 shadow-none"
+                                       value="0"
+                                       min="0"
+                                       required>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label class="form-label small fw-semibold">
+                                    MCQ Thumbnail
+                                </label>
+
+                                <input type="file"
+                                       id="st_mcqThumb"
+                                       name="mcqThumbFile"
+                                       class="form-control form-control-sm rounded-3 shadow-none"
+                                       accept="image/*">
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label class="form-label small fw-semibold">
+                                    Video Thumbnail
+                                </label>
+
+                                <input type="file"
+                                       id="st_videoThumb"
+                                       name="videoThumbFile"
+                                       class="form-control form-control-sm rounded-3 shadow-none"
+                                       accept="image/*">
+
+                            </div>
+
                         </div>
+
                         <div class="d-flex justify-content-end gap-2 mt-3">
-                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Save Sub-Topic</button>
+
+                            <button type="submit"
+                                    class="btn btn-success btn-sm rounded-pill px-4 fw-bold">
+
+                                Save Sub-Topic
+
+                            </button>
+
                         </div>
+
                     </form>
+
                 </div>
+
+
                 <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
-                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-table me-2 text-primary"></i> Sub-Topics List</h6>
-                    <div class="table-responsive"><table class="table table-hover align-middle small"><thead class="table-light"><tr><th>#</th><th>Topic</th><th>Sub-Topic</th><th>Questions</th><th class="text-end">Actions</th></tr></thead><tbody id="subTopicTableBody"><tr><td colspan="5" class="text-center text-muted">No sub-topics added</td></tr></tbody></table></div>
+
+                    <h6 class="fw-bold text-dark mb-3">
+
+                        <i class="bi bi-table me-2 text-primary"></i>
+                        Sub-Topics List
+
+                    </h6>
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover align-middle small">
+
+                            <thead class="table-light">
+
+                                <tr>
+                                    <th>#</th>
+                                    <th>Sub-Topic ID</th>
+                                    <th>Topic</th>
+                                    <th>Sub-Topic</th>
+                                    <th>Order No</th>
+                                    <th>Language</th>
+                                    <th>Description</th>
+                                    <th>Trainer Video</th>
+                                         <th style="width:130px;">
+                                        Resource File
+                                    </th>
+
+                                    <th style="width:130px;">
+                                        Exercise File
+                                    </th>
+
+                                    <th>Questions</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="subTopicTableBody">
+
+                                <tr>
+                                    <td colspan="5"
+                                        class="text-center text-muted">
+                                        No sub-topics added
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
                 </div>
+
             </div>
+
+
+            <!-- ========================================================= -->
+            <!-- MCQ -->
+            <!-- ========================================================= -->
 
             <div class="tab-pane fade" id="pane-mcq" role="tabpanel">
-                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                    <h6 class="fw-bold text-success mb-3" id="mcqFormTitle"><i class="bi bi-plus-circle me-1"></i> Add MCQ Question</h6>
-                    <form id="mcqForm">
-                        <input type="hidden" id="mcqId" value="0">
-                        <div class="row g-3">
-                            <div class="col-md-4"><label class="form-label small fw-semibold">Select Topic</label><select id="mq_topic" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
-                            <div class="col-md-4"><label class="form-label small fw-semibold">Select Sub-Topic</label><select id="mq_subTopic" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
-                            <div class="col-md-4"><label class="form-label small fw-semibold">Complexity Level</label><select id="mq_level" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
 
-                            <div class="col-md-12"><label class="form-label small fw-semibold">Question</label><textarea id="mq_question" class="form-control form-control-sm rounded-3 shadow-none" rows="2" required></textarea></div>
+               <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+                    <h6 class="fw-bold text-success mb-3" id="mcqFormTitle">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Add MCQ Question
+                    </h6>
 
-                            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text"><input class="form-check-input mt-0 right-ans-chk" type="radio" name="rightAns" value="A" checked> A</span><input type="text" id="mq_optA" class="form-control shadow-none" placeholder="Option A" required></div></div>
-                            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text"><input class="form-check-input mt-0 right-ans-chk" type="radio" name="rightAns" value="B"> B</span><input type="text" id="mq_optB" class="form-control shadow-none" placeholder="Option B" required></div></div>
-                            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text"><input class="form-check-input mt-0 right-ans-chk" type="radio" name="rightAns" value="C"> C</span><input type="text" id="mq_optC" class="form-control shadow-none" placeholder="Option C"></div></div>
-                            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text"><input class="form-check-input mt-0 right-ans-chk" type="radio" name="rightAns" value="D"> D</span><input type="text" id="mq_optD" class="form-control shadow-none" placeholder="Option D"></div></div>
+                                <form id="mcqForm">
+                                    <input type="hidden" id="mcqId" value="0">
+
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-semibold">Topic</label>
+                                            <select id="mq_topic" class="form-select form-select-sm" required>
+                                                <option value="">-- Select Topic --</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-semibold">Sub-Topic</label>
+                                            <select id="mq_subTopic" class="form-select form-select-sm" required>
+                                                <option value="">-- Select Sub-Topic --</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-semibold">Complexity</label>
+                                            <select id="mq_complexity" class="form-select form-select-sm" required>
+                                                <option value="">-- Select Complexity --</option>
+                                                <option value="Tough">Tough</option>
+                                                <option value="Easy">Easy</option>
+                                                <option value="Moderate">Moderate</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-semibold">Language</label>
+                                            <select id="mq_language" class="form-select form-select-sm" required>
+                                                <option value="">-- Select Language --</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-semibold">Editor Type</label>
+                                            <select id="mq_editorType" class="form-select form-select-sm" disabled>
+                                                <option value="HTML" selected>HTML</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <label class="form-label small fw-semibold">Question</label>
+                                            <textarea id="mq_question" class="form-control" rows="5" required></textarea>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Option A</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">
+                                                    <input type="radio" name="rightAns" value="A" checked>
+                                                </span>
+                                                <textarea id="mq_optA" class="form-control" rows="2" required></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Option B</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">
+                                                    <input type="radio" name="rightAns" value="B">
+                                                </span>
+                                                <textarea id="mq_optB" class="form-control" rows="2" required></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Option C</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">
+                                                    <input type="radio" name="rightAns" value="C">
+                                                </span>
+                                                <textarea id="mq_optC" class="form-control" rows="2"></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Option D</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">
+                                                    <input type="radio" name="rightAns" value="D">
+                                                </span>
+                                                <textarea id="mq_optD" class="form-control" rows="2"></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <label class="form-label small fw-semibold">Answer Description</label>
+                                            <textarea id="mq_answerDescription" class="form-control" rows="5"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2 mt-3">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                                onclick="resetMcqForm()">
+                                            Reset
+                                        </button>
+                                        <button type="submit" id="btnSaveMcq"
+                                                class="btn btn-success btn-sm rounded-pill px-4 fw-bold">
+                                            Save MCQ
+                                        </button>
+                                    </div>
+                                </form>
                         </div>
-                        <div class="d-flex justify-content-end gap-2 mt-3">
-                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Save MCQ</button>
-                        </div>
-                    </form>
-                </div>
+
                 <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
-                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-table me-2 text-primary"></i> MCQ Questions List</h6>
-                    <div class="table-responsive"><table class="table table-hover align-middle small"><thead class="table-light"><tr><th>#</th><th>Question</th><th>Right Ans</th><th class="text-end">Actions</th></tr></thead><tbody id="mcqTableBody"><tr><td colspan="4" class="text-center text-muted">No MCQs added</td></tr></tbody></table></div>
-                </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-dark mb-0">
+                                <i class="bi bi-table me-2 text-primary"></i>
+                                MCQ Questions List
+                            </h6>
+                            <span class="badge bg-primary rounded-pill" id="mcqCount">0</span>
+                        </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered align-middle small">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Question ID</th>
+                                            <th style="min-width:280px">Question Name</th>
+                                            <th>Topic</th>
+                                            <th>Sub-Topic</th>
+                                            <th>Created Date</th>
+                                            <th>Created By</th>
+                                            <th>Modified Date</th>
+                                            <th>Modified By</th>
+                                            <th>Question Level</th>
+                                            <th>Complexity</th>
+                                            <th>Language</th>
+                                            <th style="min-width:240px">Answer Description</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mcqTableBody">
+                                        <tr>
+                                            <td colspan="13" class="text-center text-muted py-4">
+                                                No MCQs added
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
             </div>
+
+            </div>
+            <!-- ========================================================= -->
+            <!-- PRACTICAL LAB -->
+            <!-- ========================================================= -->
 
             <div class="tab-pane fade" id="pane-lab" role="tabpanel">
-                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                    <h6 class="fw-bold text-success mb-3" id="labFormTitle"><i class="bi bi-plus-circle me-1"></i> Add Practical Lab</h6>
-                    <form id="labForm" enctype="multipart/form-data">
-                        <input type="hidden" id="labId" value="0">
-                        <div class="row g-3">
-                            <div class="col-md-4"><label class="form-label small fw-semibold">Title</label><input type="text" id="lb_title" name="title" class="form-control form-control-sm rounded-3 shadow-none" required></div>
-                            <div class="col-md-4"><label class="form-label small fw-semibold">Practical Topic</label><input type="text" id="lb_practicalTopic" name="practicalTopic" class="form-control form-control-sm rounded-3 shadow-none" required></div>
-                            <div class="col-md-4"><label class="form-label small fw-semibold">Standard</label><select id="lb_standard" name="standardMasterId" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
 
-                            <div class="col-md-3"><label class="form-label small fw-semibold">Display Order</label><select id="lb_order" name="displayOrderId" class="form-select form-select-sm rounded-3 shadow-none" required></select></div>
-                            <div class="col-md-3"><label class="form-label small fw-semibold">Coins</label><input type="number" id="lb_coins" name="coins" class="form-control form-control-sm rounded-3 shadow-none" value="10" required></div>
-                            <div class="col-md-3"><label class="form-label small fw-semibold">Gems</label><input type="number" id="lb_gems" name="gems" class="form-control form-control-sm rounded-3 shadow-none" value="5" required></div>
-                            <div class="col-md-3"><label class="form-label small fw-semibold">Video Link</label><input type="url" id="lb_video" name="videoLink" class="form-control form-control-sm rounded-3 shadow-none"></div>
+        <!-- PRACTICAL LAB FORM -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+            <h6 class="fw-bold text-success mb-3" id="labFormTitle">
+                <i class="bi bi-plus-circle me-1"></i> Add Practical Lab
+            </h6>
 
-                            <div class="col-md-6"><label class="form-label small fw-semibold">Thumbnail Image</label><input type="file" id="lb_thumb" name="thumbnailFile" class="form-control form-control-sm rounded-3 shadow-none" accept="image/*"></div>
-                            <div class="col-md-6"><label class="form-label small fw-semibold">Resource File (PDF / Img)</label><input type="file" id="lb_res" name="resourceFile" class="form-control form-control-sm rounded-3 shadow-none"></div>
+            <form id="labForm" enctype="multipart/form-data">
+                <input type="hidden" id="labId" value="0">
 
-                            <div class="col-md-12"><label class="form-label small fw-semibold">Description</label><textarea id="lb_desc" name="description" class="form-control form-control-sm rounded-3 shadow-none" rows="2"></textarea></div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Title <span class="text-danger">*</span></label>
+                        <input type="text" id="lb_title" name="title" class="form-control form-control-sm rounded-3 shadow-none" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Topic <span class="text-danger">*</span></label>
+                        <select id="lb_topic" name="practicalTopicID" class="form-select form-select-sm rounded-3 shadow-none" required>
+                            <option value="">-- Select Topic --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Sub-Topic <span class="text-danger">*</span></label>
+                        <select id="lb_subTopic" name="practicalSubtopicID" class="form-select form-select-sm rounded-3 shadow-none" required>
+                            <option value="">-- Select Sub-Topic --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Level <span class="text-danger">*</span></label>
+                        <select id="lb_level" name="practicalLevel" class="form-select form-select-sm rounded-3 shadow-none" required>
+                            <option value="">-- Select Level --</option>
+                            <option value="1">Easy</option>
+                            <option value="2">Moderate</option>
+                            <option value="3">Tough</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Practical Standard</label>
+                        <input type="text" id="lb_standard" name="practicalStandard" class="form-control form-control-sm rounded-3 shadow-none" placeholder="e.g. Standard 5">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Group</label>
+                        <select id="lb_group" name="student_Group" class="form-select form-select-sm rounded-3 shadow-none">
+                            <option value="">-- Select Group --</option>
+                            <option value="All">All</option>
+                            <option value="A">Group A</option>
+                            <option value="B">Group B</option>
+                            <option value="C">Group C</option>
+                            <option value="D">Group D</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Practical Type</label>
+                        <input type="text" id="lb_type" name="type" class="form-control form-control-sm rounded-3 shadow-none" placeholder="e.g. 0">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">File Type</label>
+                        <input type="text" id="lb_fileType" name="fileType" class="form-control form-control-sm rounded-3 shadow-none" placeholder="e.g. zip, pdf">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Order No <span class="text-danger">*</span></label>
+                        <input type="number" id="lb_order" name="orderNo" class="form-control form-control-sm rounded-3 shadow-none" min="1" step="1" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Coins</label>
+                        <input type="number" id="lb_coins" name="coins" class="form-control form-control-sm rounded-3 shadow-none" value="10" min="0">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Gems</label>
+                        <input type="number" id="lb_gems" name="gems" class="form-control form-control-sm rounded-3 shadow-none" value="5" min="0">
+                    </div>
+
+                    <div class="col-md-12 d-flex align-items-center mt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="lb_isTask" name="isTask" value="true">
+                            <label class="form-check-label small fw-semibold" for="lb_isTask">
+                                Click here if task
+                            </label>
                         </div>
-                        <div class="d-flex justify-content-end gap-2 mt-3">
-                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Save Practical Lab</button>
-                        </div>
-                    </form>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Video Link</label>
+                        <input type="url" id="lb_video" name="videoLink" class="form-control form-control-sm rounded-3 shadow-none" placeholder="https://...">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Thumbnail Image</label>
+                        <input type="file" id="lb_thumb" name="thumbnailFile" class="form-control form-control-sm rounded-3 shadow-none" accept="image/*">
+                        <div id="lb_thumbCurrent" class="mt-1"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Resource File</label>
+                        <input type="file" id="lb_res" name="resourceFile" class="form-control form-control-sm rounded-3 shadow-none">
+                        <div id="lb_resCurrent" class="mt-1"></div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label small fw-semibold">Code</label>
+                        <textarea id="lb_code" name="code" class="form-control form-control-sm rounded-3 shadow-none font-monospace" rows="3" placeholder="Enter source code or snippet..."></textarea>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label small fw-semibold">Description</label>
+                        <textarea id="lb_desc" name="description" class="form-control form-control-sm rounded-3 shadow-none" rows="3"></textarea>
+                    </div>
                 </div>
-                <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
-                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-table me-2 text-primary"></i> Practical Labs List</h6>
-                    <div class="table-responsive"><table class="table table-hover align-middle small"><thead class="table-light"><tr><th>#</th><th>Title</th><th>Practical Topic</th><th>Coins/Gems</th><th class="text-end">Actions</th></tr></thead><tbody id="labTableBody"><tr><td colspan="5" class="text-center text-muted">No practical labs added</td></tr></tbody></table></div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-4" onclick="resetLabForm()">Reset</button>
+                    <button type="submit" id="btnSaveLab" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">
+                        <i class="bi bi-save me-1"></i> Save Practical Lab
+                    </button>
                 </div>
+            </form>
+        </div>
+
+        <!-- PRACTICAL LABS LIST -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-table me-2 text-primary"></i> Practical Labs List
+                </h6>
+                <span class="badge bg-primary rounded-pill" id="labCount">0</span>
             </div>
 
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>ID</th>
+                            <th style="min-width:180px;">Title</th>
+                            <th>Topic</th>
+                            <th>Sub-Topic</th>
+                            <th>Level</th>
+                            <th>Standard</th>
+                            <th>Group</th>
+                            <th>Type</th>
+                            <th>Order</th>
+                            <th>Rewards</th>
+                            <th>Task?</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="labTableBody">
+                        <tr>
+                            <td colspan="13" class="text-center text-muted py-4">
+                                No practical labs added
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+    </div>
+
+</div>
+
     </div>
 </div>
 
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
-    <div id="liveToast" class="toast align-items-center text-white border-0 shadow-lg rounded-4" role="alert"><div class="d-flex"><div class="toast-body fw-semibold" id="toastMessage"></div><button type="button" class="btn-close btn-close-white me-2 m-auto shadow-none" data-bs-dismiss="toast"></button></div></div>
+
+<!-- TOAST -->
+<div class="position-fixed bottom-0 end-0 p-3"
+     style="z-index:1100;">
+
+    <div id="liveToast"
+         class="toast align-items-center text-white border-0 shadow-lg rounded-4"
+         role="alert">
+
+        <div class="d-flex">
+
+            <div class="toast-body fw-semibold"
+                 id="toastMessage">
+            </div>
+
+            <button type="button"
+                    class="btn-close btn-close-white me-2 m-auto shadow-none"
+                    data-bs-dismiss="toast">
+            </button>
+
+        </div>
+
+    </div>
+
 </div>
 
+
 @section Scripts {
+    <!-- Include TinyMCE Script (Replace YOUR_API_KEY with your key or use 'no-api-key' for testing) -->
+<script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
+
+        console.log("Course Authoring Script started");
+
+
+        // =============================================================
+        // GLOBAL VARIABLES
+        // =============================================================
+
         let selectedCourseId = null;
-        let dropCache = {};
-        let dataCache = { topics: [], subTopics: [], mcqs: [], labs: [] };
+
+
+        let dropCache = {
+
+            topics: [],
+            subTopics: [],
+            orderNumbers: [],
+            mcqLevels: [],
+            standards: [],
+            languages: []
+
+        };
+
+
+        let dataCache = {
+
+            topics: [],
+            subTopics: [],
+            mcqs: [],
+            labs: []
+
+        };
+
+
+        // =============================================================
+        // DOCUMENT READY
+        // =============================================================
 
         $(document).ready(function() {
+
+            console.log("Course Authoring document loaded");
+
+
+            // =========================================================
+            // COURSE SEARCH
+            // =========================================================
+
             $('#courseSearchInput').on('keyup', function() {
+
                 let q = $(this).val().trim();
-                if (q.length < 1) { $('#searchResults').addClass('d-none'); return; }
-                $.get(`/api/course-authoring/search-courses?query=${q}`, function(res) {
-                    if (res.success && res.data.length > 0) {
-                        let html = '';
-                        res.data.forEach(c => {
-                            html += `<button type="button" class="list-group-item list-group-item-action py-2 px-3 small" onclick='selectCourse(${JSON.stringify(c)})'><div class="fw-bold">${c.courseName}</div><div class="text-muted" style="font-size:0.75rem;">Delivery: ${new Date(c.expectedDeliveryDate).toLocaleDateString()}</div></button>`;
-                        });
-                        $('#searchResults').html(html).removeClass('d-none');
-                    } else { $('#searchResults').html('<div class="p-2 small text-muted">No courses found</div>').removeClass('d-none'); }
+
+
+                if (q.length < 1) {
+
+                    $('#searchResults')
+                        .addClass('d-none')
+                        .html('');
+
+                    return;
+                }
+
+
+                $.ajax({
+
+                    url:
+                        `/api/course-authoring/search-courses?query=${encodeURIComponent(q)}`,
+
+                    type: 'GET',
+
+                    success: function(res) {
+
+                        console.log(
+                            "Course Search Response:",
+                            res
+                        );
+
+
+                        if (
+                            res &&
+                            res.success &&
+                            Array.isArray(res.data) &&
+                            res.data.length > 0
+                        ) {
+
+                            let html = '';
+
+
+                            res.data.forEach(function(c) {
+
+                                let jsonData =
+                                    JSON.stringify(c)
+                                        .replace(/'/g, "&#39;");
+
+
+                                html += `
+
+                                        <button type="button"
+                                                class="list-group-item list-group-item-action py-2 px-3 small course-result-item"
+                                                data-course='${jsonData}'>
+
+                                            <div class="fw-bold">
+                                                ${escapeHtml(c.courseName || '')}
+                                            </div>
+
+                                            <div class="text-muted"
+                                                 style="font-size:0.75rem;">
+
+                                                Delivery:
+                                                ${c.expectedDeliveryDate
+                                        ? new Date(
+                                            c.expectedDeliveryDate
+                                        ).toLocaleDateString()
+                                        : 'N/A'
+                                    }
+
+                                            </div>
+
+                                        </button>
+
+                                    `;
+
+                            });
+
+
+                            $('#searchResults')
+                                .html(html)
+                                .removeClass('d-none');
+
+
+                            $('.course-result-item')
+                                .off('click')
+                                .on('click', function() {
+
+                                    let course =
+                                        JSON.parse(
+                                            $(this).attr('data-course')
+                                        );
+
+                                    selectCourse(course);
+
+                                });
+
+                        }
+                        else {
+
+                            $('#searchResults')
+                                .html(
+                                    '<div class="p-2 small text-muted">No courses found</div>'
+                                )
+                                .removeClass('d-none');
+
+                        }
+
+                    },
+
+                    error: function(xhr) {
+
+                        console.error(
+                            "Course Search Error:",
+                            xhr
+                        );
+
+
+                        $('#searchResults')
+                            .html(
+                                '<div class="p-2 small text-danger">Error loading courses</div>'
+                            )
+                            .removeClass('d-none');
+
+                    }
+
                 });
+
             });
 
-            $('#topicForm').on('submit', function(e) {
+            initializeMcqEditors();
+            // =========================================================
+            // TOPIC FORM
+            // =========================================================
+
+            $('#topicForm').on('submit', async function(e) {
+
                 e.preventDefault();
-                let payload = { id: parseInt($('#topicId').val()), courseRegistrationId: selectedCourseId, topicName: $('#tp_name').val(), description: $('#tp_desc').val(), displayOrderId: parseInt($('#tp_order').val()), language: $('#tp_lang').val() };
-                saveRecord('/api/course-authoring/topic/save', payload, () => { $('#topicId').val('0'); $('#topicForm')[0].reset(); loadAllTabsData(); }, 'Topic saved successfully!');
+
+
+                if (!selectedCourseId) {
+
+                    showToast(
+                        'Please select a course first.',
+                        'danger'
+                    );
+
+                    return;
+                }
+
+
+                let topicName =
+                    $('#tp_name').val().trim();
+
+
+                let orderNo =
+                    $('#tp_order').val();
+
+
+                let languageID =
+                    $('#tp_lang').val();
+
+
+                if (!topicName) {
+
+                    showToast(
+                        'Topic Name is required.',
+                        'warning'
+                    );
+
+                    return;
+                }
+
+
+                if (!orderNo || Number(orderNo) <= 0) {
+
+                    showToast(
+                        'Please enter a valid Order No.',
+                        'warning'
+                    );
+
+                    return;
+                }
+
+
+                if (!languageID) {
+
+                    showToast(
+                        'Please select Language.',
+                        'warning'
+                    );
+
+                    return;
+                }
+
+
+                let form =
+                    document.getElementById('topicForm');
+
+
+                let formData =
+                    new FormData(form);
+
+
+                // Make sure course ID is always current
+                formData.set(
+                    'courseId',
+                    selectedCourseId
+                );
+
+
+                let button =
+                    $('#btnSaveTopic');
+
+
+                let originalHtml =
+                    button.html();
+
+
+                button
+                    .prop('disabled', true)
+                    .html(`
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            Saving...
+                        `);
+
+
+                try {
+
+                    let response =
+                        await fetch(
+                            '/api/course-authoring/topic/save',
+                            {
+                                method: 'POST',
+                                body: formData
+                            }
+                        );
+
+
+                    let result =
+                        await response.json();
+
+
+                    console.log(
+                        "Topic Save Response:",
+                        result
+                    );
+
+
+                    if (
+                        !response.ok ||
+                        !result.success
+                    ) {
+
+                        throw new Error(
+                            result.message ||
+                            'Unable to save topic.'
+                        );
+
+                    }
+
+
+                    showToast(
+                        result.message ||
+                        'Topic saved successfully!',
+                        'success'
+                    );
+
+
+                    resetTopicForm();
+
+
+                    await loadCourseData();
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "Topic Save Error:",
+                        error
+                    );
+
+
+                    showToast(
+                        error.message ||
+                        'Error saving topic.',
+                        'danger'
+                    );
+
+                }
+                finally {
+
+                    button
+                        .prop('disabled', false)
+                        .html(originalHtml);
+
+                }
+
             });
+
+
+            // =========================================================
+            // SUB TOPIC FORM
+            // =========================================================
 
             $('#subTopicForm').on('submit', function(e) {
+
                 e.preventDefault();
-                let fd = new FormData(this);
-                fd.append('id', $('#subTopicId').val());
-                fd.append('courseRegistrationId', selectedCourseId);
+
+
+                if (!selectedCourseId) {
+
+                    showToast(
+                        'Please select a course first.',
+                        'danger'
+                    );
+
+                    return;
+                }
+
+
+                let fd =
+                    new FormData(this);
+
+
+                fd.set(
+                    'id',
+                    $('#subTopicId').val() || '0'
+                );
+
+
+                fd.set(
+                    'courseRegistrationId',
+                    selectedCourseId
+                );
+
 
                 $.ajax({
-                    url: '/api/course-authoring/subtopic/save', type: 'POST', data: fd, processData: false, contentType: false,
+
+                    url:
+                        '/api/course-authoring/subtopic/save',
+
+                    type: 'POST',
+
+                    data: fd,
+
+                    processData: false,
+
+                    contentType: false,
+
                     success: function(res) {
-                        if (res.success) { $('#subTopicId').val('0'); $('#subTopicForm')[0].reset(); loadAllTabsData(); showToast('Sub-Topic saved successfully!', 'success'); }
+
+                        if (res && res.success) {
+
+                            $('#subTopicId').val('0');
+
+                            $('#subTopicForm')[0].reset();
+
+                            loadCourseData();
+
+                            showToast(
+                                'Sub-Topic saved successfully!',
+                                'success'
+                            );
+
+                        }
+                        else {
+
+                            showToast(
+                                res?.message ||
+                                'Unable to save sub-topic.',
+                                'danger'
+                            );
+
+                        }
+
                     },
-                    error: function(err) { showToast('Error saving sub-topic', 'danger'); }
+
+                    error: function(xhr) {
+
+                        console.error(
+                            "Save SubTopic Error:",
+                            xhr.responseText
+                        );
+
+
+                        showToast(
+                            xhr.responseJSON?.message ||
+                            'Error saving sub-topic.',
+                            'danger'
+                        );
+
+                    }
+
                 });
+
             });
 
-            $('#mcqForm').on('submit', function(e) {
+
+            // =========================================================
+            // MCQ FORM
+            // =========================================================
+
+          $('#mcqForm').on('submit', async function (e) {
                 e.preventDefault();
-                let payload = { id: parseInt($('#mcqId').val()), courseRegistrationId: selectedCourseId, courseTopicId: parseInt($('#mq_topic').val()), courseSubTopicId: parseInt($('#mq_subTopic').val()), courseMcqLevelId: parseInt($('#mq_level').val()), question: $('#mq_question').val(), optionA: $('#mq_optA').val(), optionB: $('#mq_optB').val(), optionC: $('#mq_optC').val(), optionD: $('#mq_optD').val(), rightAnswer: $('input[name="rightAns"]:checked').val() };
-                saveRecord('/api/course-authoring/mcq/save', payload, () => { $('#mcqId').val('0'); $('#mcqForm')[0].reset(); loadAllTabsData(); }, 'MCQ saved successfully!');
+
+                if (!selectedCourseId) {
+                    showToast('Please select a course first.', 'danger');
+                    return;
+                }
+
+                const correctOption = $('input[name="rightAns"]:checked').val();
+
+                const payload = {
+                    questionId: Number($('#mcqId').val()) || 0,
+                    courseId: Number(selectedCourseId),
+                    topicId: Number($('#mq_topic').val()),
+                    subTopicId: Number($('#mq_subTopic').val()),
+                    questionName: getMcqEditorValue('mq_question'),
+                    questionType: 'HTML',
+                    editorType: 'HTML',
+                    complexityLevel: $('#mq_complexity').val(),
+                    languageId: Number($('#mq_language').val()),
+                    answerDescription: getMcqEditorValue('mq_answerDescription'),
+                    options: [
+                        { optionText: $('#mq_optA').val(), isAnswer: correctOption === 'A' },
+                        { optionText: $('#mq_optB').val(), isAnswer: correctOption === 'B' },
+                        { optionText: $('#mq_optC').val(), isAnswer: correctOption === 'C' },
+                        { optionText: $('#mq_optD').val(), isAnswer: correctOption === 'D' }
+                    ].filter(x => x.optionText.trim() !== '')
+                };
+
+                if (!payload.topicId || !payload.subTopicId ||
+                    !payload.languageId || !payload.complexityLevel ||
+                    !payload.questionName.trim()) {
+                    showToast('Complete all required fields.', 'warning');
+                    return;
+                }
+
+                if (!payload.options.length) {
+                    showToast('Enter at least one option.', 'warning');
+                    return;
+                }
+
+                if (!payload.options.some(x => x.isAnswer)) {
+                    showToast('Select the correct answer.', 'warning');
+                    return;
+                }
+
+                const button = $('#btnSaveMcq');
+                const originalText = button.html();
+
+                button.prop('disabled', true).text('Saving...');
+
+                try {
+                    const response = await fetch('/api/course-authoring/mcq/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Unable to save MCQ.');
+                    }
+
+                    showToast(result.message || 'MCQ saved successfully.', 'success');
+                    resetMcqForm();
+                    await loadCourseData();
+                } catch (error) {
+                    console.error('MCQ save error:', error);
+                    showToast(error.message || 'Error saving MCQ.', 'danger');
+                } finally {
+                    button.prop('disabled', false).html(originalText);
+                }
             });
+
+            function resetMcqForm() {
+                $('#mcqForm')[0].reset();
+                $('#mcqId').val('0');
+
+                $('#mq_editorType').val('HTML');
+                $('#mq_subTopic').html('<option value="">-- Select Sub-Topic --</option>');
+
+                $('input[name="rightAns"][value="A"]').prop('checked', true);
+
+                setMcqEditorValue('mq_question', '');
+                setMcqEditorValue('mq_answerDescription', '');
+
+                $('#mcqFormTitle').html(
+                    '<i class="bi bi-plus-circle me-1"></i> Add MCQ Question'
+                );
+                $('#btnSaveMcq').text('Save MCQ');
+            }
+
+
+            // =========================================================
+            // LAB FORM
+            // =========================================================
 
             $('#labForm').on('submit', function(e) {
+
                 e.preventDefault();
-                let fd = new FormData(this);
-                fd.append('id', $('#labId').val());
-                fd.append('courseRegistrationId', selectedCourseId);
+
+
+                if (!selectedCourseId) {
+
+                    showToast(
+                        'Please select a course first.',
+                        'danger'
+                    );
+
+                    return;
+                }
+
+
+                let fd =
+                    new FormData(this);
+
+
+                fd.set(
+                    'id',
+                    $('#labId').val() || '0'
+                );
+
+
+                fd.set(
+                    'courseRegistrationId',
+                    selectedCourseId
+                );
+
 
                 $.ajax({
-                    url: '/api/course-authoring/lab/save', type: 'POST', data: fd, processData: false, contentType: false,
+
+                    url:
+                        '/api/course-authoring/lab/save',
+
+                    type: 'POST',
+
+                    data: fd,
+
+                    processData: false,
+
+                    contentType: false,
+
                     success: function(res) {
-                        if (res.success) { $('#labId').val('0'); $('#labForm')[0].reset(); loadAllTabsData(); showToast('Practical Lab saved successfully!', 'success'); }
+
+                        if (res && res.success) {
+
+                            $('#labId').val('0');
+
+                            $('#labForm')[0].reset();
+
+                            loadCourseData();
+
+                            showToast(
+                                'Practical Lab saved successfully!',
+                                'success'
+                            );
+
+                        }
+                        else {
+
+                            showToast(
+                                res?.message ||
+                                'Unable to save lab.',
+                                'danger'
+                            );
+
+                        }
+
                     },
-                    error: function(err) { showToast('Error saving lab', 'danger'); }
+
+                    error: function(xhr) {
+
+                        console.error(
+                            "Save Lab Error:",
+                            xhr.responseText
+                        );
+
+
+                        showToast(
+                            xhr.responseJSON?.message ||
+                            'Error saving lab.',
+                            'danger'
+                        );
+
+                    }
+
                 });
+
             });
 
-            $('#mq_topic').on('change', function() {
-                let tId = $(this).val();
-                let filteredSub = dropCache.subTopics ? dropCache.subTopics.filter(x => x.courseTopicId == tId) : [];
-                populateDropdown('#mq_subTopic', filteredSub, 'id', 'subTopicName');
+
+            // =========================================================
+            // MCQ TOPIC CHANGE
+            // =========================================================
+
+            $('#mq_topic').on('change', function () {
+                    const topicId = $(this).val();
+
+                    const filtered = (dropCache.subTopics || []).filter(function (x) {
+                        return String(x.courseTopicId) === String(topicId);
+                    });
+
+                    populateDropdown(
+                        '#mq_subTopic',
+                        filtered,
+                        'id',
+                        'subTopicName',
+                        '-- Select Sub-Topic --'
+                    );
+                });
+
+
+            // =========================================================
+            // CLOSE SEARCH
+            // =========================================================
+
+            $(document).on('click', function(e) {
+
+                if (
+                    !$(e.target).closest(
+                        '#courseSearchInput, #searchResults'
+                    ).length
+                ) {
+
+                    $('#searchResults')
+                        .addClass('d-none');
+
+                }
+
             });
+
         });
 
+
+        // =============================================================
+        // SELECT COURSE
+        // =============================================================
+
         function selectCourse(c) {
-            selectedCourseId = c.id;
-            $('#courseSearchInput').val(c.courseName);
-            $('#searchResults').addClass('d-none');
-            $('#selectedCourseName').text(c.courseName);
-            $('#lblDesc').text(c.description || 'N/A');
-            $('#lblAge').text(`${c.fromAge} - ${c.toAge} yrs`);
-            $('#lblSessions').text(c.numberOfSessions);
-            $('#lblDate').text(new Date(c.expectedDeliveryDate).toLocaleDateString());
-            $('#selectedCourseCard').removeClass('d-none');
 
-            $('#authoringTabsWrapper').removeClass('opacity-50 pointer-events-none');
-            $('#authoringTabs button').prop('disabled', false);
+            console.log(
+                "Selected Course:",
+                c
+            );
 
-            loadCourseDropdowns();
-            loadAllTabsData();
+
+            selectedCourseId =
+                c.courseID ??
+                c.courseRegistrationId ??
+                c.courseId;
+
+
+            if (!selectedCourseId) {
+
+                console.error(
+                    "Course ID missing:",
+                    c
+                );
+
+
+                showToast(
+                    'Course ID is missing from API response.',
+                    'danger'
+                );
+
+                return;
+            }
+
+
+            $('#courseSearchInput')
+                .val(
+                    c.courseName || ''
+                );
+
+
+            $('#searchResults')
+                .addClass('d-none');
+
+
+            $('#selectedCourseName')
+                .text(
+                    c.courseName || 'Course'
+                );
+
+
+            $('#lblDesc')
+                .text(
+                    c.description ||
+                    c.courseDescription ||
+                    'N/A'
+                );
+
+
+            let fromAge =
+                c.fromAge ??
+                c.from_age ??
+                '';
+
+
+            let toAge =
+                c.toAge ??
+                c.to_age ??
+                '';
+
+
+            $('#lblAge')
+                .text(
+                    fromAge || toAge
+                        ? `${fromAge} - ${toAge} yrs`
+                        : 'N/A'
+                );
+
+
+            $('#lblSessions')
+                .text(
+                    c.noOfSessions ??
+                    c.sessions ??
+                    'N/A'
+                );
+
+
+            $('#lblDate')
+                .text(
+                    c.expectedDeliveryDate
+                        ? new Date(
+                            c.expectedDeliveryDate
+                        ).toLocaleDateString()
+                        : 'N/A'
+                );
+
+
+            $('#selectedCourseCard')
+                .removeClass('d-none');
+
+
+            $('#authoringTabsWrapper')
+                .removeClass(
+                    'opacity-50 pointer-events-none'
+                );
+
+
+            $('#authoringTabs button')
+                .prop(
+                    'disabled',
+                    false
+                );
+
+
+            loadCourseData();
+
         }
+
+
+        // =============================================================
+        // LOAD COURSE DATA
+        // =============================================================
+
+        async function loadCourseData() {
+
+            if (!selectedCourseId) {
+
+                return;
+
+            }
+
+
+            try {
+
+                await loadCourseDropdowns();
+
+                await loadTopics();
+
+                await loadSubTopics();
+
+                await loadMcqs();
+                //await renderMcqs();
+                await loadLabs();
+
+
+                console.log(
+                    "All course data loaded."
+                );
+
+            }
+            catch (error) {
+
+                console.error(
+                    "loadCourseData ERROR:",
+                    error
+                );
+
+
+                showToast(
+                    'Some course data could not be loaded. Check browser console.',
+                    'danger'
+                );
+
+            }
+
+        }
+
+
+        // =============================================================
+        // CLEAR COURSE
+        // =============================================================
 
         function clearSelectedCourse() {
+
             selectedCourseId = null;
-            $('#courseSearchInput').val('');
-            $('#selectedCourseCard').addClass('d-none');
-            $('#authoringTabsWrapper').addClass('opacity-50 pointer-events-none');
-            $('#authoringTabs button').prop('disabled', true);
+
+
+            dropCache = {
+
+                topics: [],
+                subTopics: [],
+                orderNumbers: [],
+                mcqLevels: [],
+                standards: [],
+                languages: []
+
+            };
+
+
+            dataCache = {
+
+                topics: [],
+                subTopics: [],
+                mcqs: [],
+                labs: []
+
+            };
+
+
+            $('#courseSearchInput')
+                .val('');
+
+
+            $('#selectedCourseCard')
+                .addClass('d-none');
+
+
+            $('#authoringTabsWrapper')
+                .addClass(
+                    'opacity-50 pointer-events-none'
+                );
+
+
+            $('#authoringTabs button')
+                .prop(
+                    'disabled',
+                    true
+                );
+
+
+            resetTopicForm();
+
+
+            clearTables();
+
+            clearDropdowns();
+
         }
+
+
+        // =============================================================
+        // CLEAR TABLES
+        // =============================================================
+
+        function clearTables() {
+
+            $('#topicTableBody').html(`
+                    <tr>
+                        <td colspan="9"
+                            class="text-center text-muted py-4">
+                            Select a course to load topics.
+                        </td>
+                    </tr>
+                `);
+
+
+            $('#subTopicTableBody').html(`
+                    <tr>
+                        <td colspan="5"
+                            class="text-center text-muted">
+                            No sub-topics added
+                        </td>
+                    </tr>
+                `);
+
+
+            $('#mcqTableBody').html(`
+                    <tr>
+                        <td colspan="4"
+                            class="text-center text-muted">
+                            No MCQs added
+                        </td>
+                    </tr>
+                `);
+
+
+            $('#labTableBody').html(`
+                    <tr>
+                        <td colspan="5"
+                            class="text-center text-muted">
+                            No practical labs added
+                        </td>
+                    </tr>
+                `);
+
+
+            $('#topicCount').text('0');
+
+        }
+
+
+        // =============================================================
+        // CLEAR DROPDOWNS
+        // =============================================================
+
+        function clearDropdowns() {
+
+            $('#tp_lang').html(
+                '<option value="">Select Language</option>'
+            );
+
+             $('#st_lang').html(
+                '<option value="">Select Language</option>'
+            );
+            $('#st_topic').html(
+                '<option value="">-- Select Topic --</option>'
+            );
+
+
+            $('#mq_topic').html(
+                '<option value="">-- Select Topic --</option>'
+            );
+
+
+            $('#mq_subTopic').html(
+                '<option value="">-- Select Sub-Topic --</option>'
+            );
+
+
+            $('#mq_level').html(
+                '<option value="">-- Select Level --</option>'
+            );
+
+
+            $('#lb_standard').html(
+                '<option value="">-- Select Standard --</option>'
+            );
+
+        }
+
+
+        // =============================================================
+        // LOAD COURSE DROPDOWNS
+        // =============================================================
 
         function loadCourseDropdowns() {
-            $.get(`/api/course-authoring/dropdowns/${selectedCourseId}`, function(res) {
-                if (res.success) {
-                    dropCache = res;
-                    populateDropdown('#tp_order', res.orderNumbers, 'id', 'displayOrder');
-                    populateDropdown('#st_order', res.orderNumbers, 'id', 'displayOrder');
-                    populateDropdown('#lb_order', res.orderNumbers, 'id', 'displayOrder');
-                    populateDropdown('#st_topic', res.topics, 'id', 'topicName');
-                    populateDropdown('#mq_topic', res.topics, 'id', 'topicName');
-                    populateDropdown('#mq_level', res.mcqLevels, 'id', 'name');
-                    populateDropdown('#lb_standard', res.standards, 'id', 'standardName');
+
+            return new Promise(function(resolve, reject) {
+
+                if (!selectedCourseId) {
+
+                    reject(
+                        new Error(
+                            'Course ID is missing'
+                        )
+                    );
+
+                    return;
                 }
+
+
+                let url =
+                    `/api/course-authoring/dropdowns/${encodeURIComponent(selectedCourseId)}`;
+
+
+                console.log(
+                    "Loading Dropdowns:",
+                    url
+                );
+
+
+                $.ajax({
+
+                    url: url,
+
+                    type: 'GET',
+
+                    success: function(res) {
+
+                        console.log(
+                            "Dropdown Response:",
+                            res
+                        );
+
+
+                        if (
+                            !res ||
+                            !res.success
+                        ) {
+
+                            reject(
+                                new Error(
+                                    res?.message ||
+                                    'Dropdown API failed'
+                                )
+                            );
+
+                            return;
+                        }
+
+
+                        // DO NOT do:
+                        // dropCache = res;
+                        //
+                        // Keep a controlled structure.
+
+                        dropCache.topics =
+                            Array.isArray(res.topics)
+                                ? res.topics
+                                : [];
+
+
+                        dropCache.subTopics =
+                            Array.isArray(res.subTopics)
+                                ? res.subTopics
+                                : [];
+
+
+                        dropCache.orderNumbers =
+                            Array.isArray(res.orderNumbers)
+                                ? res.orderNumbers
+                                : [];
+
+
+                        dropCache.mcqLevels =
+                            Array.isArray(res.mcqLevels)
+                                ? res.mcqLevels
+                                : [];
+
+
+                        dropCache.standards =
+                            Array.isArray(res.standards)
+                                ? res.standards
+                                : [];
+
+
+                        dropCache.languages =
+                            Array.isArray(res.languages)
+                                ? res.languages
+                                : [];
+
+
+                        // =================================================
+                        // LANGUAGE
+                        // =================================================
+
+                        populateDropdown(
+                            '#tp_lang',
+                            dropCache.languages,
+                            'id',
+                            'name',
+                            'Select Language'
+                        );
+
+                        populateDropdown(
+                            '#st_lang',
+                            dropCache.languages,
+                            'id',
+                            'name',
+                            'Select Language'
+                        );
+
+                        // =================================================
+                        // TOPICS
+                        // =================================================
+
+                        populateDropdown(
+                            '#st_topic',
+                            dropCache.topics,
+                            'id',
+                            'topicName',
+                            'Select Topic'
+                        );
+
+
+                        populateDropdown(
+                            '#mq_topic',
+                            dropCache.topics,
+                            'id',
+                            'topicName',
+                            'Select Topic'
+                        );
+
+
+                        // =================================================
+                        // MCQ LEVEL
+                        // =================================================
+
+                        populateDropdown(
+                            '#mq_level',
+                            dropCache.mcqLevels,
+                            'id',
+                            'name',
+                            'Select Level'
+                        );
+
+
+                        // =================================================
+                        // STANDARD
+                        // =================================================
+
+                        populateDropdown(
+                            '#lb_standard',
+                            dropCache.standards,
+                            'id',
+                            'standardName',
+                            'Select Standard'
+                        );
+                        populateDropdown(
+    '#lb_topic',
+    dropCache.topics || [],
+    'id',
+    'topicName',
+    '-- Select Topic --'
+);
+                        loadMcqDropdowns();
+
+                        resolve();
+
+                    },
+
+                    error: function(xhr) {
+
+                        console.error(
+                            "Dropdown API Error:",
+                            xhr.status,
+                            xhr.responseText
+                        );
+
+
+                        reject(xhr);
+
+                    }
+
+                });
+
             });
+
         }
 
-        function loadAllTabsData() {
-            loadTopics(); loadSubTopics(); loadMcqs(); loadLabs();
-        }
+
+        // =============================================================
+        // LOAD TOPICS
+        // =============================================================
 
         function loadTopics() {
-            $.get(`/api/course-authoring/topic/list/${selectedCourseId}`, function(res) {
-                dataCache.topics = res.data || [];
-                let rows = '';
-                dataCache.topics.forEach((x, i) => {
-                    rows += `<tr><td>${i + 1}</td><td class="fw-medium">${x.topicName}</td><td>${x.language}</td><td>${x.displayOrderId}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editTopic(${x.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteRecord('/api/course-authoring/topic/delete/${x.id}', loadAllTabsData)"><i class="bi bi-trash"></i></button></td></tr>`;
+
+            return new Promise(function(resolve, reject) {
+
+                let url =
+                    `/api/course-authoring/topic/list/${encodeURIComponent(selectedCourseId)}`;
+
+
+                console.log(
+                    "Loading Topics:",
+                    url
+                );
+
+
+                $('#topicTableBody').html(`
+                        <tr>
+                            <td colspan="9"
+                                class="text-center py-4">
+
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Loading topics...
+
+                            </td>
+                        </tr>
+                    `);
+
+
+                $.ajax({
+
+                    url: url,
+
+                    type: 'GET',
+
+                    success: function(res) {
+
+                        console.log(
+                            "Topics Response:",
+                            res
+                        );
+
+
+                        if (
+                            !res ||
+                            res.success === false
+                        ) {
+
+                            reject(
+                                new Error(
+                                    res?.message ||
+                                    'Topic API failed'
+                                )
+                            );
+
+                            return;
+                        }
+
+
+                        dataCache.topics =
+                            Array.isArray(res.data)
+                                ? res.data
+                                : [];
+
+
+                        renderTopics();
+
+
+                        resolve();
+
+                    },
+
+                    error: function(xhr) {
+
+                        console.error(
+                            "Topics API Error:",
+                            xhr.status,
+                            xhr.responseText
+                        );
+
+
+                        $('#topicTableBody').html(`
+                                <tr>
+                                    <td colspan="9"
+                                        class="text-center text-danger py-4">
+
+                                        Failed to load topics.
+
+                                    </td>
+                                </tr>
+                            `);
+
+
+                        reject(xhr);
+
+                    }
+
                 });
-                $('#topicTableBody').html(rows.length ? rows : '<tr><td colspan="5" class="text-center text-muted">No topics added</td></tr>');
+
             });
+
         }
+
+
+        // =============================================================
+        // RENDER TOPICS
+        // =============================================================
+
+        function renderTopics() {
+
+            let tbody =
+                $('#topicTableBody');
+
+
+            tbody.empty();
+
+
+            let topics =
+                dataCache.topics || [];
+
+
+            $('#topicCount')
+                .text(topics.length);
+
+
+            if (topics.length === 0) {
+
+                tbody.html(`
+                        <tr>
+                            <td colspan="9"
+                                class="text-center text-muted py-4">
+
+                                <i class="bi bi-folder2-open fs-4 d-block mb-2"></i>
+
+                                No topics added.
+
+                            </td>
+                        </tr>
+                    `);
+
+                return;
+            }
+
+
+            topics.forEach(function(x) {
+
+                // Language is stored as languageID
+                let language =
+                    dropCache.languages.find(
+                        function(l) {
+
+                            return String(l.id) ===
+                                String(x.languageID);
+
+                        }
+                    );
+
+
+                let languageName =
+                    language
+                        ? language.name
+                        : '-';
+                        const resourceUrl = normalizeFileUrl(x.resourceFile);
+                        const exerciseUrl = normalizeFileUrl(x.exerciseFile);
+
+                // Resource file
+                let resourceHtml =
+                    resourceUrl
+                        ? `
+                                <a href="${escapeHtml(resourceUrl)}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="btn btn-sm btn-outline-success">
+
+                                    <i class="bi bi-file-earmark-arrow-down me-1"></i>
+                                    View
+
+                                </a>
+                              `
+                        : `
+                                <span class="text-muted">
+                                    Not uploaded
+                                </span>
+                              `;
+
+
+                // Exercise file
+                let exerciseHtml =
+                    exerciseUrl
+                        ? `
+                                <a href="${escapeHtml(exerciseUrl)}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="btn btn-sm btn-outline-primary">
+
+                                    <i class="bi bi-file-earmark-arrow-down me-1"></i>
+                                    View
+
+                                </a>
+                              `
+                        : `
+                                <span class="text-muted">
+                                    Not uploaded
+                                </span>
+                              `;
+
+
+                tbody.append(`
+
+                        <tr>
+
+                            <!-- TOPIC ID -->
+                            <td>
+                                <span class="badge bg-dark">
+                                    ${escapeHtml(x.id)}
+                                </span>
+                            </td>
+
+
+                            <!-- TOPIC NAME -->
+                            <td>
+
+                                <span class="fw-semibold">
+                                    ${escapeHtml(x.topicName || '-')}
+                                </span>
+
+                            </td>
+
+
+                            <!-- SUB TOPIC COUNT -->
+                            <td class="text-center">
+
+                                <span class="badge bg-info text-dark">
+                                    ${escapeHtml(x.subTopicCount ?? 0)}
+                                </span>
+
+                            </td>
+
+
+                            <!-- ORDER -->
+                            <td class="text-center">
+
+                                <span class="badge bg-secondary">
+                                    ${escapeHtml(x.orderNo ?? '-')}
+                                </span>
+
+                            </td>
+
+
+                            <!-- LANGUAGE -->
+                            <td>
+                                ${escapeHtml(languageName)}
+                            </td>
+
+
+                            <!-- RESOURCE -->
+                            <td class="text-center">
+                                ${resourceHtml}
+                            </td>
+
+
+                            <!-- EXERCISE -->
+                            <td class="text-center">
+                                ${exerciseHtml}
+                            </td>
+
+
+                            <!-- DESCRIPTION -->
+                            <td>
+
+                                <div style="
+                                    max-width:350px;
+                                    white-space:normal;
+                                    word-break:break-word;
+                                ">
+
+                                    ${escapeHtml(
+                    x.description || '-'
+                )}
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- ACTIONS -->
+                            <td class="text-end">
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary border-0 p-1 me-1"
+                                        onclick="editTopic(${x.id})"
+                                        title="Edit">
+
+                                    <i class="bi bi-pencil"></i>
+
+                                </button>
+
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger border-0 p-1"
+                                        onclick="deleteRecord(
+                                            '/api/course-authoring/topic/delete/${x.id}',
+                                            loadCourseData
+                                        )"
+                                        title="Delete">
+
+                                    <i class="bi bi-trash"></i>
+
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                    `);
+
+            });
+
+        }
+
+
+        // =============================================================
+        // LOAD SUB TOPICS
+        // =============================================================
 
         function loadSubTopics() {
-            $.get(`/api/course-authoring/subtopic/list/${selectedCourseId}`, function(res) {
-                dataCache.subTopics = res.data || [];
-                let rows = '';
-                dataCache.subTopics.forEach((x, i) => {
-                    let t = dataCache.topics.find(tp => tp.id == x.courseTopicId);
-                    rows += `<tr><td>${i + 1}</td><td>${t ? t.topicName : '-'}</td><td class="fw-medium">${x.subTopicName}</td><td>${x.numberOfQuestions}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editSubTopic(${x.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteRecord('/api/course-authoring/subtopic/delete/${x.id}', loadAllTabsData)"><i class="bi bi-trash"></i></button></td></tr>`;
+
+            return new Promise(function(resolve, reject) {
+
+                let url =
+                    `/api/course-authoring/subtopic/list/${encodeURIComponent(selectedCourseId)}`;
+
+
+                $('#subTopicTableBody').html(`
+                        <tr>
+                            <td colspan="5"
+                                class="text-center py-4">
+
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Loading sub-topics...
+
+                            </td>
+                        </tr>
+                    `);
+
+
+                $.ajax({
+
+                    url: url,
+
+                    type: 'GET',
+
+                    success: function(res) {
+
+                        console.log(
+                            "SubTopics Response:",
+                            res
+                        );
+
+
+                        dataCache.subTopics =
+                            Array.isArray(res?.data)
+                                ? res.data
+                                : [];
+
+
+                        let rows = '';
+
+
+                        dataCache.subTopics.forEach(
+                                  
+
+                            function(x, i) {
+                                const language = (dropCache.languages || []).find(
+                                    l => String(l.id) === String(x.languageID)
+                                );
+                                let topic =
+                                    dataCache.topics.find(
+                                        function(tp) {
+
+                                            return String(tp.id) ===
+                                                String(x.courseTopicId);
+
+                                        }
+                                    );
+
+
+
+                                    const resourceUrl = normalizeFileUrl(x.trainerResource);
+                        const exerciseUrl = normalizeFileUrl(x.trainerExercise);
+
+                                    let resourceHtml =
+                    resourceUrl
+                        ? `
+                                <a href="${escapeHtml(resourceUrl)}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="btn btn-sm btn-outline-success">
+
+                                    <i class="bi bi-file-earmark-arrow-down me-1"></i>
+                                    View
+
+                                </a>
+                              `
+                        : `
+                                <span class="text-muted">
+                                    Not uploaded
+                                </span>
+                              `;
+
+
+                // Exercise file
+                let exerciseHtml =
+                    exerciseUrl
+                        ? `
+                                <a href="${escapeHtml(exerciseUrl)}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="btn btn-sm btn-outline-primary">
+
+                                    <i class="bi bi-file-earmark-arrow-down me-1"></i>
+                                    View
+
+                                </a>
+                              `
+                        : `
+                                <span class="text-muted">
+                                    Not uploaded
+                                </span>
+                              `;
+
+                                rows += `
+
+                                        <tr>
+
+                                            <td>
+                                                ${i + 1}
+                                            </td>
+                                                      <td>
+                            <span class="badge bg-dark">
+                                ${escapeHtml(x.id)}
+                            </span>
+                        </td>
+                                            <td>
+                                                ${escapeHtml(
+                                    topic?.topicName || '-'
+                                )}
+                                            </td>
+
+                                            <td class="fw-medium">
+                                                ${escapeHtml(
+                                    x.subTopicName || ''
+                                )}
+                                            </td>
+                                                     <td class="text-center">
+                            ${escapeHtml(x.orderNo ?? '-')}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(language?.name || '-')}
+                        </td>
+                         <td>
+                            <div style="max-width:350px;white-space:normal;word-break:break-word;">
+                                ${escapeHtml(x.description || '-')}
+                            </div>
+                        </td>
+                        <td>
+                            ${escapeHtml(x.trainerVideo || '-')}
+                        </td>
+                         <td class="text-center">
+                                ${resourceHtml}
+                            </td>
+
+
+                            <!-- EXERCISE -->
+                            <td class="text-center">
+                                ${exerciseHtml}
+                            </td>
+                       
+                                            <td>
+                                                ${x.numberOfQuestions ?? 0}
+                                            </td>
+
+                                            <td class="text-end">
+
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-primary border-0 p-1 me-1"
+                                                        onclick="editSubTopic(${x.id})">
+
+                                                    <i class="bi bi-pencil"></i>
+
+                                                </button>
+
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-danger border-0 p-1"
+                                                        onclick="deleteRecord(
+                                                            '/api/course-authoring/subtopic/delete/${x.id}',
+                                                            loadCourseData
+                                                        )">
+
+                                                    <i class="bi bi-trash"></i>
+
+                                                </button>
+
+                                            </td>
+
+                                        </tr>
+
+                                    `;
+
+                            }
+                        );
+
+
+                        $('#subTopicTableBody').html(
+
+                            rows ||
+
+                            `
+                                <tr>
+                                    <td colspan="5"
+                                        class="text-center text-muted">
+
+                                        No sub-topics added
+
+                                    </td>
+                                </tr>
+                                `
+
+                        );
+
+
+                        // Keep MCQ subtopic dropdown cache updated
+                        dropCache.subTopics =
+                            dataCache.subTopics;
+
+
+                        resolve();
+
+                    },
+
+                    error: function(xhr) {
+
+                        console.error(
+                            "SubTopics API Error:",
+                            xhr.status,
+                            xhr.responseText
+                        );
+
+
+                        $('#subTopicTableBody').html(`
+                                <tr>
+                                    <td colspan="5"
+                                        class="text-center text-danger">
+
+                                        Failed to load sub-topics
+
+                                    </td>
+                                </tr>
+                            `);
+
+
+                        reject(xhr);
+
+                    }
+
                 });
-                $('#subTopicTableBody').html(rows.length ? rows : '<tr><td colspan="5" class="text-center text-muted">No sub-topics added</td></tr>');
+
             });
+
         }
+
+
+        // =============================================================
+        // LOAD MCQS
+        // =============================================================
 
         function loadMcqs() {
-            $.get(`/api/course-authoring/mcq/list/${selectedCourseId}`, function(res) {
-                dataCache.mcqs = res.data || [];
-                let rows = '';
-                dataCache.mcqs.forEach((x, i) => {
-                    rows += `<tr><td>${i + 1}</td><td class="fw-medium">${x.question}</td><td><span class="badge bg-success-subtle text-success">Option ${x.rightAnswer}</span></td><td class="text-end"><button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editMcq(${x.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteRecord('/api/course-authoring/mcq/delete/${x.id}', loadAllTabsData)"><i class="bi bi-trash"></i></button></td></tr>`;
+
+            return new Promise(function(resolve, reject) {
+
+                let url =
+                    `/api/course-authoring/mcq/list/${encodeURIComponent(selectedCourseId)}`;
+
+
+                $.ajax({
+
+                    url: url,
+
+                    type: 'GET',
+
+                    success: function(res) {
+
+                        console.log(
+                            "MCQ Response:",
+                            res
+                        );
+
+
+                        dataCache.mcqs =
+                            Array.isArray(res?.data)
+                                ? res.data
+                                : [];
+
+
+                        let rows = '';
+
+
+                        dataCache.mcqs.forEach(
+                            function(x, i) {
+                                 const answerText = $('<div>')
+            .html(x.answerDescription || '')
+            .text();
+                                rows += `
+
+                                        <tr>
+
+                                             <td>
+                    <span class="badge bg-dark">${escapeHtml(x.id)}</span>
+                </td>
+                <td style="min-width:280px;white-space:normal;">
+                    ${escapeHtml(x.questionName || '-')}
+                </td>
+                <td>${escapeHtml(x.topicName || '-')}</td>
+                <td>${escapeHtml(x.subTopicName || '-')}</td>
+                <td>${escapeHtml(formatMcqDate(x.createdDate))}</td>
+                <td>${escapeHtml(x.createdBy ?? '-')}</td>
+                <td>${escapeHtml(formatMcqDate(x.modifiedDate))}</td>
+                <td>${escapeHtml(x.modifiedBy ?? '-')}</td>
+                <td class="text-center">${escapeHtml(x.questionLevel ?? '-')}</td>
+                <td>
+                    <span class="badge bg-secondary">${escapeHtml(x.complexityLevel || '-')}</span>
+                </td>
+                <td>${escapeHtml(x.languageName || '-')}</td>
+                <td style="min-width:240px;white-space:normal;">
+                    ${escapeHtml(answerText || '-')}
+                </td>
+                <td class="text-end text-nowrap">
+                    <button type="button"
+                            class="btn btn-sm btn-outline-primary border-0"
+                            onclick="editMcq(${Number(x.id)})"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-danger border-0"
+                            onclick="deleteRecord(
+                                '/api/course-authoring/mcq/delete/${Number(x.id)}',
+                                loadCourseData
+                            )"
+                            title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+
+                                        </tr>
+
+                                    `;
+
+                            }
+                        );
+
+
+                        $('#mcqTableBody').html(
+
+                            rows ||
+
+                            `
+                                <tr>
+                                    <td colspan="4"
+                                        class="text-center text-muted">
+
+                                        No MCQs added
+
+                                    </td>
+                                </tr>
+                                `
+
+                        );
+
+
+                        resolve();
+
+                    },
+
+                    error: function(xhr) {
+
+                        console.error(
+                            "MCQ API Error:",
+                            xhr.status,
+                            xhr.responseText
+                        );
+
+
+                        $('#mcqTableBody').html(`
+                                <tr>
+                                    <td colspan="4"
+                                        class="text-center text-danger">
+
+                                        Failed to load MCQs
+
+                                    </td>
+                                </tr>
+                            `);
+
+
+                        reject(xhr);
+
+                    }
+
                 });
-                $('#mcqTableBody').html(rows.length ? rows : '<tr><td colspan="4" class="text-center text-muted">No MCQs added</td></tr>');
+
             });
+
         }
 
-        function loadLabs() {
-            $.get(`/api/course-authoring/lab/list/${selectedCourseId}`, function(res) {
-                dataCache.labs = res.data || [];
+
+        // =============================================================
+        // LOAD LABS
+        // =============================================================
+
+       function loadLabs() {
+           debugger
+    return new Promise(function(resolve, reject) {
+        let url = `/api/course-authoring/lab/list/${encodeURIComponent(selectedCourseId)}`;
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(res) {
+                console.log("Labs Response:", res);
+
+                dataCache.labs = Array.isArray(res?.data) ? res.data : [];
                 let rows = '';
-                dataCache.labs.forEach((x, i) => {
-                    rows += `<tr><td>${i + 1}</td><td class="fw-medium">${x.title}</td><td>${x.practicalTopic}</td><td>🪙 ${x.coins} | 💎 ${x.gems}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editLab(${x.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteRecord('/api/course-authoring/lab/delete/${x.id}', loadAllTabsData)"><i class="bi bi-trash"></i></button></td></tr>`;
+
+                $('#labCount').text(dataCache.labs.length);
+
+                if (!dataCache.labs.length) {
+                    $('#labTableBody').html(`
+                        <tr>
+                            <td colspan="13" class="text-center text-muted py-4">
+                                No practical labs added
+                            </td>
+                        </tr>
+                    `);
+                    resolve();
+                    return;
+                }
+
+                dataCache.labs.forEach(function(x, i) {
+                    let topic = (dropCache.topics || []).find(t => String(t.id) === String(x.practicalTopicID));
+                    let subTopic = (dropCache.subTopics || []).find(st => String(st.id) === String(x.practicalSubtopicID));
+
+                    rows += `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td><span class="badge bg-dark">${escapeHtml(x.id)}</span></td>
+                            <td class="fw-medium">${escapeHtml(x.title || '')}</td>
+                            <td>${escapeHtml(topic?.topicName || '-')}</td>
+                            <td>${escapeHtml(subTopic?.subTopicName || '-')}</td>
+                            <td><span class="badge bg-info text-dark">${escapeHtml(x.practicalLevel || '-')}</span></td>
+                            <td>${escapeHtml(x.practicalStandard || '-')}</td>
+                            <td><span class="badge bg-secondary">${escapeHtml(x.student_Group || '-')}</span></td>
+                            <td>${escapeHtml(x.type || '-')}</td>
+                            <td class="text-center">${escapeHtml(x.orderNo ?? '-')}</td>
+                            <td>🪙 ${x.coins ?? 0} | 💎 ${x.gems ?? 0}</td>
+                            <td class="text-center">${x.isTask ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-light text-dark">No</span>'}</td>
+                            <td class="text-end text-nowrap">
+                                <button type="button" class="btn btn-sm btn-outline-primary border-0 p-1 me-1" onclick="editLab(${x.id})" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteRecord('/api/course-authoring/lab/delete/${x.id}', loadCourseData)" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
                 });
-                $('#labTableBody').html(rows.length ? rows : '<tr><td colspan="5" class="text-center text-muted">No practical labs added</td></tr>');
-            });
-        }
+
+                $('#labTableBody').html(rows);
+                resolve();
+            },
+            error: function(xhr) {
+                console.error("Lab API Error:", xhr.status, xhr.responseText);
+                $('#labTableBody').html(`
+                    <tr>
+                        <td colspan="13" class="text-center text-danger py-4">
+                            Failed to load practical labs
+                        </td>
+                    </tr>
+                `);
+                reject(xhr);
+            }
+        });
+    });
+}
+
+
+        // =============================================================
+        // EDIT TOPIC
+        // =============================================================
 
         function editTopic(id) {
-            let x = dataCache.topics.find(t => t.id === id);
-            if (!x) return;
-            $('#topicId').val(x.id); $('#tp_name').val(x.topicName); $('#tp_desc').val(x.description); $('#tp_order').val(x.displayOrderId); $('#tp_lang').val(x.language);
+
+            let topic =
+                dataCache.topics.find(
+                    function(x) {
+
+                        return Number(x.id) ===
+                            Number(id);
+
+                    }
+                );
+
+
+            if (!topic) {
+
+                showToast(
+                    'Topic not found.',
+                    'danger'
+                );
+
+                return;
+            }
+
+
+            $('#topicId')
+                .val(topic.id);
+
+
+            $('#topicCourseId')
+                .val(selectedCourseId);
+
+
+            $('#tp_name')
+                .val(topic.topicName || '');
+
+
+            $('#tp_order')
+                .val(topic.orderNo ?? '');
+
+
+            $('#tp_lang')
+                .val(topic.languageID ?? '');
+
+
+            $('#tp_desc')
+                .val(topic.description || '');
+
+
+            // Existing resource
+            if (topic.resourceFile) {
+
+                $('#tp_resourceCurrent').html(`
+
+                        <div class="small mt-2">
+
+                            <i class="bi bi-paperclip me-1"></i>
+
+                            Existing Resource:
+
+                            <a href="${escapeHtml(topic.resourceFile)}"
+                               target="_blank"
+                               rel="noopener noreferrer">
+
+                                View File
+
+                            </a>
+
+                        </div>
+
+                    `);
+
+            }
+            else {
+
+                $('#tp_resourceCurrent')
+                    .empty();
+
+            }
+
+
+            // Existing exercise
+            if (topic.exerciseFile) {
+
+                $('#tp_exerciseCurrent').html(`
+
+                        <div class="small mt-2">
+
+                            <i class="bi bi-paperclip me-1"></i>
+
+                            Existing Exercise:
+
+                            <a href="${escapeHtml(topic.exerciseFile)}"
+                               target="_blank"
+                               rel="noopener noreferrer">
+
+                                View File
+
+                            </a>
+
+                        </div>
+
+                    `);
+
+            }
+            else {
+
+                $('#tp_exerciseCurrent')
+                    .empty();
+
+            }
+
+
+            $('#topicFormTitle').html(`
+                    <i class="bi bi-pencil me-1"></i>
+                    Edit Topic
+                `);
+
+
+            $('#btnSaveTopic').html(`
+                    <i class="bi bi-save me-1"></i>
+                    Update Topic
+                `);
+
+
+            document
+                .getElementById('topicForm')
+                ?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+
         }
+
+
+        // =============================================================
+        // RESET TOPIC
+        // =============================================================
+
+        function resetTopicForm() {
+
+            let form =
+                document.getElementById(
+                    'topicForm'
+                );
+
+
+            if (form) {
+
+                form.reset();
+
+            }
+
+
+            $('#topicId')
+                .val('0');
+
+
+            $('#topicCourseId')
+                .val(
+                    selectedCourseId || '0'
+                );
+
+
+            $('#tp_order')
+                .val('');
+
+
+            $('#tp_lang')
+                .val('');
+
+
+            $('#tp_resourceCurrent')
+                .empty();
+
+
+            $('#tp_exerciseCurrent')
+                .empty();
+
+
+            $('#topicFormTitle').html(`
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Add Topic
+                `);
+
+
+            $('#btnSaveTopic').html(`
+                    <i class="bi bi-save me-1"></i>
+                    Save Topic
+                `);
+                
+            $('#st_lang')
+                .val('');
+
+        }
+
+
+        // =============================================================
+        // EDIT SUB TOPIC
+        // =============================================================
+
         function editSubTopic(id) {
-            let x = dataCache.subTopics.find(s => s.id === id);
+
+            let x =
+                dataCache.subTopics.find(
+                    function(s) {
+
+                        return String(s.id) ===
+                            String(id);
+
+                    }
+                );
+
+
             if (!x) return;
-            $('#subTopicId').val(x.id); $('#st_topic').val(x.courseTopicId); $('#st_name').val(x.subTopicName); $('#st_order').val(x.displayOrderId); $('#st_video').val(x.videoLink); $('#st_qCount').val(x.numberOfQuestions);
-        }
-        function editMcq(id) {
-            let x = dataCache.mcqs.find(m => m.id === id);
-            if (!x) return;
-            $('#mcqId').val(x.id); $('#mq_topic').val(x.courseTopicId); $('#mq_topic').trigger('change');
-            $('#mq_subTopic').val(x.courseSubTopicId); $('#mq_level').val(x.courseMcqLevelId);
-            $('#mq_question').val(x.question); $('#mq_optA').val(x.optionA); $('#mq_optB').val(x.optionB);
-            $('#mq_optC').val(x.optionC); $('#mq_optD').val(x.optionD);
-            $(`input[name="rightAns"][value="${x.rightAnswer}"]`).prop('checked', true);
-        }
-        function editLab(id) {
-            let x = dataCache.labs.find(l => l.id === id);
-            if (!x) return;
-            $('#labId').val(x.id); $('#lb_title').val(x.title); $('#lb_practicalTopic').val(x.practicalTopic);
-            $('#lb_standard').val(x.standardMasterId); $('#lb_order').val(x.displayOrderId); $('#lb_coins').val(x.coins);
-            $('#lb_gems').val(x.gems); $('#lb_video').val(x.videoLink); $('#lb_desc').val(x.description);
+
+
+            $('#subTopicId')
+                .val(x.id);
+
+
+            $('#st_topic')
+                .val(x.courseTopicId);
+
+
+            $('#st_name')
+                .val(x.subTopicName || '');
+
+
+            $('#st_order')
+                .val(
+                    x.orderNo ??
+                    x.displayOrderId ??
+                    ''
+                );
+
+
+            $('#st_video')
+                .val(x.trainerVideo || '');
+
+
+            $('#st_qCount')
+                .val(
+                    x.numberOfQuestions ??
+                    0
+                );
+
+
+            $('#subTopicFormTitle').html(`
+                    <i class="bi bi-pencil me-1"></i>
+                    Edit Sub-Topic
+                `);
+
+                 $('#st_lang')
+         .val(x.languageID ?? ''); 
+
         }
 
-        function populateDropdown(selector, list, valueField, textField) {
-            let html = '<option value="">-- Select --</option>';
-            if (list) { list.forEach(x => { html += `<option value="${x[valueField]}">${x[textField]}</option>`; }); }
-            $(selector).html(html);
-        }
 
-        function saveRecord(url, payload, successCallback, successMsg) {
-            $.ajax({
-                url: url, type: 'POST', contentType: 'application/json', data: JSON.stringify(payload),
-                success: function(res) { if (res.success) { successCallback(); loadCourseDropdowns(); showToast(successMsg, 'success'); } },
-                error: function(err) { showToast(err.responseJSON?.message || 'Error saving record', 'danger'); }
-            });
-        }
+        // =============================================================
+        // EDIT MCQ
+        // =============================================================
 
-        function deleteRecord(url, reloadCallback) {
-            Swal.fire({ title: 'Are you sure?', text: "You want to delete this record!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d', confirmButtonText: 'Yes, delete it!' }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({ url: url, type: 'DELETE', success: function(res) { if (res.success) { reloadCallback(); showToast('Deleted successfully!', 'success'); } } });
+       function editMcq(id) {
+           debugger
+                const x = (dataCache.mcqs || []).find(
+                    m => Number(m.id) === Number(id)
+                );
+
+                if (!x) {
+                    showToast('Question not found.', 'danger');
+                    return;
                 }
-            });
+
+                $('#mcqId').val(x.id);
+                $('#mq_topic').val(x.topicId).trigger('change');
+                $('#mq_subTopic').val(x.subTopicId);
+
+                $('#mq_complexity').val(x.complexityLevel);
+                $('#mq_language').val(x.languageId);
+                $('#mq_editorType').val('HTML');
+
+                setMcqEditorValue('mq_question', x.questionName || '');
+                setMcqEditorValue('mq_answerDescription', x.answerDescription || '');
+
+                const options = x.options || [];
+
+                $('#mq_optA').val(options[0]?.optionText || '');
+                $('#mq_optB').val(options[1]?.optionText || '');
+                $('#mq_optC').val(options[2]?.optionText || '');
+                $('#mq_optD').val(options[3]?.optionText || '');
+
+                const correctIndex = options.findIndex(o => o.isAnswer);
+                const answerLetter = ['A', 'B', 'C', 'D'][correctIndex] || 'A';
+
+                $(`input[name="rightAns"][value="${answerLetter}"]`).prop('checked', true);
+
+                $('#mcqFormTitle').html(
+                    '<i class="bi bi-pencil me-1"></i> Edit MCQ Question'
+                );
+                $('#btnSaveMcq').text('Update MCQ');
+
+                document.getElementById('mcqForm').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+
+
+        // =============================================================
+        // EDIT LAB
+        // =============================================================
+
+       function editLab(id) {
+    let x = dataCache.labs.find(function(l) {
+        return String(l.id) === String(id);
+    });
+
+    if (!x) return;
+
+    $('#labId').val(x.id);
+    $('#lb_title').val(x.title || '');
+    $('#lb_topic').val(x.practicalTopicID || '').trigger('change');
+    $('#lb_subTopic').val(x.practicalSubtopicID || '');
+    $('#lb_level').val(x.practicalLevel || '');
+    $('#lb_standard').val(x.practicalStandard || '');
+    $('#lb_group').val(x.student_Group || '');
+    $('#lb_type').val(x.type || '');
+    $('#lb_fileType').val(x.fileType || '');
+    $('#lb_order').val(x.orderNo ?? '');
+    $('#lb_coins').val(x.coins ?? 10);
+    $('#lb_gems').val(x.gems ?? 5);
+    $('#lb_isTask').prop('checked', !!x.isTask);
+    $('#lb_video').val(x.videoLink || '');
+    $('#lb_code').val(x.code || '');
+    $('#lb_desc').val(x.description || '');
+
+    if (x.thumbnail) {
+        $('#lb_thumbCurrent').html(`<a href="${normalizeFileUrl(x.thumbnail)}" target="_blank" class="small">View Thumbnail</a>`);
+    } else {
+        $('#lb_thumbCurrent').empty();
+    }
+
+    if (x.resources) {
+        $('#lb_resCurrent').html(`<a href="${normalizeFileUrl(x.resources)}" target="_blank" class="small">View Resource</a>`);
+    } else {
+        $('#lb_resCurrent').empty();
+    }
+
+    $('#labFormTitle').html(`
+        <i class="bi bi-pencil me-1"></i> Edit Practical Lab
+    `);
+    $('#btnSaveLab').html(`<i class="bi bi-save me-1"></i> Update Practical Lab`);
+
+    document.getElementById('labForm').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
+}
+
+
+        // =============================================================
+        // POPULATE DROPDOWN
+        // =============================================================
+
+        function populateDropdown(
+            selector,
+            list,
+            valueField,
+            textField,
+            placeholder = '-- Select --'
+        ) {
+
+            let html =
+                `<option value="">${escapeHtml(placeholder)}</option>`;
+
+
+            if (Array.isArray(list)) {
+
+                list.forEach(function(x) {
+
+                    let value =
+                        x[valueField] ?? '';
+
+
+                    let text =
+                        x[textField] ?? '';
+
+
+                    html += `
+
+                            <option value="${escapeHtml(value)}">
+                                ${escapeHtml(text)}
+                            </option>
+
+                        `;
+
+                });
+
+            }
+
+
+            $(selector)
+                .html(html);
+
         }
 
-        function showToast(message, type = 'success') {
-            const $toast = $('#liveToast');
-            $toast.removeClass('bg-success bg-danger').addClass(type === 'success' ? 'bg-success' : 'bg-danger');
-            $('#toastMessage').html(`<i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} me-2"></i> ${message}`);
-            new bootstrap.Toast($toast[0], { delay: 3000 }).show();
+
+        // =============================================================
+        // GENERIC JSON SAVE
+        // =============================================================
+
+        function saveRecord(
+            url,
+            payload,
+            successCallback,
+            successMsg
+        ) {
+
+            $.ajax({
+
+                url: url,
+
+                type: 'POST',
+
+                contentType: 'application/json',
+
+                data:
+                    JSON.stringify(payload),
+
+                success: function(res) {
+
+                    console.log(
+                        "Save Response:",
+                        res
+                    );
+
+
+                    if (
+                        res &&
+                        res.success
+                    ) {
+
+                        successCallback();
+
+
+                        loadCourseDropdowns();
+
+
+                        showToast(
+                            successMsg,
+                            'success'
+                        );
+
+                    }
+                    else {
+
+                        showToast(
+                            res?.message ||
+                            'Error saving record.',
+                            'danger'
+                        );
+
+                    }
+
+                },
+
+                error: function(xhr) {
+
+                    console.error(
+                        "Save Error:",
+                        xhr.status,
+                        xhr.responseText
+                    );
+
+
+                    showToast(
+                        xhr.responseJSON?.message ||
+                        'Error saving record.',
+                        'danger'
+                    );
+
+                }
+
+            });
+
         }
+
+
+        // =============================================================
+        // DELETE
+        // =============================================================
+
+        function deleteRecord(
+            url,
+            reloadCallback
+        ) {
+
+            Swal.fire({
+
+                title:
+                    'Are you sure?',
+
+                text:
+                    'You want to delete this record!',
+
+                icon:
+                    'warning',
+
+                showCancelButton:
+                    true,
+
+                confirmButtonColor:
+                    '#dc3545',
+
+                cancelButtonColor:
+                    '#6c757d',
+
+                confirmButtonText:
+                    'Yes, delete it!'
+
+            }).then(function(result) {
+
+                if (!result.isConfirmed)
+                    return;
+
+
+                $.ajax({
+
+                    url: url,
+
+                    type: 'DELETE',
+
+                    success: function(res) {
+
+                        if (
+                            res &&
+                            res.success
+                        ) {
+
+                            reloadCallback();
+
+
+                            showToast(
+                                'Deleted successfully!',
+                                'success'
+                            );
+
+                        }
+                        else {
+
+                            showToast(
+                                res?.message ||
+                                'Unable to delete record.',
+                                'danger'
+                            );
+
+                        }
+
+                    },
+
+                    error: function(xhr) {
+
+                        console.error(
+                            "Delete Error:",
+                            xhr.status,
+                            xhr.responseText
+                        );
+
+
+                        showToast(
+                            xhr.responseJSON?.message ||
+                            'Error deleting record.',
+                            'danger'
+                        );
+
+                    }
+
+                });
+
+            });
+
+        }
+
+
+        // =============================================================
+        // TOAST
+        // =============================================================
+
+        function showToast(
+            message,
+            type = 'success'
+        ) {
+
+            const $toast =
+                $('#liveToast');
+
+
+            $toast
+                .removeClass(
+                    'bg-success bg-danger bg-warning text-dark'
+                )
+                .addClass(
+                    type === 'success'
+                        ? 'bg-success'
+                        : type === 'warning'
+                            ? 'bg-warning text-dark'
+                            : 'bg-danger'
+                );
+
+
+            $('#toastMessage').html(`
+
+                    <i class="bi ${type === 'success'
+                    ? 'bi-check-circle-fill'
+                    : 'bi-exclamation-triangle-fill'
+                } me-2"></i>
+
+                    ${escapeHtml(message)}
+
+                `);
+
+
+            new bootstrap.Toast(
+                $toast[0],
+                {
+                    delay: 3000
+                }
+            ).show();
+
+        }
+
+
+        // =============================================================
+        // HTML ESCAPE
+        // =============================================================
+
+        function escapeHtml(value) {
+
+            if (
+                value === null ||
+                value === undefined
+            ) {
+
+                return '';
+
+            }
+
+
+            return String(value)
+                .replace(
+                    /&/g,
+                    '&amp;'
+                )
+                .replace(
+                    /</g,
+                    '&lt;'
+                )
+                .replace(
+                    />/g,
+                    '&gt;'
+                )
+                .replace(
+                    /"/g,
+                    '&quot;'
+                )
+                .replace(
+                    /'/g,
+                    '&#039;'
+                );
+
+        }
+        function normalizeFileUrl(url) {
+    if (!url) return '';
+
+    url = String(url).trim();
+
+    if (url.startsWith('~/')) {
+        return url.substring(1);
+    }
+
+    return url;
+}
+function loadMcqDropdowns() {
+    populateDropdown(
+        '#mq_language',
+        dropCache.languages || [],
+        'id',
+        'name',
+        '-- Select Language --'
+    );
+
+    populateDropdown(
+        '#mq_topic',
+        dropCache.topics || [],
+        'id',
+        'topicName',
+        '-- Select Topic --'
+    );
+
+    $('#mq_complexity').html(`
+        <option value="">-- Select Complexity --</option>
+        <option value="Tough">Tough</option>
+        <option value="Easy">Easy</option>
+        <option value="Moderate">Moderate</option>
+    `);
+
+    $('#mq_editorType').val('HTML');
+}
+
+function initializeMcqEditors() {
+    if (typeof tinymce === 'undefined') {
+        console.error('TinyMCE is not loaded.');
+        return;
+    }
+
+    ['mq_question', 'mq_answerDescription'].forEach(function (id) {
+        if (tinymce.get(id)) return;
+
+        tinymce.init({
+            selector: `#${id}`,
+            height: 250,
+            menubar: false,
+            plugins: 'lists link table code',
+            toolbar: 'undo redo | bold italic underline | bullist numlist | link table | code',
+            branding: false,
+            promotion: false
+        });
+    });
+}
+
+function getMcqEditorValue(id) {
+    const editor = typeof tinymce !== 'undefined' ? tinymce.get(id) : null;
+    return editor ? editor.getContent() : $(`#${id}`).val();
+}
+
+function setMcqEditorValue(id, value) {
+    const editor = typeof tinymce !== 'undefined' ? tinymce.get(id) : null;
+
+    if (editor) {
+        editor.setContent(value || '');
+    } else {
+        $(`#${id}`).val(value || '');
+    }
+}
+function renderMcqs() {
+    const tbody = $('#mcqTableBody');
+    const mcqs = dataCache.mcqs || [];
+
+    tbody.empty();
+    $('#mcqCount').text(mcqs.length);
+
+    if (!mcqs.length) {
+        tbody.html(`
+            <tr>
+                <td colspan="13" class="text-center text-muted py-4">
+                    No MCQs added
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    mcqs.forEach(function (x) {
+        // Strip or safely parse answer description HTML for table display if needed
+        const answerText = $('<div>')
+            .html(x.answerDescription || '')
+            .text();
+
+        tbody.append(`
+            <tr>
+                <td>
+                    <span class="badge bg-dark">${escapeHtml(x.id)}</span>
+                </td>
+                <td style="min-width:280px;white-space:normal;">
+                    ${escapeHtml(x.questionName || '-')}
+                </td>
+                <td>${escapeHtml(x.topicName || '-')}</td>
+                <td>${escapeHtml(x.subTopicName || '-')}</td>
+                <td>${escapeHtml(formatMcqDate(x.createdDate))}</td>
+                <td>${escapeHtml(x.createdBy ?? '-')}</td>
+                <td>${escapeHtml(formatMcqDate(x.modifiedDate))}</td>
+                <td>${escapeHtml(x.modifiedBy ?? '-')}</td>
+                <td class="text-center">${escapeHtml(x.questionLevel ?? '-')}</td>
+                <td>
+                    <span class="badge bg-secondary">${escapeHtml(x.complexityLevel || '-')}</span>
+                </td>
+                <td>${escapeHtml(x.languageName || '-')}</td>
+                <td style="min-width:240px;white-space:normal;">
+                    ${escapeHtml(answerText || '-')}
+                </td>
+                <td class="text-end text-nowrap">
+                    <button type="button"
+                            class="btn btn-sm btn-outline-primary border-0"
+                            onclick="editMcq(${Number(x.id)})"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-danger border-0"
+                            onclick="deleteRecord(
+                                '/api/course-authoring/mcq/delete/${Number(x.id)}',
+                                loadCourseData
+                            )"
+                            title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `);
+    });
+}
+
+function formatMcqDate(value) {
+    if (!value) return '-';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString();
+}
+
+
+
+
+$('#lb_topic').on('change', function () {
+    const topicId = $(this).val();
+    const filtered = (dropCache.subTopics || []).filter(function (x) {
+        return String(x.courseTopicId) === String(topicId);
+    });
+
+    populateDropdown(
+        '#lb_subTopic',
+        filtered,
+        'id',
+        'subTopicName',
+        '-- Select Sub-Topic --'
+    );
+});
+
+function resetLabForm() {
+    $('#labForm')[0].reset();
+    $('#labId').val('0');
+    $('#lb_topic').val('');
+    $('#lb_subTopic').html('<option value="">-- Select Sub-Topic --</option>');
+    $('#lb_level').val('');
+    $('#lb_group').val('');
+    $('#lb_thumbCurrent').empty();
+    $('#lb_resCurrent').empty();
+
+    $('#labFormTitle').html(`
+        <i class="bi bi-plus-circle me-1"></i> Add Practical Lab
+    `);
+    $('#btnSaveLab').html(`<i class="bi bi-save me-1"></i> Save Practical Lab`);
+}
+
     </script>
+
 }

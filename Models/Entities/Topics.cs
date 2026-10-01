@@ -48,7 +48,7 @@ namespace HemFoundation.Models.Entities
         public int? Order { get; set; }
 
         [Column("isactive")]
-        public bool? IsActive { get; set; }
+        public string? IsActive { get; set; }
 
         [Column("createdby")]
         public int? CreatedBy { get; set; }

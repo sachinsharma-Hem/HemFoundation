@@ -3,8 +3,40 @@
   "WorkspaceRootPath": "H:\\Rajan Thakur\\Project\\HemFoundation\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\api\\otheractivityapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\otheractivityapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\anubhuticontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\anubhuticontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\learn\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\learn\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\controllers\\api\\courseauthoringapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\courseauthoringapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\entities\\wj_practicals.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\entities\\wj_practicals.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\views\\courses\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\courses\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\models\\entities\\topics.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:models\\entities\\topics.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\rajan thakur\\project\\hemfoundation\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     }
   ],
   "DocumentGroupContainers": [
@@ -27,15 +59,117 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "OtherActivityApiController.cs",
-              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\OtherActivityApiController.cs",
-              "RelativeDocumentMoniker": "Controllers\\Api\\OtherActivityApiController.cs",
-              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\OtherActivityApiController.cs",
-              "RelativeToolTip": "Controllers\\Api\\OtherActivityApiController.cs",
-              "ViewState": "AgIAAAMBAAAAmpmZmZkswAYBAAAZAAAAAAAAAA==",
+              "Title": "AnubhutiController.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\AnubhutiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AnubhutiController.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\AnubhutiController.cs",
+              "RelativeToolTip": "Controllers\\AnubhutiController.cs",
+              "ViewState": "AgIAAG4CAAAAAAAAAAApwFACAABPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-30T08:17:00.499Z",
+              "WhenOpened": "2026-10-01T16:29:49.488Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "WJ_Practicals.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\WJ_Practicals.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\WJ_Practicals.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\WJ_Practicals.cs",
+              "RelativeToolTip": "Models\\Entities\\WJ_Practicals.cs",
+              "ViewState": "AgIAAEYAAAAAAAAAAAAiwF4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-01T12:35:41.966Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAABAAAADgy8zMzAwswCYAAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-10-01T12:19:41.162Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Learn\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Learn\\Index.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Learn\\Index.cshtml",
+              "RelativeToolTip": "Views\\Learn\\Index.cshtml",
+              "ViewState": "AgIAAAUFAAAAAAAAAAApwBYFAABWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-10-01T12:06:10.397Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Topics.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\Topics.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\Topics.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Models\\Entities\\Topics.cs",
+              "RelativeToolTip": "Models\\Entities\\Topics.cs",
+              "ViewState": "AgIAACIAAAAAAAAAAAAwwDIAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-01T08:10:46.545Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ApplicationDbContext.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Data\\ApplicationDbContext.cs",
+              "RelativeDocumentMoniker": "Data\\ApplicationDbContext.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Data\\ApplicationDbContext.cs",
+              "RelativeToolTip": "Data\\ApplicationDbContext.cs",
+              "ViewState": "AgIAACQEAAAAAAAAAMApwDMEAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-01T06:53:32.298Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Courses\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Courses\\Index.cshtml",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Views\\Courses\\Index.cshtml",
+              "RelativeToolTip": "Views\\Courses\\Index.cshtml",
+              "ViewState": "AgIAAF4GAAAAAAAAAAAewGcGAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-10-01T04:30:19.681Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "CourseAuthoringApiController.cs",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\CourseAuthoringApiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Api\\CourseAuthoringApiController.cs",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Controllers\\Api\\CourseAuthoringApiController.cs",
+              "RelativeToolTip": "Controllers\\Api\\CourseAuthoringApiController.cs",
+              "ViewState": "AgIAAIEBAAAAAAAAAADgv4sBAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-01T04:37:12.342Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "H:\\Rajan Thakur\\Project\\HemFoundation\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Properties\\launchSettings.json",
+              "ToolTip": "H:\\Rajan Thakur\\Project\\HemFoundation\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-10-01T04:26:41.974Z"
             }
           ]
         }
