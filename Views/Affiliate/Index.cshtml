@@ -369,25 +369,85 @@
 
                     // --- 2. Populate Detailed Logs Table ---
                     if (res.detailedLogs && res.detailedLogs.length > 0) {
+
                         let logRows = res.detailedLogs.map(l => {
-                            let inMap = l.punchInLocation ? `<a href="http://maps.google.com/?q=$${l.punchInLocation}" target="_blank" class="text-decoration-none small text-danger"><i class="bi bi-geo-alt-fill"></i> Map</a>` : '-';
-                            let outMap = l.punchOutLocation ? `<a href="http://maps.google.com/?q=$${l.punchOutLocation}" target="_blank" class="text-decoration-none small text-danger"><i class="bi bi-geo-alt-fill"></i> Map</a>` : '-';
-                            
-                            let badge = l.status === 'CheckedIn' 
-                                ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>' 
-                                : `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Out (${l.punchOutMode})</span>`;
+
+                            // Punch In Location
+                            let inMap = l.punchInLocation
+                                ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.punchInLocation)}"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     class="text-decoration-none small text-danger">
+                        <i class="bi bi-geo-alt-fill"></i> Map
+                   </a>`
+                                : '-';
+
+                            // Punch Out Location
+                            let outMap = l.punchOutLocation
+                                ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.punchOutLocation)}"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     class="text-decoration-none small text-danger">
+                        <i class="bi bi-geo-alt-fill"></i> Map
+                   </a>`
+                                : '-';
+
+                            // Status Badge
+                            let badge = l.status === 'CheckedIn'
+                                ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>'
+                                : `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                        Out (${l.punchOutMode || '-'})
+                   </span>`;
 
                             return `<tr>
-                                <td class="fw-semibold text-dark">${formatDateDDMMYYYY(l.attendanceDate)}</td>
-                                <td><b>${l.affiliateName}</b> <br/> <small class="text-muted">${l.userCode || ''}</small></td>
-                                <td>${formatTime(l.punchInTime)} <div class="mt-1">${inMap}</div></td>
-                                <td>${formatTime(l.punchOutTime)} <div class="mt-1">${outMap}</div></td>
-                                <td>${badge}<br/><small class="text-muted">${l.totalHoursWorked} hrs</small></td>
-                            </tr>`;
+                <td class="fw-semibold text-dark">
+                    ${formatDateDDMMYYYY(l.attendanceDate)}
+                </td>
+
+                <td>
+                    <b>${l.affiliateName || ''}</b>
+                    <br/>
+                    <small class="text-muted">
+                        ${l.userCode || ''}
+                    </small>
+                </td>
+
+                <td>
+                    ${formatTime(l.punchInTime)}
+                    <div class="mt-1">
+                        ${inMap}
+                    </div>
+                </td>
+
+                <td>
+                    ${formatTime(l.punchOutTime)}
+                    <div class="mt-1">
+                        ${outMap}
+                    </div>
+                </td>
+
+                <td>
+                    ${badge}
+                    <br/>
+                    <small class="text-muted">
+                        ${l.totalHoursWorked || 0} hrs
+                    </small>
+                </td>
+            </tr>`;
+
                         }).join('');
+
                         $('#logsTableBody').html(logRows);
+
                     } else {
-                        $('#logsTableBody').html('<tr><td colspan="5" class="text-center py-4 text-muted">No detailed logs found.</td></tr>');
+
+                        $('#logsTableBody').html(`
+            <tr>
+                <td colspan="5" class="text-center py-4 text-muted">
+                    No detailed logs found.
+                </td>
+            </tr>
+        `);
                     }
                 }
             }

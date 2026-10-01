@@ -3,9 +3,7 @@
     Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
 }
 
-<!-- Tabulator CSS -->
 <link href="https://unpkg.com/tabulator-tables@6.2.5/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
-<!-- MultiSelect CSS for Standard Modal -->
 <link href="~/Content/MultiSelect/bootstrap-multiselect.css" rel="stylesheet" />
 
 <style>
@@ -429,20 +427,32 @@
         let studentTable, teacherTable, volunteerTable;
 
         $(document).ready(function() {
-            // Check URL parameter to auto-open specific tab
             const urlParams = new URLSearchParams(window.location.search);
-            const activeTab = urlParams.get('tab');
-            if (activeTab === 'student') $('#student-tab').tab('show');
-            else if (activeTab === 'teacher') $('#teacher-tab').tab('show');
-            else if (activeTab === 'volunteer') $('#volunteer-tab').tab('show');
-            else if (activeTab === 'bulk') $('#bulk-tab').tab('show');
 
-            // Setup Standard MultiSelect Options for Teacher Modal
+            const activeTab = urlParams.get('tab');
+            const uploadType = urlParams.get('type');
+
+            if (activeTab === 'student') {
+                $('#student-tab').tab('show');
+            }
+            else if (activeTab === 'teacher') {
+                $('#teacher-tab').tab('show');
+            }
+            else if (activeTab === 'volunteer') {
+                $('#volunteer-tab').tab('show');
+            }
+            else if (activeTab === 'bulk') {
+                $('#bulk-tab').tab('show');
+
+                if (uploadType) {
+                    $('#bulkUploadType').val(uploadType);
+                }
+            }
+
             $('#clearStandards').on('click', function() {
                 $('#dll_Standard').multiselect('clearSelection');
             });
 
-            // Inside $(document).ready(function() {
             var standardData = [
                 "3rd", "3rd-A", "3rd-B", "3rd-C", "3rd-D",
                 "4th", "4th-A", "4th-B", "4th-C", "4th-D",
@@ -460,7 +470,7 @@
             ];
 
             var $selectElement = $('#dll_Standard');
-            $selectElement.empty(); // Prevent duplicate appending if re-triggered
+            $selectElement.empty(); 
             $.each(standardData, function(index, value) {
                 $selectElement.append($('<option>', { value: value, text: value }));
             });
@@ -524,14 +534,12 @@
                 });
             }
 
-            // AJAX Handlers for Modals using Universal API
-            // AJAX Handlers for Modals using Universal API with Double-Click Prevention
+
             $('#frmAddStudent, #frmAddTeacher, #frmAddVolunteer').on('submit', function(e) {
                 e.preventDefault();
                 let $form = $(this);
                 let $submitBtn = $form.find('button[type="submit"]');
 
-                // Prevent double submission if already processing
                 if ($submitBtn.prop('disabled')) {
                     return;
                 }
@@ -539,7 +547,6 @@
                 let formData = new FormData(this);
                 let isStudent = $form.attr('id') === 'frmAddStudent';
 
-                // Disable button and add a loading indicator
                 $submitBtn.prop('disabled', true);
                 let originalBtnText = $submitBtn.html();
                 $submitBtn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...');
@@ -606,7 +613,6 @@
             });
         });
 
-        // --- TABULATOR INITIALIZATION ---
         function initStudentTable(data) {
             studentTable = new Tabulator("#studentTableContainer", {
                 data: data,
@@ -619,7 +625,7 @@
                     { formatter: "rownum", title: "SrNo", hozAlign: "center", width: 60 },
                     {
                         title: "Students ID",
-                        field: "studentId", // Use consistent lowercase or handle getter safely
+                        field: "studentId", 
                         formatter: cell => cell.getData().studentId || cell.getData().StudentID || '-'
                     },
                     {
@@ -650,13 +656,12 @@
                     { title: "Username", field: "username", formatter: cell => cell.getData().username || cell.getData().Username || '-' },
                     {
                         title: "Password",
-                        field: "password_", // Make sure this matches your data JSON key (e.g., "password_", "Password_", or "password")
+                        field: "password_", 
                         formatter: cell => {
                             let d = cell.getData();
                             return d.password_ || d.Password_ || d.password || d.Password || '-';
                         },
                         accessorDownload: function(value, data, type, column, row) {
-                            // This explicitly forces Tabulator to grab the value during .xlsx export
                             return data.password_ || data.Password_ || data.password || data.Password || '';
                         }
                     },
@@ -716,11 +721,9 @@
                             return r.teacherId || r.TeacherID || r.teacherID || "N/A";
                         },
                         accessorDownload: function(value, data, type, column, row) {
-                            // Ensures the ID is explicitly captured during Excel download
                             return data.teacherId || data.TeacherID || data.teacherID || '';
                         }
                     },
-                  //  { title: "ID", field: "teacherId", hozAlign: "center", width: 70, formatter: cell => cell.getData().teacherId || cell.getData().TeacherID || cell.getData().teacherID || "N/A" },
                     { title: "Teacher Name", field: "FirstName", formatter: cell => cell.getData().FirstName || cell.getData().firstName || '' },
                     { title: "Institute Name", field: "instituteName", formatter: cell => cell.getData().instituteName || cell.getData().InstituteName || "N/A" },
                     { title: "City", field: "cityName", formatter: cell => cell.getData().cityName || cell.getData().CityName || cell.getData().city || "N/A" },
@@ -792,7 +795,6 @@
                             return r.iD || r.ID || r.id || "N/A";
                         },
                         accessorDownload: function(value, data, type, column, row) {
-                            // Ensures the ID is explicitly captured during Excel download
                             return data.iD || data.ID || data.id || '';
                         }
                     },
@@ -807,34 +809,15 @@
                     },
                     { title: "Mobile", field: "mobileNo", formatter: cell => cell.getData().mobileNo || cell.getData().MobileNo || '-' },
                     { title: "Email", field: "email", formatter: cell => cell.getData().email || cell.getData().Email || '-' },
-                    // {
-                    //     title: "Status",
-                    //     field: "isActive",
-                    //     hozAlign: "center",
-                    //     formatter: cell => {
-                    //         let isActive = cell.getData().isActive !== undefined ? cell.getData().isActive : cell.getData().IsActive;
-                    //         return isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-danger-subtle text-danger">Inactive</span>';
-                    //     }
-                    // },
+                
                    
                     { title: "Username", field: "username", formatter: cell => cell.getData().username || cell.getData().Username || '-' },
                     { title: "Password", field: "password_", formatter: cell => cell.getData().password_ || cell.getData().Password || '-' }
-                    // ,
-                    // {
-                    //     title: "SMS",
-                    //     hozAlign: "center",
-                    //     headerSort: false,
-                    //     formatter: cell => {
-                    //         let r = cell.getData();
-                    //         let tId = r.teacherId || r.TeacherID || r.teacherID || 0;
-                    //         return `<button type="button" data-id="${tId}" class="btn btn-outline-primary btn-xs px-2 SendSMSINSTeacher font-weight-bold rounded-pill">Send SMS</button>`;
-                    //     }
-                    // }
+                
                 ]
             });
         }
 
-        // --- GLOBAL SEARCH FILTER FOR TABULATOR ---
         function filterTabulator(type, query) {
             let table = type === 'student' ? studentTable : type === 'teacher' ? teacherTable : volunteerTable;
             if (table) {
@@ -848,7 +831,6 @@
             }
         }
 
-        // --- EXPORT TO EXCEL ---
         function exportTable(type, format) {
             let table = type === 'student' ? studentTable : type === 'teacher' ? teacherTable : volunteerTable;
             if (table) {
@@ -858,7 +840,6 @@
             }
         }
 
-        // Open Reassign Grade Modal (Student)
         function ChangeStandard(studentID, studentName, currentStd, currentDiv) {
             $("#hd_StudentID").val(studentID);
             $("#lbl_Student_Name").text(studentName);
@@ -868,7 +849,6 @@
             standardModal.show();
         }
 
-        // Save Reassigned Grade (Student)
         function setStandard() {
             var StudentId = parseInt($("#hd_StudentID").val());
             var Standard = $("#dll_student_standard").val();
@@ -896,7 +876,6 @@
             }
         }
 
-        // Unmap / Delete Student Link
         function DeleteStudentRosterRow(StudentId) {
             Swal.fire({
                 title: 'Unmap Student?',
@@ -925,9 +904,6 @@
             });
         }
 
-        // --- TEACHER ACTIONS ---
-
-        // Trigger text dispatch automation workflows securely for Teachers
         $(document).on('click', '.SendSMSINS', function() {
             var targetBtn = $(this);
             Swal.fire({
@@ -1017,7 +993,6 @@
             }
         }
 
-        // Submit Assigned Standards for Teacher
             function fnSubmitStandardToTeacher() {
                 var teacherId = $('#teacherId').val();
                 var standarddata = [];
@@ -1042,7 +1017,6 @@
                     data: { teacherId: teacherId, standard: standard },
                     dataType: 'json',
                     success: function(result) {
-                        // Support both camelCase (JSON default) and PascalCase property returns
                         let isSuccess = result.success !== undefined ? result.success : result.Success;
                         let messageText = result.message || result.Message || "Standards assigned successfully.";
 
@@ -1052,7 +1026,6 @@
                             if (modal) {
                                 modal.hide();
                             } else {
-                                // Fallback cleanup if instance wasn't stored
                                 $('#assignStandardList').modal('hide');
                                 $('.modal-backdrop').remove();
                                 $('body').removeClass('modal-open');
@@ -1070,17 +1043,6 @@
                     }
                 });
             }
-        // $selectElement.multiselect({
-        //     nonSelectedText: 'Select Assigned Grades',
-        //     enableFiltering: true,
-        //     includeSelectAllOption: true,
-        //     filterPlaceholder: 'Search class records...',
-        //     maxHeight: 250,
-        //     buttonClass: 'btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between',
-        //     // Force Bootstrap 5 dropdown toggle attribute
-        //     templates: {
-        //         button: '<button type="button" class="multiselect dropdown-toggle btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between" data-bs-toggle="dropdown" aria-expanded="false"><span class="multiselect-selected-text"></span></button>'
-        //     }
-        // });
+       
     </script>
 }

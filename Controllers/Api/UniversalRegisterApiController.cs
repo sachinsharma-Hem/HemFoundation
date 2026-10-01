@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
+﻿using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Spreadsheet;
 using HemFoundation.Common;
 using HemFoundation.Data;
 using HemFoundation.DTOs;
@@ -6,6 +7,7 @@ using HemFoundation.Migrations;
 using HemFoundation.Models;
 using HemFoundation.Models.Entities;
 using HemFoundation.Models.Identity;
+using HemFoundation.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -18,23 +20,36 @@ namespace HemFoundation.Controllers.Api
     [ApiController]
     public class UniversalRegisterApiController : ControllerBase
     {
+        // =========================================================
+        // DEPENDENCY FIELDS
+        // =========================================================
+
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IWebHostEnvironment _env;
         private readonly SMSManager _smsManager;
+        private readonly IFileStorageService _fileStorage;
+
+
+        // =========================================================
+        // CONSTRUCTOR
+        // =========================================================
 
         public UniversalRegisterApiController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            IWebHostEnvironment env, SMSManager smsManager)
+            IWebHostEnvironment env,
+            SMSManager smsManager,
+            IFileStorageService fileStorage)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _env = env;
             _smsManager = smsManager;
+            _fileStorage = fileStorage;
         }
 
         [HttpPost("register")]
@@ -605,63 +620,183 @@ namespace HemFoundation.Controllers.Api
             return Ok(list);
         }
 
-
         [HttpPost("bulk-upload")]
-        public async Task<IActionResult> BulkUpload([FromForm] IFormFile excelFile, [FromForm] string uploadType)
+        public async Task<IActionResult> BulkUpload(
+    [FromForm] IFormFile excelFile,
+    [FromForm] string uploadType)
         {
             if (excelFile == null || excelFile.Length == 0)
-                return BadRequest(new { success = false, message = "Please select a valid Excel file." });
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Please select a valid Excel file."
+                });
+            }
+
             string extension = Path.GetExtension(excelFile.FileName).ToLowerInvariant();
+
             if (extension != ".xlsx" && extension != ".xls")
             {
-                return BadRequest(new { success = false, message = "Only Excel files (.xlsx or .xls) are allowed." });
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Only Excel files (.xlsx or .xls) are allowed."
+                });
             }
+
+            if (string.IsNullOrWhiteSpace(uploadType))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Upload type is required."
+                });
+            }
+
             int? currentUserId = HttpContext.Session.GetInt32("UserID");
 
             if (currentUserId == null || currentUserId == 0)
             {
-                // Fall back to claims if session is missing
                 string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                currentUserId = int.TryParse(claimId, out int parsed) ? parsed : 0;
+
+                currentUserId = int.TryParse(
+                    claimId,
+                    out int parsed
+                ) ? parsed : 0;
             }
 
             if (currentUserId == null || currentUserId == 0)
             {
-                return Unauthorized(new { success = false, message = "User not logged in." });
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "User not logged in."
+                });
             }
 
-            var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
+            var institute = await _context.SchoolProfileDetails
+                .FirstOrDefaultAsync(i => i.instituteid == currentUserId);
 
             if (institute == null)
-                return BadRequest(new { success = false, message = "Authorized school institute not found." });
-
-            string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "bulkUploads");
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-            string uniqueFileName = $"{institute.institute_name?.Replace(" ", "_")}_{uploadType}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{Path.GetExtension(excelFile.FileName)}";
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                await excelFile.CopyToAsync(stream);
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Authorized school institute not found."
+                });
             }
+
+            // ============================================================
+            // CENTRAL FILE SERVER UPLOAD
+            // ============================================================
+
+            string folderPath = $"Uploads/BulkUploads/{institute.instituteid}";
+
+            var uploadResult = await _fileStorage.UploadAsync(
+                excelFile,
+                folderPath
+            );
+
+            if (uploadResult == null ||
+                !uploadResult.success ||
+                string.IsNullOrWhiteSpace(uploadResult.filePath))
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = uploadResult?.message
+                               ?? "Excel file upload failed."
+                });
+            }
+
+            // ============================================================
+            // SAVE FILE PATH IN DATABASE
+            // ============================================================
 
             var log = new BulkUploadLog
             {
                 InstituteID = institute.instituteid,
                 UploadType = uploadType,
                 FileName = excelFile.FileName,
-                FilePath = $"/uploads/bulkUploads/{uniqueFileName}",
+
+                // Central File Server path
+                FilePath = uploadResult.filePath,
+
                 TotalRecords = 0,
                 Status = "Uploaded Successfully",
                 UploadedDate = DateTime.UtcNow
             };
 
             _context.BulkUploadLogs.Add(log);
+
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = $"{uploadType}s Excel file uploaded and saved successfully! Users will be updated in next 24 hr." });
+            return Ok(new
+            {
+                success = true,
+                message = $"{uploadType}s Excel file uploaded and saved successfully! Users will be updated in next 24 hr.",
+                filePath = uploadResult.filePath,
+                fileName = uploadResult.fileName
+            });
         }
+
+        //[HttpPost("bulk-upload")]
+        //public async Task<IActionResult> BulkUpload([FromForm] IFormFile excelFile, [FromForm] string uploadType)
+        //{
+        //    if (excelFile == null || excelFile.Length == 0)
+        //        return BadRequest(new { success = false, message = "Please select a valid Excel file." });
+        //    string extension = Path.GetExtension(excelFile.FileName).ToLowerInvariant();
+        //    if (extension != ".xlsx" && extension != ".xls")
+        //    {
+        //        return BadRequest(new { success = false, message = "Only Excel files (.xlsx or .xls) are allowed." });
+        //    }
+        //    int? currentUserId = HttpContext.Session.GetInt32("UserID");
+
+        //    if (currentUserId == null || currentUserId == 0)
+        //    {
+        //        // Fall back to claims if session is missing
+        //        string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //        currentUserId = int.TryParse(claimId, out int parsed) ? parsed : 0;
+        //    }
+
+        //    if (currentUserId == null || currentUserId == 0)
+        //    {
+        //        return Unauthorized(new { success = false, message = "User not logged in." });
+        //    }
+
+        //    var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
+
+        //    if (institute == null)
+        //        return BadRequest(new { success = false, message = "Authorized school institute not found." });
+
+        //    string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "bulkUploads");
+        //    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+        //    string uniqueFileName = $"{institute.institute_name?.Replace(" ", "_")}_{uploadType}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{Path.GetExtension(excelFile.FileName)}";
+        //    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+        //    using (var stream = new FileStream(filePath, FileMode.Create))
+        //    {
+        //        await excelFile.CopyToAsync(stream);
+        //    }
+
+        //    var log = new BulkUploadLog
+        //    {
+        //        InstituteID = institute.instituteid,
+        //        UploadType = uploadType,
+        //        FileName = excelFile.FileName,
+        //        FilePath = $"/uploads/bulkUploads/{uniqueFileName}",
+        //        TotalRecords = 0,
+        //        Status = "Uploaded Successfully",
+        //        UploadedDate = DateTime.UtcNow
+        //    };
+
+        //    _context.BulkUploadLogs.Add(log);
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok(new { success = true, message = $"{uploadType}s Excel file uploaded and saved successfully! Users will be updated in next 24 hr." });
+        //}
 
         [HttpGet("download-sample/{fileType}")]
         public IActionResult DownloadSample(string fileType)

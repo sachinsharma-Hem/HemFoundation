@@ -13,12 +13,11 @@ using System.Text;
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Database Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHttpClient("InHouseFileStorage");
 
-// 2. Identity Configuration
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = false;
@@ -106,10 +105,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHostedService<AttendanceBackgroundWorker>();
 builder.Services.AddTransient<SMSManager>();
 builder.Services.AddScoped<IGroupProjectService, GroupProjectService>();
-// Build
+builder.Services.AddScoped<IFileStorageService,
+    InHouseFileStorageService>();
 var app = builder.Build();
 
-// 5. Middleware Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

@@ -71,9 +71,7 @@
     <script>
         $(document).ready(function() {
 
-            // ==========================================
-            // STUDENT SYLLABUS LOGIC
-            // ==========================================
+            
             let $stdInput = $('#hdnStudentStandardId');
             if ($stdInput.length > 0) {
                 let standardId = parseInt($stdInput.val());
@@ -84,9 +82,7 @@
                 }
             }
 
-            // ==========================================
-            // UPLOAD PARTNERSHIP LETTER LOGIC (All formats allowed)
-            // ==========================================
+           
             $(document).on('submit', '#frmUploadLetter', function(e) {
                 e.preventDefault();
                 console.log("Partnership Upload Form Submitted");

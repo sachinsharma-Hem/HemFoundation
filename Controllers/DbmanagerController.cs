@@ -6,14 +6,26 @@ namespace HemFoundation.Controllers
     [Route("admin")]
     public class DbmanagerController : Controller
     {
-        [HttpGet("superadmindata")]
-        public IActionResult Index()
+        [HttpGet("{path}")]
+        public IActionResult Index(string path)
         {
             var isLoggedIn =
                 HttpContext.Session.GetString("IsAdminLoggedIn");
 
-            if (string.IsNullOrEmpty(isLoggedIn) ||
-                isLoggedIn != "true")
+            var savedPath =
+                HttpContext.Session.GetString("AdminDynamicPath");
+
+            if (isLoggedIn != "true")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (string.IsNullOrEmpty(savedPath))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (!string.Equals(path, savedPath, StringComparison.Ordinal))
             {
                 return RedirectToAction("Index", "Home");
             }

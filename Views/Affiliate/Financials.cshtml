@@ -1,6 +1,27 @@
-﻿@{
+﻿@using Microsoft.Extensions.Configuration
+
+@using System
+@inject IConfiguration Configuration
+
+@{
     ViewData["Title"] = "Financials & Monthly Billing";
     Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+
+   
+    string fileUploadApiUrl =
+        Configuration["FileSettings:InHouseUploadUrl"] ?? "";
+
+    
+    string fileBaseUrl = "";
+
+    if (Uri.TryCreate(
+        fileUploadApiUrl,
+        UriKind.Absolute,
+        out Uri? fileUri))
+    {
+        fileBaseUrl =
+            $"{fileUri.Scheme}://{fileUri.Authority}";
+    }
 }
 
 <div class="container-fluid py-4">
@@ -200,6 +221,43 @@
 
 @section Scripts {
     <script>
+
+        // =========================================================
+        // CENTRAL FILE SERVER URL
+        // Comes from appsettings.json
+        // =========================================================
+
+        const FILE_BASE_URL = '@Html.Raw(fileBaseUrl)';
+
+
+        // =========================================================
+        // CONVERT STORED FILE PATH TO CENTRAL FILE URL
+        // =========================================================
+
+        function getFileUrl(filePath) {
+
+            if (!filePath) {
+                return '#';
+            }
+
+            // Agar already complete URL hai
+            // to same URL return karo.
+            if (
+                filePath.startsWith('http://') ||
+                filePath.startsWith('https://')
+            ) {
+                return filePath;
+            }
+
+            // Starting slash remove karo
+            let cleanPath =
+                filePath.replace(/^\/+/, '');
+
+            // Central server URL + stored path
+            return FILE_BASE_URL + '/' + cleanPath;
+        }
+
+
         let draftBillsData = [];
 
         $(function () {
@@ -265,8 +323,13 @@
                                 <td><b>#${b.billNumber || 'Draft'}</b><br><small class="text-muted">${formatDate(b.billDate)}</small></td>
                                 <td>${b.particulars}</td>
                                 <td><b class="text-success">₹${b.totalAmount.toFixed(2)}</b></td>
-                                <td class="text-center"><a href="${b.generatedPdfUrl}" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0"><i class="bi bi-file-pdf"></i> View PDF</a></td>
-                                <td class="text-center">
+<td class="text-center">
+    <a href="${getFileUrl(b.generatedPdfUrl)}"
+       target="_blank"
+       class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0">
+        <i class="bi bi-file-pdf"></i> View PDF
+    </a>
+</td>                                <td class="text-center">
                                     <button class="btn btn-sm btn-light border text-primary shadow-none me-1" onclick="editDraftBill(${b.id})"><i class="bi bi-pencil-square"></i> Edit</button>
                                     <button class="btn btn-sm btn-success shadow-none" onclick="openUploadModal(${b.id})"><i class="bi bi-cloud-upload"></i> Upload</button>
                                 </td>
@@ -536,10 +599,25 @@
                         res.data.forEach(b => {
                             let badge = b.status == 'Paid' ? 'success' : (b.status == 'Approved' ? 'primary' : (b.status == 'Rejected' ? 'danger' : 'warning'));
 
-                            let pdfs = `<a href="${b.generatedPdfUrl}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0">System PDF</a>`;
-                            if (b.signedPdfUrl) {
-                                pdfs += ` <br><a href="${b.signedPdfUrl}" target="_blank" class="btn btn-sm btn-success rounded-pill px-2 py-0 mt-1"><i class="bi bi-check2-all"></i> Signed Copy</a>`;
-                            }
+let pdfs = `
+    <a href="${getFileUrl(b.generatedPdfUrl)}"
+       target="_blank"
+       class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0">
+        System PDF
+    </a>`;                           if (b.signedPdfUrl) {
+
+    pdfs += `
+        <br>
+
+        <a href="${getFileUrl(b.signedPdfUrl)}"
+           target="_blank"
+           class="btn btn-sm btn-success rounded-pill px-2 py-0 mt-1">
+
+            <i class="bi bi-check2-all"></i>
+            Signed Copy
+
+        </a>`;
+}
 
                             html += `<tr>
                                 <td><b>#${b.billNumber}</b><br><small class="text-muted">${formatDate(b.billDate)}</small></td>

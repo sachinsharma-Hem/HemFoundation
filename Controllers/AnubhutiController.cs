@@ -566,12 +566,10 @@ namespace HemFoundation.Controllers
 
                         if (IsExtensionAllowed(extension))
                         {
-                            // Restored original Anubhuti folder structure logic
                             string dynamicFolderPath = instituteID != 0
                                 ? $"Uploads/Anubhuti/{instituteID}/{userID}"
                                 : $"Uploads/Anubhuti/{userID}";
 
-                            // --- IN-HOUSE API UPLOAD INTEGRATION START ---
                             string inHouseApiUrl = _configuration["FileSettings:InHouseUploadUrl"];
                             string apiKey = _configuration["FileSettings:ApiKey"];
 
@@ -607,7 +605,6 @@ namespace HemFoundation.Controllers
                                 remoteFilePath = apiResult.filePath;
                                 uniqueFileName = apiResult.fileName;
                             }
-                            // --- IN-HOUSE API UPLOAD INTEGRATION END ---
 
                             byte[] bytes = [];
 
