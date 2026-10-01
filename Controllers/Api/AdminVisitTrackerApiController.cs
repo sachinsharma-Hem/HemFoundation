@@ -20,12 +20,22 @@ namespace HemFoundation.Controllers.Api
         [HttpGet("affiliates")]
         public async Task<IActionResult> GetAffiliates()
         {
-            var list = await _context.Affiliates
-                .Where(a => a.IsActive)
-                .Select(a => new { a.UserID, Name = a.FirstName + " " + a.LastName })
+            var affiliates = await _context.View_HF_Affiliate
+                .AsNoTracking()
+                .Select(x => new
+                {
+                    userID = x.InstituteID,
+                    name = ((x.FirstName ?? "") + " " + (x.LastName ?? "")).Trim()
+                })
+                .Distinct()
+                .OrderBy(x => x.name)
                 .ToListAsync();
 
-            return Ok(new { success = true, data = list });
+            return Ok(new
+            {
+                success = true,
+                data = affiliates
+            });
         }
 
         [HttpGet("track")]
@@ -77,7 +87,7 @@ namespace HemFoundation.Controllers.Api
             var visitList = await (
                 from p in planQuery
 
-                join a in _context.Affiliates
+                join a in _context.Users
                     on p.AffiliateId equals a.UserID into affGroup
                 from aff in affGroup.DefaultIfEmpty()
 

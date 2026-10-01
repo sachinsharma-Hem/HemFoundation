@@ -7,16 +7,20 @@
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h3 class="fw-bold text-dark m-0"><i class="bi bi-cash-stack text-success me-2"></i> Finance & Billing Command Center</h3>
-            <p class="text-muted small m-0">Manage Organization Masters, process affiliate monthly bills, and record payments.</p>
+            <p class="text-muted small m-0">Manage Organization Masters, process affiliate monthly bills & expense bills, and record payments.</p>
         </div>
         <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openOrgModal()">
             <i class="bi bi-building-add me-1"></i> Manage Organizations
         </button>
     </div>
 
+    <!-- TABS -->
     <ul class="nav nav-tabs mb-4" id="adminFinanceTabs" role="tablist">
         <li class="nav-item">
             <button class="nav-link active fw-bold" id="tab-bills" data-bs-toggle="tab" data-bs-target="#paneBills">Monthly Bills & Approvals</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold text-muted" id="tab-expenses" data-bs-toggle="tab" data-bs-target="#paneExpenses" onclick="loadAdminExpenseBills()">Monthly Expenses</button>
         </li>
         <li class="nav-item">
             <button class="nav-link fw-bold text-muted" id="tab-orgs" data-bs-toggle="tab" data-bs-target="#paneOrgs" onclick="loadOrgs()">Organizations Master</button>
@@ -24,8 +28,9 @@
     </ul>
 
     <div class="tab-content">
+        <!-- PANE 1: MONTHLY BILLS -->
         <div class="tab-pane fade show active" id="paneBills">
-            
+
             <div class="row g-3 mb-4" id="adminStatsRow">
                 <div class="col">
                     <div class="card border-0 shadow-sm rounded-4 p-3 bg-light border-start border-4 border-secondary">
@@ -105,6 +110,48 @@
             </div>
         </div>
 
+        <!-- PANE 2: MONTHLY EXPENSES (NEW TAB) -->
+        <div class="tab-pane fade" id="paneExpenses">
+            <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-semibold m-0">Filter by Affiliate</label>
+                        <select id="fltExpenseAffiliate" class="form-select form-select-sm rounded-3 shadow-none" onchange="loadAdminExpenseBills()">
+                            <option value="">All Affiliates</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-semibold m-0">Filter by Month (e.g., September-2026)</label>
+                        <input type="text" id="fltExpenseMonth" class="form-control form-control-sm rounded-3 shadow-none" placeholder="e.g. September-2026" oninput="loadAdminExpenseBills()">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-success btn-sm w-100 rounded-3 fw-semibold shadow-sm" onclick="loadAdminExpenseBills()"><i class="bi bi-search"></i> Search</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light text-muted">
+                            <tr>
+                                <th>Month</th>
+                                <th>Affiliate Name</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th class="text-center">Documents</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblAdminExpenseBills">
+                            <tr><td colspan="6" class="text-center py-5">Loading expense bills...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANE 3: ORGANIZATIONS MASTER -->
         <div class="tab-pane fade" id="paneOrgs">
             <div class="card border-0 shadow-sm rounded-4 p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -130,6 +177,7 @@
     </div>
 </div>
 
+<!-- MODAL: ORG -->
 <div class="modal fade" id="orgModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg p-3">
@@ -166,6 +214,7 @@
     </div>
 </div>
 
+<!-- MODAL: PROCESS BILL -->
 <div class="modal fade" id="processBillModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 border-0 shadow-lg p-3">
@@ -190,7 +239,7 @@
                             <label class="form-label small fw-bold">Approved By</label>
                             <input type="text" id="pApprovedBy" class="form-control rounded-3 shadow-none" placeholder="e.g. Finance Manager">
                         </div>
-                        
+
                         <div id="paymentFields" class="col-12 row g-3 m-0 p-3 bg-light rounded-3 border d-none">
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Amount Paid (₹)</label>
@@ -226,9 +275,39 @@
     </div>
 </div>
 
+<!-- MODAL: PROCESS EXPENSE BILL -->
+<div class="modal fade" id="processExpenseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3">
+            <div class="modal-header border-bottom">
+                <h5 class="fw-bold m-0 text-success">Process Monthly Expense Bill</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <form id="frmProcessExpense">
+                    <input type="hidden" id="hdnProcExpenseId">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Update Status</label>
+                        <select id="pExpStatus" class="form-select rounded-3 shadow-none">
+                            <option value="Approved">Approve</option>
+                            <option value="Paid">Mark as Paid</option>
+                            <option value="Rejected">Reject</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Admin Remarks</label>
+                        <textarea id="pExpRemarks" class="form-control rounded-3 shadow-none" rows="3" placeholder="Remarks..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm">Save & Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-        $(function () {
+        $(function() {
             loadAffiliateDropdown();
             loadBills();
         });
@@ -236,7 +315,7 @@
         function getAuthToken() { return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || ''; }
 
         function formatDate(dateStr) {
-            if(!dateStr) return '-';
+            if (!dateStr) return '-';
             let d = new Date(dateStr);
             return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
         }
@@ -248,10 +327,10 @@
                 type: 'GET',
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
                 success: function(res) {
-                    if(res.success) {
+                    if (res.success) {
                         let html = '<option value="">All Affiliates (Overall)</option>';
                         res.data.forEach(a => html += `<option value="${a.userID}">${a.name}</option>`);
-                        $('#fltAffiliate').html(html);
+                        $('#fltAffiliate, #fltExpenseAffiliate').html(html);
                     }
                 }
             });
@@ -264,7 +343,7 @@
                 type: 'GET',
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
                 success: function(res) {
-                    if(res.success) {
+                    if (res.success) {
                         $('#stTotal').text(res.data.totalBills);
                         $('#stAppr').text(res.data.approved);
                         $('#stRej').text(res.data.rejected);
@@ -280,7 +359,7 @@
             let status = $('#fltStatus').val();
             let affId = $('#fltAffiliate').val();
 
-            loadStats(); // Load stats on every filter/refresh
+            loadStats();
 
             $('#tblAdminBills').html('<tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div></td></tr>');
 
@@ -288,29 +367,28 @@
                 url: `/api/financials/admin/all-bills?status=${status}&affiliateId=${affId}`,
                 type: 'GET',
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                success: function (res) {
+                success: function(res) {
                     if (res.success && res.data.length > 0) {
                         let html = '';
                         res.data.forEach(b => {
                             let badge = b.status == 'Paid' ? 'success' : (b.status == 'Approved' ? 'primary' : (b.status == 'Rejected' ? 'danger' : 'warning'));
 
-                            // ONLY SHOWING SIGNED PDF NOW
-                            let pdfLink = b.signedPdfUrl 
-                                ? `<a href="${b.signedPdfUrl}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm"><i class="bi bi-file-earmark-check me-1"></i> View Bill</a>` 
+                            let pdfLink = b.signedPdfUrl
+                                ? `<a href="${b.signedPdfUrl}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm"><i class="bi bi-file-earmark-check me-1"></i> View Bill</a>`
                                 : '<span class="text-muted small">No File</span>';
-                            
+
                             let payDetail = b.payment ? `<br><small class="text-success fw-bold">Txn: ${b.payment.transactionNumber} (₹${b.payment.amountPaid})</small>` : '';
 
                             html += `<tr>
-                                <td><b>#${b.billNumber}</b><br><small class="text-muted">${formatDate(b.billDate)}</small></td>
-                                <td><span class="text-primary fw-bold">${b.affiliateName}</span><br><small class="text-muted">To: ${b.orgName}</small></td>
-                                <td><b>₹${b.totalAmount.toFixed(2)}</b><br><small class="text-muted">${b.particulars}</small>${payDetail}</td>
-                                <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>
-                                <td class="text-center">${pdfLink}</td>
-                                <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-dark rounded-pill px-3 shadow-none" onclick="openProcessModal(${b.id}, '${b.status}', ${b.totalAmount})">Process</button>
-                                </td>
-                            </tr>`;
+                                                <td><b>#${b.billNumber}</b><br><small class="text-muted">${formatDate(b.billDate)}</small></td>
+                                                <td><span class="text-primary fw-bold">${b.affiliateName}</span><br><small class="text-muted">To: ${b.orgName}</small></td>
+                                                <td><b>₹${b.totalAmount.toFixed(2)}</b><br><small class="text-muted">${b.particulars}</small>${payDetail}</td>
+                                                <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>
+                                                <td class="text-center">${pdfLink}</td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-outline-dark rounded-pill px-3 shadow-none" onclick="openProcessModal(${b.id}, '${b.status}', ${b.totalAmount})">Process</button>
+                                                </td>
+                                            </tr>`;
                         });
                         $('#tblAdminBills').html(html);
                     } else {
@@ -338,7 +416,7 @@
             }
         }
 
-        $('#frmProcessBill').on('submit', function (e) {
+        $('#frmProcessBill').on('submit', function(e) {
             e.preventDefault();
             let payload = {
                 BillId: parseInt($('#hdnProcBillId').val()),
@@ -358,10 +436,80 @@
                 contentType: 'application/json',
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
                 data: JSON.stringify(payload),
-                success: function (res) {
+                success: function(res) {
                     if (res.success) {
                         $('#processBillModal').modal('hide');
                         loadBills();
+                    }
+                }
+            });
+        });
+
+        // ================= MONTHLY EXPENSES ADMIN LOGIC (FIXED URL) =================
+        function loadAdminExpenseBills() {
+            let affId = $('#fltExpenseAffiliate').val();
+            let month = $('#fltExpenseMonth').val();
+
+            $('#tblAdminExpenseBills').html('<tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>');
+
+            $.ajax({
+                url: `/api/financials/admin/expense-bills?affiliateId=${affId || ''}&month=${month || ''}`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if (res.success && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(b => {
+                            let badge = b.status == 'Paid' ? 'success' : (b.status == 'Approved' ? 'primary' : (b.status == 'Rejected' ? 'danger' : 'warning'));
+                            let docs = `<a href="${b.generatedPdfUrl}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0">System PDF</a>`;
+                            if (b.signedPdfUrl) {
+                                docs += ` <br><a href="${b.signedPdfUrl}" target="_blank" class="btn btn-sm btn-success rounded-pill px-2 py-0 mt-1">Signed Copy</a>`;
+                            }
+
+                            html += `<tr>
+                                                <td><b>${b.monthYear}</b></td>
+                                                <td><span class="text-primary fw-bold">${b.affiliateName}</span></td>
+                                                <td><b class="text-success">₹${b.totalAmount.toFixed(2)}</b></td>
+                                                <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>
+                                                <td class="text-center">${docs}</td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-outline-dark rounded-pill px-3 shadow-none" onclick="openProcessExpenseModal(${b.id}, '${b.status}')">Process</button>
+                                                </td>
+                                            </tr>`;
+                        });
+                        $('#tblAdminExpenseBills').html(html);
+                    } else {
+                        $('#tblAdminExpenseBills').html('<tr><td colspan="6" class="text-center py-5 text-muted">No monthly expense bills found.</td></tr>');
+                    }
+                }
+            });
+        }
+
+        function openProcessExpenseModal(id, status) {
+            $('#hdnProcExpenseId').val(id);
+            $('#pExpStatus').val(status == 'Uploaded' ? 'Approved' : status);
+            $('#pExpRemarks').val('');
+            $('#processExpenseModal').modal('show');
+        }
+
+        $('#frmProcessExpense').on('submit', function(e) {
+            e.preventDefault();
+            let payload = {
+                BillId: parseInt($('#hdnProcExpenseId').val()),
+                Status: $('#pExpStatus').val(),
+                AdminRemarks: $('#pExpRemarks').val()
+            };
+
+            $.ajax({
+                url: '/api/financials/admin/process-expense-bill',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    if (res.success) {
+                        $('#processExpenseModal').modal('hide');
+                        loadAdminExpenseBills();
                     }
                 }
             });
@@ -374,7 +522,7 @@
                 url: '/api/financials/admin/orgs',
                 type: 'GET',
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                success: function (res) {
+                success: function(res) {
                     if (res.success && res.data.length > 0) {
                         let html = '';
                         res.data.forEach(o => {
@@ -382,14 +530,14 @@
                             let badge = o.isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
 
                             html += `<tr>
-                                <td>${logo}</td>
-                                <td><b>${o.orgName}</b></td>
-                                <td>${o.address}</td>
-                                <td>${badge}</td>
-                                <td class="text-center">
-                                    <button class="btn btn-sm btn-light border" onclick="deleteOrg(${o.id})"><i class="bi bi-trash text-danger"></i></button>
-                                </td>
-                            </tr>`;
+                                                <td>${logo}</td>
+                                                <td><b>${o.orgName}</b></td>
+                                                <td>${o.address}</td>
+                                                <td>${badge}</td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-light border" onclick="deleteOrg(${o.id})"><i class="bi bi-trash text-danger"></i></button>
+                                                </td>
+                                            </tr>`;
                         });
                         $('#tblOrgs').html(html);
                     } else {
@@ -405,7 +553,7 @@
             $('#orgModal').modal('show');
         }
 
-        $('#frmOrg').on('submit', function (e) {
+        $('#frmOrg').on('submit', function(e) {
             e.preventDefault();
             let formData = new FormData();
             formData.append('Id', $('#hdnOrgId').val());
@@ -423,7 +571,7 @@
                 contentType: false,
                 processData: false,
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                success: function (res) {
+                success: function(res) {
                     if (res.success) {
                         $('#orgModal').modal('hide');
                         loadOrgs();
@@ -438,7 +586,7 @@
                     url: `/api/financials/admin/delete-org/${id}`,
                     type: 'DELETE',
                     headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                    success: function (res) {
+                    success: function(res) {
                         if (res.success) loadOrgs();
                     }
                 });
