@@ -1172,8 +1172,13 @@
                         var langIdVal = row.languageID || row.LanguageID || 1;
                         var examIdVal = row.examinationID || row.ExaminationID || 0;
                         html += `<a href="/Exam/Index?QuizId=${quizIdVal}&TopicID=${topicIdVal}&LevelID=1&LanguageID=${langIdVal}&IsInstituteQuiz=false&IsAttempt=true&ExamID=${examIdVal}" class="btn btn-action-pill btn-pill-info" onclick="event.stopPropagation()"><i class="fa fa-eye"></i> Preview MCQ</a>`;
+                    } else if (isItemLockedByProgression) 
+                    {
+                        html += `<button type="button" class="btn btn-action-pill btn-pill-primary" onclick="Swal.fire({title: '${isAttemptedVal === true ? "Completed" : "Locked"}', text: '${lockMessage}', icon: '${isAttemptedVal === true ? "success" : "info"}', confirmButtonColor: '#0284c7'});"><i class="fa fa-play"></i> Start Assessment</button>`;
+
                     } else {
                         html += `<button type="button" class="btn btn-action-pill btn-pill-primary" onclick="evaluateAndExecuteLaunch('${activityType}', '${launchUrl}', '${safeName}')"><i class="fa fa-play"></i> Start Assessment</button>`;
+
                     }
                     html += '</div>';
                 }
@@ -1210,7 +1215,7 @@
                         var isGame = (codeVal !== '' && codeVal !== '0' && codeVal !== 'NULL');
                         var itemScr = r.itemScore !== undefined ? r.itemScore : (r.ItemScore || 0);
 
-                        if (isGame && itemScr === 0) {
+                        if (isGame && !r.isAttempted) {
                             gamesIncomplete = true;
                         }
                         if (!isGame && name.includes('mcq') && !name.includes('survey') && itemScr < 3) {
@@ -1218,16 +1223,25 @@
                         }
                     });
                 }
-
-                if (lowMcqScores || gamesIncomplete) {
+                if (gamesIncomplete) {
                     Swal.fire({
                         title: 'Survey Locked!',
-                        html: '<div style="text-align:left; font-size:14px; line-height:1.6;"><p>To proceed with the Post Value Survey, you must first clear all previous week requirements:</p><ul><li>All Practical Labs & Interactive Games must be completed.</li><li>You must achieve a minimum score of 3 Marks or more on every weekly MCQ task.</li></ul></div>',
+                        html: '<div style="text-align:left; font-size:14px; line-height:1.6;"><p>To proceed with the Post Value Survey, you must first clear all previous week requirements:</p><ul><li>All Practical Labs & Interactive Games must be completed.</li></ul></div>',
                         icon: 'warning',
                         confirmButtonColor: '#0284c7'
                     });
                     return;
                 }
+                if (lowMcqScores) {
+                    Swal.fire({
+                        title: 'Survey Locked!',
+                        html: '<div style="text-align:left; font-size:14px; line-height:1.6;"><ul><li>All Practical Labs & Interactive Games must be completed.</li><li>You must achieve a minimum score of 3 Marks or more on every weekly MCQ task.</li></ul></div>',
+                        icon: 'warning',
+                        confirmButtonColor: '#0284c7'
+                    });
+                    return;
+                }
+              
             }
 
             if (!isStudent && type !== 'mcq') {

@@ -1347,7 +1347,7 @@ namespace HemFoundation.Controllers.Api
         }
 
         [HttpGet("export-details-excel")]
-        public async Task<IActionResult> ExportDetailsExcel(string category, string type, string search = "")
+        public async Task<IActionResult> ExportDetailsExcel(string category, string type, string search = "", int affiliateid = 0)
         {
             try
             {
@@ -1355,7 +1355,56 @@ namespace HemFoundation.Controllers.Api
                 type = type?.Trim().ToLower() ?? "";
                 search = search?.Trim() ?? "";
 
-                List<int?> instituteIds = await GetInstituteIdsForCategoryAsync(category);
+                List<int?> instituteIds = new List<int?>();
+
+                string role = HttpContext.Session.GetString("UserRole") ?? "";
+
+
+                if (affiliateid != 0)
+                {
+                    instituteIds =
+                        await GetInstituteIdsForCategoryAsyncwithaffiliateid(
+                            category,
+                            affiliateid,
+                            role
+                        );
+                }
+                else if (
+                    role == "WJ_Admin" ||
+                    role == "Admin" ||
+                    role == "Management"
+                )
+                {
+                    instituteIds =
+                        await GetInstituteIdsForCategoryAsync(category);
+                }
+                else if (
+                    role == "WJ_Affiliate" ||
+                    role == "HF_Volunteers"
+                )
+                {
+                    Int32 userId =
+                        HttpContext.Session.GetInt32("UserID") ?? 0;
+
+                    instituteIds =
+                        await GetInstituteIdsForCategoryAsyncwithaffiliateid(
+                            category,
+                            userId,
+                            role
+                        );
+                }
+                else
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new List<object>(),
+                        totalRecords = 0,
+                        totalPages = 0,
+                        
+                        message = "Unauthorised User"
+                    });
+                }
                 if (!instituteIds.Any())
                 {
                     return BadRequest("No records found to export.");

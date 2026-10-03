@@ -1,68 +1,381 @@
-﻿<!DOCTYPE html>
-<html>
+﻿
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title></title>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEM-Virtues | Group Project Status</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f3f6f8;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        @media only screen and (max-width: 620px) {
+            .email-container {
+                width: 100% !important;
+            }
+
+            .header-padding {
+                padding: 20px !important;
+            }
+
+            .content-padding {
+                padding: 25px 20px !important;
+            }
+
+            .footer-padding {
+                padding: 25px 20px !important;
+            }
+
+            .logo {
+                max-width: 150px !important;
+            }
+        }
+    </style>
 </head>
-<body>
-    <table width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f2f2f2">
-        <tbody>
-            <tr>
-                <td valign="top" align="center">
-                    <table cellspacing="0" cellpadding="0" border="0">
-                        <tbody>
-                            <tr>
-                                <td width="600">
-                                    <div style="width:600px;margin:20px auto;border-radius:8px">
-                                        <div style="background-color:#00607A;padding:30px 50px;border-radius:8px 8px 0 0">
-                                            <table width="100%">
-                                                <tbody>
-                                                    <tr>
-                                                        <td valign="middle" style="padding-top:10px">
-                                                            <a target="_blank" style="font-size:28px;font-weight:bold;color:#ffffff;
-                                                                text-decoration:none;line-height:.5" href="https://www.hemvirtues.com/">
-                                                                <img id="img1" src="https://www.hemvirtues.com/images/logo/logo.png" alt="HEM-Virtues" />
 
-                                                            </a>
-                                                        </td>
-                                                        <td valign="middle" align="right">
-                                                            <a target="_blank" style="display:inline-block;background-color:#ffcf46;color:#4d3e15;font-size:16px;padding:10px 20px;border-radius:10px;font-weight:bold;text-decoration:none" href="https://www.hemvirtues.com/Account/Login">Log In</a>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+<body style="margin:0; padding:0; background-color:#f3f6f8;">
+
+    <!-- Main Wrapper -->
+    <table width="100%" cellpadding="0" cellspacing="0"
+           border="0" bgcolor="#f3f6f8" role="presentation">
+        <tr>
+            <td align="center" style="padding:30px 12px;">
+
+                <!-- Email Container -->
+                <table class="email-container" width="600"
+                       cellpadding="0" cellspacing="0" border="0"
+                       role="presentation"
+                       style="width:600px; max-width:600px;
+                              background-color:#ffffff;
+                              border-radius:14px;
+                              overflow:hidden;">
+
+                    <!-- Header -->
+                    <tr>
+                        <td class="header-padding"
+                            bgcolor="#00607A"
+                            style="padding:25px 35px;
+                                   background-color:#00607A;">
+
+                            <table width="100%" cellpadding="0"
+                                   cellspacing="0" border="0"
+                                   role="presentation">
+                                <tr>
+                                    <!-- Logo -->
+                                    <td align="left" valign="middle">
+                                        <a href="https://www.hemvirtues.com/"
+                                           target="_blank"
+                                           style="text-decoration:none;">
+                                            <img class="logo"
+                                                 src="https://www.hemvirtues.com/images/logo/logo.png"
+                                                 alt="HEM-Virtues"
+                                                 width="170"
+                                                 style="display:block;
+                                                        width:170px;
+                                                        max-width:100%;
+                                                        height:auto;
+                                                        border:0;">
+                                        </a>
+                                    </td>
+
+                                    <!-- Login Button -->
+                                    <td align="right" valign="middle">
+                                        <a href="https://www.hemvirtues.com"
+                                           target="_blank"
+                                           style="display:inline-block;
+                                                  background-color:#ffcf46;
+                                                  color:#263746;
+                                                  padding:12px 22px;
+                                                  border-radius:7px;
+                                                  font-size:14px;
+                                                  font-weight:bold;
+                                                  text-decoration:none;">
+                                            Log In &rarr;
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </td>
+                    </tr>
+
+                    <!-- Accent Strip -->
+                    <tr>
+                        <td bgcolor="#ffcf46"
+                            style="height:5px; line-height:5px;
+                                   font-size:0;">
+                            &nbsp;
+                        </td>
+                    </tr>
+
+                    <!-- Main Content -->
+                    <tr>
+                        <td class="content-padding"
+                            style="padding:40px 40px 35px;
+                                   background-color:#ffffff;">
+
+                            <!-- Greeting -->
+                            <p style="margin:0 0 20px;
+                                      font-size:16px;
+                                      line-height:26px;
+                                      color:#344054;">
+                                Hello
+                                <strong style="color:#00607A;">
+                                    <%studentsname%>
+                                </strong>,
+                            </p>
+
+                            <!-- Status Card -->
+                            <table width="100%" cellpadding="0"
+                                   cellspacing="0" border="0"
+                                   role="presentation"
+                                   style="margin-bottom:25px;">
+                                <tr>
+                                    <td align="center"
+                                        style="padding:25px 18px;
+                                               background-color:#eef6fb;
+                                               border:1px solid #d8eaf4;
+                                               border-radius:10px;">
+
+                                        <!-- Status Icon -->
+                                        <div style="font-size:34px;
+                                                    line-height:44px;
+                                                    color:#00607A;">
+                                            &#128203;
                                         </div>
-                                        <div align="justify" style="background-color:#E6E7E9;padding:25px">
-                                            <h1 style="font-size:20px;font-weight:700;color:#3F3F3F"> Hello <%studentsname%>, </h1>
-                                            <p style="color:#3F3F3F;font-size:18px;line-height:28px;font-weight:300">
-                                               
-                                                Your Request for Group Project submission has been <%action%> by the school.
-                                            </p>
 
+                                        <h2 style="margin:10px 0 8px;
+                                                   color:#00607A;
+                                                   font-size:21px;
+                                                   line-height:29px;">
+                                            Group Project Submission Update
+                                        </h2>
 
+                                        <p style="margin:0;
+                                                  font-size:15px;
+                                                  line-height:24px;
+                                                  color:#475467;">
+                                            Your submission request has been
+                                            <strong style="color:#00607A;">
+                                                <%action%>
+                                            </strong>
+                                            by your school.
+                                        </p>
 
+                                    </td>
+                                </tr>
+                            </table>
 
-                                            <p style="color:#3F3F3F;font-size:18px;line-height:28px;font-weight:300">
-                                                For further queries, Please revert us on <a href="mailto:admin@hemafoundation.org">admin@hemafoundation.org</a> Whatsapp and Contact No.: +91 72280 01342.
-                                            </p>
-                                            <p style="color:#3F3F3F;font-size:18px;line-height:28px;font-weight:300">
-                                                Best Regards,<br />
-                                                HEMA Foundation
-                                            </p>
-                                        </div>
-                                        <div style="color: #ffffff; background-color: #00607A; text-align:center; padding:15px 30px 15px 25px;border-radius:0 0 5px 5px">
-                                            <p style="color:#E6E7E9;font-size:18px;line-height:28px;font-weight:300; text-align:justify;">
-                                                HEM-Virtues is an online competition platform exclusively designed to empower, inspire & educate students in Moral Values. The course comprise of Learn, MCQs , Practical, Task, Results, Impactful Research Reports, E-Certificate, Rewards and Recognition for Students and Institute respectively. The course is available in English and Hindi for Students .
-                                            </p>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        </tbody>
+                            <!-- Main Message -->
+                            <p style="margin:0 0 18px;
+                                      color:#475467;
+                                      font-size:16px;
+                                      line-height:28px;">
+                                We would like to inform you that your
+                                request for Group Project Submission
+                                has been
+                                <strong style="color:#00607A;">
+                                    <%action%>
+                                </strong>
+                                by your school.
+                            </p>
+
+                            <p style="margin:0 0 25px;
+                                      color:#475467;
+                                      font-size:16px;
+                                      line-height:28px;">
+                                Please log in to the HEM-Virtues platform
+                                to check your project submission status
+                                and proceed with the next steps, if any.
+                            </p>
+
+                            <!-- CTA Button -->
+                            <table cellpadding="0" cellspacing="0"
+                                   border="0" align="center"
+                                   role="presentation"
+                                   style="margin:0 auto 30px;">
+                                <tr>
+                                    <td align="center"
+                                        bgcolor="#00607A"
+                                        style="border-radius:8px;">
+                                        <a href="https://www.hemvirtues.com"
+                                           target="_blank"
+                                           style="display:inline-block;
+                                                  padding:14px 32px;
+                                                  color:#ffffff;
+                                                  font-size:15px;
+                                                  font-weight:bold;
+                                                  text-decoration:none;
+                                                  border-radius:8px;">
+                                            Check Submission Status &rarr;
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Support Section -->
+                            <table width="100%" cellpadding="0"
+                                   cellspacing="0" border="0"
+                                   role="presentation"
+                                   style="background-color:#f8fafc;
+                                          border-left:4px solid #ffcf46;">
+                                <tr>
+                                    <td style="padding:18px 20px;">
+
+                                        <p style="margin:0 0 8px;
+                                                  font-size:15px;
+                                                  font-weight:bold;
+                                                  color:#344054;">
+                                            Need Help?
+                                        </p>
+
+                                        <p style="margin:0;
+                                                  font-size:14px;
+                                                  line-height:24px;
+                                                  color:#667085;">
+                                            For any queries or assistance,
+                                            please contact us.
+                                            <br>
+
+                                            Email:
+                                            <a href="mailto:admin@hemafoundation.org"
+                                               style="color:#00607A;
+                                                      text-decoration:none;
+                                                      font-weight:bold;">
+                                                admin@hemafoundation.org
+                                            </a>
+                                            <br>
+
+                                            WhatsApp / Contact:
+                                            <a href="tel:+917228001342"
+                                               style="color:#00607A;
+                                                      text-decoration:none;
+                                                      font-weight:bold;">
+                                                +91 72280 01342
+                                            </a>
+                                        </p>
+
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Sign Off -->
+                            <p style="margin:30px 0 0;
+                                      font-size:15px;
+                                      line-height:25px;
+                                      color:#475467;">
+                                Best Regards,<br>
+
+                                <strong style="color:#00607A;
+                                               font-size:16px;">
+                                    HEMA Foundation
+                                </strong>
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer-padding"
+                            bgcolor="#004e65"
+                            style="padding:30px 35px;
+                                   background-color:#004e65;">
+
+                            <!-- Footer Heading -->
+                            <p style="margin:0 0 12px;
+                                      font-size:18px;
+                                      line-height:26px;
+                                      font-weight:bold;
+                                      color:#ffffff;
+                                      text-align:center;">
+                                About HEM-Virtues
+                            </p>
+
+                            <!-- Footer Description -->
+                            <p style="margin:0 0 22px;
+                                      font-size:13px;
+                                      line-height:23px;
+                                      color:#d9e9ee;
+                                      text-align:center;">
+                                HEM-Virtues is an online competition
+                                platform designed to empower, inspire,
+                                and educate students in moral values.
+                                Our learning program includes lessons,
+                                MCQs, practical activities, tasks,
+                                results, impactful research reports,
+                                e-certificates, rewards, and recognition
+                                for students and institutes.
+
+                                The course is available in English
+                                and Hindi.
+                            </p>
+
+                            <!-- Divider -->
+                            <table width="100%" cellpadding="0"
+                                   cellspacing="0" border="0"
+                                   role="presentation">
+                                <tr>
+                                    <td style="height:1px;
+                                               background-color:#367487;
+                                               font-size:0;
+                                               line-height:1px;">
+                                        &nbsp;
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Footer Links -->
+                            <p style="margin:20px 0 10px;
+                                      text-align:center;
+                                      font-size:13px;
+                                      line-height:22px;">
+
+                                <a href="https://www.hemvirtues.com/"
+                                   target="_blank"
+                                   style="color:#ffcf46;
+                                          text-decoration:none;">
+                                    Visit Website
+                                </a>
+
+                                &nbsp;&nbsp;|&nbsp;&nbsp;
+
+                                <a href="mailto:admin@hemafoundation.org"
+                                   style="color:#ffcf46;
+                                          text-decoration:none;">
+                                    Contact Us
+                                </a>
+                            </p>
+
+                            <!-- Copyright -->
+                            <p style="margin:0;
+                                      text-align:center;
+                                      color:#b9d0d8;
+                                      font-size:11px;
+                                      line-height:20px;">
+                                &copy; HEMA Foundation.
+                                All Rights Reserved.
+                                <br>
+                                Empowering Students Through
+                                Moral Values.
+                            </p>
+
+                        </td>
+                    </tr>
+
+                </table>
+                <!-- End Email Container -->
+
+            </td>
+        </tr>
     </table>
+    <!-- End Main Wrapper -->
+
 </body>
 </html>
+

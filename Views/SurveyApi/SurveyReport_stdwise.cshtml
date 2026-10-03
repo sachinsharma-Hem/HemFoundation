@@ -1,0 +1,2210 @@
+﻿@{
+    ViewData["Title"] = "Survey Report - Standard Wise";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<style>
+    .survey-page {
+        padding: 24px;
+        background: #f5f7fb;
+        min-height: calc(100vh - 80px);
+    }
+
+    .survey-header {
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: #fff;
+        border-radius: 16px;
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        box-shadow: 0 8px 25px rgba(30, 60, 114, 0.18);
+    }
+
+    .survey-header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .header-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        flex-shrink: 0;
+    }
+
+    .survey-header h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .survey-header p {
+        margin: 5px 0 0;
+        opacity: 0.85;
+        font-size: 14px;
+    }
+
+    .filter-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 22px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e9edf3;
+    }
+
+    .filter-title {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 18px;
+        color: #263238;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #4b5563;
+        margin-bottom: 7px;
+    }
+
+    .form-select {
+        min-height: 44px;
+        border-radius: 8px;
+        border: 1px solid #d7dce5;
+    }
+
+    .form-select:focus {
+        border-color: #2a5298;
+        box-shadow: 0 0 0 0.2rem rgba(42, 82, 152, 0.12);
+    }
+
+    .btn-generate {
+        min-height: 44px;
+        padding: 0 24px;
+        border: 0;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: #fff;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .btn-generate:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(42, 82, 152, 0.25);
+        color: #fff;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 20px;
+        border: 1px solid #e9edf3;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 21px;
+        background: #eef4ff;
+        color: #2a5298;
+        flex-shrink: 0;
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 3px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1.2;
+    }
+
+    .report-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e9edf3;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    .report-card-header {
+        padding: 20px 22px;
+        border-bottom: 1px solid #edf0f4;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .report-title {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .report-subtitle {
+        margin: 5px 0 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .report-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .report-actions .btn {
+        border-radius: 7px;
+    }
+
+    .report-body {
+        padding: 20px;
+    }
+
+    .search-box {
+        position: relative;
+        margin-bottom: 18px;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #8a94a6;
+    }
+
+    .search-box input {
+        padding-left: 38px;
+        min-height: 42px;
+        border-radius: 8px;
+        border: 1px solid #d7dce5;
+    }
+
+    .table-responsive {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+    }
+
+    #surveyTable {
+        margin: 0;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    #surveyTable thead th {
+        background: #f1f5f9;
+        color: #334155;
+        font-weight: 700;
+        vertical-align: middle;
+        border-bottom: 2px solid #dbe2ea;
+        text-align: center;
+    }
+
+    #surveyTable tbody td {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    #surveyTable tbody td.student-name {
+        text-align: left;
+        font-weight: 600;
+    }
+
+    #surveyTable tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .pre-header {
+        background: #fff4e5 !important;
+        color: #9a5a00 !important;
+    }
+
+    .post-header {
+        background: #e9f8ef !important;
+        color: #137333 !important;
+    }
+
+    .score-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 38px;
+        padding: 4px 7px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 12px;
+    }
+
+    .score-good {
+        background: #e8f7ed;
+        color: #137333;
+    }
+
+    .score-medium {
+        background: #fff4dd;
+        color: #946200;
+    }
+
+    .score-low {
+        background: #fdecec;
+        color: #b42318;
+    }
+
+    .score-neutral {
+        background: #eef1f4;
+        color: #59636e;
+    }
+
+    .total-cell {
+        font-weight: 700;
+        background: #f8fafc;
+    }
+
+    .improvement-cell {
+        font-weight: 700;
+    }
+
+    .improvement-positive {
+        color: #198754;
+    }
+
+    .improvement-negative {
+        color: #dc3545;
+    }
+
+    .improvement-neutral {
+        color: #6c757d;
+    }
+
+    .empty-state {
+        padding: 55px 20px;
+        text-align: center;
+        color: #6b7280;
+    }
+
+    .empty-state i {
+        font-size: 46px;
+        color: #b7c0cc;
+        margin-bottom: 14px;
+    }
+
+    .empty-state h5 {
+        color: #374151;
+        margin-bottom: 7px;
+    }
+
+    #loadingOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.75);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(2px);
+    }
+
+    .loading-box {
+        background: #fff;
+        padding: 25px 35px;
+        border-radius: 14px;
+        box-shadow: 0 8px 35px rgba(0, 0, 0, 0.15);
+        text-align: center;
+    }
+
+    .loading-box .spinner-border {
+        width: 38px;
+        height: 38px;
+        margin-bottom: 12px;
+    }
+
+    .loading-box div:last-child {
+        font-weight: 600;
+        color: #374151;
+    }
+
+    @@media (max-width: 768px) {
+
+        .survey-page {
+            padding: 12px;
+        }
+
+        .survey-header {
+            padding: 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .survey-header h2 {
+            font-size: 20px;
+        }
+
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .report-card-header {
+            align-items: flex-start;
+        }
+
+        .report-actions {
+            width: 100%;
+        }
+
+        .report-actions .btn {
+            flex: 1;
+        }
+
+        .filter-card {
+            padding: 16px;
+        }
+
+        .report-body {
+            padding: 12px;
+        }
+    }
+</style>
+
+<div class="survey-page">
+
+    <!-- Header -->
+    <div class="survey-header">
+
+        <div class="survey-header-left">
+
+            <div class="header-icon">
+                <i class="bi bi-bar-chart-line"></i>
+            </div>
+
+            <div>
+                <h2>Survey Report - Standard Wise</h2>
+                <p>View student survey performance and pre/post assessment comparison</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-card">
+
+        <div class="filter-title">
+            <i class="bi bi-funnel me-2"></i>
+            Generate Report
+        </div>
+
+        <div class="row g-3 align-items-end">
+
+            <div class="col-md-8">
+
+                <label for="MainCourseName" class="form-label">
+                    Course
+                </label>
+
+                <select id="MainCourseName"
+                        class="form-select">
+
+                    <option value="">
+                        -- Select Course --
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <button type="button"
+                        id="btnGenerate"
+                        class="btn btn-generate w-100">
+
+                    <i class="bi bi-bar-chart-fill me-2"></i>
+                    Generate Report
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Statistics -->
+    <div id="statsSection"
+         class="stats-row"
+         style="display:none;">
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                <i class="bi bi-people-fill"></i>
+            </div>
+
+            <div>
+                <div class="stat-label">
+                    Total Students
+                </div>
+
+                <div id="statStudents"
+                     class="stat-value">
+                    0
+                </div>
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                <i class="bi bi-question-circle-fill"></i>
+            </div>
+
+            <div>
+                <div class="stat-label">
+                    Total Questions
+                </div>
+
+                <div id="statQuestions"
+                     class="stat-value">
+                    0
+                </div>
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+
+            <div>
+
+                <div class="stat-label">
+                    Average Pre / Post
+                </div>
+
+                <div id="statPre"
+                     class="stat-value">
+                    0
+                </div>
+
+                <div id="statPost"
+                     style="font-size:13px;color:#198754;font-weight:600;">
+                    0
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Report -->
+    <div id="reportCard"
+         class="report-card"
+         style="display:none;">
+
+        <div class="report-card-header">
+
+            <div>
+
+                <h4 id="reportTitle"
+                    class="report-title">
+                    Survey Report
+                </h4>
+
+                <p id="reportSubtitle"
+                   class="report-subtitle">
+                    Standard wise report
+                </p>
+
+            </div>
+
+            <div class="report-actions">
+
+                <button type="button"
+                        id="btnExport"
+                        class="btn btn-outline-success btn-sm">
+
+                    <i class="bi bi-file-earmark-excel me-1"></i>
+                    Export CSV
+
+                </button>
+
+                <button type="button"
+                        id="btnPrint"
+                        class="btn btn-outline-primary btn-sm">
+
+                    <i class="bi bi-printer me-1"></i>
+                    Print
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="report-body">
+
+            <div class="search-box">
+
+                <i class="bi bi-search"></i>
+
+                <input type="text"
+                       id="txtSearch"
+                       class="form-control"
+                       placeholder="Search student, standard, division, institute or mobile number..." />
+
+            </div>
+
+            <div class="table-responsive">
+
+                <table id="surveyTable"
+                       class="table table-bordered table-hover align-middle">
+
+                    <thead id="surveyTableHead">
+                    </thead>
+
+                    <tbody id="surveyTableBody">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div id="emptyState"
+                 class="empty-state"
+                 style="display:none;">
+
+                <i class="bi bi-inbox"></i>
+
+                <h5>No Records Found</h5>
+
+                <p class="mb-0">
+                    No survey records match your search.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Loading -->
+<div id="loadingOverlay">
+
+    <div class="loading-box">
+
+        <div>
+            <div class="spinner-border text-primary"
+                 role="status">
+            </div>
+        </div>
+
+        <div>
+            Loading report...
+        </div>
+
+    </div>
+
+</div>
+<script>
+
+    var surveyData = [];
+    var maxQuestionCount = 0;
+    var currentCourse = "";
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+        loadCourses();
+
+        var generateButton = document.getElementById("btnGenerate");
+
+        if (generateButton) {
+            generateButton.addEventListener("click", generateReport);
+        }
+
+        var searchBox = document.getElementById("txtSearch");
+
+        if (searchBox) {
+            searchBox.addEventListener("input", function() {
+                renderTable(searchBox.value);
+            });
+        }
+
+        var exportButton = document.getElementById("btnExport");
+
+        if (exportButton) {
+            exportButton.addEventListener("click", exportCsv);
+        }
+
+        var printButton = document.getElementById("btnPrint");
+
+        if (printButton) {
+            printButton.addEventListener("click", printReport);
+        }
+
+    });
+
+
+    function getValue(obj, name) {
+
+        if (!obj) {
+            return null;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(obj, name)) {
+            return obj[name];
+        }
+
+        var pascalName =
+            name.charAt(0).toUpperCase() +
+            name.substring(1);
+
+        if (Object.prototype.hasOwnProperty.call(obj, pascalName)) {
+            return obj[pascalName];
+        }
+
+        return null;
+    }
+
+
+    function escapeHtml(value) {
+
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+
+    function toNumber(value) {
+
+        if (
+            value === null ||
+            value === undefined ||
+            value === ""
+        ) {
+            return 0;
+        }
+
+        var result = Number(value);
+
+        return isNaN(result) ? 0 : result;
+    }
+
+
+    function showLoading(show) {
+
+        var overlay =
+            document.getElementById("loadingOverlay");
+
+        if (!overlay) {
+            return;
+        }
+
+        overlay.style.display =
+            show ? "flex" : "none";
+    }
+
+
+    function showToast(message, type) {
+
+        type = type || "info";
+
+        var oldToast =
+            document.getElementById("surveyToast");
+
+        if (oldToast) {
+            oldToast.remove();
+        }
+
+        var toast =
+            document.createElement("div");
+
+        toast.id = "surveyToast";
+
+        toast.style.position = "fixed";
+        toast.style.right = "20px";
+        toast.style.bottom = "20px";
+        toast.style.zIndex = "10000";
+        toast.style.padding = "13px 18px";
+        toast.style.borderRadius = "8px";
+        toast.style.color = "#fff";
+        toast.style.fontWeight = "600";
+        toast.style.maxWidth = "400px";
+        toast.style.boxShadow =
+            "0 5px 20px rgba(0,0,0,.18)";
+
+        if (type === "success") {
+            toast.style.background = "#198754";
+        }
+        else if (type === "danger") {
+            toast.style.background = "#dc3545";
+        }
+        else if (type === "warning") {
+            toast.style.background = "#f59e0b";
+        }
+        else {
+            toast.style.background = "#2563eb";
+        }
+
+        toast.textContent = message;
+
+        document.body.appendChild(toast);
+
+        setTimeout(function() {
+
+            if (toast.parentNode) {
+                toast.remove();
+            }
+
+        }, 3500);
+    }
+
+
+    function loadCourses() {
+
+        var select =
+            document.getElementById("MainCourseName");
+
+        if (!select) {
+            return;
+        }
+
+        showLoading(true);
+
+        fetch("/api/survey/courses", {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        })
+            .then(function(response) {
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Unable to load courses."
+                    );
+                }
+
+                return response.json();
+
+            })
+            .then(function(result) {
+
+                if (!result || result.success !== true) {
+
+                    throw new Error(
+                        result && result.message
+                            ? result.message
+                            : "Unable to load courses."
+                    );
+                }
+
+                select.innerHTML =
+                    '<option value="">-- Select Course --</option>';
+
+                var courses =
+                    result.data || [];
+
+                courses.forEach(function(course) {
+
+                    var text =
+                        getValue(course, "text") ||
+                        getValue(course, "value") ||
+                        "";
+
+                    if (!text) {
+                        return;
+                    }
+
+                    var option =
+                        document.createElement("option");
+
+                    option.value = text;
+                    option.textContent = text;
+
+                    select.appendChild(option);
+
+                });
+
+            })
+            .catch(function(error) {
+
+                console.error(error);
+
+                showToast(
+                    error.message ||
+                    "Unable to load courses.",
+                    "danger"
+                );
+
+            })
+            .finally(function() {
+
+                showLoading(false);
+
+            });
+    }
+
+
+    function generateReport() {
+
+        var select =
+            document.getElementById("MainCourseName");
+
+        if (!select) {
+            return;
+        }
+
+        var courseName =
+            select.value;
+
+        if (!courseName) {
+
+            showToast(
+                "Please select a course.",
+                "warning"
+            );
+
+            return;
+        }
+
+        currentCourse =
+            courseName;
+
+        showLoading(true);
+
+        fetch("/api/survey/report", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({
+                mainCourseName: courseName
+            })
+        })
+            .then(function(response) {
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to generate survey report."
+                    );
+                }
+
+                return response.json();
+
+            })
+            .then(function(result) {
+
+                if (!result || result.success !== true) {
+
+                    throw new Error(
+                        result && result.message
+                            ? result.message
+                            : "Unable to generate survey report."
+                    );
+                }
+
+                surveyData =
+                    result.data || [];
+
+                maxQuestionCount =
+                    toNumber(
+                        result.maxQuestionCount
+                    );
+
+                if (maxQuestionCount <= 0) {
+
+                    maxQuestionCount =
+                        detectQuestionCount(
+                            surveyData
+                        );
+                }
+
+                updateStatistics();
+
+                document.getElementById(
+                    "reportCard"
+                ).style.display = "block";
+
+                document.getElementById(
+                    "statsSection"
+                ).style.display = "grid";
+
+                document.getElementById(
+                    "reportTitle"
+                ).textContent =
+                    currentCourse +
+                    " - Survey Report";
+
+                document.getElementById(
+                    "reportSubtitle"
+                ).textContent =
+                    "Standard wise student survey performance report";
+
+                renderTable("");
+
+                showToast(
+                    "Report generated successfully.",
+                    "success"
+                );
+
+            })
+            .catch(function(error) {
+
+                console.error(error);
+
+                surveyData = [];
+
+                document.getElementById(
+                    "reportCard"
+                ).style.display = "none";
+
+                document.getElementById(
+                    "statsSection"
+                ).style.display = "none";
+
+                showToast(
+                    error.message ||
+                    "Unable to generate survey report.",
+                    "danger"
+                );
+
+            })
+            .finally(function() {
+
+                showLoading(false);
+
+            });
+    }
+
+
+    function detectQuestionCount(data) {
+
+        if (!data || data.length === 0) {
+            return 0;
+        }
+
+        var maxQuestion = 0;
+
+        data.forEach(function(row) {
+
+            var questions =
+                getValue(row, "questions");
+
+            if (Array.isArray(questions)) {
+
+                questions.forEach(function(question) {
+
+                    var number =
+                        toNumber(
+                            getValue(
+                                question,
+                                "questionNo"
+                            )
+                        );
+
+                    if (number > maxQuestion) {
+                        maxQuestion = number;
+                    }
+
+                });
+            }
+
+            Object.keys(row || {}).forEach(
+                function(key) {
+
+                    var match =
+                        key.match(
+                            /^(?:preQ|postQ|preq|postq)(\d+)/i
+                        );
+
+                    if (match) {
+
+                        var number =
+                            parseInt(
+                                match[1],
+                                10
+                            );
+
+                        if (number > maxQuestion) {
+                            maxQuestion = number;
+                        }
+                    }
+                }
+            );
+
+        });
+
+        return maxQuestion;
+    }
+
+
+    function findQuestion(row, questionNo) {
+
+        var questions =
+            getValue(row, "questions");
+
+        if (!Array.isArray(questions)) {
+            return null;
+        }
+
+        for (
+            var i = 0;
+            i < questions.length;
+            i++
+        ) {
+
+            var qNo =
+                toNumber(
+                    getValue(
+                        questions[i],
+                        "questionNo"
+                    )
+                );
+
+            if (qNo === questionNo) {
+                return questions[i];
+            }
+        }
+
+        return null;
+    }
+
+
+    function getQuestionValue(
+        row,
+        questionNo,
+        type
+    ) {
+
+        var question =
+            findQuestion(
+                row,
+                questionNo
+            );
+
+        if (question) {
+
+            var questionNames;
+
+            if (type === "pre") {
+
+                questionNames = [
+                    "prePoint",
+                    "PrePoint",
+                    "prePoints",
+                    "PrePoints",
+                    "pre",
+                    "Pre",
+                    "preValue",
+                    "PreValue"
+                ];
+
+            }
+            else {
+
+                questionNames = [
+                    "postPoint",
+                    "PostPoint",
+                    "postPoints",
+                    "PostPoints",
+                    "post",
+                    "Post",
+                    "postValue",
+                    "PostValue"
+                ];
+            }
+
+            for (
+                var q = 0;
+                q < questionNames.length;
+                q++
+            ) {
+
+                var questionValue =
+                    getValue(
+                        question,
+                        questionNames[q]
+                    );
+
+                if (
+                    questionValue !== null &&
+                    questionValue !== undefined &&
+                    questionValue !== ""
+                ) {
+                    return questionValue;
+                }
+            }
+        }
+
+
+        var prefix =
+            type === "pre"
+                ? "preQ"
+                : "postQ";
+
+        var possibleNames = [
+            prefix + questionNo + "Point",
+            prefix + questionNo + "point",
+            prefix + questionNo,
+            prefix.toLowerCase() +
+            questionNo +
+            "Point",
+            prefix.toLowerCase() +
+            questionNo +
+            "point",
+            prefix.toLowerCase() +
+            questionNo
+        ];
+
+
+        for (
+            var i = 0;
+            i < possibleNames.length;
+            i++
+        ) {
+
+            var value =
+                getValue(
+                    row,
+                    possibleNames[i]
+                );
+
+            if (
+                value !== null &&
+                value !== undefined &&
+                value !== ""
+            ) {
+                return value;
+            }
+        }
+
+        return 0;
+    }
+
+
+    function getTotal(row, type) {
+
+        var names;
+
+        if (type === "pre") {
+
+            names = [
+                "totalPre",
+                "TotalPre",
+                "totalPrePoint",
+                "TotalPrePoint",
+                "preTotal",
+                "PreTotal"
+            ];
+
+        }
+        else {
+
+            names = [
+                "totalPost",
+                "TotalPost",
+                "totalPostPoint",
+                "TotalPostPoint",
+                "postTotal",
+                "PostTotal"
+            ];
+        }
+
+
+        for (
+            var i = 0;
+            i < names.length;
+            i++
+        ) {
+
+            var value =
+                getValue(
+                    row,
+                    names[i]
+                );
+
+            if (
+                value !== null &&
+                value !== undefined &&
+                value !== ""
+            ) {
+                return toNumber(value);
+            }
+        }
+
+
+        var total = 0;
+
+        for (
+            var questionNo = 1;
+            questionNo <= maxQuestionCount;
+            questionNo++
+        ) {
+
+            total +=
+                toNumber(
+                    getQuestionValue(
+                        row,
+                        questionNo,
+                        type
+                    )
+                );
+        }
+
+        return total;
+    }
+
+
+    function scoreBadge(value) {
+
+        var number =
+            toNumber(value);
+
+        var cssClass =
+            "score-neutral";
+
+        if (number >= 4) {
+            cssClass = "score-good";
+        }
+        else if (number >= 2) {
+            cssClass = "score-medium";
+        }
+        else if (number > 0) {
+            cssClass = "score-low";
+        }
+
+        return (
+            '<span class="score-badge ' +
+            cssClass +
+            '">' +
+            escapeHtml(number) +
+            "</span>"
+        );
+    }
+
+
+    function getStudentName(row) {
+
+        var firstName =
+            getValue(row, "firstName") ||
+            getValue(row, "firstname") ||
+            "";
+
+        var lastName =
+            getValue(row, "lastName") ||
+            getValue(row, "lastname") ||
+            "";
+
+        var fullName =
+            getValue(row, "studentName") ||
+            getValue(row, "StudentName") ||
+            "";
+
+        if (fullName) {
+            return fullName;
+        }
+
+        return (
+            String(firstName) +
+            " " +
+            String(lastName)
+        ).trim();
+    }
+
+
+    function renderTable(searchText) {
+
+        var tableHead =
+            document.getElementById(
+                "surveyTableHead"
+            );
+
+        var tableBody =
+            document.getElementById(
+                "surveyTableBody"
+            );
+
+        var emptyState =
+            document.getElementById(
+                "emptyState"
+            );
+
+        if (!tableHead || !tableBody) {
+            return;
+        }
+
+        searchText =
+            (searchText || "")
+                .toLowerCase()
+                .trim();
+
+
+        var filteredData =
+            surveyData.filter(
+                function(row) {
+
+                    if (!searchText) {
+                        return true;
+                    }
+
+                    var searchableText = [
+                        getStudentName(row),
+                        getValue(row, "standard"),
+                        getValue(row, "Standard"),
+                        getValue(row, "division"),
+                        getValue(row, "Division"),
+                        getValue(row, "instituteName"),
+                        getValue(row, "InstituteName"),
+                        getValue(row, "mobileNo"),
+                        getValue(row, "MobileNo")
+                    ]
+                        .join(" ")
+                        .toLowerCase();
+
+                    return (
+                        searchableText.indexOf(
+                            searchText
+                        ) >= 0
+                    );
+                }
+            );
+
+
+        var headerHtml =
+            "<tr>" +
+            '<th rowspan="2">#</th>' +
+            '<th rowspan="2">Student</th>' +
+            '<th rowspan="2">Standard</th>' +
+            '<th rowspan="2">Division</th>' +
+            '<th rowspan="2">Institute</th>';
+
+
+        for (
+            var questionNo = 1;
+            questionNo <= maxQuestionCount;
+            questionNo++
+        ) {
+
+            headerHtml +=
+                '<th colspan="2">Q' +
+                questionNo +
+                "</th>";
+        }
+
+
+        headerHtml +=
+            '<th colspan="2">Total</th>' +
+            '<th rowspan="2">Improvement</th>' +
+            "</tr>";
+
+
+        headerHtml += "<tr>";
+
+
+        for (
+            var q = 1;
+            q <= maxQuestionCount;
+            q++
+        ) {
+
+            headerHtml +=
+                '<th class="pre-header">Pre</th>' +
+                '<th class="post-header">Post</th>';
+        }
+
+
+        headerHtml +=
+            '<th class="pre-header">Pre</th>' +
+            '<th class="post-header">Post</th>' +
+            "</tr>";
+
+
+        tableHead.innerHTML =
+            headerHtml;
+
+
+        if (filteredData.length === 0) {
+
+            tableBody.innerHTML = "";
+
+            if (emptyState) {
+                emptyState.style.display =
+                    "block";
+            }
+
+            return;
+        }
+
+
+        if (emptyState) {
+            emptyState.style.display =
+                "none";
+        }
+
+
+        var bodyHtml = "";
+
+
+        filteredData.forEach(
+            function(row, index) {
+
+                var studentName =
+                    getStudentName(row);
+
+                var standard =
+                    getValue(
+                        row,
+                        "standard"
+                    ) ||
+                    getValue(
+                        row,
+                        "Standard"
+                    ) ||
+                    "";
+
+                var division =
+                    getValue(
+                        row,
+                        "division"
+                    ) ||
+                    getValue(
+                        row,
+                        "Division"
+                    ) ||
+                    "";
+
+                var institute =
+                    getValue(
+                        row,
+                        "instituteName"
+                    ) ||
+                    getValue(
+                        row,
+                        "InstituteName"
+                    ) ||
+                    getValue(
+                        row,
+                        "institute"
+                    ) ||
+                    "";
+
+
+                var totalPre =
+                    getTotal(row, "pre");
+
+                var totalPost =
+                    getTotal(row, "post");
+
+                var improvement =
+                    totalPost - totalPre;
+
+
+                var improvementClass =
+                    "improvement-neutral";
+
+                if (improvement > 0) {
+                    improvementClass =
+                        "improvement-positive";
+                }
+                else if (improvement < 0) {
+                    improvementClass =
+                        "improvement-negative";
+                }
+
+
+                bodyHtml +=
+                    "<tr>" +
+
+                    "<td>" +
+                    (index + 1) +
+                    "</td>" +
+
+                    '<td class="student-name">' +
+                    escapeHtml(studentName) +
+                    "</td>" +
+
+                    "<td>" +
+                    escapeHtml(standard) +
+                    "</td>" +
+
+                    "<td>" +
+                    escapeHtml(division) +
+                    "</td>" +
+
+                    "<td>" +
+                    escapeHtml(institute) +
+                    "</td>";
+
+
+                for (
+                    var questionNo = 1;
+                    questionNo <= maxQuestionCount;
+                    questionNo++
+                ) {
+
+                    var preValue =
+                        getQuestionValue(
+                            row,
+                            questionNo,
+                            "pre"
+                        );
+
+                    var postValue =
+                        getQuestionValue(
+                            row,
+                            questionNo,
+                            "post"
+                        );
+
+
+                    bodyHtml +=
+                        "<td>" +
+                        scoreBadge(preValue) +
+                        "</td>" +
+
+                        "<td>" +
+                        scoreBadge(postValue) +
+                        "</td>";
+                }
+
+
+                bodyHtml +=
+                    '<td class="total-cell">' +
+                    escapeHtml(totalPre) +
+                    "</td>" +
+
+                    '<td class="total-cell">' +
+                    escapeHtml(totalPost) +
+                    "</td>" +
+
+                    '<td class="improvement-cell ' +
+                    improvementClass +
+                    '">' +
+                    (
+                        improvement > 0
+                            ? "+"
+                            : ""
+                    ) +
+                    escapeHtml(improvement) +
+                    "</td>" +
+
+                    "</tr>";
+            }
+        );
+
+
+        tableBody.innerHTML =
+            bodyHtml;
+    }
+
+
+    function updateStatistics() {
+
+        var students =
+            surveyData.length;
+
+        document.getElementById(
+            "statStudents"
+        ).textContent =
+            students;
+
+        document.getElementById(
+            "statQuestions"
+        ).textContent =
+            maxQuestionCount;
+
+
+        if (students === 0) {
+
+            document.getElementById(
+                "statPre"
+            ).textContent = "0";
+
+            document.getElementById(
+                "statPost"
+            ).textContent =
+                "Post: 0";
+
+            return;
+        }
+
+
+        var preTotal = 0;
+        var postTotal = 0;
+
+
+        surveyData.forEach(
+            function(row) {
+
+                preTotal +=
+                    getTotal(row, "pre");
+
+                postTotal +=
+                    getTotal(row, "post");
+            }
+        );
+
+
+        var averagePre =
+            preTotal / students;
+
+        var averagePost =
+            postTotal / students;
+
+
+        document.getElementById(
+            "statPre"
+        ).textContent =
+            averagePre.toFixed(2);
+
+        document.getElementById(
+            "statPost"
+        ).textContent =
+            "Post: " +
+            averagePost.toFixed(2);
+    }
+
+
+    function exportCsv() {
+
+        if (
+            !surveyData ||
+            surveyData.length === 0
+        ) {
+
+            showToast(
+                "No data available to export.",
+                "warning"
+            );
+
+            return;
+        }
+
+
+        var headers = [
+            "#",
+            "Student",
+            "Standard",
+            "Division",
+            "Institute"
+        ];
+
+
+        for (
+            var questionNo = 1;
+            questionNo <= maxQuestionCount;
+            questionNo++
+        ) {
+
+            headers.push(
+                "Q" +
+                questionNo +
+                " Pre"
+            );
+
+            headers.push(
+                "Q" +
+                questionNo +
+                " Post"
+            );
+        }
+
+
+        headers.push("Total Pre");
+        headers.push("Total Post");
+        headers.push("Improvement");
+
+
+        var rows = [];
+
+        rows.push(headers);
+
+
+        surveyData.forEach(
+            function(row, index) {
+
+                var csvRow = [];
+
+                csvRow.push(index + 1);
+
+                csvRow.push(
+                    getStudentName(row)
+                );
+
+                csvRow.push(
+                    getValue(
+                        row,
+                        "standard"
+                    ) ||
+                    getValue(
+                        row,
+                        "Standard"
+                    ) ||
+                    ""
+                );
+
+                csvRow.push(
+                    getValue(
+                        row,
+                        "division"
+                    ) ||
+                    getValue(
+                        row,
+                        "Division"
+                    ) ||
+                    ""
+                );
+
+                csvRow.push(
+                    getValue(
+                        row,
+                        "instituteName"
+                    ) ||
+                    getValue(
+                        row,
+                        "InstituteName"
+                    ) ||
+                    ""
+                );
+
+
+                for (
+                    var questionNo = 1;
+                    questionNo <= maxQuestionCount;
+                    questionNo++
+                ) {
+
+                    csvRow.push(
+                        getQuestionValue(
+                            row,
+                            questionNo,
+                            "pre"
+                        )
+                    );
+
+                    csvRow.push(
+                        getQuestionValue(
+                            row,
+                            questionNo,
+                            "post"
+                        )
+                    );
+                }
+
+
+                var totalPre =
+                    getTotal(row, "pre");
+
+                var totalPost =
+                    getTotal(row, "post");
+
+
+                csvRow.push(totalPre);
+                csvRow.push(totalPost);
+                csvRow.push(
+                    totalPost - totalPre
+                );
+
+                rows.push(csvRow);
+            }
+        );
+
+
+        var csvContent =
+            rows
+                .map(
+                    function(row) {
+
+                        return row
+                            .map(
+                                function(value) {
+
+                                    var text =
+                                        value === null ||
+                                            value === undefined
+                                            ? ""
+                                            : String(value);
+
+                                    text =
+                                        text.replace(
+                                            /"/g,
+                                            '""'
+                                        );
+
+                                    return (
+                                        '"' +
+                                        text +
+                                        '"'
+                                    );
+                                }
+                            )
+                            .join(",");
+                    }
+                )
+                .join("\r\n");
+
+
+        var blob =
+            new Blob(
+                [csvContent],
+                {
+                    type:
+                        "text/csv;charset=utf-8;"
+                }
+            );
+
+
+        var url =
+            URL.createObjectURL(blob);
+
+
+        var link =
+            document.createElement("a");
+
+        link.href = url;
+
+        link.download =
+            sanitizeFileName(
+                currentCourse +
+                "_Survey_Report.csv"
+            );
+
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+
+
+        showToast(
+            "CSV exported successfully.",
+            "success"
+        );
+    }
+
+
+    function sanitizeFileName(value) {
+
+        return String(
+            value || "Survey_Report"
+        )
+            .replace(
+                /[\\/:*?"<>|]+/g,
+                "_"
+            )
+            .trim();
+    }
+
+
+    function printReport() {
+
+        if (
+            !surveyData ||
+            surveyData.length === 0
+        ) {
+
+            showToast(
+                "No data available to print.",
+                "warning"
+            );
+
+            return;
+        }
+
+
+        var table =
+            document.getElementById(
+                "surveyTable"
+            );
+
+
+        if (!table) {
+
+            showToast(
+                "Report table not found.",
+                "danger"
+            );
+
+            return;
+        }
+
+
+        var printWindow =
+            window.open(
+                "",
+                "_blank",
+                "width=1400,height=900"
+            );
+
+
+        if (!printWindow) {
+
+            showToast(
+                "Please allow pop-ups to print the report.",
+                "warning"
+            );
+
+            return;
+        }
+
+
+        var doc =
+            printWindow.document;
+
+        doc.open();
+
+
+        var html =
+            doc.createElement("html");
+
+        var head =
+            doc.createElement("head");
+
+        var body =
+            doc.createElement("body");
+
+
+        var meta =
+            doc.createElement("meta");
+
+        meta.setAttribute(
+            "charset",
+            "UTF-8"
+        );
+
+        head.appendChild(meta);
+
+
+        var title =
+            doc.createElement("title");
+
+        title.textContent =
+            currentCourse +
+            " - Survey Report";
+
+        head.appendChild(title);
+
+
+        var style =
+            doc.createElement("style");
+
+
+        style.textContent =
+            "* { box-sizing: border-box; }" +
+
+            "body {" +
+            "font-family: Arial, Helvetica, sans-serif;" +
+            "margin: 0;" +
+            "padding: 15px;" +
+            "color: #222;" +
+            "background: #fff;" +
+            "}" +
+
+            ".print-header {" +
+            "text-align: center;" +
+            "margin-bottom: 15px;" +
+            "}" +
+
+            ".print-header h2 {" +
+            "margin: 0 0 5px 0;" +
+            "font-size: 20px;" +
+            "}" +
+
+            ".print-header p {" +
+            "margin: 0;" +
+            "font-size: 11px;" +
+            "color: #555;" +
+            "}" +
+
+            "table {" +
+            "width: 100%;" +
+            "border-collapse: collapse;" +
+            "font-size: 8px;" +
+            "}" +
+
+            "th, td {" +
+            "border: 1px solid #999;" +
+            "padding: 4px;" +
+            "text-align: center;" +
+            "vertical-align: middle;" +
+            "}" +
+
+            "th {" +
+            "background: #eeeeee !important;" +
+            "font-weight: bold;" +
+            "}" +
+
+            ".student-name {" +
+            "text-align: left !important;" +
+            "}" +
+
+            ".pre-header {" +
+            "background: #fff4e5 !important;" +
+            "}" +
+
+            ".post-header {" +
+            "background: #e9f8ef !important;" +
+            "}" +
+
+            ".score-badge {" +
+            "display: inline-block;" +
+            "font-weight: bold;" +
+            "padding: 2px 4px;" +
+            "}" +
+
+            ".total-cell {" +
+            "font-weight: bold;" +
+            "}" +
+
+            ".improvement-cell {" +
+            "font-weight: bold;" +
+            "}" +
+
+            "thead {" +
+            "display: table-header-group;" +
+            "}" +
+
+            "tr {" +
+            "page-break-inside: avoid;" +
+            "}";
+
+
+        /*
+         * Build the print page rule without
+         * putting the special character directly
+         * in this Razor file.
+         */
+
+        style.textContent +=
+            String.fromCharCode(64) +
+            "page {" +
+            "size: landscape;" +
+            "margin: 8mm;" +
+            "}";
+
+
+        head.appendChild(style);
+
+
+        var printHeader =
+            doc.createElement("div");
+
+        printHeader.className =
+            "print-header";
+
+
+        var heading =
+            doc.createElement("h2");
+
+        heading.textContent =
+            currentCourse +
+            " - Survey Report";
+
+
+        var summary =
+            doc.createElement("p");
+
+        summary.textContent =
+            "Total Students: " +
+            surveyData.length +
+            " | Total Questions: " +
+            maxQuestionCount;
+
+
+        printHeader.appendChild(heading);
+        printHeader.appendChild(summary);
+
+        body.appendChild(printHeader);
+
+
+        var clonedTable =
+            table.cloneNode(true);
+
+        body.appendChild(clonedTable);
+
+
+        html.appendChild(head);
+        html.appendChild(body);
+
+        doc.appendChild(html);
+
+        doc.close();
+
+
+        printWindow.focus();
+
+
+        setTimeout(
+            function() {
+
+                printWindow.print();
+
+                setTimeout(
+                    function() {
+
+                        try {
+                            printWindow.close();
+                        }
+                        catch (e) {
+                            console.log(e);
+                        }
+
+                    },
+                    1000
+                );
+
+            },
+            500
+        );
+    }
+
+</script>

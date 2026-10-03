@@ -278,7 +278,7 @@
             <!-- MODAL BODY -->
             <div class="modal-body p-4">
 
-                <div class="table-responsive border rounded-3 modal-table-wrapper" style="max-height: 420px;">
+                    <div class="table-responsive border rounded-3 modal-table-wrapper" style="max-height:auto; height: fit-content;">
                     <table class="table table-hover align-middle mb-0" id="modalTable">
                         <thead class="table-light"></thead>
                         <tbody></tbody>
@@ -1551,7 +1551,7 @@
         // Server-side full data export handler
         $('#btnExportModalData').on('click', function() {
             let searchTerm = $('#modalTableSearch').val().trim();
-            let exportUrl = `/api/admin/export-details-excel?category=${currentCategory}&type=${currentType}&search=${encodeURIComponent(searchTerm)}`;
+            let exportUrl = `/api/admin/export-details-excel?category=${currentCategory}&type=${currentType}&search=${encodeURIComponent(searchTerm)}&affiliateid=${affiliateId}`;
 
             showGlobalLoader("Generating Excel Export for Filtered Records...");
 
