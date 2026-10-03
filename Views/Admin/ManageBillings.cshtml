@@ -380,15 +380,15 @@
                             let payDetail = b.payment ? `<br><small class="text-success fw-bold">Txn: ${b.payment.transactionNumber} (₹${b.payment.amountPaid})</small>` : '';
 
                             html += `<tr>
-                                                <td><b>#${b.billNumber}</b><br><small class="text-muted">${formatDate(b.billDate)}</small></td>
-                                                <td><span class="text-primary fw-bold">${b.affiliateName}</span><br><small class="text-muted">To: ${b.orgName}</small></td>
-                                                <td><b>₹${b.totalAmount.toFixed(2)}</b><br><small class="text-muted">${b.particulars}</small>${payDetail}</td>
-                                                <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>
-                                                <td class="text-center">${pdfLink}</td>
-                                                <td class="text-center">
-                                                    <button class="btn btn-sm btn-outline-dark rounded-pill px-3 shadow-none" onclick="openProcessModal(${b.id}, '${b.status}', ${b.totalAmount})">Process</button>
-                                                </td>
-                                            </tr>`;
+                                                        <td><b>#${b.billNumber}</b><br><small class="text-muted">${formatDate(b.billDate)}</small></td>
+                                                        <td><span class="text-primary fw-bold">${b.affiliateName}</span><br><small class="text-muted">To: ${b.orgName}</small></td>
+                                                        <td><b>₹${b.totalAmount.toFixed(2)}</b><br><small class="text-muted">${b.particulars}</small>${payDetail}</td>
+                                                        <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>
+                                                        <td class="text-center">${pdfLink}</td>
+                                                        <td class="text-center">
+                                                            <button class="btn btn-sm btn-outline-dark rounded-pill px-3 shadow-none" onclick="openProcessModal(${b.id}, '${b.status}', ${b.totalAmount})">Process</button>
+                                                        </td>
+                                                    </tr>`;
                         });
                         $('#tblAdminBills').html(html);
                     } else {
@@ -467,15 +467,15 @@
                             }
 
                             html += `<tr>
-                                                <td><b>${b.monthYear}</b></td>
-                                                <td><span class="text-primary fw-bold">${b.affiliateName}</span></td>
-                                                <td><b class="text-success">₹${b.totalAmount.toFixed(2)}</b></td>
-                                                <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>
-                                                <td class="text-center">${docs}</td>
-                                                <td class="text-center">
-                                                    <button class="btn btn-sm btn-outline-dark rounded-pill px-3 shadow-none" onclick="openProcessExpenseModal(${b.id}, '${b.status}')">Process</button>
-                                                </td>
-                                            </tr>`;
+                                                        <td><b>${b.monthYear}</b></td>
+                                                        <td><span class="text-primary fw-bold">${b.affiliateName}</span></td>
+                                                        <td><b class="text-success">₹${b.totalAmount.toFixed(2)}</b></td>
+                                                        <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>
+                                                        <td class="text-center">${docs}</td>
+                                                        <td class="text-center">
+                                                            <button class="btn btn-sm btn-outline-dark rounded-pill px-3 shadow-none" onclick="openProcessExpenseModal(${b.id}, '${b.status}')">Process</button>
+                                                        </td>
+                                                    </tr>`;
                         });
                         $('#tblAdminExpenseBills').html(html);
                     } else {
@@ -530,14 +530,14 @@
                             let badge = o.isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
 
                             html += `<tr>
-                                                <td>${logo}</td>
-                                                <td><b>${o.orgName}</b></td>
-                                                <td>${o.address}</td>
-                                                <td>${badge}</td>
-                                                <td class="text-center">
-                                                    <button class="btn btn-sm btn-light border" onclick="deleteOrg(${o.id})"><i class="bi bi-trash text-danger"></i></button>
-                                                </td>
-                                            </tr>`;
+                                                        <td>${logo}</td>
+                                                        <td><b>${o.orgName}</b></td>
+                                                        <td>${o.address}</td>
+                                                        <td>${badge}</td>
+                                                        <td class="text-center">
+                                                            <button class="btn btn-sm btn-light border" onclick="deleteOrg(${o.id})"><i class="bi bi-trash text-danger"></i></button>
+                                                        </td>
+                                                    </tr>`;
                         });
                         $('#tblOrgs').html(html);
                     } else {

@@ -1,7 +1,27 @@
-﻿@{
+﻿@using Microsoft.Extensions.Configuration
+@using System
+
+@inject IConfiguration Configuration
+
+@{
     ViewData["Title"] = "Activity Submission";
     Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+
     int valueItemId = ViewBag.ValueItemId;
+
+    string fileUploadApiUrl =
+        Configuration["FileSettings:InHouseUploadUrl"] ?? "";
+
+    string fileBaseUrl = "";
+
+    if (Uri.TryCreate(
+        fileUploadApiUrl,
+        UriKind.Absolute,
+        out Uri? fileUri))
+    {
+        fileBaseUrl =
+            $"{fileUri.Scheme}://{fileUri.Authority}";
+    }
 }
 
 <div class="container-fluid py-4">
@@ -117,6 +137,21 @@
 
 @section Scripts {
     <script>
+        const fileBaseUrl = '@fileBaseUrl';
+
+        function getCentralFileUrl(filePath) {
+            if (!filePath) return "";
+
+            if (/^https?:\/\//i.test(filePath)) {
+                return filePath;
+            }
+
+            return fileBaseUrl.replace(/\/+$/, "") +
+                "/" +
+                filePath.replace(/^\/+/, "");
+        }
+
+
         let VID = @valueItemId;
         let students = []; // Array of { id, name, team: '' }
         let groups = [];   // Array of string names
@@ -301,9 +336,22 @@
                     <div class="card bg-light border-0 rounded-4 p-4 mt-3">
                                 <p class="mb-3"><b>Your Observation:</b> <br> ${existingSubmission.shortDescription || 'N/A'}</p>
                         <div class="d-flex gap-2">
-                            ${existingSubmission.imageActivity ? `<a href="${existingSubmission.imageActivity}" target="_blank" class="btn btn-outline-dark fw-bold rounded-pill"><i class="bi bi-image"></i> View Image</a>` : ''}
-                            ${existingSubmission.videoActivity ? `<a href="${existingSubmission.videoActivity}" target="_blank" class="btn btn-outline-dark fw-bold rounded-pill"><i class="bi bi-camera-video"></i> View Video</a>` : ''}
-                        </div>
+                                ${existingSubmission.imageActivity
+                        ? `<a href="${getCentralFileUrl(existingSubmission.imageActivity)}"
+                  target="_blank"
+                  class="btn btn-outline-dark fw-bold rounded-pill">
+                  <i class="bi bi-image"></i> View Image
+               </a>`
+                        : ''}
+
+        ${existingSubmission.videoActivity
+                        ? `<a href="${getCentralFileUrl(existingSubmission.videoActivity)}"
+                  target="_blank"
+                  class="btn btn-outline-dark fw-bold rounded-pill">
+                  <i class="bi bi-camera-video"></i> View Video
+               </a>`
+                        : ''}
+                             </div>
                     </div>
                 `);
             }
