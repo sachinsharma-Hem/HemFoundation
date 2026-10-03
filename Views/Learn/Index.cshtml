@@ -1,7 +1,11 @@
-﻿@model IEnumerable<HemFoundation.Models.MainCourseVM>
+﻿@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+
+@model IEnumerable<HemFoundation.Models.MainCourseVM>
 @{
     ViewData["Title"] = "Interactive-Learning-Workspace";
     Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    var fileHostingBaseUrl =
+        Configuration["FileSettings:BaseUrl"]?.TrimEnd('/') ?? "";
 
     var firstItem = Model != null ? Model.FirstOrDefault() : null;
     int assignedCount = firstItem != null ? firstItem.GlobalAssigned : 0;
@@ -735,6 +739,21 @@
 @section Scripts {
 
     <script>
+        var fileHostingBaseUrl =  @Html.Raw(System.Text.Json.JsonSerializer.Serialize(fileHostingBaseUrl));
+    function resolveHostedFileUrl(path) {
+    if (!path || path === 'NULL') return '';
+
+    path = path.trim();
+
+    // Keep absolute URLs unchanged.
+    if (/^https?:\/\//i.test(path)) {
+        return path;
+    }
+
+    // Convert ~/folder/file or /folder/file to the configured host.
+    return fileHostingBaseUrl + '/' +
+        path.replace(/^~\/?/, '').replace(/^\/+/, '');
+}
         var activeCourseDataCache = null;
         var activeWeekGlobalIndex = 1;
         var isStudent = @isStudentBool.ToString().ToLower();
@@ -1045,7 +1064,7 @@
                 if (activityType === 'video' && trainerVidVal && trainerVidVal !== 'NULL') {
                     imgUrl = getYouTubeThumbnail(trainerVidVal);
                 } else if (trainerExVal && trainerExVal.trim() !== '' && trainerExVal !== 'NULL') {
-                    imgUrl = trainerExVal.replace(/^~\//, 'https://www.hemvirtues.in/');
+                    imgUrl = resolveHostedFileUrl(trainerExVal);
                 }
 
                 var typeBadge = isTruePracticalGame ? 'Practical Lab' : activityType;
@@ -1115,11 +1134,11 @@
                 if (isTruePracticalGame) {
                     html += '<div class="activity-card-footer">';
                     if (resVal && resVal.trim() !== '' && resVal !== 'NULL') {
-                        var cleanRes = resVal.replace(/^~\//, 'https://www.hemvirtues.in/');
+                        var cleanRes = resolveHostedFileUrl(resVal);
                         html += '<a href="' + cleanRes + '" download class="btn btn-action-pill btn-pill-secondary" target="blank" onclick="event.stopPropagation()"><i class="fa fa-download"></i> Resources</a>';
                     }
                     if (trainerVidVal && trainerVidVal.trim() !== '' && trainerVidVal !== 'NULL') {
-                        var tutorialCleanUrl = trainerVidVal.replace(/^~\//, 'https://www.hemvirtues.in/');
+                        var tutorialCleanUrl = resolveHostedFileUrl(trainerVidVal);
                         html += '<button type="button" class="btn btn-action-pill btn-pill-secondary" onclick="event.stopPropagation();openMediaModal(\'' + tutorialCleanUrl + '\', \'Tutorial\')"><i class="fa fa-video-camera"></i> Tutorial</button>';
                     }
                     if (isAttemptedVal === true) {
@@ -1280,9 +1299,9 @@
             var trainerRes = row.trainerResource || row.TrainerResource;
             var trainerEx = row.trainerExercise || row.TrainerExercise;
 
-            if (type === 'video' && trainerVid) return trainerVid.replace(/^~\//, 'https://www.hemvirtues.in/');
-            if (type === 'pdf' && trainerRes) return trainerRes.replace(/^~\//, 'https://www.hemvirtues.in/');
-            if (type === 'practical' && trainerEx) return trainerEx.replace(/^~\//, 'https://www.hemvirtues.in/');
+            if (type === 'video' && trainerVid) return resolveHostedFileUrl(trainerVid);
+            if (type === 'pdf' && trainerRes) return resolveHostedFileUrl(trainerRes);
+            if (type === 'practical' && trainerEx) return resolveHostedFileUrl(trainerEx);
 
             if (type === 'presurvey' || type === 'postsurvey') return '/Exam/Survey?CourseID=' + courseId + '&TopicID=' + topicId + '&LanguageID=' + langId;
             if (type === 'mcq') return '/Exam/Index?QuizId=' + quizId + '&TopicID=' + topicId + '&LevelID=1&LanguageID=' + langId + '&IsInstituteQuiz=false&IsAttempt=false&ExamID=0';

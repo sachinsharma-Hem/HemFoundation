@@ -90,6 +90,7 @@ namespace HemFoundation.Data
         public DbSet<Topics> Topics { get; set; }
         public DbSet<Courses> Courses { get; set; }
         public DbSet<QuizCourseLevels> QuizCourseLevels { get; set; }
+        public DbSet<Language> Languages { get; set; }
         public virtual DbSet<WJ_Tech_Teacher_Questions> WJ_Tech_Teacher_Questions { get; set; }
         public virtual DbSet<Levels> Levels { get; set; }
         public virtual DbSet<View_ExamResult> View_ExamResult { get; set; }
@@ -608,6 +609,7 @@ namespace HemFoundation.Data
             {
                 entity.ToTable("courses");
                 entity.Ignore("Quiz");
+                entity.Ignore("WJ_Practicals");
             });
 
             builder.Entity<Levels>().ToTable("levels");
@@ -999,6 +1001,89 @@ namespace HemFoundation.Data
 
                 entity.Property(e => e.VolunteerIsDeleted)
                     .HasColumnName("volunteer_is_deleted");
+            });
+
+
+            builder.Entity<WJ_Practicals>(entity =>
+            {
+                entity.ToTable("wj_practicals");
+
+                entity.HasKey(e => e.PracticalID);
+
+                entity.Property(e => e.PracticalID)
+                    .HasColumnName("practicalid");
+
+                entity.Property(e => e.CourseID)
+                    .HasColumnName("courseid");
+
+                entity.Property(e => e.Title)
+                    .HasColumnName("title");
+
+                entity.Property(e => e.Description)
+                    .HasColumnName("description");
+
+                entity.Property(e => e.OrderNo)
+                    .HasColumnName("orderno");
+
+                entity.Property(e => e.Coins)
+                    .HasColumnName("coins");
+
+                entity.Property(e => e.FileType)
+                    .HasColumnName("filetype");
+
+                entity.Property(e => e.VideoLink)
+                    .HasColumnName("videolink");
+
+                entity.Property(e => e.Thumbnail)
+                    .HasColumnName("thumbnail");
+
+                entity.Property(e => e.PracticalLevel)
+                    .HasColumnName("practicallevel");
+
+                entity.Property(e => e.CreatedDate)
+                    .HasColumnName("createddate");
+
+                entity.Property(e => e.CreatedBy)
+                    .HasColumnName("createdby");
+
+                entity.Property(e => e.ModifiedDate)
+                    .HasColumnName("modifieddate");
+
+                entity.Property(e => e.ModifiedBy)
+                    .HasColumnName("modifiedby");
+
+                entity.Property(e => e.Code)
+                    .HasColumnName("code");
+
+                entity.Property(e => e.Student_Group)
+                    .HasColumnName("student_group");
+
+                entity.Property(e => e.Resources)
+                    .HasColumnName("resources");
+
+                entity.Property(e => e.Gems)
+                    .HasColumnName("gems");
+
+                entity.Property(e => e.PracticalTopicID)
+                    .HasColumnName("practicaltopicid");
+
+                entity.Property(e => e.PracticalSubtopicID)
+                    .HasColumnName("practicalsubtopicid");
+
+                entity.Property(e => e.PracticalStandard)
+                    .HasColumnName("practicalstandard");
+
+                entity.Property(e => e.isTask)
+         .HasColumnName("istask");
+
+                entity.Property(e => e.languageID)
+                    .HasColumnName("languageid");
+
+                entity.Property(e => e.ScrambleTopicID)
+                    .HasColumnName("scrambletopicid");
+
+                entity.Property(e => e.Type)
+                    .HasColumnName("Type");
             });
 
         }

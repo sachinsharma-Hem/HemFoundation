@@ -36,7 +36,7 @@ namespace HemFoundation.Models.Entities
         public string FileType { get; set; }
 
         [Column("videolink")]
-        public string VideoLink { get; set; }
+        public string? VideoLink { get; set; }
 
         [Column("thumbnail")]
         public string Thumbnail { get; set; }
@@ -75,7 +75,7 @@ namespace HemFoundation.Models.Entities
         public int? PracticalSubtopicID { get; set; }
 
         [Column("practicalstandard")]
-        public string PracticalStandard { get; set; }
+        public string? PracticalStandard { get; set; }
 
         [Column("istask")]
         public bool? isTask { get; set; }
@@ -86,10 +86,10 @@ namespace HemFoundation.Models.Entities
         [Column("scrambletopicid")]
         public int? ScrambleTopicID { get; set; }
 
-        [Column("type")]
+        [Column("Type")]
         public string Type { get; set; }
 
-        public virtual Courses Courses { get; set; }
+        //public virtual Courses Courses { get; set; }
         public virtual ICollection<WJ_PracticalSubmission> WJ_PracticalSubmission { get; set; }
     }
 }
