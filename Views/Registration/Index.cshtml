@@ -968,10 +968,10 @@
                         data: { TeacherID: TeacherID },
                         dataType: 'json',
                         success: function(result) {
-                            if (result.Success) {
-                                Swal.fire('Success!', result.Message, 'success').then(() => { location.reload(); });
+                            if (result.success) {
+                                Swal.fire('Success!', result.message, 'success').then(() => { location.reload(); });
                             } else {
-                                Swal.fire('Info', result.Message, 'error');
+                                Swal.fire('Info', result.message, 'error');
                             }
                         },
                         error: function() {

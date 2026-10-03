@@ -51,6 +51,7 @@
 		<Folder Include="Models\Masters\" />
 		<Folder Include="ViewModels\" />
 		<Folder Include="Views\Learn\Shared\" />
+		<Folder Include="wwwroot\Content\img\" />
 		<Folder Include="wwwroot\images\banners\" />
 		<Folder Include="wwwroot\images\gallery\" />
 		<Folder Include="wwwroot\images\icons\" />

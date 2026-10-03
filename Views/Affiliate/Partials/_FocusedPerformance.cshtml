@@ -848,7 +848,7 @@
                     ? ''
                     : String(value).trim();
             })();
-            let exportUrl = `/api/admin/export-details-excel?category=${currentCategory}&type=${currentType}&search=${encodeURIComponent(searchTerm)}`;
+            let exportUrl = `/api/admin/export-details-excel?category=${currentCategory}&type=${currentType}&search=${encodeURIComponent(searchTerm)}&affiliateid=${affiliateId}`;
 
             showGlobalLoader("Generating Excel Export for Filtered Records...");
 

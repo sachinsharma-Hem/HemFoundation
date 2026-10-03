@@ -133,7 +133,7 @@ namespace HemFoundation.Services
         // Add corresponding service methods for RejectRequest and ApproveRequest if needed...
         public async Task<string> RejectRequestAsync(int courseid, int studentsID, int instituteID)
         {
-            string templatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "template", "Approval.html");
+            string templatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot", "template", "Approval.html");
             StringBuilder body = new StringBuilder(File.Exists(templatePath) ? File.ReadAllText(templatePath) : "");
 
             string firstName = "";
@@ -184,7 +184,7 @@ namespace HemFoundation.Services
 
             EmailManager.SendEmailAws(instituteEmail, "Confirmation For Rejection Of Group Project Submission", body.ToString(), null, "", "");
 
-            string studentTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "template", "ApprovalConfirmationForStudents.html");
+            string studentTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot", "template", "ApprovalConfirmationForStudents.html");
             StringBuilder body1 = new StringBuilder(File.Exists(studentTemplatePath) ? File.ReadAllText(studentTemplatePath) : "");
 
             body1.Replace("<%action%>", "Rejected");
@@ -199,7 +199,7 @@ namespace HemFoundation.Services
 
         public async Task<(bool Success, string HtmlContent, string Message)> ApproveRequestAsync(int courseid, int studentsID, int instituteID)
         {
-            string templatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "template", "Approval.html");
+            string templatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot", "template", "Approval.html");
             StringBuilder body = new StringBuilder(File.Exists(templatePath) ? File.ReadAllText(templatePath) : "");
 
             string firstName = "";
@@ -238,7 +238,10 @@ namespace HemFoundation.Services
 
                 if (isAlreadyExists)
                 {
-                    return (false, "", "Your request for the Approval of students for the group project submission has been already submitted!!.");
+                    body.Replace("<%action%>", "Approval");
+                    body.Replace("<%instituteName%>", instituteName);
+                    return (true, body.ToString(), "");
+                    //return (false, "", "Your request for the Approval of students for the group project submission has been already submitted!!.");
                 }
 
                 // 3. Fetch Institute details
@@ -274,7 +277,7 @@ namespace HemFoundation.Services
 
                 EmailManager.SendEmailAws(instituteEmail, "Confirmation For Approval Of Group Project Submission", body.ToString(), null, "", "");
 
-                string studentTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "template", "ApprovalConfirmationForStudents.html");
+                string studentTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot", "template", "ApprovalConfirmationForStudents.html");
                 StringBuilder body1 = new StringBuilder(File.Exists(studentTemplatePath) ? File.ReadAllText(studentTemplatePath) : "");
 
                 body1.Replace("<%action%>", "Approved");
