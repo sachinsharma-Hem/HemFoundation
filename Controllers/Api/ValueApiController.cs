@@ -1,5 +1,6 @@
 ﻿using HemFoundation.Data;
 using HemFoundation.Models.Entities;
+using HemFoundation.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -13,11 +14,16 @@ namespace HemFoundation.Controllers.Api
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
 
-        public ValueApiController(ApplicationDbContext context, IWebHostEnvironment env)
+        public ValueApiController(
+      ApplicationDbContext context,
+      IWebHostEnvironment env,
+      IFileStorageService fileStorage)
         {
             _context = context;
             _env = env;
+            _fileStorage = fileStorage;
         }
 
         // ================== GRADE MASTER ==================
@@ -48,7 +54,13 @@ namespace HemFoundation.Controllers.Api
         // ================== VALUE ITEM MASTER ==================
 
         [HttpPost("add-value")]
-        public async Task<IActionResult> AddValue([FromForm] int GradeId, [FromForm] string CapacityName, [FromForm] string ValueTitleEng, [FromForm] string ValueTitleHin, IFormFile ValueImage, IFormFile ActivityPdf)
+        public async Task<IActionResult> AddValue(
+      [FromForm] int GradeId,
+      [FromForm] string CapacityName,
+      [FromForm] string ValueTitleEng,
+      [FromForm] string ValueTitleHin,
+      IFormFile ValueImage,
+      IFormFile ActivityPdf)
         {
             var item = new ValueItemMaster
             {
@@ -60,26 +72,69 @@ namespace HemFoundation.Controllers.Api
                 IsActive = true
             };
 
-            string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "annual_calendar");
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+            // ================= VALUE IMAGE UPLOAD =================
 
-            if (ValueImage != null)
+            if (ValueImage != null && ValueImage.Length > 0)
             {
-                string imgName = $"{Guid.NewGuid()}_{ValueImage.FileName}";
-                using (var fs = new FileStream(Path.Combine(uploadsFolder, imgName), FileMode.Create)) { await ValueImage.CopyToAsync(fs); }
-                item.ValueImageUrl = $"/uploads/annual_calendar/{imgName}";
+                string folderPath =
+                    "Uploads/ValueOfYear/Calendar";
+
+                var uploadResult =
+                    await _fileStorage.UploadAsync(
+                        ValueImage,
+                        folderPath);
+
+                if (uploadResult == null ||
+                    !uploadResult.success ||
+                    string.IsNullOrWhiteSpace(uploadResult.filePath))
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        message = uploadResult?.message
+                            ?? "Value image upload failed."
+                    });
+                }
+
+                item.ValueImageUrl = uploadResult.filePath;
             }
 
-            if (ActivityPdf != null)
+
+            if (ActivityPdf != null && ActivityPdf.Length > 0)
             {
-                string pdfName = $"{Guid.NewGuid()}_{ActivityPdf.FileName}";
-                using (var fs = new FileStream(Path.Combine(uploadsFolder, pdfName), FileMode.Create)) { await ActivityPdf.CopyToAsync(fs); }
-                item.ActivityPdfUrl = $"/uploads/annual_calendar/{pdfName}";
+                string folderPath =
+                    "Uploads/ValueOfYear/Calendar";
+
+                var uploadResult =
+                    await _fileStorage.UploadAsync(
+                        ActivityPdf,
+                        folderPath);
+
+                if (uploadResult == null ||
+                    !uploadResult.success ||
+                    string.IsNullOrWhiteSpace(uploadResult.filePath))
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        message = uploadResult?.message
+                            ?? "Activity PDF upload failed."
+                    });
+                }
+
+                item.ActivityPdfUrl = uploadResult.filePath;
             }
+
 
             _context.ValueItemMasters.Add(item);
+
             await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "Calendar Value Card added successfully." });
+
+            return Ok(new
+            {
+                success = true,
+                message = "Calendar Value Card added successfully."
+            });
         }
 
         [HttpGet("values-list")]
@@ -101,8 +156,6 @@ namespace HemFoundation.Controllers.Api
                                 }).ToListAsync();
             return Ok(new { success = true, data = values });
         }
-
-        // ================== SCHOOL CALENDAR API ==================
 
         [HttpGet("school-calendar")]
         public async Task<IActionResult> GetSchoolCalendar()
@@ -172,7 +225,6 @@ namespace HemFoundation.Controllers.Api
             
         }
 
-        // ================== ACTIVITY SUBMISSION APIS ==================
 
         [HttpGet("activity-page-data/{valueItemId}")]
         public async Task<IActionResult> GetActivityPageData(int valueItemId)
@@ -232,9 +284,6 @@ namespace HemFoundation.Controllers.Api
 
         public class SaveGroupDto { public string GroupName { get; set; } public List<int> StudentIds { get; set; } }
 
-        // ========================================================
-        // EXISTING SAVE GROUPS METHOD KO ISSE REPLACE KAREIN
-        // ========================================================
         [HttpPost("save-groups/{valueItemId}")]
         public async Task<IActionResult> SaveGroups(int valueItemId, [FromBody] List<SaveGroupDto> requestGroups)
         {
@@ -245,7 +294,6 @@ namespace HemFoundation.Controllers.Api
 
             if (currentUserId == null || currentUserId == 0)
             {
-                // Fall back to claims if session is missing
                 string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 currentUserId = int.TryParse(claimId, out int parsed) ? parsed : 0;
             }
@@ -254,26 +302,15 @@ namespace HemFoundation.Controllers.Api
             var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
             if (institute == null) return BadRequest(new { success = false, message = "School not found." });
 
-            // Puraani mappings delete karein
             var oldGroups = await _context.HfRelManageGroupList.Where(g => g.IsAllocatedBy == institute.instituteid && g.MainCourseID == valueItemId).ToListAsync();
-           // var oldMappings = await _context.ActivityGroupStudents.Where(gs => oldGroups.Select(g => g.Id).Contains(gs.GroupId)).ToListAsync();
 
-            //_context.HfRelManageGroupList.RemoveRange(oldMappings);
             _context.HfRelManageGroupList.RemoveRange(oldGroups);
             await _context.SaveChangesAsync();
 
-            // Nayi mappings add karein
             foreach (var rg in requestGroups)
             {
-                // Agar group name empty hai toh default naam de dein
                 string gName = string.IsNullOrWhiteSpace(rg.GroupName) ? "Group" : rg.GroupName;
 
-               
-
-               // _context.ActivityGroups.Add(newGroup);
-                //await _context.SaveChangesAsync(); // Id generate karne ke liye
-
-                // Null check lagaya hai taaki array empty hone par crash na ho
                 if (rg.StudentIds != null && rg.StudentIds.Any())
                 {
                     foreach (var sid in rg.StudentIds)
@@ -295,62 +332,149 @@ namespace HemFoundation.Controllers.Api
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Teams & Students updated successfully!" });
         }
-
         [HttpPost("submit-activity")]
-        public async Task<IActionResult> SubmitActivity([FromForm] int ValueItemId, [FromForm] string Comment, IFormFile? ImageFile, IFormFile? VideoFile)
+        public async Task<IActionResult> SubmitActivity(
+            [FromForm] int ValueItemId,
+            [FromForm] string Comment,
+            IFormFile? ImageFile,
+            IFormFile? VideoFile)
         {
-            int? currentUserId = HttpContext.Session.GetInt32("UserID");
+            int? currentUserId =
+                HttpContext.Session.GetInt32("UserID");
 
             if (currentUserId == null || currentUserId == 0)
             {
                 // Fall back to claims if session is missing
-                string? claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                currentUserId = int.TryParse(claimId, out int parsed) ? parsed : 0;
-            }
-            if (string.IsNullOrEmpty(currentUserId.ToString())) return Unauthorized(new { success = false, message = "Not logged in" });
+                string? claimId =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
-            if (institute == null) return BadRequest(new { success = false, message = "School not found." });
-
-
-            // Check if submission already exists for this Capacity (ValueItemId)
-            bool exists = await _context.creativityActivitiesSubmission2021s.AnyAsync(s => s.InstituteID == institute.instituteid && s.MainCourseID == ValueItemId);
-            if (exists) return BadRequest(new { success = false, message = "Activity already submitted for this capacity." });
-
-            // GroupId ko by default 0 rakha gaya hai kyunki ye overall capacity submission hai
-            var submission = new CreativityActivitiesSubmission2021
-            {
-                InstituteID = institute.instituteid,
-                MainCourseID = ValueItemId,
-
-                ShortDescription = Comment,
-                CreatedDate = System.DateTime.Now
-            };
-
-            string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "submissions");
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-            if (ImageFile != null)
-            {
-                string imgName = $"{Guid.NewGuid()}_{ImageFile.FileName}";
-                using (var fs = new FileStream(Path.Combine(uploadsFolder, imgName), FileMode.Create)) { await ImageFile.CopyToAsync(fs); }
-                submission.ImageActivity = $"/uploads/submissions/{imgName}";
-            }
-            if (VideoFile != null)
-            {
-                string vidName = $"{Guid.NewGuid()}_{VideoFile.FileName}";
-                using (var fs = new FileStream(Path.Combine(uploadsFolder, vidName), FileMode.Create)) { await VideoFile.CopyToAsync(fs); }
-                submission.VideoActivity = $"/uploads/submissions/{vidName}";
+                currentUserId =
+                    int.TryParse(
+                        claimId,
+                        out int parsed)
+                        ? parsed
+                        : 0;
             }
 
-            _context.creativityActivitiesSubmission2021s.Add(submission);
+            if (string.IsNullOrEmpty(currentUserId.ToString()))
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "Not logged in"
+                });
+            }
+
+            var institute =
+                await _context.view_wj_instituteslist
+                    .FirstOrDefaultAsync(
+                        i => i.instituteid == currentUserId);
+
+            if (institute == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "School not found."
+                });
+            }
+
+
+            bool exists =
+                await _context.creativityActivitiesSubmission2021s
+                    .AnyAsync(s =>
+                        s.InstituteID == institute.instituteid &&
+                        s.MainCourseID == ValueItemId);
+
+            if (exists)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Activity already submitted for this capacity."
+                });
+            }
+
+            var submission =
+                new CreativityActivitiesSubmission2021
+                {
+                    InstituteID = institute.instituteid,
+                    MainCourseID = ValueItemId,
+
+                    ShortDescription = Comment,
+                    CreatedDate = System.DateTime.Now
+                };
+
+
+
+            if (ImageFile != null && ImageFile.Length > 0)
+            {
+                string folderPath =
+                    $"Uploads/ValueOfYear/Submissions/{institute.instituteid}";
+
+                var uploadResult =
+                    await _fileStorage.UploadAsync(
+                        ImageFile,
+                        folderPath);
+
+                if (uploadResult == null ||
+                    !uploadResult.success ||
+                    string.IsNullOrWhiteSpace(uploadResult.filePath))
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        message = uploadResult?.message
+                            ?? "Image upload failed."
+                    });
+                }
+
+                submission.ImageActivity =
+                    uploadResult.filePath;
+            }
+
+
+            if (VideoFile != null && VideoFile.Length > 0)
+            {
+                string folderPath =
+                    $"Uploads/ValueOfYear/Submissions/{institute.instituteid}";
+
+                var uploadResult =
+                    await _fileStorage.UploadAsync(
+                        VideoFile,
+                        folderPath);
+
+                if (uploadResult == null ||
+                    !uploadResult.success ||
+                    string.IsNullOrWhiteSpace(uploadResult.filePath))
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        message = uploadResult?.message
+                            ?? "Video upload failed."
+                    });
+                }
+
+                submission.VideoActivity =
+                    uploadResult.filePath;
+            }
+
+
+
+            _context.creativityActivitiesSubmission2021s
+                .Add(submission);
+
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = "Capacity activity submitted successfully!" });
+            return Ok(new
+            {
+                success = true,
+                message = "Capacity activity submitted successfully!"
+            });
         }
     }
 
-    // Controller class ke bahar define karein taaki 400 Bad Request na aaye
     public class SaveGroupDto
     {
         public string? GroupName { get; set; }

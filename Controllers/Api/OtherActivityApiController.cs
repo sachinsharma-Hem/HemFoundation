@@ -1,5 +1,6 @@
 ﻿using HemFoundation.Data;
 using HemFoundation.Models.Entities;
+using HemFoundation.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,35 @@ namespace HemFoundation.Controllers.Api
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
+        private readonly IConfiguration _configuration;
 
-        public OtherActivityApiController(ApplicationDbContext context, IWebHostEnvironment env)
+        public OtherActivityApiController(
+       ApplicationDbContext context,
+       IWebHostEnvironment env,
+       IFileStorageService fileStorage,
+       IConfiguration configuration)
         {
             _context = context;
             _env = env;
+            _fileStorage = fileStorage;
+            _configuration = configuration;
+        }
+
+        private string GetCentralFileUrl(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                return string.Empty;
+
+            if (Uri.TryCreate(filePath, UriKind.Absolute, out _))
+                return filePath;
+
+            string baseUrl =
+                _configuration["FileSettings:BaseUrl"]
+                ?? throw new Exception(
+                    "FileSettings:BaseUrl is not configured.");
+
+            return $"{baseUrl.TrimEnd('/')}/{filePath.TrimStart('/')}";
         }
 
         private async Task<long> GetCurrentAffiliateIdAsync()
@@ -36,7 +61,6 @@ namespace HemFoundation.Controllers.Api
                 .FirstOrDefaultAsync();
         }
 
-        // ================= ACTIVITY ENDPOINTS =================
 
         [HttpGet("list")]
         public async Task<IActionResult> GetActivities()
@@ -100,7 +124,6 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
-                // Validate ID
                 if (id <= 0)
                 {
                     return BadRequest(new
@@ -110,7 +133,6 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
-                // Find activity only for logged-in affiliate
                 var item = await _context.AffiliateOtherActivities
                     .FirstOrDefaultAsync(x =>
                         x.Id == id &&
@@ -126,11 +148,9 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
-                // Clean values
                 updateRemark = updateRemark?.Trim() ?? string.Empty;
                 status = status?.Trim() ?? "Pending";
 
-                // Allowed statuses
                 var allowedStatuses = new[]
                 {
             "Pending",
@@ -148,17 +168,13 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
-                // Update basic information
                 item.UpdateRemark = updateRemark;
                 item.Status = status;
                 item.UpdateDate = DateTime.UtcNow;
                 item.ModifiedDate = DateTime.UtcNow;
 
-                // ================= IMAGE UPLOAD =================
-
                 if (activityImage != null && activityImage.Length > 0)
                 {
-                    // Optional file size limit: 10 MB
                     if (activityImage.Length > 10 * 1024 * 1024)
                     {
                         return BadRequest(new
@@ -168,58 +184,62 @@ namespace HemFoundation.Controllers.Api
                         });
                     }
 
-                    var uploadsFolder = Path.Combine(
-                        _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"),
-                        "uploads",
-                        "activities"
-                    );
 
-                    if (!Directory.Exists(uploadsFolder))
+                    if (activityImage != null && activityImage.Length > 0)
                     {
-                        Directory.CreateDirectory(uploadsFolder);
-                    }
-
-                    // Safe extension
-                    var extension = Path.GetExtension(activityImage.FileName);
-
-                    var allowedExtensions = new[]
-                    {
-                ".jpg",
-                ".jpeg",
-                ".png",
-                ".webp"
-            };
-
-                    if (!allowedExtensions.Contains(
-                            extension,
-                            StringComparer.OrdinalIgnoreCase))
-                    {
-                        return BadRequest(new
+                        if (activityImage.Length > 10 * 1024 * 1024)
                         {
-                            success = false,
-                            message = "Only JPG, JPEG, PNG and WEBP images are allowed."
-                        });
+                            return BadRequest(new
+                            {
+                                success = false,
+                                message = "Image size cannot exceed 10 MB."
+                            });
+                        }
+
+                        var extension =
+                            Path.GetExtension(activityImage.FileName);
+
+                        var allowedExtensions = new[]
+                        {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+    };
+
+                        if (!allowedExtensions.Contains(
+                                extension,
+                                StringComparer.OrdinalIgnoreCase))
+                        {
+                            return BadRequest(new
+                            {
+                                success = false,
+                                message = "Only JPG, JPEG, PNG and WEBP images are allowed."
+                            });
+                        }
+
+                        string folderPath =
+                            $"Uploads/OtherActivity/Activities/{affId}";
+
+                        var uploadResult =
+                            await _fileStorage.UploadAsync(
+                                activityImage,
+                                folderPath);
+
+                        if (uploadResult == null ||
+                            !uploadResult.success ||
+                            string.IsNullOrWhiteSpace(uploadResult.filePath))
+                        {
+                            return StatusCode(500, new
+                            {
+                                success = false,
+                                message = uploadResult?.message
+                                    ?? "Activity image upload failed."
+                            });
+                        }
+
+                        item.ImagePath = uploadResult.filePath;
                     }
-
-                    var uniqueFileName =
-                        $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
-
-                    var filePath = Path.Combine(
-                        uploadsFolder,
-                        uniqueFileName
-                    );
-
-                    await using (var stream = new FileStream(
-                        filePath,
-                        FileMode.CreateNew,
-                        FileAccess.Write,
-                        FileShare.None))
-                    {
-                        await activityImage.CopyToAsync(stream);
-                    }
-
-                    item.ImagePath =
-                        $"/uploads/activities/{uniqueFileName}";
                 }
 
                 await _context.SaveChangesAsync();
@@ -294,34 +314,57 @@ namespace HemFoundation.Controllers.Api
             {
                 if (expenseImage.Length > 10 * 1024 * 1024)
                 {
-                    return BadRequest(new { success = false, message = "Image size cannot exceed 10 MB." });
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Receipt size cannot exceed 10 MB."
+                    });
                 }
 
-                var uploadsFolder = Path.Combine(
-                    _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"),
-                    "uploads",
-                    "expenses"
-                );
+                var extension =
+                    Path.GetExtension(expenseImage.FileName);
 
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                var extension = Path.GetExtension(expenseImage.FileName);
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".pdf" };
-
-                if (!allowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+                var allowedExtensions = new[]
                 {
-                    return BadRequest(new { success = false, message = "Only JPG, JPEG, PNG, WEBP and PDF files are allowed." });
-                }
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".pdf"
+    };
 
-                var uniqueFileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                await using (var stream = new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                if (!allowedExtensions.Contains(
+                        extension,
+                        StringComparer.OrdinalIgnoreCase))
                 {
-                    await expenseImage.CopyToAsync(stream);
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Only JPG, JPEG, PNG, WEBP and PDF files are allowed."
+                    });
                 }
 
-                savedReceiptPath = $"/uploads/expenses/{uniqueFileName}";
+                string folderPath =
+                    $"Uploads/OtherActivity/Expenses/{affId}";
+
+                var uploadResult =
+                    await _fileStorage.UploadAsync(
+                        expenseImage,
+                        folderPath);
+
+                if (uploadResult == null ||
+                    !uploadResult.success ||
+                    string.IsNullOrWhiteSpace(uploadResult.filePath))
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        message = uploadResult?.message
+                            ?? "Expense receipt upload failed."
+                    });
+                }
+
+                savedReceiptPath = uploadResult.filePath;
             }
 
             var expense = new AffiliateExpense
@@ -343,51 +386,6 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, message = "Expense submitted successfully." });
         }
 
-        // ================= EXPENSE ENDPOINTS =================
-
-        //[HttpGet("expense/list")]
-        //public async Task<IActionResult> GetExpenses()
-        //{
-        //    long affId = await GetCurrentAffiliateIdAsync();
-        //    if (affId == 0) return Unauthorized(new { success = false, message = "Unauthorized" });
-
-        //    var list = await _context.AffiliateExpenses
-        //        .Where(x => x.AffiliateId == affId && !x.IsDeleted)
-        //        .OrderByDescending(x => x.ExpenseDate)
-        //        .ToListAsync();
-
-        //    return Ok(new { success = true, data = list });
-        //}
-
-        //[HttpPost("expense/create")]
-        //public async Task<IActionResult> CreateExpense([FromBody] ExpenseCreateModel model)
-        //{
-        //    long affId = await GetCurrentAffiliateIdAsync();
-        //    if (affId == 0) return Unauthorized(new { success = false, message = "Unauthorized" });
-
-        //    // Auto-prepend related information to ExpenseDetail for clarity
-        //    string prefix = model.RelatedType == "SchoolVisit" ? "[School Visit] " : (model.RelatedType == "OtherActivity" ? "[Other Activity] " : "");
-        //    string finalDetail = prefix + model.ExpenseDetail;
-
-        //    var expense = new AffiliateExpense
-        //    {
-        //        AffiliateId = affId,
-        //        ExpenseDate = model.ExpenseDate.Date,
-        //        ExpenseDetail = finalDetail,
-        //        Amount = model.Amount,
-        //        RelatedType = model.RelatedType,
-        //        RelatedId = model.RelatedId,
-        //        Status = "Pending",
-        //        CreatedDate = DateTime.UtcNow
-        //    };
-
-        //    _context.AffiliateExpenses.Add(expense);
-        //    await _context.SaveChangesAsync();
-
-        //    return Ok(new { success = true, message = "Expense submitted successfully." });
-        //}
-
-        // Get list of completed/active school visits for dropdown
         [HttpGet("expense/school-visits")]
         public async Task<IActionResult> GetSchoolVisitsForExpense()
         {
@@ -511,38 +509,114 @@ namespace HemFoundation.Controllers.Api
         }
 
         [HttpPost("expense/upload-signed-bill")]
-        public async Task<IActionResult> UploadSignedExpenseBill([FromForm] long billId, [FromForm] IFormFile signedFile)
+        public async Task<IActionResult> UploadSignedExpenseBill(
+     [FromForm] long billId,
+     [FromForm] IFormFile signedFile)
         {
-            long affId = await GetCurrentAffiliateIdAsync();
-            if (affId == 0) return Unauthorized(new { success = false, message = "Unauthorized" });
-
-            var bill = await _context.MonthlyExpenseBills.FirstOrDefaultAsync(x => x.Id == billId && x.AffiliateId == affId);
-            if (bill == null) return NotFound(new { success = false, message = "Bill not found." });
-
-            if (signedFile != null && signedFile.Length > 0)
+            try
             {
-                var folder = Path.Combine(_env.WebRootPath, "uploads", "signed_expense_bills");
-                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                long affId = await GetCurrentAffiliateIdAsync();
 
-                string fileName = $"Signed_Expense_{bill.Id}_{Guid.NewGuid()}{Path.GetExtension(signedFile.FileName)}";
-                string filePath = Path.Combine(folder, fileName);
-
-                using (var fs = new FileStream(filePath, FileMode.Create))
+                if (affId == 0)
                 {
-                    await signedFile.CopyToAsync(fs);
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        message = "Unauthorized"
+                    });
                 }
 
-                bill.SignedPdfUrl = "/uploads/signed_expense_bills/" + fileName;
-                bill.Status = "Uploaded"; // Sent to Admin
+                var bill =
+                    await _context.MonthlyExpenseBills
+                        .FirstOrDefaultAsync(x =>
+                            x.Id == billId &&
+                            x.AffiliateId == affId);
+
+                if (bill == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Bill not found."
+                    });
+                }
+
+                if (signedFile == null || signedFile.Length <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Please select a valid PDF file."
+                    });
+                }
+
+                if (signedFile.Length > 10 * 1024 * 1024)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "File size cannot exceed 10 MB."
+                    });
+                }
+
+                var extension =
+                    Path.GetExtension(signedFile.FileName);
+
+                if (!string.Equals(
+                        extension,
+                        ".pdf",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Only PDF files are allowed."
+                    });
+                }
+
+                string folderPath =
+                    $"Uploads/OtherActivity/SignedExpenseBills/{affId}";
+
+                var uploadResult =
+                    await _fileStorage.UploadAsync(
+                        signedFile,
+                        folderPath);
+
+                if (uploadResult == null ||
+                    !uploadResult.success ||
+                    string.IsNullOrWhiteSpace(uploadResult.filePath))
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        message = uploadResult?.message
+                            ?? "Signed expense bill upload failed."
+                    });
+                }
+
+                bill.SignedPdfUrl = uploadResult.filePath;
+
+                bill.Status = "Uploaded";
                 bill.ModifiedDate = DateTime.UtcNow;
+
                 await _context.SaveChangesAsync();
 
-                return Ok(new { success = true, message = "Signed expense bill uploaded successfully!" });
+                return Ok(new
+                {
+                    success = true,
+                    message = "Signed expense bill uploaded successfully!",
+                    filePath = bill.SignedPdfUrl
+                });
             }
-
-            return BadRequest(new { success = false, message = "Please select a valid PDF file." });
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
-
         private async Task<string> GenerateExpensePdfAsync(MonthlyExpenseBill bill, Users aff, AffiliateBankDetail bank, List<AffiliateExpense> expenses)
         {
             string itemRows = "";
@@ -610,18 +684,82 @@ namespace HemFoundation.Controllers.Api
             using var page = await browser.NewPageAsync();
             await page.SetContentAsync(htmlContent);
 
-            string uploadDir = Path.Combine(_env.WebRootPath, "uploads", "expense_bills");
-            if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+            string tempDir = Path.Combine(
+      Path.GetTempPath(),
+      "HemFoundation",
+      "ExpenseBills");
 
-            string fileName = $"ExpenseBill_{bill.Id}_{DateTime.Now.Ticks}.pdf";
-            string filePath = Path.Combine(uploadDir, fileName);
+            if (!Directory.Exists(tempDir))
+                Directory.CreateDirectory(tempDir);
 
-            await page.PdfAsync(filePath, new PdfOptions { Format = PaperFormat.A4, PrintBackground = true });
+            string fileName =
+                $"ExpenseBill_{bill.Id}_{DateTime.Now.Ticks}.pdf";
 
-            return $"/uploads/expense_bills/{fileName}";
+            string tempFilePath =
+                Path.Combine(tempDir, fileName);
+
+            try
+            {
+                await page.PdfAsync(
+                    tempFilePath,
+                    new PdfOptions
+                    {
+                        Format = PaperFormat.A4,
+                        PrintBackground = true
+                    });
+
+
+                await using var fileStream =
+                    new FileStream(
+                        tempFilePath,
+                        FileMode.Open,
+                        FileAccess.Read,
+                        FileShare.Read);
+
+                var formFile = new FormFile(
+                    fileStream,
+                    0,
+                    fileStream.Length,
+                    "file",
+                    fileName)
+                {
+                    Headers = new HeaderDictionary(),
+                    ContentType = "application/pdf"
+                };
+
+                string folderPath =
+                    $"Uploads/OtherActivity/ExpenseBills/{bill.AffiliateId}";
+
+                var uploadResult =
+                    await _fileStorage.UploadAsync(
+                        formFile,
+                        folderPath);
+
+                if (uploadResult == null ||
+                    !uploadResult.success ||
+                    string.IsNullOrWhiteSpace(uploadResult.filePath))
+                {
+                    throw new Exception(
+                        uploadResult?.message ??
+                        "Generated expense PDF upload failed.");
+                }
+
+                return uploadResult.filePath;
+            }
+            finally
+            {
+                if (System.IO.File.Exists(tempFilePath))
+                {
+                    try
+                    {
+                        System.IO.File.Delete(tempFilePath);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
         }
-
-
         
     }
     public class ExpenseBillGenModel

@@ -687,58 +687,78 @@ namespace HemFoundation.Controllers.Api
                 });
             }
 
-            // ============================================================
-            // CENTRAL FILE SERVER UPLOAD
-            // ============================================================
 
-            string folderPath = $"Uploads/BulkUploads/{institute.instituteid}";
 
-            var uploadResult = await _fileStorage.UploadAsync(
-                excelFile,
-                folderPath
-            );
+            try
+            {
+                string folderPath = $"Uploads/BulkUploads/{institute.instituteid}";
 
-            if (uploadResult == null ||
-                !uploadResult.success ||
-                string.IsNullOrWhiteSpace(uploadResult.filePath))
+                var uploadResult = await _fileStorage.UploadAsync(
+                    excelFile,
+                    folderPath
+                );
+
+                if (uploadResult == null)
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        message = "File storage service returned null."
+                    });
+                }
+
+                if (!uploadResult.success)
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        message = uploadResult.message
+                    });
+                }
+
+                if (string.IsNullOrWhiteSpace(uploadResult.filePath))
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        message = "File uploaded but file path was empty."
+                    });
+                }
+
+                // DB save
+                var log = new BulkUploadLog
+                {
+                    InstituteID = institute.instituteid,
+                    UploadType = uploadType,
+                    FileName = excelFile.FileName,
+                    FilePath = uploadResult.filePath,
+                    TotalRecords = 0,
+                    Status = "Uploaded Successfully",
+                    UploadedDate = DateTime.UtcNow
+                };
+
+                _context.BulkUploadLogs.Add(log);
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"{uploadType}s Excel file uploaded and saved successfully!",
+                    filePath = uploadResult.filePath,
+                    fileName = uploadResult.fileName
+                });
+            }
+            catch (Exception ex)
             {
                 return StatusCode(500, new
                 {
                     success = false,
-                    message = uploadResult?.message
-                               ?? "Excel file upload failed."
+                    message = "File upload failed.",
+                    error = ex.Message,
+                    innerError = ex.InnerException?.Message
                 });
             }
-
-            // ============================================================
-            // SAVE FILE PATH IN DATABASE
-            // ============================================================
-
-            var log = new BulkUploadLog
-            {
-                InstituteID = institute.instituteid,
-                UploadType = uploadType,
-                FileName = excelFile.FileName,
-
-                // Central File Server path
-                FilePath = uploadResult.filePath,
-
-                TotalRecords = 0,
-                Status = "Uploaded Successfully",
-                UploadedDate = DateTime.UtcNow
-            };
-
-            _context.BulkUploadLogs.Add(log);
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                success = true,
-                message = $"{uploadType}s Excel file uploaded and saved successfully! Users will be updated in next 24 hr.",
-                filePath = uploadResult.filePath,
-                fileName = uploadResult.fileName
-            });
         }
 
         //[HttpPost("bulk-upload")]

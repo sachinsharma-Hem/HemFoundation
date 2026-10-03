@@ -1,6 +1,25 @@
-﻿@{
+﻿@using Microsoft.Extensions.Configuration
+@using System
+
+@inject IConfiguration Configuration
+
+@{
     ViewData["Title"] = "Other Activity & Expenses";
     Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+
+    string fileUploadApiUrl =
+        Configuration["FileSettings:InHouseUploadUrl"] ?? "";
+
+    string fileBaseUrl = "";
+
+    if (Uri.TryCreate(
+        fileUploadApiUrl,
+        UriKind.Absolute,
+        out Uri? fileUri))
+    {
+        fileBaseUrl =
+            $"{fileUri.Scheme}://{fileUri.Authority}";
+    }
 }
 <div class="container-fluid py-4">
 
@@ -508,6 +527,19 @@
             dateInput.setAttribute("min", minDate);
             dateInput.setAttribute("max", maxDate);
         }
+        const fileBaseUrl = '@fileBaseUrl';
+
+        function getCentralFileUrl(filePath) {
+            if (!filePath) return "";
+
+            if (/^https?:\/\//i.test(filePath)) {
+                return filePath;
+            }
+
+            return fileBaseUrl.replace(/\/+$/, "") +
+                "/" +
+                filePath.replace(/^\/+/, "");
+        }
 
         async function loadActivities() {
             const tbody = document.getElementById("activityTableBody");
@@ -523,8 +555,13 @@
                 let html = "";
                 res.data.forEach(item => {
                     const location = [item.address, item.city, item.state, item.pincode].filter(Boolean).join(", ");
-                    let imageHtml = item.imagePath ? `<a href="${escapeHtml(item.imagePath)}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill"><i class="bi bi-image me-1"></i> Preview</a>` : "-";
-
+                    let imageHtml = item.imagePath
+                        ? `<a href="${escapeHtml(getCentralFileUrl(item.imagePath))}"
+              target="_blank"
+              class="btn btn-sm btn-outline-primary">
+              View
+           </a>`
+                        : "-";
                     let isCompleted = (item.status || "").toLowerCase() === "completed";
                     let actionBtn = isCompleted
                         ? `<span class="badge bg-success-subtle text-success">Locked (Completed)</span>`
@@ -675,7 +712,13 @@
                 }
                 let html = "";
                 res.data.forEach(item => {
-                    let receiptHtml = item.receiptPath ? `<a href="${escapeHtml(item.receiptPath)}" target="_blank" class="btn btn-outline-success btn-sm rounded-pill"><i class="bi bi-receipt me-1"></i> Preview</a>` : "-";
+                    let receiptHtml = item.receiptPath
+                        ? `<a href="${escapeHtml(getCentralFileUrl(item.receiptPath))}"
+              target="_blank"
+              class="btn btn-sm btn-outline-primary">
+              View
+           </a>`
+                        : "-";
                     html += `
                                 <tr>
                                     <td class="px-3 fw-semibold">${formatDate(item.expenseDate)}</td>
@@ -743,11 +786,23 @@
                 let html = "";
                 res.data.forEach(b => {
                     let badge = b.status === 'Paid' ? 'success' : (b.status === 'Approved' ? 'primary' : (b.status === 'Rejected' ? 'danger' : 'warning'));
+let docs = b.generatedPdfUrl
+    ? `<a href="${escapeHtml(getCentralFileUrl(b.generatedPdfUrl))}" 
+          target="_blank" 
+          class="btn btn-sm btn-outline-primary">
+          Generated PDF
+       </a>`
+    : "-";
 
-                    let docs = `<a href="${escapeHtml(b.generatedPdfUrl)}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0"><i class="bi bi-eye"></i> System PDF</a>`;
-                    if (b.signedPdfUrl) {
-                        docs += ` <br><a href="${escapeHtml(b.signedPdfUrl)}" target="_blank" class="btn btn-sm btn-success rounded-pill px-2 py-0 mt-1"><i class="bi bi-eye-fill"></i> Signed Copy</a>`;
-                    }
+if (b.signedPdfUrl) {
+    docs += `
+        <br>
+        <a href="${escapeHtml(getCentralFileUrl(b.signedPdfUrl))}" 
+           target="_blank" 
+           class="btn btn-sm btn-outline-success mt-1">
+           Signed PDF
+        </a>`;
+}
 
                     let actionBtn = b.status === 'Generated'
                         ? `<button class="btn btn-sm btn-success rounded-pill px-3 py-1 shadow-none" onclick="openExpenseUploadModal(${b.id})"><i class="bi bi-cloud-upload me-1"></i> Upload Signed</button>`

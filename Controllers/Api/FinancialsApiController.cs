@@ -1547,7 +1547,7 @@ namespace HemFoundation.Controllers.Api
             var bill = await _context.MonthlyExpenseBills.FindAsync(dto.BillId);
             if (bill == null) return NotFound(new { success = false, message = "Bill not found" });
 
-            bill.Status = dto.Status; // Approved, Paid, Rejected
+            bill.Status = dto.Status; 
             bill.AdminRemarks = dto.AdminRemarks;
             bill.ModifiedDate = DateTime.UtcNow;
 
@@ -1582,7 +1582,7 @@ namespace HemFoundation.Controllers.Api
 
     public class BillPayloadDto
     {
-        public int? BillId { get; set; } // <--- YEH NAYI LINE ADD KAREIN
+        public int? BillId { get; set; } 
         public int OrganizationId { get; set; }
         public DateTime BillDate { get; set; }
         public string Particulars { get; set; } = string.Empty;
