@@ -1,6 +1,37 @@
-﻿@{
+﻿@using Microsoft.Extensions.Configuration
+@using System
+
+@inject IConfiguration Configuration
+
+@{
     ViewData["Title"] = "Manage Billings & Finance";
     Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+
+    int? valueItemId = null;
+
+    if (ViewBag.ValueItemId != null)
+    {
+        int parsedValue;
+
+        if (int.TryParse(ViewBag.ValueItemId.ToString(), out parsedValue))
+        {
+            valueItemId = parsedValue;
+        }
+    }
+
+    string fileUploadApiUrl =
+        Configuration["FileSettings:InHouseUploadUrl"] ?? "";
+
+    string fileBaseUrl = "";
+
+    if (Uri.TryCreate(
+        fileUploadApiUrl,
+        UriKind.Absolute,
+        out Uri? fileUri))
+    {
+        fileBaseUrl =
+            $"{fileUri.Scheme}://{fileUri.Authority}";
+    }
 }
 
 <div class="container-fluid py-4">
@@ -307,6 +338,19 @@
 
 @section Scripts {
     <script>
+        const fileBaseUrl = '@fileBaseUrl';
+
+        function getCentralFileUrl(filePath) {
+            if (!filePath) return "";
+
+            if (/^https?:\/\//i.test(filePath)) {
+                return filePath;
+            }
+
+            return fileBaseUrl.replace(/\/+$/, "") +
+                "/" +
+                filePath.replace(/^\/+/, "");
+        }
         $(function() {
             loadAffiliateDropdown();
             loadBills();
@@ -374,7 +418,7 @@
                             let badge = b.status == 'Paid' ? 'success' : (b.status == 'Approved' ? 'primary' : (b.status == 'Rejected' ? 'danger' : 'warning'));
 
                             let pdfLink = b.signedPdfUrl
-                                ? `<a href="${b.signedPdfUrl}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm"><i class="bi bi-file-earmark-check me-1"></i> View Bill</a>`
+                                ? `<a href="${getCentralFileUrl(b.signedPdfUrl)}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm"><i class="bi bi-file-earmark-check me-1"></i> View Bill</a>`
                                 : '<span class="text-muted small">No File</span>';
 
                             let payDetail = b.payment ? `<br><small class="text-success fw-bold">Txn: ${b.payment.transactionNumber} (₹${b.payment.amountPaid})</small>` : '';
@@ -461,9 +505,21 @@
                         let html = '';
                         res.data.forEach(b => {
                             let badge = b.status == 'Paid' ? 'success' : (b.status == 'Approved' ? 'primary' : (b.status == 'Rejected' ? 'danger' : 'warning'));
-                            let docs = `<a href="${b.generatedPdfUrl}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0">System PDF</a>`;
+                            let docs = b.generatedPdfUrl
+                                ? `<a href="${getCentralFileUrl(b.generatedPdfUrl)}"
+                 target="_blank"
+                 class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0">
+                 System PDF
+               </a>`
+                                : '';
+
                             if (b.signedPdfUrl) {
-                                docs += ` <br><a href="${b.signedPdfUrl}" target="_blank" class="btn btn-sm btn-success rounded-pill px-2 py-0 mt-1">Signed Copy</a>`;
+                                docs += ` <br>
+                <a href="${getCentralFileUrl(b.signedPdfUrl)}"
+                   target="_blank"
+                   class="btn btn-sm btn-success rounded-pill px-2 py-0 mt-1">
+                   Signed Copy
+                </a>`;
                             }
 
                             html += `<tr>
