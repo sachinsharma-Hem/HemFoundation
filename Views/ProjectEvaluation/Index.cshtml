@@ -1048,7 +1048,7 @@
         <div class="metric-card warning">
             <div class="metric-icon">👥</div>
             <div class="metric-value" id="card-group">0</div>
-            <div class="metric-label">Group PBL Projects</div>
+            <div class="metric-label">Group Projects</div>
             <a href="#" class="metric-link eval-card" data-type="group-pbl"><i class="bi bi-arrow-right"></i> View Details</a>
         </div>
     </div>
@@ -1521,28 +1521,92 @@
                 });
         }
 
+        function formatProjectType(type) {
+
+            const typeMap = {
+                "individual-projects": "Individual",
+                "group-pbl": "Group PBL",
+                "family-projects": "Family",
+                "sel-projects": "SEL"
+            };
+
+            return typeMap[type?.toLowerCase()] || type;
+        }
+
+
         function loadEvaluatedHistory() {
+
             fetch('/api/project-evaluations/history')
                 .then(res => res.json())
                 .then(res => {
-                    if (res.success) {
-                        let tbody = document.querySelector("#evaluated-table tbody");
-                        tbody.innerHTML = "";
-                        res.data.forEach((item, index) => {
-                            let statusClass = item.statusColor.toLowerCase();
-                            let statusBadge = `<span class="status-badge ${statusClass}"><span class="status-dot"></span>${item.statusColor}</span>`;
 
-                            tbody.innerHTML += `<tr>
-                                                <td>${index + 1}</td>
-                                                <td><code>${item.projectID}</code></td>
-                                                <td>${item.projectType}</td>
-                                                <td>${statusBadge}</td>
-                                                <td><span class="fw-bold">${item.marks}</span></td>
-                                                <td>${item.description}</td>
-                                                <td>${new Date(item.evaluatedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' })}</td>
-                                            </tr>`;
+                    if (res.success) {
+
+                        let tbody =
+                            document.querySelector("#evaluated-table tbody");
+
+                        tbody.innerHTML = "";
+
+                        res.data.forEach((item, index) => {
+
+                            let statusClass =
+                                item.statusColor.toLowerCase();
+
+                            let statusBadge = `
+                                <span class="status-badge ${statusClass}">
+                                    <span class="status-dot"></span>
+                                    ${item.statusColor}
+                                </span>
+                            `;
+
+                            tbody.innerHTML += `
+                                <tr>
+
+                                    <td>${index + 1}</td>
+
+                                    <td>
+                                        <code>${item.projectID}</code>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            ${formatProjectType(item.projectType)}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        ${statusBadge}
+                                    </td>
+
+                                    <td>
+                                        <span class="fw-bold">
+                                            ${item.marks}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        ${item.description || '-'}
+                                    </td>
+
+                                    <td>
+                                        ${new Date(item.evaluatedDate)
+                                    .toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: '2-digit'
+                                    })}
+                                    </td>
+
+                                </tr>
+                            `;
                         });
                     }
+                })
+                .catch(error => {
+                    console.error(
+                        "Error loading evaluated history:",
+                        error
+                    );
                 });
         }
     </script>

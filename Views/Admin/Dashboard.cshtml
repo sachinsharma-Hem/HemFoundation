@@ -1,43 +1,172 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Http
+
+@{
     ViewData["Title"] = "Admin Dashboard";
     Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+
+    string userRole =
+        Context.Session.GetString("UserRole") ?? "";
+
+    bool isSupervisor =
+        userRole.Equals("Supervisor",
+            StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="container-fluid py-4">
 
-    <!-- ========================================================= -->
-    <!-- WELCOME HEADER -->
-    <!-- ========================================================= -->
+    
+    @if (isSupervisor)
+    {
+        <div class="container-fluid py-4">
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
-                <div class="d-flex align-items-center justify-content-between">
+            <!-- Supervisor Welcome -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
 
-                    <div>
-                        <h2 class="fw-bold text-dark mb-1">
-                            Dashboard Overview 🚀
-                        </h2>
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-person-check-fill text-primary fs-4"></i>
+                        </div>
 
-                        <p class="text-muted m-0">
-                            Welcome back,
-                            <span id="adminUserName"
-                                  class="text-success fw-semibold">
-                                Admin
-                            </span>!
-                        </p>
+                        <div>
+                            <h4 class="fw-bold mb-1">
+                                Supervisor Dashboard
+                            </h4>
+
+                            <p class="text-muted mb-0 small">
+                                Recently evaluated project history
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Recently Evaluated History -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+                <!-- Header -->
+                <div class="card-header bg-white border-0 px-4 py-3">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h5 class="fw-bold mb-1">
+                                <i class="bi bi-clock-history text-primary me-2"></i>
+                                Recently Evaluated History
+                            </h5>
+
+                            <small class="text-muted">
+                                Latest project evaluations
+                            </small>
+                        </div>
+
+                        <span class="badge bg-primary rounded-pill px-3 py-2">
+                            Evaluation History
+                        </span>
+
                     </div>
 
                 </div>
+
+
+                <!-- Table -->
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0"
+                           id="supervisorEvaluatedTable">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th class="px-4 py-3 text-muted small fw-semibold">
+                                    #
+                                </th>
+
+                                <th class="py-3 text-muted small fw-semibold">
+                                    Project ID
+                                </th>
+
+                                <th class="py-3 text-muted small fw-semibold">
+                                    Type
+                                </th>
+
+                                <th class="py-3 text-muted small fw-semibold">
+                                    Status
+                                </th>
+
+                                <th class="py-3 text-muted small fw-semibold text-center">
+                                    Marks
+                                </th>
+
+                                <th class="py-3 text-muted small fw-semibold">
+                                    Description
+                                </th>
+
+                                <th class="px-4 py-3 text-muted small fw-semibold">
+                                    Date
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+
+                                <td colspan="7"
+                                    class="text-center py-5">
+
+                                    <div class="spinner-border spinner-border-sm text-primary"
+                                         role="status">
+                                    </div>
+
+                                    <span class="ms-2 text-muted">
+                                        Loading evaluation history...
+                                    </span>
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+    else
+{
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+
+                        <div>
+                            <h2 class="fw-bold text-dark mb-1">
+                                Dashboard Overview 🚀
+                            </h2>
+
+                            <p class="text-muted m-0">
+                                Welcome back,
+                                <span id="adminUserName"
+                                      class="text-success fw-semibold">
+                                    Admin
+                                </span>!
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-
-
-    <!-- ========================================================= -->
-    <!-- PERFORMANCE REPORT -->
-    <!-- ========================================================= -->
-
     <div class="d-flex align-items-center mb-3">
 
         <div>
@@ -320,10 +449,6 @@
     </div>
 
 
-    <!-- ========================================================= -->
-    <!-- FOCUSED REPORT -->
-    <!-- ========================================================= -->
-
     <div class="d-flex align-items-center mb-3">
 
         <div>
@@ -604,11 +729,7 @@
         </div>
 
     </div>
-
-
-    <!-- ========================================================= -->
-    <!-- INFO BANNER -->
-    <!-- ========================================================= -->
+}
 
     <div class="row mb-4">
 
@@ -638,16 +759,6 @@
 
 </div>
 
-
-<!-- ========================================================= -->
-<!-- DETAILS MODAL -->
-<!-- ========================================================= -->
-<!-- ========================================================= -->
-<!-- DETAILS MODAL -->
-<!-- ========================================================= -->
-<!-- ========================================================= -->
-<!-- DETAILS MODAL WITH SERVER-SIDE PAGINATION & SEARCH -->
-<!-- ========================================================= -->
 
 <div class="modal fade"
      id="dashboardDetailsModal"
@@ -731,9 +842,7 @@
     </div>
 
 </div>
-<!-- ========================================================= -->
-<!-- GLOBAL PAGE LOADER OVERLAY -->
-<!-- ========================================================= -->
+
 <div id="globalLoader" class="global-loader-overlay" style="display: none;">
     <div class="text-center">
         <div class="spinner-border text-primary shadow-lg" style="width: 3.5rem; height: 3.5rem;" role="status">
@@ -743,10 +852,6 @@
     </div>
 </div>
 
-
-<!-- ========================================================= -->
-<!-- STYLES -->
-<!-- ========================================================= -->
 
 <style>
 
@@ -770,7 +875,6 @@
         }
 
 
-    /* ================= PERFORMANCE COLORS ================= */
 
     .card-performance-primary {
         background: linear-gradient(135deg, #4f46e5, #6366f1);
@@ -908,10 +1012,244 @@
 @section Scripts {
 
     <script>
+        function formatProjectType(type) {
 
-        /* =========================================================
-            GLOBAL LOADER HELPERS
-        ========================================================= */
+            const typeMap = {
+                "individual-projects": "Individual",
+                "group-pbl": "Group PBL",
+                "family-projects": "Family",
+                "sel-projects": "SEL"
+            };
+
+            return typeMap[type?.toLowerCase()] || type || "-";
+        }
+
+
+        function getStatusBadge(status) {
+
+            const statusMap = {
+                "green": {
+                    text: "Excellent",
+                    className: "bg-success-subtle text-success border border-success-subtle"
+                },
+
+                "orange": {
+                    text: "In Progress",
+                    className: "bg-warning-subtle text-warning-emphasis border border-warning-subtle"
+                },
+
+                "red": {
+                    text: "Needs Work",
+                    className: "bg-danger-subtle text-danger border border-danger-subtle"
+                }
+            };
+
+            const key = status?.toLowerCase();
+            const statusInfo = statusMap[key];
+
+            if (!statusInfo) {
+
+                return `
+                    <span class="badge bg-secondary-subtle text-secondary border">
+                        ${status || "Unknown"}
+                    </span>
+                `;
+            }
+
+            return `
+                <span class="badge ${statusInfo.className} rounded-pill px-3 py-2">
+                    ${statusInfo.text}
+                </span>
+            `;
+        }
+
+
+        function loadSupervisorEvaluatedHistory() {
+
+            fetch('/api/project-evaluations/history')
+
+                .then(res => res.json())
+
+                .then(res => {
+
+                    const tbody =
+                        document.querySelector(
+                            "#supervisorEvaluatedTable tbody"
+                        );
+
+                    if (!tbody) return;
+
+                    tbody.innerHTML = "";
+
+
+                    if (!res.success ||
+                        !res.data ||
+                        res.data.length === 0) {
+
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="7"
+                                    class="text-center py-5">
+
+                                    <div class="text-muted">
+
+                                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+
+                                        <div class="fw-semibold">
+                                            No evaluation history found
+                                        </div>
+
+                                        <small>
+                                            Recently evaluated projects will appear here.
+                                        </small>
+
+                                    </div>
+
+                                </td>
+                            </tr>
+                        `;
+
+                        return;
+                    }
+
+
+                    res.data.forEach((item, index) => {
+
+                        const projectType =
+                            formatProjectType(item.projectType);
+
+                        const statusBadge =
+                            getStatusBadge(item.statusColor);
+
+                        const evaluatedDate =
+                            item.evaluatedDate
+                                ? new Date(item.evaluatedDate)
+                                    .toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: '2-digit'
+                                    })
+                                : "-";
+
+
+                        tbody.innerHTML += `
+
+                            <tr>
+
+                                <!-- Sr -->
+                                <td class="px-4">
+                                    <span class="text-muted fw-semibold">
+                                        ${index + 1}
+                                    </span>
+                                </td>
+
+
+                                <!-- Project ID -->
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        #${item.projectID}
+                                    </span>
+                                </td>
+
+
+                                <!-- Type -->
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
+                                        ${projectType}
+                                    </span>
+                                </td>
+
+
+                                <!-- Status -->
+                                <td>
+                                    ${statusBadge}
+                                </td>
+
+
+                                <!-- Marks -->
+                                <td class="text-center">
+
+                                    <span class="badge bg-dark rounded-pill px-3 py-2">
+                                        ${item.marks ?? 0}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- Description -->
+                                <td style="min-width: 250px; max-width: 400px;">
+
+                                    <span class="text-muted small">
+                                        ${item.description || "-"}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- Date -->
+                                <td class="px-4">
+
+                                    <span class="text-muted small">
+                                        <i class="bi bi-calendar3 me-1"></i>
+                                        ${evaluatedDate}
+                                    </span>
+
+                                </td>
+
+                            </tr>
+
+                        `;
+
+                    });
+
+                })
+
+                .catch(error => {
+
+                    console.error(
+                        "Error loading evaluated history:",
+                        error
+                    );
+
+                    const tbody =
+                        document.querySelector(
+                            "#supervisorEvaluatedTable tbody"
+                        );
+
+                    if (tbody) {
+
+                        tbody.innerHTML = `
+
+                            <tr>
+
+                                <td colspan="7"
+                                    class="text-center py-5">
+
+                                    <div class="text-danger">
+
+                                        <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>
+
+                                        <div class="fw-semibold">
+                                            Unable to load evaluation history
+                                        </div>
+
+                                        <small class="text-muted">
+                                            Please refresh the page and try again.
+                                        </small>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        `;
+
+                    }
+
+                });
+        }
+
         function showGlobalLoader(message = "Processing your request, please wait...") {
             $("#globalLoaderText").text(message);
             $("#globalLoader").fadeIn(150);
@@ -921,9 +1259,6 @@
             $("#globalLoader").fadeOut(150);
         }
 
-        /* =========================================================
-            PAGE LOAD
-        ========================================================= */
 
         $(document).ready(function() {
 
@@ -939,14 +1274,20 @@
                 );
             }
 
-            loadAdminDashboardCounts();
+            @if (isSupervisor)
+                {
+                    <text>
+                            loadSupervisorEvaluatedHistory();
+                    </text>
+            }
+                else
+                {
+                    <text>
+                            loadAdminDashboardCounts();
+                    </text>
+            }
 
         });
-
-
-        /* =========================================================
-            AUTH TOKEN
-        ========================================================= */
 
         function getAuthToken() {
 
@@ -1074,7 +1415,6 @@
 
         }
         
-            // Global variable to store raw fetched data for filtering and sorting
         let currentCategory = '';
         let currentType = '';
         let currentPage = 1;
@@ -1172,7 +1512,6 @@
             });
         }
 
-        // Render headers with click-to-sort capability
         function renderTableHeaders(sampleRow) {
             if (!sampleRow) return;
             const keys = Object.keys(sampleRow);
@@ -1189,14 +1528,11 @@
             $('#modalTable thead').html(thead);
         }
 
-        // Client-side sorting toggle for the currently loaded page items
         let sortDirection = {};
         function sortModalTable(key) {
             sortDirection[key] = !sortDirection[key];
             let asc = sortDirection[key];
 
-            // Assuming current page data is stored globally or can be sorted from current rows
-            // Let's sort the active rendered table rows directly or maintain a global dataset array.
             let $rows = $('#modalTable tbody tr').toArray();
 
             // Find column index
@@ -1571,6 +1907,7 @@
             exportCreativityReport("F", "Focused Group Projects", $(this), $("#focusedGroupIconWrapper"));
         });
     </script>
+    
     <script>
         // Universal helper function for PBL report downloads
         function exportPblReport(apiEndpoint, filterVal, reportTitle, $card, $iconWrapper) {

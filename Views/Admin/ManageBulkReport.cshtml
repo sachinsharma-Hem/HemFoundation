@@ -1,8 +1,38 @@
-﻿@{
+﻿@using Microsoft.Extensions.Configuration
+@using System
+
+@inject IConfiguration Configuration
+
+@{
     ViewData["Title"] = "Manage Bulk Upload Reports";
     Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
-}
 
+    int? valueItemId = null;
+
+    if (ViewBag.ValueItemId != null)
+    {
+        int parsedValue;
+
+        if (int.TryParse(ViewBag.ValueItemId.ToString(), out parsedValue))
+        {
+            valueItemId = parsedValue;
+        }
+    }
+
+    string fileUploadApiUrl =
+        Configuration["FileSettings:InHouseUploadUrl"] ?? "";
+
+    string fileBaseUrl = "";
+
+    if (Uri.TryCreate(
+        fileUploadApiUrl,
+        UriKind.Absolute,
+        out Uri? fileUri))
+    {
+        fileBaseUrl =
+            $"{fileUri.Scheme}://{fileUri.Authority}";
+    }
+}
 <div class="container-fluid py-4">
     <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -119,7 +149,6 @@
     </div>
 </div>
 
-<!-- ================= SUCCESS POPUP MODAL ================= -->
 <div class="modal fade" id="successPopupModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg p-4 text-center">
@@ -135,6 +164,39 @@
 
 @section Scripts {
     <script>
+      
+
+        const fileBaseUrl = '@Html.Raw(fileBaseUrl)';
+
+        function getFileUrl(filePath) {
+
+            if (!filePath) {
+                return '#';
+            }
+
+            if (
+                filePath.startsWith('http://') ||
+                filePath.startsWith('https://')
+            ) {
+                return filePath;
+            }
+
+            let cleanPath =
+                filePath.replace(/^\/+/, '');
+
+            return fileBaseUrl.replace(/\/+$/, '') +
+                '/' +
+                cleanPath;
+        }
+        function getDownloadUrl(filePath) {
+
+            if (!filePath) {
+                return '#';
+            }
+
+            return '/api/admin/download-bulk-file?filePath='
+                + encodeURIComponent(filePath);
+        }
         let allLogsData = [];
         let currentPage = 1;
 
@@ -202,17 +264,22 @@
                             <td class="fw-semibold text-dark">${log.schoolName}</td>
                             <td><span class="badge bg-light text-dark border">${log.uploadType}</span></td>
                             <td>
-                                <a href="${log.filePath}" target="_blank" class="text-decoration-none text-success fw-semibold">
-                                    <i class="bi bi-file-earmark-excel text-success me-1"></i> ${log.fileName}
-                                </a>
+                                               <a href="${getDownloadUrl(log.filePath)}"
+           class="text-decoration-none text-success fw-semibold"
+           title="Download Excel">
+            <i class="bi bi-file-earmark-excel text-success me-1"></i>
+            ${log.fileName}
+        </a>
                             </td>
                             <td class="small text-muted">${dateStr}</td>
                             <td><span class="badge ${badgeClass} px-2 py-1">${log.status}</span></td>
                             <td class="text-center">
                                 <div class="btn-group shadow-sm">
-                                    <a href="${log.filePath}" target="_blank" class="btn btn-sm btn-light border-end" title="Download">
-                                        <i class="bi bi-download text-primary"></i>
-                                    </a>
+                                                 <a href="${getDownloadUrl(log.filePath)}" target="_blank"
+           class="btn btn-sm btn-light border-end"
+           title="Download Excel">
+            <i class="bi bi-download text-primary"></i>
+        </a>
                                     <button type="button" class="btn btn-sm btn-light border-end" title="Smart Upload & Preview" onclick="openSmartPreview(${log.logID})">
                                         <i class="bi bi-magic text-success"></i>
                                     </button>
@@ -227,18 +294,15 @@
             }
             $('#bulkLogsTable tbody').html(rows);
 
-            // Pagination Info & Controls Update
             let startDisplay = totalRecords > 0 ? startIndex + 1 : 0;
             let endDisplay = Math.min(endIndex, totalRecords);
             $('#paginationInfo').text(`Showing ${startDisplay} to ${endDisplay} of ${totalRecords} entries`);
 
             let paginationHtml = '';
-            // Previous Button
             paginationHtml += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
                 <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Prev</a>
             </li>`;
 
-            // Page Number Buttons
             for (let p = 1; p <= totalPages; p++) {
                 if (p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) {
                     paginationHtml += `<li class="page-item ${p === currentPage ? 'active' : ''}">
@@ -249,7 +313,6 @@
                 }
             }
 
-            // Next Button
             paginationHtml += `<li class="page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}">
                 <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Next</a>
             </li>`;
