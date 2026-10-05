@@ -123,7 +123,8 @@ namespace HemFoundation.Controllers.Api
                 "female" or "f" => "2",
                 "other" or "o" => "3",
                 _ => null
-            };
+            };         
+
             var coreUser = new HemFoundation.Models.Entities.Users
             {
                 FirstName = model.FirstName,
@@ -133,7 +134,7 @@ namespace HemFoundation.Controllers.Api
                 EmailID = model.EmailID,
                 IsActive = true,
                 CreatedBy = 1,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.Now,
                 AspNetUserID = aspNetUserId,
                 Password_ = baseMobile,
                 RegisterFrom = "HemVirtue",
