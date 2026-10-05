@@ -62,16 +62,114 @@
             }
 
     /* Tabulator Customizations to Match Bootstrap */
-    .tabulator {
-        border: 1px solid #dee2e6 !important;
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
+    /* ============================================
+       TABULATOR DIRECTORY TABLE
+       ============================================ */
+
+    .directory-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 10px;
     }
 
-        .tabulator .tabulator-header {
-            background-color: #f8f9fa !important;
-            font-weight: bold;
+        /* Keep table wider than mobile screen when required */
+        .directory-table-wrapper .tabulator {
+            width: max-content !important;
+            min-width: 100%;
+            border: 1px solid #dee2e6 !important;
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: 14px;
         }
+
+            /* Header */
+            .directory-table-wrapper .tabulator .tabulator-header {
+                background: #f8f9fa !important;
+                font-weight: 700;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            /* Header cells */
+            .directory-table-wrapper .tabulator .tabulator-col {
+                min-width: 120px;
+                background: #f8f9fa !important;
+            }
+
+            /* Header title */
+            .directory-table-wrapper .tabulator .tabulator-col-title {
+                white-space: nowrap;
+                overflow: visible;
+                text-overflow: clip;
+                font-weight: 700;
+            }
+
+            /* Header filter */
+            .directory-table-wrapper .tabulator .tabulator-header-filter {
+                padding: 5px 6px;
+            }
+
+                .directory-table-wrapper .tabulator .tabulator-header-filter input,
+                .directory-table-wrapper .tabulator .tabulator-header-filter select {
+                    width: 100%;
+                    min-width: 90px;
+                    height: 32px;
+                    border: 1px solid #ced4da;
+                    border-radius: 6px;
+                    padding: 4px 7px;
+                    font-size: 12px;
+                    outline: none;
+                }
+
+                    .directory-table-wrapper .tabulator .tabulator-header-filter input:focus,
+                    .directory-table-wrapper .tabulator .tabulator-header-filter select:focus {
+                        border-color: #6f42c1;
+                        box-shadow: 0 0 0 2px rgba(111, 66, 193, 0.10);
+                    }
+
+            /* Table data */
+            .directory-table-wrapper .tabulator .tabulator-cell {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* Do not allow header to become too small */
+            .directory-table-wrapper .tabulator .tabulator-col[tabulator-field] {
+                min-width: 130px;
+            }
+
+            /* Sorting indicator */
+            .directory-table-wrapper .tabulator .tabulator-col.tabulator-sortable:hover {
+                background-color: #f0ebfa !important;
+            }
+
+    /* Mobile */
+    @@media (max-width: 768px) {
+
+        .directory-table-wrapper {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+            .directory-table-wrapper .tabulator {
+                min-width: 1100px;
+                font-size: 13px;
+            }
+
+                .directory-table-wrapper .tabulator .tabulator-col {
+                    min-width: 130px;
+                }
+
+                .directory-table-wrapper .tabulator .tabulator-cell {
+                    padding: 8px 10px;
+                }
+
+                .directory-table-wrapper .tabulator .tabulator-header-filter input {
+                    min-width: 110px;
+                }
+    }
 
     .action-icon-btn {
         padding: 4px 8px;
@@ -182,17 +280,17 @@
             <div class="tab-pane fade show active" id="studentContent">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold text-dark m-0">Enrolled Students</h5>
-                    <div class="d-flex align-items-center">
-                        <input type="text" id="studentSearchInput" class="form-control form-control-sm d-inline-block w-auto me-2" placeholder="Search students..." onkeyup="filterTabulator('student', this.value)">
-                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm me-2" onclick="exportTable('student', 'xlsx')">
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                        <input type="text" id="studentSearchInput" class="form-control form-control-sm" placeholder="Search students..." onkeyup="filterTabulator('student', this.value)">
+                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="exportTable('student', 'xlsx')">
                             <i class="fas fa-file-excel me-1"></i> Export Excel
                         </button>
                         <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddStudent">
                             <i class="bi bi-person-plus-fill me-1"></i> Add New Student
                         </button>
                     </div>
-                </div>
-                <div id="studentTableContainer"></div>
+                </div><div id="studentTableContainer">
+                <div id="studentTableContainer"></div></div>
             </div>
 
             <!-- REASSIGN GRADE MODAL (STUDENT) -->
@@ -235,9 +333,9 @@
             <div class="tab-pane fade" id="teacherContent">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold text-dark m-0">Active Teachers</h5>
-                    <div class="d-flex align-items-center">
-                        <input type="text" id="teacherSearchInput" class="form-control form-control-sm d-inline-block w-auto me-2" placeholder="Search teachers..." onkeyup="filterTabulator('teacher', this.value)">
-                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm me-2" onclick="exportTable('teacher', 'xlsx')">
+                <div class="d-flex flex-column flex-sm-row gap-2">
+                        <input type="text" id="teacherSearchInput" class="form-control form-control-sm" placeholder="Search teachers..." onkeyup="filterTabulator('teacher', this.value)">
+                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="exportTable('teacher', 'xlsx')">
                             <i class="fas fa-file-excel me-1"></i> Export Excel
                         </button>
                         <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalAddTeacher">
@@ -245,16 +343,16 @@
                         </button>
                     </div>
                 </div>
-                <!-- Tabulator Container -->
-                <div id="teacherTableContainer"></div>
+            <!-- Tabulator Container --><div class="directory-table-wrapper">
+                <div id="teacherTableContainer"></div></div>
             </div>
 
             <!-- TAB 3: VOLUNTEERS LIST -->
             <div class="tab-pane fade" id="volunteerContent">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold text-dark m-0">Assigned Volunteers</h5>
-                    <div class="d-flex align-items-center">
-                        <input type="text" id="volunteerSearchInput" class="form-control form-control-sm d-inline-block w-auto me-2" placeholder="Search volunteers..." onkeyup="filterTabulator('volunteer', this.value)">
+            <div class="d-flex flex-column flex-sm-row gap-2">
+                        <input type="text" id="volunteerSearchInput" class="form-control form-control-sm" placeholder="Search volunteers..." onkeyup="filterTabulator('volunteer', this.value)">
                         <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="exportTable('volunteer', 'xlsx')">
                             <i class="fas fa-file-excel me-1"></i> Export Excel
                         </button>
@@ -262,8 +360,8 @@
                             <i class="bi bi-person-plus-fill me-1"></i> Add New Volunteer
                         </button>
                     </div>
-                </div>
-                <div id="volunteerTableContainer"></div>
+        </div><div class="directory-table-wrapper">
+                <div id="volunteerTableContainer"></div></div>
             </div>
 
             <!-- TAB 4: BULK UPLOAD -->
@@ -689,223 +787,682 @@ function getDownloadUrl(filePath) {
                 });
             });
         });
+        const directoryTableDefaults = {
+            layout: "fitData",
+            responsiveLayout: false,
 
+            pagination: true,
+            paginationMode: "local",
+            paginationSize: 10,
+            paginationSizeSelector: [10, 25, 50, 100],
+
+            // IMPORTANT:
+            // Prevent users from dragging/reordering columns
+            movableColumns: false,
+
+            // Allow sorting by clicking headers
+            headerSort: true,
+
+            // Do not automatically resize columns to mobile width
+            columnDefaults: {
+                headerSort: true,
+                headerFilter: "input",
+                headerFilterFunc: "like",
+                resizable: false,
+                tooltip: true
+            }
+        };
         function initStudentTable(data) {
+
+            if (studentTable) {
+                studentTable.destroy();
+            }
+
+            // Normalize data so searching/sorting works correctly
+            data = (data || []).map(function(d) {
+
+                return {
+                    ...d,
+
+                    _studentId:
+                        d.studentId ||
+                        d.StudentID ||
+                        '',
+
+                    _studentName:
+                        `${d.firstName || d.FirstName || ''} ${d.lastName || d.LastName || ''}`.trim(),
+
+                    _city:
+                        d.cityName ||
+                        d.CityName ||
+                        '',
+
+                    _mobile:
+                        d.mobileNo ||
+                        d.MobileNo ||
+                        '',
+
+                    _gender:
+                        d.gender ||
+                        d.Gender ||
+                        '',
+
+                    _standard:
+                        d.standard ||
+                        d.Standard ||
+                        '',
+
+                    _division:
+                        d.division ||
+                        d.Division ||
+                        '',
+
+                    _username:
+                        d.username ||
+                        d.Username ||
+                        '',
+
+                    _password:
+                        d.password_ ||
+                        d.Password_ ||
+                        d.password ||
+                        d.Password ||
+                        ''
+                };
+            });
+
             studentTable = new Tabulator("#studentTableContainer", {
+
+                ...directoryTableDefaults,
+
                 data: data,
-                layout: "fitColumns",
-                pagination: "local",
-                paginationSize: 10,
-                paginationSizeSelector: [10, 25, 50, 100],
-                movableColumns: true,
+
                 columns: [
-                    { formatter: "rownum", title: "SrNo", hozAlign: "center", width: 60 },
+
                     {
-                        title: "Students ID",
-                        field: "studentId", 
-                        formatter: cell => cell.getData().studentId || cell.getData().StudentID || '-'
+                        formatter: "rownum",
+                        title: "Sr No",
+                        hozAlign: "center",
+                        width: 70,
+                        headerSort: false,
+                        headerFilter: false
                     },
+
+                    {
+                        title: "Student ID",
+                        field: "_studentId",
+                        width: 130,
+                        sorter: "string",
+                        headerFilter: "input"
+                    },
+
                     {
                         title: "Student Name",
-                        field: "firstName",
-                        formatter: cell => {
-                            let d = cell.getData();
-                            return `${d.firstName || d.FirstName || ''} ${d.lastName || d.LastName || ''}`;
-                        }
+                        field: "_studentName",
+                        width: 190,
+                        sorter: "string",
+                        headerFilter: "input"
                     },
-                    { title: "City", field: "cityName", formatter: cell => cell.getData().cityName || cell.getData().CityName || '-' },
-                    { title: "Mobile Number", field: "mobileNo", formatter: cell => cell.getData().mobileNo || cell.getData().MobileNo || '-' },
-                    { title: "Gender", field: "gender", formatter: cell => cell.getData().gender || cell.getData().Gender || '-' },
+
                     {
-                        title: "Std / Div",
-                        field: "standard",
-                        hozAlign: "center",
-                        formatter: cell => {
-                            let d = cell.getData();
-                            let sId = d.studentId || d.StudentID || 0;
-                            let fName = d.firstName || d.FirstName || '';
-                            let lName = d.lastName || d.LastName || '';
-                            let std = d.standard || d.Standard || '-';
-                            let div = d.division || d.Division || '-';
-                            return `<span class="text-purple fw-bold" role="button" onclick="ChangeStandard(${sId}, '${fName} ${lName}', '${std}', '${div}')"><i class="fas fa-edit small me-1 opacity-50"></i>${std}-${div}</span>`;
-                        }
+                        title: "City",
+                        field: "_city",
+                        width: 140,
+                        sorter: "string",
+                        headerFilter: "input"
                     },
-                    { title: "Username", field: "username", formatter: cell => cell.getData().username || cell.getData().Username || '-' },
+
+                    {
+                        title: "Mobile Number",
+                        field: "_mobile",
+                        width: 150,
+                        sorter: "string",
+                        headerFilter: "input"
+                    },
+
+                    {
+                        title: "Gender",
+                        field: "_gender",
+                        width: 110,
+                        sorter: "string",
+                        headerFilter: "input"
+                    },
+
+                    {
+                        title: "Standard",
+                        field: "_standard",
+                        width: 120,
+                        sorter: "string",
+                        headerFilter: "input"
+                    },
+
+                    {
+                        title: "Division",
+                        field: "_division",
+                        width: 110,
+                        sorter: "string",
+                        headerFilter: "input"
+                    },
+
+                    {
+                        title: "Username",
+                        field: "_username",
+                        width: 170,
+                        sorter: "string",
+                        headerFilter: "input"
+                    },
+
                     {
                         title: "Password",
-                        field: "password_", 
-                        formatter: cell => {
-                            let d = cell.getData();
-                            return d.password_ || d.Password_ || d.password || d.Password || '-';
-                        },
-                        accessorDownload: function(value, data, type, column, row) {
-                            return data.password_ || data.Password_ || data.password || data.Password || '';
-                        }
+                        field: "_password",
+                        width: 160,
+                        sorter: "string",
+                        headerFilter: "input"
                     },
+
                     {
                         title: "Report",
-                        field: "coins",
                         hozAlign: "center",
+                        width: 90,
+                        headerSort: false,
+                        headerFilter: false,
                         download: false,
-                        formatter: cell => {
+
+                        formatter: function(cell) {
+
                             let d = cell.getData();
-                            let sId = d.studentId || d.StudentID || 0;
-                            let coins = d.coins || d.Coins || 0;
-                            return `<a target="_blank" href="/Learn/PrintStudentScorecard?id=${sId}" class="ms-2 text-info" title="Print Scorecard"><i class="fas fa-print"></i></a>`;
+
+                            let sId =
+                                d.studentId ||
+                                d.StudentID ||
+                                0;
+
+                            return `
+                                <a target="_blank"
+                                   href="/Learn/PrintStudentScorecard?id=${sId}"
+                                   class="text-info"
+                                   title="Print Scorecard">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                            `;
                         }
                     },
+
                     {
                         title: "Actions",
                         hozAlign: "center",
+                        width: 90,
+                        headerSort: false,
+                        headerFilter: false,
                         download: false,
-                        formatter: cell => {
-                            let d = cell.getData();
-                            let sId = d.studentId || d.StudentID || 0;
-                            return `<a class="text-danger cursor-pointer" onclick="DeleteStudentRosterRow(${sId})" title="Remove Student Link"><i class="fas fa-trash-alt"></i></a>`;
-                        }
-                    },
-                    {
-                        title: "SMS",
-                        hozAlign: "center",
-                        download: false,
-                        formatter: cell => {
-                            let d = cell.getData();
-                            let sId = d.studentId || d.StudentID || 0;
-                            return `<button type="button" data-id="${sId}" class="btn btn-outline-primary btn-xs fw-bold px-2 rounded-pill SendSMSINS">Send SMS</button>`;
-                        }
-                    }
-                ],
-            });
-        }
 
-        function initTeacherTable(data) {
-            teacherTable = new Tabulator("#teacherTableContainer", {
-                data: data,
-                layout: "fitColumns",
-                pagination: "local",
-                paginationSize: 10,
-                paginationSizeSelector: [10, 25, 50, 100],
-                movableColumns: true,
-                columns: [
-                    { formatter: "rownum", title: "SrNo", hozAlign: "center", width: 60 },
-                    { 
-                        title: "ID", 
-                        field: "teacherId", 
-                        hozAlign: "center", 
-                        width: 70, 
-                        formatter: cell => {
-                            let r = cell.getData();
-                            return r.teacherId || r.TeacherID || r.teacherID || "N/A";
-                        },
-                        accessorDownload: function(value, data, type, column, row) {
-                            return data.teacherId || data.TeacherID || data.teacherID || '';
+                        formatter: function(cell) {
+
+                            let d = cell.getData();
+
+                            let sId =
+                                d.studentId ||
+                                d.StudentID ||
+                                0;
+
+                            return `
+                                <a class="text-danger cur-pointer"
+                                   onclick="DeleteStudentRosterRow(${sId})"
+                                   title="Remove Student Link">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            `;
                         }
                     },
-                    { title: "Teacher Name", field: "FirstName", formatter: cell => cell.getData().FirstName || cell.getData().firstName || '' },
-                    { title: "Institute Name", field: "instituteName", formatter: cell => cell.getData().instituteName || cell.getData().InstituteName || "N/A" },
-                    { title: "City", field: "cityName", formatter: cell => cell.getData().cityName || cell.getData().CityName || cell.getData().city || "N/A" },
-                    { title: "Mobile", field: "mobileNo", formatter: cell => cell.getData().mobileNo || cell.getData().MobileNo || "N/A" },
-                    { title: "Gender", field: "gender", formatter: cell => cell.getData().gender || cell.getData().Gender || "N/A" },
-                    { title: "Username", field: "userName", formatter: cell => cell.getData().userName || cell.getData().UserName || "N/A" },
-                    { title: "Password", field: "password_", formatter: cell => cell.getData().password_ || cell.getData().Password_ || "N/A" },
-                    {
-                        title: "Standards",
-                        field: "standard",
-                        formatter: cell => {
-                            let std = cell.getData().standard || cell.getData().Standard;
-                            return std ? std : '<span class="badge bg-warning text-dark">Unassigned</span>';
-                        }
-                    },
-                    { title: "Registered Date", field: "CreatedDate", formatter: cell => cell.getData().CreatedDate || cell.getData().createdDate || "N/A" },
-                    {
-                        title: "Action",
-                        hozAlign: "center",
-                        headerSort: false,
-                        formatter: cell => {
-                            let r = cell.getData();
-                            let tId = r.teacherId || r.TeacherID || r.teacherID || 0;
-                            return `<a class="action-icon-btn text-danger cur-pointer" onclick="DeleteTeacher(${tId})" title="Delete"><i class="fas fa-trash-alt"></i></a>` +
-                                `<a class="action-icon-btn text-info" href="/Admin/ExportTeacherPerformanceExcel?TeacherID=${tId}&type=Teacher" title="Performance"><i class="fas fa-chart-bar"></i></a>`;
-                        }
-                    },
+
                     {
                         title: "SMS",
                         hozAlign: "center",
+                        width: 110,
                         headerSort: false,
-                        formatter: cell => {
-                            let r = cell.getData();
-                            let tId = r.teacherId || r.TeacherID || r.teacherID || 0;
-                            return `<button type="button" data-id="${tId}" class="btn btn-outline-primary btn-xs px-2 SendSMSINSTeacher font-weight-bold rounded-pill">Send SMS</button>`;
-                        }
-                    },
-                    {
-                        title: "Assign",
-                        hozAlign: "center",
-                        headerSort: false,
-                        formatter: cell => {
-                            let r = cell.getData();
-                            let tId = r.teacherId || r.TeacherID || r.teacherID || 0;
-                            let fName = (r.FirstName || r.firstName || '').replace(/'/g, "\\'");
-                            let std = r.standard || r.Standard || '';
-                            return `<a href="#" onclick="fnAssignTeacher(${tId}, '${fName}', '${std}')" data-bs-toggle="modal" data-bs-target="#assignStandardList" class="btn btn-outline-purple btn-xs px-2 font-weight-bold rounded-pill" style="color:#6f42c1; border-color:#6f42c1;">Assign Standard</a>`;
+                        headerFilter: false,
+                        download: false,
+
+                        formatter: function(cell) {
+
+                            let d = cell.getData();
+
+                            let sId =
+                                d.studentId ||
+                                d.StudentID ||
+                                0;
+
+                            return `
+                                <button type="button"
+                                        data-id="${sId}"
+                                        class="btn btn-outline-primary btn-xs fw-bold px-2 rounded-pill SendSMSINS">
+                                    Send SMS
+                                </button>
+                            `;
                         }
                     }
                 ]
             });
         }
+        function initTeacherTable(data) {
+
+    if (teacherTable) {
+        teacherTable.destroy();
+    }
+
+    data = (data || []).map(function (d) {
+
+        return {
+            ...d,
+
+            _teacherId:
+                d.teacherId ||
+                d.TeacherID ||
+                d.teacherID ||
+                '',
+
+            _teacherName:
+                d.FirstName ||
+                d.firstName ||
+                '',
+
+            _institute:
+                d.instituteName ||
+                d.InstituteName ||
+                '',
+
+            _city:
+                d.cityName ||
+                d.CityName ||
+                d.city ||
+                '',
+
+            _mobile:
+                d.mobileNo ||
+                d.MobileNo ||
+                '',
+
+            _gender:
+                d.gender ||
+                d.Gender ||
+                '',
+
+            _username:
+                d.userName ||
+                d.UserName ||
+                '',
+
+            _password:
+                d.password_ ||
+                d.Password_ ||
+                '',
+
+            _standard:
+                d.standard ||
+                d.Standard ||
+                '',
+
+            _createdDate:
+                d.CreatedDate ||
+                d.createdDate ||
+                ''
+        };
+    });
+
+    teacherTable = new Tabulator("#teacherTableContainer", {
+
+        ...directoryTableDefaults,
+
+        data: data,
+
+        columns: [
+
+            {
+                formatter: "rownum",
+                title: "Sr No",
+                hozAlign: "center",
+                width: 70,
+                headerSort: false,
+                headerFilter: false
+            },
+
+            {
+                title: "Teacher ID",
+                field: "_teacherId",
+                width: 130,
+                sorter: "string",
+                headerFilter: "input"
+            },
+
+            {
+                title: "Teacher Name",
+                field: "_teacherName",
+                width: 190,
+                sorter: "string",
+                headerFilter: "input"
+            },
+
+            {
+                title: "Institute Name",
+                field: "_institute",
+                width: 220,
+                sorter: "string",
+                headerFilter: "input"
+            },
+
+            {
+                title: "City",
+                field: "_city",
+                width: 140,
+                sorter: "string",
+                headerFilter: "input"
+            },
+
+            {
+                title: "Mobile",
+                field: "_mobile",
+                width: 150,
+                sorter: "string",
+                headerFilter: "input"
+            },
+
+            {
+                title: "Gender",
+                field: "_gender",
+                width: 110,
+                sorter: "string",
+                headerFilter: "input"
+            },
+
+            {
+                title: "Username",
+                field: "_username",
+                width: 170,
+                sorter: "string",
+                headerFilter: "input"
+            },
+
+            {
+                title: "Password",
+                field: "_password",
+                width: 160,
+                sorter: "string",
+                headerFilter: "input"
+            },
+
+            {
+                title: "Standards",
+                field: "_standard",
+                width: 180,
+                sorter: "string",
+                headerFilter: "input",
+
+                formatter: function (cell) {
+
+                    let value = cell.getValue();
+
+                    return value
+                        ? value
+                        : '<span class="badge bg-warning text-dark">Unassigned</span>';
+                }
+            },
+
+            {
+                title: "Registered Date",
+                field: "_createdDate",
+                width: 180,
+                sorter: "string",
+                headerFilter: "input"
+            },
+
+            {
+                title: "Action",
+                hozAlign: "center",
+                width: 110,
+                headerSort: false,
+                headerFilter: false,
+                download: false,
+
+                formatter: function (cell) {
+
+                    let r = cell.getData();
+
+                    let tId =
+                        r.teacherId ||
+                        r.TeacherID ||
+                        r.teacherID ||
+                        0;
+
+                    return `
+                        <a class="action-icon-btn text-danger cur-pointer"
+                           onclick="DeleteTeacher(${tId})"
+                           title="Delete">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+
+                       
+                    `;
+                }
+            },
+
+            {
+                title: "SMS",
+                hozAlign: "center",
+                width: 110,
+                headerSort: false,
+                headerFilter: false,
+                download: false,
+
+                formatter: function (cell) {
+
+                    let r = cell.getData();
+
+                    let tId =
+                        r.teacherId ||
+                        r.TeacherID ||
+                        r.teacherID ||
+                        0;
+
+                    return `
+                        <button type="button"
+                                data-id="${tId}"
+                                class="btn btn-outline-primary btn-xs px-2 SendSMSINSTeacher font-weight-bold rounded-pill">
+                            Send SMS
+                        </button>
+                    `;
+                }
+            },
+
+            {
+                title: "Assign",
+                hozAlign: "center",
+                width: 150,
+                headerSort: false,
+                headerFilter: false,
+                download: false,
+
+                formatter: function (cell) {
+
+                    let r = cell.getData();
+
+                    let tId =
+                        r.teacherId ||
+                        r.TeacherID ||
+                        r.teacherID ||
+                        0;
+
+                    let fName =
+                        (r.FirstName || r.firstName || '')
+                        .replace(/'/g, "\\'");
+
+                    let std =
+                        r.standard ||
+                        r.Standard ||
+                        '';
+
+                    return `
+                        <a href="#"
+                           onclick="fnAssignTeacher(${tId}, '${fName}', '${std}')"
+                           data-bs-toggle="modal"
+                           data-bs-target="#assignStandardList"
+                           class="btn btn-outline-purple btn-xs px-2 font-weight-bold rounded-pill"
+                           style="color:#6f42c1;border-color:#6f42c1;">
+                            Assign Standard
+                        </a>
+                    `;
+                }
+            }
+        ]
+    });
+}
 
         function initVolunteerTable(data) {
+
+            if (volunteerTable) {
+                volunteerTable.destroy();
+            }
+
+            data = (data || []).map(function(d) {
+
+                return {
+                    ...d,
+
+                    _id:
+                        d.iD ||
+                        d.ID ||
+                        d.id ||
+                        '',
+
+                    _mobile:
+                        d.mobileNo ||
+                        d.MobileNo ||
+                        '',
+
+                    _name:
+                        `${d.firstName || d.FirstName || ''} ${d.lastName || d.LastName || ''}`.trim(),
+
+                    _email:
+                        d.email ||
+                        d.Email ||
+                        '',
+
+                    _username:
+                        d.username ||
+                        d.Username ||
+                        '',
+
+                    _password:
+                        d.password_ ||
+                        d.Password_ ||
+                        ''
+                };
+            });
+
             volunteerTable = new Tabulator("#volunteerTableContainer", {
+
+                ...directoryTableDefaults,
+
                 data: data,
-                layout: "fitColumns",
-                pagination: "local",
-                paginationSize: 10,
+
                 columns: [
-                    { formatter: "rownum", title: "SrNo", hozAlign: "center", width: 60 },                    
-                    { 
-                        title: "ID", 
-                        field: "id", 
-                        hozAlign: "center", 
-                        width: 70, 
-                        formatter: cell => {
-                            let r = cell.getData();
-                            return r.iD || r.ID || r.id || "N/A";
-                        },
-                        accessorDownload: function(value, data, type, column, row) {
-                            return data.iD || data.ID || data.id || '';
-                        }
+
+                    {
+                        formatter: "rownum",
+                        title: "Sr No",
+                        hozAlign: "center",
+                        width: 70,
+                        headerSort: false,
+                        headerFilter: false
                     },
-                    { title: "Mobile", field: "mobileNo", formatter: cell => cell.getData().mobileNo || cell.getData().MobileNo || '-' },
+
+                    {
+                        title: "Volunteer ID",
+                        field: "_id",
+                        width: 130,
+                        sorter: "string",
+                        headerFilter: "input"
+                    },
+
                     {
                         title: "Name",
-                        field: "firstName",
-                        formatter: cell => {
-                            let v = cell.getData();
-                            return `${v.firstName || v.FirstName || ''} ${v.lastName || v.LastName || ''}`;
-                        }
+                        field: "_name",
+                        width: 190,
+                        sorter: "string",
+                        headerFilter: "input"
                     },
-                    { title: "Mobile", field: "mobileNo", formatter: cell => cell.getData().mobileNo || cell.getData().MobileNo || '-' },
-                    { title: "Email", field: "email", formatter: cell => cell.getData().email || cell.getData().Email || '-' },
-                
-                   
-                    { title: "Username", field: "username", formatter: cell => cell.getData().username || cell.getData().Username || '-' },
-                    { title: "Password", field: "password_", formatter: cell => cell.getData().password_ || cell.getData().Password || '-' }
-                
+
+                    {
+                        title: "Mobile",
+                        field: "_mobile",
+                        width: 150,
+                        sorter: "string",
+                        headerFilter: "input"
+                    },
+
+                    {
+                        title: "Email",
+                        field: "_email",
+                        width: 230,
+                        sorter: "string",
+                        headerFilter: "input"
+                    },
+
+                    {
+                        title: "Username",
+                        field: "_username",
+                        width: 180,
+                        sorter: "string",
+                        headerFilter: "input"
+                    },
+
+                    {
+                        title: "Password",
+                        field: "_password",
+                        width: 160,
+                        sorter: "string",
+                        headerFilter: "input"
+                    }
                 ]
             });
         }
 
         function filterTabulator(type, query) {
-            let table = type === 'student' ? studentTable : type === 'teacher' ? teacherTable : volunteerTable;
-            if (table) {
-                if (!query) {
-                    table.clearFilter();
-                } else {
-                    table.setFilter(function(data) {
-                        return Object.values(data).some(val => val !== null && val !== undefined && String(val).toLowerCase().includes(query.toLowerCase()));
-                    });
-                }
+
+            let table =
+                type === 'student'
+                    ? studentTable
+                    : type === 'teacher'
+                        ? teacherTable
+                        : volunteerTable;
+
+            if (!table) return;
+
+            query = (query || '').trim();
+
+            if (!query) {
+                table.clearFilter();
+                return;
             }
+
+            table.setFilter(function(data) {
+
+                return Object.keys(data).some(function(key) {
+
+                    let value = data[key];
+
+                    if (
+                        key.startsWith('_') &&
+                        value !== null &&
+                        value !== undefined
+                    ) {
+                        return String(value)
+                            .toLowerCase()
+                            .includes(query.toLowerCase());
+                    }
+
+                    return false;
+                });
+            });
         }
 
         function exportTable(type, format) {
@@ -1041,8 +1598,8 @@ function getDownloadUrl(filePath) {
                 if (result.isConfirmed) {
                     $.ajax({
                         type: "GET",
-                        url: '/api/school/deleteteacher',
-                        data: { TeacherID: TeacherID },
+                        url: '/api/school/UnmapTeacher',
+                        data: { teacherid: TeacherID },
                         dataType: 'json',
                         success: function(result) {
                             if (result.success) {

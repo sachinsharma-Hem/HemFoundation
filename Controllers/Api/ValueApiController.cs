@@ -170,10 +170,10 @@ namespace HemFoundation.Controllers.Api
             }
             if (string.IsNullOrEmpty(currentUserId.ToString())) return Unauthorized(new { success = false, message = "Not logged in" });
 
-            var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
+            var institute = await _context.view_wj_instituteslist.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
             if (institute == null) return BadRequest(new { success = false, message = "School profile not found" });
 
-            var schoolStandardNames = await _context.ViewWjStudentsDetailsInfo
+            var schoolStandardNames = await _context.hf_view_studentsdetails
                 .Where(s => s.InstituteID == institute.instituteid && s.Standard != null)
                 .Select(s => s.Standard).Distinct().ToListAsync();
 
@@ -239,7 +239,7 @@ namespace HemFoundation.Controllers.Api
             }
             if (string.IsNullOrEmpty(currentUserId.ToString())) return Unauthorized(new { success = false, message = "Not logged in" });
 
-            var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
+            var institute = await _context.view_wj_instituteslist.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
             if (institute == null) return BadRequest(new { success = false, message = "School not found." });
 
             var valueItem = await _context.vw_valueitemmasters.FirstOrDefaultAsync(v => v.Id == valueItemId);
@@ -248,36 +248,35 @@ namespace HemFoundation.Controllers.Api
             var grade = await _context.StandardMasters.FirstOrDefaultAsync(g => g.StandardName == valueItem.GradeId);
             var standard = await _context.StandardMasters.FirstOrDefaultAsync(s => s.StandardName == grade.StandardName);
 
-            // 1. Us standard ke saare students
-            var students = await _context.ViewWjStudentsDetailsInfo
+            // 1. Students of that standard
+            var students = await _context.hf_view_studentsdetails
                 .Where(s => s.InstituteID == institute.instituteid && s.Standard == standard.StandardName)
-                .Select(s => new { Id = s.StudentId, Name = s.FirstName + " " + s.LastName }) // <--- ISE UPDATE KIYA
+                .Select(s => new { Id = s.StudentId, Name = s.FirstName + " " + s.LastName })
                 .ToListAsync();
+
             var submissions = await _context.creativityActivitiesSubmission2021s
               .Where(s => s.InstituteID == institute.instituteid && s.MainCourseID == valueItemId)
               .ToListAsync();
 
-
-            // 2. Existing Groups aur unke students
-            var groups = await _context.HfRelManageGroupList
-                .Where(g => g.IsAllocatedBy == institute.instituteid && g.MainCourseID==valueItem.Id)
-                .ToListAsync();
-
-            var groupStudents = await _context.HfRelManageGroupList
+            // 2. Fetch all group allocation rows and group them by GroupName to avoid duplicates
+            var groupRows = await _context.HfRelManageGroupList
                 .Where(g => g.IsAllocatedBy == institute.instituteid && g.MainCourseID == valueItem.Id)
                 .ToListAsync();
-            // 3. Existing Submissions
+
+            var formattedGroups = groupRows
+                .GroupBy(g => g.GroupName)
+                .Select(g => new {
+                    groupName = g.Key,
+                    studentIds = g.Select(x => x.StudentID).Where(id => id.HasValue).Select(id => id.Value).ToList()
+                })
+                .ToList();
 
             return Ok(new
             {
                 success = true,
                 activity = new { valueItem.CapacityName, valueItem.ValueTitleEng, grade.StandardName },
                 students,
-                groups = groups.Select(g => new {
-                    g.MgslId,
-                    g.GroupName,
-                    StudentIds = groupStudents.Where(gs => gs.MgslId == g.MgslId).Select(gs => gs.StudentID).ToList()
-                }),
+                groups = formattedGroups,
                 submissions
             });
         }
@@ -299,38 +298,50 @@ namespace HemFoundation.Controllers.Api
             }
             if (string.IsNullOrEmpty(currentUserId.ToString())) return Unauthorized(new { success = false, message = "Not logged in" });
 
-            var institute = await _context.SchoolProfileDetails.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
+            var institute = await _context.view_wj_instituteslist.FirstOrDefaultAsync(i => i.instituteid == currentUserId);
             if (institute == null) return BadRequest(new { success = false, message = "School not found." });
 
-            var oldGroups = await _context.HfRelManageGroupList.Where(g => g.IsAllocatedBy == institute.instituteid && g.MainCourseID == valueItemId).ToListAsync();
 
-            _context.HfRelManageGroupList.RemoveRange(oldGroups);
-            await _context.SaveChangesAsync();
-
-            foreach (var rg in requestGroups)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                string gName = string.IsNullOrWhiteSpace(rg.GroupName) ? "Group" : rg.GroupName;
+                var oldGroups = await _context.HfRelManageGroupList
+                    .Where(g => g.IsAllocatedBy == institute.instituteid && g.MainCourseID == valueItemId)
+                    .ToListAsync();
 
-                if (rg.StudentIds != null && rg.StudentIds.Any())
+                _context.HfRelManageGroupList.RemoveRange(oldGroups);
+                await _context.SaveChangesAsync();
+
+                foreach (var rg in requestGroups)
                 {
-                    foreach (var sid in rg.StudentIds)
+                    string gName = string.IsNullOrWhiteSpace(rg.GroupName) ? "Group" : rg.GroupName;
+
+                    if (rg.StudentIds != null && rg.StudentIds.Any())
                     {
-                        var newGroup = new HfRelManageGroupList
+                        foreach (var sid in rg.StudentIds.Distinct())
                         {
-                            IsAllocatedBy = institute.instituteid,
-                            MainCourseID = valueItemId,
-                            GroupName = gName,
-                            StudentID=sid,
-                            IsAllocated=true,
-
-                        };
-
-                        _context.HfRelManageGroupList.Add(newGroup);
+                            _context.HfRelManageGroupList.Add(new HfRelManageGroupList
+                            {
+                                IsAllocatedBy = institute.instituteid,
+                                MainCourseID = valueItemId,
+                                GroupName = gName,
+                                StudentID = sid,
+                                IsAllocated = true
+                            });
+                        }
                     }
                 }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { success = true, message = "Teams & Students updated successfully!" });
             }
-            await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "Teams & Students updated successfully!" });
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
         [HttpPost("submit-activity")]
         public async Task<IActionResult> SubmitActivity(

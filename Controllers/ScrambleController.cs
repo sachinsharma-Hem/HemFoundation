@@ -27,7 +27,7 @@ namespace HemFoundation.Controllers
         {
             TempData["CourseID"] = courseID;
             ScrambleModel model = new ScrambleModel();
-
+            TempData["Message"] = null;
             try
             {
                 // Language ID resolution from Session
