@@ -95,9 +95,9 @@ namespace HemFoundation.Services
                 return null;
 
             string downloadUrl =
-                _configuration["FileSettings:InHouseDownloadUrl"]
+                _configuration["FileSettings:BaseUrl"]
                 ?? throw new Exception(
-                    "InHouseDownloadUrl is not configured.");
+                    "BaseUrl is not configured.");
 
             string apiKey =
                 _configuration["FileSettings:ApiKey"]
@@ -114,7 +114,7 @@ namespace HemFoundation.Services
                 apiKey);
 
             var url =
-                $"{downloadUrl}?filePath={Uri.EscapeDataString(filePath)}";
+                $"{downloadUrl}{filePath}";
 
             var response = await client.GetAsync(url);
 

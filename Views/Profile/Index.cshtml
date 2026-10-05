@@ -197,7 +197,6 @@
 </div>
 
 @section Scripts {
-    <!-- Select2 JS for Searchable Dropdown -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         // Custom Popup Function
@@ -232,7 +231,6 @@
             const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
             let currentUserRole = '';
 
-            // Initialize Select2 Searchable Dropdown for Institutes
             $('#ddlInstitute').select2({
                 theme: 'bootstrap-5',
                 placeholder: 'Search and select school...',

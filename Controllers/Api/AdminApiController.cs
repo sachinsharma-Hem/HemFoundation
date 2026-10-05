@@ -17,6 +17,7 @@ using System.Data;
 using System.Reflection;
 using System.Security.Claims;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using HemFoundation.Services;
 
 namespace HemFoundation.Controllers.Api
 {
@@ -29,17 +30,21 @@ namespace HemFoundation.Controllers.Api
         private readonly IWebHostEnvironment _env;
         private readonly SMSManager _smsManager;
         private readonly IConfiguration _configuration;
+        private readonly IFileStorageService _fileStorage;
         public AdminApiController(
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment env,
-            SMSManager smsManager, IConfiguration configuration)
+      ApplicationDbContext context,
+      UserManager<ApplicationUser> userManager,
+      IWebHostEnvironment env,
+      SMSManager smsManager,
+      IConfiguration configuration,
+      IFileStorageService fileStorage)
         {
             _context = context;
             _userManager = userManager;
             _env = env;
             _smsManager = smsManager;
             _configuration = configuration;
+            _fileStorage = fileStorage;
         }
 
         [HttpGet("dashboard-stats")]
@@ -98,164 +103,518 @@ namespace HemFoundation.Controllers.Api
 
             return Ok(new { success = true, message = "Bulk upload status updated successfully!" });
         }
-
         [HttpPost("preview-excel")]
-        public async Task<IActionResult> PreviewExcel([FromForm] int logId, [FromForm] IFormFile excelFile)
+        public async Task<IActionResult> PreviewExcel(
+            [FromForm] int logId,
+            [FromForm] IFormFile excelFile)
         {
-            var log = await _context.BulkUploadLogs.FirstOrDefaultAsync(l => l.LogID == logId);
-            if (log == null) return NotFound(new { success = false, message = "Log record not found." });
+            var log = await _context.BulkUploadLogs
+                .FirstOrDefaultAsync(l => l.LogID == logId);
+
+            if (log == null)
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Log record not found."
+                });
 
             if (excelFile == null || excelFile.Length == 0)
-                return BadRequest(new { success = false, message = "Please select a valid Excel file." });
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Please select a valid Excel file."
+                });
 
             try
             {
-                string uploadsFolder = Path.Combine(_env.WebRootPath, "adminuploadfileserver");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                // ============================================================
+                // 1. UPLOAD EXCEL TO CENTRAL FILE SERVER
+                // ============================================================
 
-                string uniqueFileName = $"{log.LogID}_{DateTime.UtcNow:yyyyMMdd_HHmmss}_{excelFile.FileName}";
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                string folderPath = "Uploads/AdminBulkUpload";
 
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                var uploadResult = await _fileStorage.UploadAsync(
+                    excelFile,
+                    folderPath);
+
+                if (uploadResult == null ||
+                    !uploadResult.success ||
+                    string.IsNullOrWhiteSpace(uploadResult.filePath))
                 {
-                    await excelFile.CopyToAsync(fileStream);
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        message = uploadResult?.message
+                            ?? "Excel file upload to central server failed."
+                    });
                 }
 
-                log.FilePath = $"/adminuploadfileserver/{uniqueFileName}";
+                // ============================================================
+                // 2. SAVE CENTRAL FILE PATH IN DATABASE
+                // ============================================================
+
+                log.FilePath = uploadResult.filePath;
                 log.FileName = excelFile.FileName;
+
                 await _context.SaveChangesAsync();
 
-                var previewRows = new List<Dictionary<string, string>>();
-                var detectedColumns = new List<string>();
-                var columnMappingInfo = new Dictionary<string, string>();
+                // ============================================================
+                // 3. READ EXCEL DIRECTLY FROM UPLOADED FILE STREAM
+                // ============================================================
 
-                using (var workbook = new ClosedXML.Excel.XLWorkbook(filePath))
+                var previewRows =
+                    new List<Dictionary<string, string>>();
+
+                var detectedColumns =
+                    new List<string>();
+
+                var columnMappingInfo =
+                    new Dictionary<string, string>();
+
+                // IFormFile stream ko directly ClosedXML ko diya ja raha hai.
+                // Koi local wwwroot file create nahi hogi.
+                using (var excelStream = excelFile.OpenReadStream())
+                using (var workbook = new ClosedXML.Excel.XLWorkbook(excelStream))
                 {
                     var worksheet = workbook.Worksheet(1);
+
                     var headerRow = worksheet.Row(1);
-                    int colCount = headerRow.LastCellUsed()?.Address.ColumnNumber ?? 4;
+
+                    int colCount =
+                        headerRow.LastCellUsed()?.Address.ColumnNumber ?? 4;
+
+                    // ========================================================
+                    // DETECT COLUMNS
+                    // ========================================================
 
                     for (int c = 1; c <= colCount; c++)
                     {
-                        string colName = headerRow.Cell(c).GetString().Trim();
+                        string colName =
+                            headerRow.Cell(c).GetString().Trim();
+
                         detectedColumns.Add(colName);
 
-                        string lower = colName.ToLower();
-                        string mappedTo = "Ignored / Extra Column";
-                        if (lower.Contains("first") || lower.Contains("fname")) mappedTo = "users.firstname";
-                        else if (lower.Contains("last") || lower.Contains("lname") || lower.Contains("surname")) mappedTo = "users.lastname";
-                        else if (lower.Contains("mob") || lower.Contains("phone") || lower.Contains("contact")) mappedTo = "users.mobileno";
-                        else if (lower.Contains("email") || lower.Contains("mail")) mappedTo = "users.emailid";
-                        else if (lower.Contains("standard") || lower.Contains("class") || lower.Contains("std")) mappedTo = "wj_students.standard";
-                        else if (lower.Contains("div") || lower.Contains("section")) mappedTo = "wj_students.division";
-                        else if (lower.Contains("gardian") || lower.Contains("guardian") || lower.Contains("parent")) mappedTo = "wj_students.gardianname";
-                        else if (lower.Contains("guardianmail") || lower.Contains("parentemail")) mappedTo = "wj_students.guardianemailid";
+                        string lower =
+                            colName.ToLower();
+
+                        string mappedTo =
+                            "Ignored / Extra Column";
+
+                        if (lower.Contains("first") ||
+                            lower.Contains("fname"))
+                        {
+                            mappedTo = "users.firstname";
+                        }
+                        else if (lower.Contains("last") ||
+                                 lower.Contains("lname") ||
+                                 lower.Contains("surname"))
+                        {
+                            mappedTo = "users.lastname";
+                        }
+                        else if (lower.Contains("mob") ||
+                                 lower.Contains("phone") ||
+                                 lower.Contains("contact"))
+                        {
+                            mappedTo = "users.mobileno";
+                        }
+                        else if (lower.Contains("email") ||
+                                 lower.Contains("mail"))
+                        {
+                            mappedTo = "users.emailid";
+                        }
+                        else if (lower.Contains("standard") ||
+                                 lower.Contains("class") ||
+                                 lower.Contains("std"))
+                        {
+                            mappedTo = "wj_students.standard";
+                        }
+                        else if (lower.Contains("div") ||
+                                 lower.Contains("section"))
+                        {
+                            mappedTo = "wj_students.division";
+                        }
+                        else if (lower.Contains("gardian") ||
+                                 lower.Contains("guardian") ||
+                                 lower.Contains("parent"))
+                        {
+                            mappedTo = "wj_students.gardianname";
+                        }
+                        else if (lower.Contains("guardianmail") ||
+                                 lower.Contains("parentemail"))
+                        {
+                            mappedTo = "wj_students.guardianemailid";
+                        }
 
                         columnMappingInfo[colName] = mappedTo;
                     }
 
-                    int lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
+                    // ========================================================
+                    // READ PREVIEW ROWS
+                    // ========================================================
+
+                    int lastRow =
+                        worksheet.LastRowUsed()?.RowNumber() ?? 1;
+
                     for (int r = 2; r <= lastRow; r++)
                     {
                         var row = worksheet.Row(r);
-                        var rowData = new Dictionary<string, string>();
+
+                        var rowData =
+                            new Dictionary<string, string>();
+
                         bool hasData = false;
 
                         for (int c = 1; c <= colCount; c++)
                         {
-                            string colName = detectedColumns[c - 1];
-                            string val = row.Cell(c).GetString().Trim();
+                            string colName =
+                                detectedColumns[c - 1];
+
+                            string val =
+                                row.Cell(c).GetString().Trim();
+
                             rowData[colName] = val;
-                            if (!string.IsNullOrEmpty(val)) hasData = true;
+
+                            if (!string.IsNullOrEmpty(val))
+                            {
+                                hasData = true;
+                            }
                         }
 
-                        if (hasData) previewRows.Add(rowData);
+                        if (hasData)
+                        {
+                            previewRows.Add(rowData);
+                        }
                     }
                 }
 
-                return Ok(new { success = true, filePath = log.FilePath, columns = detectedColumns, columnMapping = columnMappingInfo, previewData = previewRows });
+                // ============================================================
+                // 4. RETURN SAME RESPONSE STRUCTURE
+                // ============================================================
+
+                return Ok(new
+                {
+                    success = true,
+                    filePath = log.FilePath,
+                    columns = detectedColumns,
+                    columnMapping = columnMappingInfo,
+                    previewData = previewRows
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = "Error reading Excel: " + ex.Message });
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Error reading Excel: " + ex.Message
+                });
             }
         }
 
         [HttpPost("process-mapped-excel")]
-        public async Task<IActionResult> ProcessMappedExcel([FromForm] int logId, [FromForm] string filePath)
+        public async Task<IActionResult> ProcessMappedExcel(
+     [FromForm] int logId,
+     [FromForm] string filePath)
         {
-            var log = await _context.BulkUploadLogs.FirstOrDefaultAsync(l => l.LogID == logId);
-            if (log == null) return NotFound(new { success = false, message = "Log record not found." });
+            var log = await _context.BulkUploadLogs
+                .FirstOrDefaultAsync(l => l.LogID == logId);
 
-            string fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
-            if (!System.IO.File.Exists(fullPath)) return NotFound(new { success = false, message = "Server file not found." });
+            if (log == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Log record not found."
+                });
+            }
 
-            log.Status = "In Progress";
-            await _context.SaveChangesAsync();
 
-            int successCount = 0;
-            int failCount = 0;
-            int instituteId = log.InstituteID;
-            string uploadType = log.UploadType?.Trim().ToLower() ?? "student";
-
-            var notificationList = new List<(string Mobile, string FirstName, string Username, string Email, string LastName)>();
+            FileDownloadResult? downloadedFile = null;
 
             try
             {
-                using (var workbook = new ClosedXML.Excel.XLWorkbook(fullPath))
+                downloadedFile =
+                    await _fileStorage.DownloadAsync(filePath);
+            }
+            catch
+            {
+                downloadedFile = null;
+            }
+
+            Stream? excelStream = null;
+
+            try
+            {
+                if (downloadedFile != null &&
+                    downloadedFile.FileBytes != null &&
+                    downloadedFile.FileBytes.Length > 0)
                 {
-                    var worksheet = workbook.Worksheet(1);
-                    var headers = worksheet.Row(1).CellsUsed().ToDictionary(c => c.GetString().Trim().ToLower(), c => c.Address.ColumnNumber);
+                    excelStream =
+                        new MemoryStream(downloadedFile.FileBytes);
+                }
+                else
+                {
+                    // --------------------------------------------------------
+                    // OLD LOCAL FILE FALLBACK
+                    // --------------------------------------------------------
+
+                    string fullPath =
+                        Path.Combine(
+                            _env.WebRootPath,
+                            filePath.TrimStart('/'));
+
+                    if (!System.IO.File.Exists(fullPath))
+                    {
+                        return NotFound(new
+                        {
+                            success = false,
+                            message = "Excel file not found on central server or local server."
+                        });
+                    }
+
+                    var localBytes =
+                        await System.IO.File.ReadAllBytesAsync(fullPath);
+
+                    if (localBytes == null ||
+                        localBytes.Length == 0)
+                    {
+                        return NotFound(new
+                        {
+                            success = false,
+                            message = "Excel file is empty."
+                        });
+                    }
+
+                    excelStream =
+                        new MemoryStream(localBytes);
+                }
+
+                // ============================================================
+                // 3. MARK PROCESSING STARTED
+                // ============================================================
+
+                log.Status = "In Progress";
+
+                await _context.SaveChangesAsync();
+
+                int successCount = 0;
+                int failCount = 0;
+
+                int instituteId = log.InstituteID;
+
+                string uploadType =
+                    log.UploadType?.Trim().ToLower()
+                    ?? "student";
+
+                var notificationList =
+                    new List<(
+                        string Mobile,
+                        string FirstName,
+                        string Username,
+                        string Email,
+                        string LastName
+                    )>();
+
+                // ============================================================
+                // 4. READ EXCEL FROM CENTRAL FILE BYTES
+                // ============================================================
+
+                excelStream.Position = 0;
+
+                using (var workbook =
+                    new ClosedXML.Excel.XLWorkbook(excelStream))
+                {
+                    var worksheet =
+                        workbook.Worksheet(1);
+
+                    var headers =
+                        worksheet
+                            .Row(1)
+                            .CellsUsed()
+                            .ToDictionary(
+                                c => c.GetString()
+                                    .Trim()
+                                    .ToLower(),
+                                c => c.Address.ColumnNumber);
+
+                    // ========================================================
+                    // COLUMN FINDER
+                    // ========================================================
 
                     int GetCol(params string[] keys)
                     {
                         foreach (var k in keys)
                         {
-                            var match = headers.Keys.FirstOrDefault(h => h.Contains(k));
-                            if (match != null) return headers[match];
+                            var match =
+                                headers.Keys.FirstOrDefault(
+                                    h => h.Contains(k));
+
+                            if (match != null)
+                            {
+                                return headers[match];
+                            }
                         }
+
                         return -1;
                     }
 
-                    int fNameCol = GetCol("first", "name", "fname");
-                    int lNameCol = GetCol("last", "surname", "lname");
-                    int mobCol = GetCol("mob", "phone", "contact", "cell", "number");
-                    int emailCol = GetCol("email", "mail");
-                    int stdCol = GetCol("standard", "class", "std");
-                    int divCol = GetCol("div", "section");
-                    int guardianNameCol = GetCol("gardian", "guardian", "parent", "father");
-                    int guardianMobCol = GetCol("guardianmob", "parentmob", "guardianphone");
-                    int guardianEmailCol = GetCol("guardianemail", "parentemail");
+                    int fNameCol =
+                        GetCol("first", "name", "fname");
 
-                    int lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
+                    int lNameCol =
+                        GetCol("last", "surname", "lname");
 
-                    string portalNameToMatch = uploadType switch
-                    {
-                        "student" => "WJ_Students",
-                        "teacher" => "WJ_Teacher",
-                        "volunteer" => "Volunteer",
-                        _ => "WJ_Students"
-                    };
+                    int mobCol =
+                        GetCol(
+                            "mob",
+                            "phone",
+                            "contact",
+                            "cell",
+                            "number");
 
-                    var portal = await _context.PortalMasters.FirstOrDefaultAsync(p => p.PortalName.ToLower() == portalNameToMatch.ToLower() && p.IsActive);
-                    string roleName = uploadType == "volunteer" ? "HF_Volunteers" : (portal?.PortalName ?? "WJ_Students");
+                    int emailCol =
+                        GetCol("email", "mail");
+
+                    int stdCol =
+                        GetCol(
+                            "standard",
+                            "class",
+                            "std");
+
+                    int divCol =
+                        GetCol(
+                            "div",
+                            "section");
+
+                    int guardianNameCol =
+                        GetCol(
+                            "gardian",
+                            "guardian",
+                            "parent",
+                            "father");
+
+                    int guardianMobCol =
+                        GetCol(
+                            "guardianmob",
+                            "parentmob",
+                            "guardianphone");
+
+                    int guardianEmailCol =
+                        GetCol(
+                            "guardianemail",
+                            "parentemail");
+
+                    int lastRow =
+                        worksheet.LastRowUsed()?.RowNumber()
+                        ?? 1;
+
+                    // ========================================================
+                    // PORTAL / ROLE
+                    // ========================================================
+
+                    string portalNameToMatch =
+                        uploadType switch
+                        {
+                            "student" => "WJ_Students",
+                            "teacher" => "WJ_Teacher",
+                            "volunteer" => "Volunteer",
+                            _ => "WJ_Students"
+                        };
+
+                    var portal =
+                        await _context.PortalMasters
+                            .FirstOrDefaultAsync(
+                                p =>
+                                    p.PortalName.ToLower()
+                                    ==
+                                    portalNameToMatch.ToLower()
+                                    &&
+                                    p.IsActive);
+
+                    string roleName =
+                        uploadType == "volunteer"
+                            ? "HF_Volunteers"
+                            : (portal?.PortalName
+                               ?? "WJ_Students");
+
+                    // ========================================================
+                    // PROCESS EACH ROW
+                    // ========================================================
 
                     for (int r = 2; r <= lastRow; r++)
                     {
                         var row = worksheet.Row(r);
+
                         try
                         {
-                            string firstName = fNameCol > 0 ? row.Cell(fNameCol).GetString().Trim() : "User";
-                            string lastName = lNameCol > 0 ? row.Cell(lNameCol).GetString().Trim() : "";
-                            string mobileNo = mobCol > 0 ? row.Cell(mobCol).GetString().Trim() : "";
-                            string emailID = emailCol > 0 ? row.Cell(emailCol).GetString().Trim() : "";
-                            string standard = stdCol > 0 ? row.Cell(stdCol).GetString().Trim() : "";
-                            string division = divCol > 0 ? row.Cell(divCol).GetString().Trim() : "";
-                            string guardianName = guardianNameCol > 0 ? row.Cell(guardianNameCol).GetString().Trim() : "";
-                            string guardianMob = guardianMobCol > 0 ? row.Cell(guardianMobCol).GetString().Trim() : "";
-                            string guardianEmail = guardianEmailCol > 0 ? row.Cell(guardianEmailCol).GetString().Trim() : "";
+                            string firstName =
+                                fNameCol > 0
+                                    ? row.Cell(fNameCol)
+                                        .GetString()
+                                        .Trim()
+                                    : "User";
 
-                            if (string.IsNullOrEmpty(firstName) && string.IsNullOrEmpty(mobileNo))
+                            string lastName =
+                                lNameCol > 0
+                                    ? row.Cell(lNameCol)
+                                        .GetString()
+                                        .Trim()
+                                    : "";
+
+                            string mobileNo =
+                                mobCol > 0
+                                    ? row.Cell(mobCol)
+                                        .GetString()
+                                        .Trim()
+                                    : "";
+
+                            string emailID =
+                                emailCol > 0
+                                    ? row.Cell(emailCol)
+                                        .GetString()
+                                        .Trim()
+                                    : "";
+
+                            string standard =
+                                stdCol > 0
+                                    ? row.Cell(stdCol)
+                                        .GetString()
+                                        .Trim()
+                                    : "";
+
+                            string division =
+                                divCol > 0
+                                    ? row.Cell(divCol)
+                                        .GetString()
+                                        .Trim()
+                                    : "";
+
+                            string guardianName =
+                                guardianNameCol > 0
+                                    ? row.Cell(guardianNameCol)
+                                        .GetString()
+                                        .Trim()
+                                    : "";
+
+                            string guardianMob =
+                                guardianMobCol > 0
+                                    ? row.Cell(guardianMobCol)
+                                        .GetString()
+                                        .Trim()
+                                    : "";
+
+                            string guardianEmail =
+                                guardianEmailCol > 0
+                                    ? row.Cell(guardianEmailCol)
+                                        .GetString()
+                                        .Trim()
+                                    : "";
+
+                            // =================================================
+                            // VALIDATION
+                            // =================================================
+
+                            if (string.IsNullOrEmpty(firstName) &&
+                                string.IsNullOrEmpty(mobileNo))
                             {
                                 failCount++;
                                 continue;
@@ -266,127 +625,243 @@ namespace HemFoundation.Controllers.Api
                                 mobileNo = "9999999999";
                             }
 
-
-
-                            //if (!string.IsNullOrEmpty(standard) && !standard.EndsWith("th", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("st", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("nd", StringComparison.OrdinalIgnoreCase) && !standard.EndsWith("rd", StringComparison.OrdinalIgnoreCase))
-                            //{
-                            //    standard += "th";
-                            //}
                             if (!string.IsNullOrEmpty(standard))
                             {
-                                // Extract any leading numeric digits from the standard string (e.g., "11th" -> 11, "1" -> 1)
-                                string digits = new string(standard.Where(char.IsDigit).ToArray());
+                                string digits =
+                                    new string(
+                                        standard
+                                            .Where(char.IsDigit)
+                                            .ToArray());
 
-
-
-                                if (int.TryParse(digits, out int number))
+                                if (int.TryParse(
+                                    digits,
+                                    out int number))
                                 {
                                     string suffix = "th";
 
-                                    int lastTwo = number % 100;
-                                    if (lastTwo < 11 || lastTwo > 13)
+                                    int lastTwo =
+                                        number % 100;
+
+                                    if (lastTwo < 11 ||
+                                        lastTwo > 13)
                                     {
                                         switch (number % 10)
                                         {
-                                            case 1: suffix = "st"; break;
-                                            case 2: suffix = "nd"; break;
-                                            case 3: suffix = "rd"; break;
+                                            case 1:
+                                                suffix = "st";
+                                                break;
+
+                                            case 2:
+                                                suffix = "nd";
+                                                break;
+
+                                            case 3:
+                                                suffix = "rd";
+                                                break;
                                         }
                                     }
 
-                                    standard = number + suffix;
+                                    standard =
+                                        number + suffix;
                                 }
                             }
-                            string uniqueUsername = mobileNo;
+
+                            string uniqueUsername =
+                                mobileNo;
+
                             int counter = 1;
-                            while (await HemFoundation.Common.Utility.CheckUsernameExistsAsync(_context, uniqueUsername))
+
+                            while (
+                                await HemFoundation.Common.Utility
+                                    .CheckUsernameExistsAsync(
+                                        _context,
+                                        uniqueUsername))
                             {
-                                uniqueUsername = $"{mobileNo}_{counter}";
+                                uniqueUsername =
+                                    $"{mobileNo}_{counter}";
+
                                 counter++;
                             }
 
-                            string aspNetUserId = await HemFoundation.Common.Utility.CreateIdentityUserRawAsync(_context, uniqueUsername, emailID, mobileNo, roleName);
+                            string aspNetUserId =
+                                await HemFoundation.Common.Utility
+                                    .CreateIdentityUserRawAsync(
+                                        _context,
+                                        uniqueUsername,
+                                        emailID,
+                                        mobileNo,
+                                        roleName);
 
-                            var coreUser = new HemFoundation.Models.Entities.Users
-                            {
-                                FirstName = string.IsNullOrEmpty(firstName) ? "User" : firstName,
-                                LastName = lastName,
-                                MobileNo = mobileNo,
-                                EmailID = emailID,
-                                IsActive = true,
-                                CreatedBy = instituteId,
-                                CreatedDate = DateTime.UtcNow,
-                                AspNetUserID = aspNetUserId,
-                                Password_ = mobileNo,
-                                RegisterFrom = "AdminBulkUpload",
-                                PhotoUrl = "-"
-                            };
+                            var coreUser =
+                                new HemFoundation.Models.Entities.Users
+                                {
+                                    FirstName =
+                                        string.IsNullOrEmpty(firstName)
+                                            ? "User"
+                                            : firstName,
+
+                                    LastName = lastName,
+
+                                    MobileNo = mobileNo,
+
+                                    EmailID = emailID,
+
+                                    IsActive = true,
+
+                                    CreatedBy = instituteId,
+
+                                    CreatedDate =
+                                        DateTime.UtcNow,
+
+                                    AspNetUserID =
+                                        aspNetUserId,
+
+                                    Password_ =
+                                        mobileNo,
+
+                                    RegisterFrom =
+                                        "AdminBulkUpload",
+
+                                    PhotoUrl = "-"
+                                };
+
                             _context.Users.Add(coreUser);
+
                             await _context.SaveChangesAsync();
 
-                            int generatedUserId = coreUser.UserID;
+                            int generatedUserId =
+                                coreUser.UserID;
 
                             if (roleName == "WJ_Students")
                             {
-                                var student = new WJ_Students
-                                {
-                                    StudentID = generatedUserId,
-                                    Standard = standard,
-                                    Division = division,
-                                    GardianName = guardianName,
-                                    GuardianMobileNo = guardianMob,
-                                    GuardianEmailID = guardianEmail,
-                                    ProfileUrl = uniqueUsername,
-                                    IsActive = true,
-                                    IsPaid = false,
-                                    SharingPermission = false
-                                };
-                                _context.WJ_Students.Add(student);
+                                var student =
+                                    new WJ_Students
+                                    {
+                                        StudentID =
+                                            generatedUserId,
 
-                                _context.WJ_StudentAssociates.Add(new WJ_StudentAssociates
-                                {
-                                    StudentID = generatedUserId,
-                                    InstituteID = instituteId,
-                                    IsPrimaryAssociate = true
-                                });
+                                        Standard =
+                                            standard,
+
+                                        Division =
+                                            division,
+
+                                        GardianName =
+                                            guardianName,
+
+                                        GuardianMobileNo =
+                                            guardianMob,
+
+                                        GuardianEmailID =
+                                            guardianEmail,
+
+                                        ProfileUrl =
+                                            uniqueUsername,
+
+                                        IsActive = true,
+
+                                        IsPaid = false,
+
+                                        SharingPermission = false
+                                    };
+
+                                _context.WJ_Students
+                                    .Add(student);
+
+                                _context.WJ_StudentAssociates
+                                    .Add(
+                                        new WJ_StudentAssociates
+                                        {
+                                            StudentID =
+                                                generatedUserId,
+
+                                            InstituteID =
+                                                instituteId,
+
+                                            IsPrimaryAssociate =
+                                                true
+                                        });
                             }
+
                             else if (roleName == "WJ_Teacher")
                             {
-                                var teacher = new WJ_Teacher
-                                {
-                                    TeacherID = generatedUserId,
-                                    ProfileUrl = uniqueUsername
-                                };
-                                _context.WJ_Teachers.Add(teacher);
+                                var teacher =
+                                    new WJ_Teacher
+                                    {
+                                        TeacherID =
+                                            generatedUserId,
 
-                                _context.WJ_TeacherAssociates.Add(new WJ_TeacherAssociates
-                                {
-                                    TeacherID = generatedUserId,
-                                    InstituteID = instituteId,
-                                    IsPrimaryAssociate = true
-                                });
+                                        ProfileUrl =
+                                            uniqueUsername
+                                    };
+
+                                _context.WJ_Teachers
+                                    .Add(teacher);
+
+                                _context.WJ_TeacherAssociates
+                                    .Add(
+                                        new WJ_TeacherAssociates
+                                        {
+                                            TeacherID =
+                                                generatedUserId,
+
+                                            InstituteID =
+                                                instituteId,
+
+                                            IsPrimaryAssociate =
+                                                true
+                                        });
                             }
-                            else if (roleName == "HF_Volunteers")
+
+                            else if (roleName ==
+                                     "HF_Volunteers")
                             {
-                                var volunteer = new Volunteer
-                                {
-                                    Id = generatedUserId,
-                                    FirstName = firstName,
-                                    LastName = lastName,
-                                    MobileNo = mobileNo,
-                                    Email = emailID,
-                                    InstituteId = instituteId,
-                                    AspNetUserId = aspNetUserId,
-                                    Password_ = mobileNo,
-                                    IsActive = true,
-                                    IsDeleted = false
-                                };
-                                _context.Volunteers.Add(volunteer);
+                                var volunteer =
+                                    new Volunteer
+                                    {
+                                        Id =
+                                            generatedUserId,
+
+                                        FirstName =
+                                            firstName,
+
+                                        LastName =
+                                            lastName,
+
+                                        MobileNo =
+                                            mobileNo,
+
+                                        Email =
+                                            emailID,
+
+                                        InstituteId =
+                                            instituteId,
+
+                                        AspNetUserId =
+                                            aspNetUserId,
+
+                                        Password_ =
+                                            mobileNo,
+
+                                        IsActive = true,
+
+                                        IsDeleted = false
+                                    };
+
+                                _context.Volunteers
+                                    .Add(volunteer);
                             }
 
                             await _context.SaveChangesAsync();
 
-                            notificationList.Add((mobileNo, firstName, uniqueUsername, emailID, lastName));
+                            notificationList.Add(
+                                (
+                                    mobileNo,
+                                    firstName,
+                                    uniqueUsername,
+                                    emailID,
+                                    lastName
+                                ));
 
                             successCount++;
                         }
@@ -397,7 +872,10 @@ namespace HemFoundation.Controllers.Api
                     }
 
                     log.Status = "Completed";
-                    log.TotalRecords = successCount;
+
+                    log.TotalRecords =
+                        successCount;
+
                     await _context.SaveChangesAsync();
 
                     _ = Task.Run(async () =>
@@ -408,38 +886,78 @@ namespace HemFoundation.Controllers.Api
                             {
                                 if (!string.IsNullOrEmpty(item.Mobile))
                                 {
-                                    _smsManager.StudentRegistration(item.Mobile, item.FirstName, item.Username, item.Mobile);
+                                    _smsManager.StudentRegistration(
+                                        item.Mobile,
+                                        item.FirstName,
+                                        item.Username,
+                                        item.Mobile);
                                 }
 
                                 if (!string.IsNullOrEmpty(item.Email))
                                 {
-                                    var studentRegObj = new StudentRegistration
-                                    {
-                                        FirstName = item.FirstName,
-                                        LastName = item.LastName,
-                                        EmailID = item.Email,
-                                        UserName = item.Username,
-                                        Password = item.Mobile,
-                                        MobileNo = item.Mobile
-                                    };
-                                    Utility.StudentRegistration(studentRegObj);
+                                    var studentRegObj =
+                                        new StudentRegistration
+                                        {
+                                            FirstName =
+                                                item.FirstName,
+
+                                            LastName =
+                                                item.LastName,
+
+                                            EmailID =
+                                                item.Email,
+
+                                            UserName =
+                                                item.Username,
+
+                                            Password =
+                                                item.Mobile,
+
+                                            MobileNo =
+                                                item.Mobile
+                                        };
+
+                                    Utility.StudentRegistration(
+                                        studentRegObj);
                                 }
                             }
                             catch (Exception bgEx)
                             {
-                                System.Diagnostics.Debug.WriteLine("Background notification failed: " + bgEx.Message);
+                                System.Diagnostics.Debug.WriteLine(
+                                    "Background notification failed: "
+                                    + bgEx.Message);
                             }
                         }
                     });
 
-                    return Ok(new { success = true, message = $"Registration complete! Successfully Inserted: {successCount}, Failed/Skipped: {failCount} (Notifications processing in background)" });
+                    return Ok(new
+                    {
+                        success = true,
+                        message =
+                            $"Registration complete! Successfully Inserted: {successCount}, Failed/Skipped: {failCount} (Notifications processing in background)"
+                    });
                 }
             }
             catch (Exception ex)
             {
                 log.Status = "Failed";
+
                 await _context.SaveChangesAsync();
-                return BadRequest(new { success = false, message = "Error processing data: " + ex.Message });
+
+                return BadRequest(new
+                {
+                    success = false,
+                    message =
+                        "Error processing data: "
+                        + ex.Message
+                });
+            }
+            finally
+            {
+                if (excelStream != null)
+                {
+                    await excelStream.DisposeAsync();
+                }
             }
         }
         [HttpDelete("delete-bulk-log/{id}")]
@@ -727,8 +1245,6 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
-
-
 
         [HttpGet("overall-dashboard-counts")]
         public async Task<IActionResult> GetOverallDashboardCounts()
@@ -1432,7 +1948,7 @@ namespace HemFoundation.Controllers.Api
             }
         }
 
-        // Helper method to build query and apply search filter natively via PostgreSQL ILIKE
+       
         private IQueryable<object> BuildDetailsQuery(string category, string type, List<int?> instituteIds, string search)
         {
             string pattern = $"%{search}%";
@@ -1578,7 +2094,7 @@ namespace HemFoundation.Controllers.Api
                 _ => Enumerable.Empty<object>().AsQueryable()
             };
         }
-        // Helper for institute lookup
+        
         private async Task<List<int?>> GetInstituteIdsForCategoryAsync(string category)
         {
             if (category == "performance")
@@ -1704,6 +2220,50 @@ namespace HemFoundation.Controllers.Api
 
                
             return new List<int?>();
+        }
+
+        [HttpGet("download-bulk-file")]
+        public async Task<IActionResult> DownloadBulkFile([FromQuery] string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "File path is required."
+                });
+            }
+
+            try
+            {
+                var fileResult = await _fileStorage.DownloadAsync(filePath);
+
+                if (fileResult == null ||
+                    fileResult.FileBytes == null ||
+                    fileResult.FileBytes.Length == 0)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "File not found."
+                    });
+                }
+
+                return File(
+                    fileResult.FileBytes,
+                    fileResult.ContentType ??
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    fileResult.FileName
+                );
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Unable to download file: " + ex.Message
+                });
+            }
         }
     }
 }

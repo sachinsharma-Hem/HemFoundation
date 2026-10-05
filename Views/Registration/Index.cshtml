@@ -1,6 +1,25 @@
-﻿@{
+﻿@using Microsoft.Extensions.Configuration
+@using System
+
+@inject IConfiguration Configuration
+
+@{
     ViewData["Title"] = "School Registration & Management Hub";
     Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+
+    string fileUploadApiUrl =
+        Configuration["FileSettings:InHouseUploadUrl"] ?? "";
+
+    string fileBaseUrl = "";
+
+    if (Uri.TryCreate(
+        fileUploadApiUrl,
+        UriKind.Absolute,
+        out Uri? fileUri))
+    {
+        fileBaseUrl =
+            $"{fileUri.Scheme}://{fileUri.Authority}";
+    }
 }
 
 <link href="https://unpkg.com/tabulator-tables@6.2.5/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
@@ -423,6 +442,38 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/Content/MultiSelect/bootstrap-multiselect.js" type="text/javascript"></script>
     <script>
+
+        const fileBaseUrl = '@Html.Raw(fileBaseUrl)';
+
+function getFileUrl(filePath) {
+
+    if (!filePath) {
+        return '#';
+    }
+
+    if (
+        filePath.startsWith('http://') ||
+        filePath.startsWith('https://')
+    ) {
+        return filePath;
+    }
+
+    let cleanPath =
+        filePath.replace(/^\/+/, '');
+
+    return fileBaseUrl.replace(/\/+$/, '') +
+        '/' +
+        cleanPath;
+}
+function getDownloadUrl(filePath) {
+
+    if (!filePath) {
+        return '#';
+    }
+
+    return '/api/admin/download-bulk-file?filePath='
+        + encodeURIComponent(filePath);
+}
       
         let studentTable, teacherTable, volunteerTable;
 
@@ -500,7 +551,6 @@
             });
 
             function loadSchoolHubData() {
-                // Fetch all data from the centralized Universal API endpoint
                 $.get('/api/universal/school-lists', function(res) {
                     if (res.success) {
                         initStudentTable(res.students || []);
@@ -513,7 +563,7 @@
 
                             let rawDate = teacher.createdDate || teacher.CreatedDate;
                             if (rawDate) {
-                                teacher.CreatedDate = moment(rawDate).format('DD-MMM-YYYY hh:mm A');
+                                teacher.CreatedDate = moment(rawDate).format('DD-MMM-YYYY');
                             } else {
                                 teacher.CreatedDate = "N/A";
                             }
@@ -523,7 +573,34 @@
 
                         let logRows = '';
                         (res.logs || []).forEach(l => {
-                            logRows += `<tr><td><span class="badge bg-info-subtle text-info">${l.uploadType}</span></td><td>${l.fileName}</td><td><span class="badge bg-success-subtle text-success">${l.status}</span></td><td>${new Date(l.uploadedDate).toLocaleString()}</td><td><a href="${l.filePath}" target="_blank" class="btn btn-sm btn-light border"><i class="bi bi-download"></i></a></td></tr>`;
+                            logRows += `
+        <tr>
+            <td>
+                <span class="badge bg-info-subtle text-info">
+                    ${l.uploadType}
+                </span>
+            </td>
+
+            <td>${l.fileName}</td>
+
+            <td>
+                <span class="badge bg-success-subtle text-success">
+                    ${l.status}
+                </span>
+            </td>
+
+            <td>
+                ${new Date(l.uploadedDate).toLocaleDateString()}
+            </td>
+
+            <td>
+                <a href="${getDownloadUrl(l.filePath)}"
+                           class="btn btn-sm btn-light border" target="_blank"
+                   title="Download Excel">
+                    <i class="bi bi-download"></i>
+                </a>
+            </td>
+        </tr>`;
                         });
                         $('#logsTable tbody').html(logRows || '<tr><td colspan="5" class="text-center text-muted">No bulk uploads recorded.</td></tr>');
                     }

@@ -133,7 +133,7 @@ namespace HemFoundation.Controllers.Api
                 EmailID = model.EmailID,
                 IsActive = true,
                 CreatedBy = 1,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.Today.ToLongTimeString(),
                 AspNetUserID = aspNetUserId,
                 Password_ = baseMobile,
                 RegisterFrom = "HemVirtue",

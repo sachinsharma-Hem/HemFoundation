@@ -1,13 +1,18 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Http
+
+@{
     ViewData["Title"] = "Admin Dashboard";
     Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+
+    string userRole =
+        Context.Session.GetString("UserRole") ?? "";
+
+    bool isSupervisor =
+        userRole.Equals("Supervisor",
+            StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="container-fluid py-4">
-
-    <!-- ========================================================= -->
-    <!-- WELCOME HEADER -->
-    <!-- ========================================================= -->
 
     <div class="row mb-4">
         <div class="col-12">
@@ -33,10 +38,9 @@
         </div>
     </div>
 
-
-    <!-- ========================================================= -->
-    <!-- PERFORMANCE REPORT -->
-    <!-- ========================================================= -->
+    @if (!isSupervisor)
+{
+    
 
     <div class="d-flex align-items-center mb-3">
 
@@ -604,7 +608,7 @@
         </div>
 
     </div>
-
+}
 
     <!-- ========================================================= -->
     <!-- INFO BANNER -->
@@ -638,16 +642,6 @@
 
 </div>
 
-
-<!-- ========================================================= -->
-<!-- DETAILS MODAL -->
-<!-- ========================================================= -->
-<!-- ========================================================= -->
-<!-- DETAILS MODAL -->
-<!-- ========================================================= -->
-<!-- ========================================================= -->
-<!-- DETAILS MODAL WITH SERVER-SIDE PAGINATION & SEARCH -->
-<!-- ========================================================= -->
 
 <div class="modal fade"
      id="dashboardDetailsModal"
@@ -731,9 +725,7 @@
     </div>
 
 </div>
-<!-- ========================================================= -->
-<!-- GLOBAL PAGE LOADER OVERLAY -->
-<!-- ========================================================= -->
+
 <div id="globalLoader" class="global-loader-overlay" style="display: none;">
     <div class="text-center">
         <div class="spinner-border text-primary shadow-lg" style="width: 3.5rem; height: 3.5rem;" role="status">
@@ -743,10 +735,6 @@
     </div>
 </div>
 
-
-<!-- ========================================================= -->
-<!-- STYLES -->
-<!-- ========================================================= -->
 
 <style>
 
@@ -770,7 +758,6 @@
         }
 
 
-    /* ================= PERFORMANCE COLORS ================= */
 
     .card-performance-primary {
         background: linear-gradient(135deg, #4f46e5, #6366f1);

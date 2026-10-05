@@ -3,20 +3,40 @@
   "WorkspaceRootPath": "H:\\Sachin\\Project\\HemFoundation\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\api\\affiliateschoolmappingapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\affiliateschoolmappingapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\admin\\dashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\admin\\dashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\valueofyear\\activitysubmission.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\valueofyear\\activitysubmission.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\dashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\dashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\dashboard\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\dashboard\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\wwwroot\\js\\jwtsession.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:wwwroot\\js\\jwtsession.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\registration\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\registration\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\api\\universalregisterapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\universalregisterapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\api\\adminapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\adminapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\admin\\managebulkreport.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\admin\\managebulkreport.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\views\\admin\\managebillings.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:views\\admin\\managebillings.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|h:\\sachin\\project\\hemfoundation\\controllers\\api\\valueapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A2B8B60-BBF3-0C47-48D7-2EDB2F79F838}|HemFoundation.csproj|solutionrelative:controllers\\api\\valueapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +46,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 1023,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Bookmark",
@@ -42,54 +62,119 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "AffiliateSchoolMappingApiController.cs",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\AffiliateSchoolMappingApiController.cs",
-              "RelativeDocumentMoniker": "Controllers\\Api\\AffiliateSchoolMappingApiController.cs",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\AffiliateSchoolMappingApiController.cs",
-              "RelativeToolTip": "Controllers\\Api\\AffiliateSchoolMappingApiController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAG8AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-10-05T04:05:25.018Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "ManageBillings.cshtml",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Admin\\ManageBillings.cshtml",
-              "RelativeDocumentMoniker": "Views\\Admin\\ManageBillings.cshtml",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Admin\\ManageBillings.cshtml",
-              "RelativeToolTip": "Views\\Admin\\ManageBillings.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAABKAAAAAAAAAA==",
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dashboard\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Dashboard\\Index.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Dashboard\\Index.cshtml",
+              "RelativeToolTip": "Views\\Dashboard\\Index.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-10-03T18:20:59.502Z",
+              "WhenOpened": "2026-10-05T10:30:50.573Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "ValueApiController.cs",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\ValueApiController.cs",
-              "RelativeDocumentMoniker": "Controllers\\Api\\ValueApiController.cs",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\ValueApiController.cs",
-              "RelativeToolTip": "Controllers\\Api\\ValueApiController.cs",
-              "ViewState": "AgIAACEAAAAAAAAAAAAAwCoAAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-10-03T10:57:59.439Z",
+              "Title": "jwtsession.js",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\wwwroot\\js\\jwtsession.js",
+              "RelativeDocumentMoniker": "wwwroot\\js\\jwtsession.js",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\wwwroot\\js\\jwtsession.js",
+              "RelativeToolTip": "wwwroot\\js\\jwtsession.js",
+              "ViewState": "AgIAAB0AAAAAAAAAAAAkwDkAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-10-05T10:30:12.506Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "ActivitySubmission.cshtml",
-              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\ValueOfYear\\ActivitySubmission.cshtml",
-              "RelativeDocumentMoniker": "Views\\ValueOfYear\\ActivitySubmission.cshtml",
-              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\ValueOfYear\\ActivitySubmission.cshtml",
-              "RelativeToolTip": "Views\\ValueOfYear\\ActivitySubmission.cshtml",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Title": "DashboardController.cs",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\DashboardController.cs",
+              "RelativeDocumentMoniker": "Controllers\\DashboardController.cs",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\DashboardController.cs",
+              "RelativeToolTip": "Controllers\\DashboardController.cs",
+              "ViewState": "AgIAABkAAAAAAAAAAAAcwB8AAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-05T10:29:00.656Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Dashboard.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Admin\\Dashboard.cshtml",
+              "RelativeDocumentMoniker": "Views\\Admin\\Dashboard.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Admin\\Dashboard.cshtml",
+              "RelativeToolTip": "Views\\Admin\\Dashboard.cshtml",
+              "ViewState": "AgIAAFICAAAAAAAAAAAAAF0CAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-10-03T10:54:06.273Z",
+              "WhenOpened": "2026-10-05T09:02:26.63Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "UniversalRegisterApiController.cs",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\UniversalRegisterApiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Api\\UniversalRegisterApiController.cs",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\UniversalRegisterApiController.cs",
+              "RelativeToolTip": "Controllers\\Api\\UniversalRegisterApiController.cs",
+              "ViewState": "AgIAAGIAAAAAAAAAAAAUwLsAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-05T08:53:36.958Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Registration\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Registration\\Index.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Registration\\Index.cshtml",
+              "RelativeToolTip": "Views\\Registration\\Index.cshtml",
+              "ViewState": "AgIAAEQCAAAAAAAAAAAUwEsCAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-10-05T06:55:17.644Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "AdminApiController.cs",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\AdminApiController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Api\\AdminApiController.cs",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Controllers\\Api\\AdminApiController.cs",
+              "RelativeToolTip": "Controllers\\Api\\AdminApiController.cs",
+              "ViewState": "AgIAAG0IAAAAAAAAAAAowLQIAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-05T06:33:31.282Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ManageBulkReport.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Admin\\ManageBulkReport.cshtml",
+              "RelativeDocumentMoniker": "Views\\Admin\\ManageBulkReport.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Admin\\ManageBulkReport.cshtml",
+              "RelativeToolTip": "Views\\Admin\\ManageBulkReport.cshtml",
+              "ViewState": "AgIAAKYAAAAAAAAAAAAQwMQAAAAeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-10-05T06:22:33.148Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ManageBillings.cshtml",
+              "DocumentMoniker": "H:\\Sachin\\Project\\HemFoundation\\Views\\Admin\\ManageBillings.cshtml",
+              "RelativeDocumentMoniker": "Views\\Admin\\ManageBillings.cshtml",
+              "ToolTip": "H:\\Sachin\\Project\\HemFoundation\\Views\\Admin\\ManageBillings.cshtml",
+              "RelativeToolTip": "Views\\Admin\\ManageBillings.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-10-03T18:20:59.502Z",
               "EditorCaption": ""
             }
           ]
