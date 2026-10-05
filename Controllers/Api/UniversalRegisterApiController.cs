@@ -133,7 +133,9 @@ namespace HemFoundation.Controllers.Api
                 EmailID = model.EmailID,
                 IsActive = true,
                 CreatedBy = 1,
-                CreatedDate = DateTime.Today.ToLongTimeString(),
+
+                CreatedDate = DateTime.Now,
+
                 AspNetUserID = aspNetUserId,
                 Password_ = baseMobile,
                 RegisterFrom = "HemVirtue",
@@ -141,7 +143,7 @@ namespace HemFoundation.Controllers.Api
                 Pincode = model.Pincode,
                 AddressLine1 = model.Address,
                 AddressLine3 = model.State,
-                PhotoUrl=photoUrl
+                PhotoUrl = photoUrl
             };
             _context.Users.Add(coreUser);
             await _context.SaveChangesAsync();
