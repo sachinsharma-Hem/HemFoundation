@@ -263,10 +263,10 @@
                     <h5 class="fw-bold text-dark m-0">Enrolled Students</h5>
                     <div class="d-flex flex-column flex-sm-row gap-2">
                         <input type="text" id="studentSearchInput" class="form-control form-control-sm" placeholder="Search students..." onkeyup="filterTabulator('student', this.value)">
-                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="exportTable('student', 'xlsx')">
+                        <button class="btn btn-success btn-sm" onclick="exportTable('student', 'xlsx')">
                             <i class="fas fa-file-excel me-1"></i> Export Excel
                         </button>
-                        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddStudent">
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddStudent">
                             <i class="bi bi-person-plus-fill me-1"></i> Add New Student
                         </button>
                     </div>
@@ -316,10 +316,10 @@
                     <h5 class="fw-bold text-dark m-0">Active Teachers</h5>
                 <div class="d-flex flex-column flex-sm-row gap-2">
                         <input type="text" id="teacherSearchInput" class="form-control form-control-sm" placeholder="Search teachers..." onkeyup="filterTabulator('teacher', this.value)">
-                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="exportTable('teacher', 'xlsx')">
+                        <button class="btn btn-success btn-sm" onclick="exportTable('teacher', 'xlsx')">
                             <i class="fas fa-file-excel me-1"></i> Export Excel
                         </button>
-                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalAddTeacher">
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddTeacher">
                             <i class="bi bi-person-plus-fill me-1"></i> Add New Teacher
                         </button>
                     </div>
@@ -334,10 +334,10 @@
                     <h5 class="fw-bold text-dark m-0">Assigned Volunteers</h5>
             <div class="d-flex flex-column flex-sm-row gap-2">
                         <input type="text" id="volunteerSearchInput" class="form-control form-control-sm" placeholder="Search volunteers..." onkeyup="filterTabulator('volunteer', this.value)">
-                        <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="exportTable('volunteer', 'xlsx')">
+                        <button class="btn btn-success btn-sm" onclick="exportTable('volunteer', 'xlsx')">
                             <i class="fas fa-file-excel me-1"></i> Export Excel
                         </button>
-                        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddVolunteer">
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddVolunteer">
                             <i class="bi bi-person-plus-fill me-1"></i> Add New Volunteer
                         </button>
                     </div>
@@ -662,6 +662,8 @@
                             if (isStudent) $('#modalAddStudent').modal('hide');
                             else if ($form.attr('id') === 'frmAddTeacher') $('#modalAddTeacher').modal('hide');
                             else $('#modalAddVolunteer').modal('hide');
+                            $submitBtn.prop('disabled', false);
+                             $submitBtn.html(originalBtnText);
                             loadSchoolHubData();
                         } else {
                             $submitBtn.prop('disabled', false);
