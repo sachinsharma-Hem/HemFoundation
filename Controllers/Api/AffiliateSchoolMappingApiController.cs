@@ -109,65 +109,66 @@ namespace HemFoundation.Controllers.Api
             var targetAffIdStr = model.AffiliateId.ToString();
             var istNow = GetIstTime();
 
-            // Get all schools currently assigned to this affiliate
             var currentAssignedInstitutes = await _context.WJ_Institutes
                 .Where(i => i.ReferralCode == reffrelcode.ReferralCode)
                 .ToListAsync();
 
-            // Selected Institute IDs sent from UI
             var newSelectedIDs = model.InstituteIDs ?? new List<int>();
 
-            // 1) Schools to be ADDED or RE-ASSIGNED
             var institutesToAdd = await _context.WJ_Institutes
-                .Where(i => newSelectedIDs.Contains(i.InstituteID) && i.ReferralCode != reffrelcode.ReferralCode)
+                .Where(i =>
+                    newSelectedIDs.Contains(i.InstituteID) &&
+                    (i.ReferralCode == null ||
+                     i.ReferralCode != reffrelcode.ReferralCode))
                 .ToListAsync();
 
             foreach (var inst in institutesToAdd)
             {
                 string? prevAffIdStr = inst.ReferralCode;
-                string? prevAffName = "Unassigned";
+                string prevAffName = "Unassigned";
 
-                if (!string.IsNullOrEmpty(inst.ReferralCode) )
+                if (!string.IsNullOrEmpty(inst.ReferralCode))
                 {
-                    var prevAff = await _context.WJ_ReferralCodes.FirstOrDefaultAsync(a => a.ReferralCode == inst.ReferralCode);
-                    
-                    var prevAffdetails = await _context.Users
-    .FirstOrDefaultAsync(a => a.UserID == prevAff.UserID);
+                    var prevAff = await _context.WJ_ReferralCodes
+                        .FirstOrDefaultAsync(a =>
+                            a.ReferralCode == inst.ReferralCode);
 
-                    if (prevAffdetails != null)
+                    if (prevAff != null)
                     {
-                        prevAffName = $"{prevAffdetails.FirstName} {prevAffdetails.LastName}".Trim();
-                    }
-                    else
-                    {
-                        prevAffName = "";
+                        var prevAffdetails = await _context.Users
+                            .FirstOrDefaultAsync(a =>
+                                a.UserID == prevAff.UserID);
+
+                        if (prevAffdetails != null)
+                        {
+                            prevAffName =
+                                $"{prevAffdetails.FirstName} {prevAffdetails.LastName}"
+                                .Trim();
+                        }
                     }
                 }
 
-                // Update mapping
                 inst.ReferralCode = reffrelcode.ReferralCode;
 
-                // Log audit history
-                _context.AffiliateSchoolMappingHistories.Add(new AffiliateSchoolMappingHistory
-                {
-                    InstituteID = inst.InstituteID,
-                    //PreviousAffiliateId = !string.IsNullOrEmpty(prevAffIdStr) && long.TryParse(prevAffIdStr, out long pId) ? pId : null,
-                    PreviousAffiliateName = prevAffName,
-                    NewAffiliateId = model.AffiliateId,
-                    NewAffiliateName = newAffName,
-                    AssignedDate = istNow,
-                    AssignedBy = "Admin"
-                });
+                _context.AffiliateSchoolMappingHistories.Add(
+                    new AffiliateSchoolMappingHistory
+                    {
+                        InstituteID = inst.InstituteID,
+                        PreviousAffiliateName = prevAffName,
+                        NewAffiliateId = model.AffiliateId,
+                        NewAffiliateName = newAffName,
+                        AssignedDate = istNow,
+                        AssignedBy = "Admin"
+                    });
             }
 
-            // 2) Schools REMOVED from this affiliate (if moved back to left box)
             var institutesToRemove = currentAssignedInstitutes
                 .Where(i => !newSelectedIDs.Contains(i.InstituteID))
                 .ToList();
 
             foreach (var inst in institutesToRemove)
             {
-                inst.ReferralCode = null; // Unassigned
+                inst.ReferralCode = null; 
 
                 _context.AffiliateSchoolMappingHistories.Add(new AffiliateSchoolMappingHistory
                 {
