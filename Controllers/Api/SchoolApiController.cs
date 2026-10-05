@@ -334,8 +334,96 @@ namespace HemFoundation.Controllers.Api
                 return Ok(new { Success = false, Message = ex.Message, Data = (object)null });
             }
         }
-      
-      [HttpPost("SendPasswordUser")]
+        [HttpGet("UnmapTeacher")]
+        public async Task<IActionResult> UnmapTeacher(int teacherid)
+        {
+            var jsonResult = new { Success = false, Message = "", Data = (object)null };
+
+            try
+            {
+                if (teacherid <= 0)
+                {
+                    throw new Exception("Invalid Teacher ID.");
+                }
+
+                using (var conn = new NpgsqlConnection(_connectionString))
+                {
+                    await conn.OpenAsync();
+
+                    // 1. Execute the stored procedure to unmap the student
+                    using (var cmd = new NpgsqlCommand("CALL public.hf_sp_unmapteacher(@StudentId)", conn))
+                    {
+                        cmd.Parameters.AddWithValue("@StudentId", teacherid);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // 2. Fetch student and school details for notifications
+                    string query = @"
+                SELECT 
+                    TRIM(COALESCE(st.firstname, '') || ' ' || COALESCE(st.lastname, '')) AS studentname,
+                    st.mobileno AS studentmobile,
+                    st.emailid AS studentemail,
+                    ins.""Name"" AS schoolname,
+                    iu.emailid AS schoolemail,
+                    iu.mobileno AS schoolmobileno 
+                FROM users st             
+                LEFT JOIN wj_teacherassociates ass ON st.userid = ass.teacherid             
+                LEFT JOIN wj_institutes ins ON ass.instituteid = ins.instituteid             
+                LEFT JOIN users iu ON ins.instituteid = iu.userid             
+                WHERE st.userid = @StudentId";
+
+                    DataTable dt = new DataTable();
+                    using (var cmd = new NpgsqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@StudentId", teacherid);
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            dt.Load(reader);
+                        }
+                    }
+
+                    if (dt.Rows.Count == 0)
+                    {
+                        throw new Exception("No student data found.");
+                    }
+
+                    var row = dt.Rows[0];
+                    string studentName = row["studentname"]?.ToString() ?? "";
+                    string studentEmail = row["studentemail"]?.ToString() ?? "";
+                    string schoolName = row["schoolname"]?.ToString() ?? "";
+                    string schoolEmail = row["schoolemail"]?.ToString() ?? "";
+
+                    // 3. Prepare Notification Content
+                    string subject = $"Notice: Unmapping from {schoolName}";
+                    string message = $"Dear {studentName},\n\n" +
+                                     $"You have been unmapped from your school '{schoolName}'. " +
+                                     $"Please contact your school admin for clarification.\n\n" +
+                                     "Thank you,\nHem Virtues Team";
+
+                    string schoolMessage = $"Dear {schoolName},\n\n" +
+                                            $"Teacher '{studentName}' has been unmapped from your school.\n\n" +
+                                            "Regards,\nHem Virtues System";
+
+                    // 4. Send Emails asynchronously or via your manager classes
+                    if (!string.IsNullOrWhiteSpace(studentEmail))
+                    {
+                        EmailManager.SendEmailAws(studentEmail, subject, message, null, "", "");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(schoolEmail))
+                    {
+                        EmailManager.SendEmailAws(schoolEmail, subject, schoolMessage, null, "", "");
+                    }
+
+                    return Ok(new { Success = true, Message = "Teacher unmapped successfully.", Data = "Teacher Unmapped" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { Success = false, Message = ex.Message, Data = (object)null });
+            }
+        }
+        [HttpPost("SendPasswordUser")]
         public async Task<IActionResult> SendPasswordUser([FromForm] int id)
         {
             string result = "0";
@@ -505,7 +593,7 @@ namespace HemFoundation.Controllers.Api
         {
             try
             {
-                _context.Database.ExecuteSqlRaw("CALL public.pro_wj_teacherdelete({0}, NULL)", teacherID, DBNull.Value);
+               // _context.Database.ExecuteSqlRaw("CALL public.pro_wj_teacherdelete({0}, NULL)", teacherID, DBNull.Value);
 
                 return Ok(new
                 {
