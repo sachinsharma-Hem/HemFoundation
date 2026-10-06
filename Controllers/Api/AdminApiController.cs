@@ -1637,7 +1637,7 @@ namespace HemFoundation.Controllers.Api
                         .Distinct()
                         .ToListAsync();
 
-                    instituteIds = await _context.SchoolProfileDetails
+                    instituteIds = await _context.view_wj_instituteslist
                         .AsNoTracking()
                         .Where(x => x.referralcode != null && referralCodes.Contains(x.referralcode))
                         .Select(x => (int?)x.instituteid)
@@ -1665,7 +1665,7 @@ namespace HemFoundation.Controllers.Api
 
                 object result = type switch
                 {
-                    "total-students" => await _context.Set<ViewWjStudentsDetailsInfo>()
+                    "total-students" => await _context.Set<hf_view_studentsdetails>()
                         .AsNoTracking()
                         .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
                         .Take(limit)
@@ -1673,7 +1673,7 @@ namespace HemFoundation.Controllers.Api
 
                     "active-students" => await (
                         from log in _context.StudentActivityLogs.AsNoTracking()
-                        join student in _context.Set<ViewWjStudentsDetailsInfo>()
+                        join student in _context.Set<hf_view_studentsdetails>()
                             on log.StudentID equals student.StudentId
                         where log.InstituteID != null &&
                               instituteIds.Contains(log.InstituteID) &&
@@ -1683,7 +1683,7 @@ namespace HemFoundation.Controllers.Api
 
                     "total-teachers" => await _context.Set<ViewHfTeacherDetails>()
                         .AsNoTracking()
-                        .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID))
+                        .Where(x => instituteIds.Contains(x.InstituteID))
                         .Take(limit)
                         .ToListAsync(),
 
@@ -1691,7 +1691,7 @@ namespace HemFoundation.Controllers.Api
                         from log in _context.TeacherActivityLogs.AsNoTracking()
                         join teacher in _context.Set<ViewHfTeacherDetails>()
                             on log.TeacherID equals teacher.TeacherID
-                        where log.InstituteID != null &&
+                        where 
                               instituteIds.Contains(log.InstituteID)
                         select teacher
                     ).Distinct().Take(limit).ToListAsync(),

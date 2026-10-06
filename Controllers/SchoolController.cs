@@ -478,28 +478,90 @@ namespace HemFoundation.Controllers
             }
         }
         [HttpGet]
-        public async Task<IActionResult> PrintInstituteReport(int instituteId)
+        public async Task<IActionResult> PrintInstituteReport(int? instituteId)
         {
-            var model = await GetreportData(instituteId);
-
-            // Flag to tell the View we are in "PDF Mode"
-            ViewBag.IsPdf = true;
-
-            // Note: Rotativa may require rotativa.aspnetcore NuGet package in .NET Core
-            return new Rotativa.AspNetCore.ViewAsPdf("PrintReport", model)
+            try
             {
-                FileName = "InstituteReport.pdf",
-                PageSize = Rotativa.AspNetCore.Options.Size.A4,
-                CustomSwitches = "--javascript-delay 1000 --no-stop-slow-scripts"
-            };
-        }
 
-        public async Task<IActionResult> PrintReport(int instituteId)
+                // If instituteId is not passed, get it from session
+                if (!instituteId.HasValue || instituteId.Value <= 0)
+                {
+                    instituteId = HttpContext.Session.GetInt32("UserID");
+                }
+
+                // Still not available
+                if (!instituteId.HasValue || instituteId.Value <= 0)
+                {
+                    return BadRequest("Institute ID is required.");
+                }
+
+                var model = await GetreportData(instituteId.Value);
+
+                if (model == null)
+                {
+                    return NotFound("Institute report data not found.");
+                }
+
+                var pdf = new Rotativa.AspNetCore.ViewAsPdf(
+                    "PrintReport",
+                    model
+                    )
+                {
+                    FileName = $"InstituteReport_{instituteId}.pdf",
+
+                    PageSize = Rotativa.AspNetCore.Options.Size.A4,
+
+                    PageOrientation = Rotativa.AspNetCore.Options.Orientation.Portrait,
+
+                    PageMargins = new Rotativa.AspNetCore.Options.Margins
+                    {
+                        Top = 10,
+                        Bottom = 10,
+                        Left = 10,
+                        Right = 10
+                    },
+
+                    CustomSwitches =
+                        "--enable-local-file-access " +
+                        "--javascript-delay 3000 " +
+                        "--no-stop-slow-scripts " +
+                        "--load-error-handling ignore " +
+                        "--load-media-error-handling ignore " +
+                        "--enable-javascript"
+                };
+
+                pdf.ViewData["IsPdf"] = true;
+
+                return pdf;
+            
+            }
+            catch (Exception ex)
+            {
+                // your existing exception logger can be used here
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    "Unable to generate institute report PDF."
+                );
+            }
+        }
+        public async Task<IActionResult> PrintReport(int? instituteId)
         {
+
+            if (!instituteId.HasValue || instituteId.Value <= 0)
+            {
+                instituteId = HttpContext.Session.GetInt32("UserID");
+            }
+
+            // Still not available
+            if (!instituteId.HasValue || instituteId.Value <= 0)
+            {
+                return BadRequest("Institute ID is required.");
+            }
+
             ViewBag.IsPdf = true;
 
             // Get all 9 report result sets from PostgreSQL
-            var model = await GetreportData(instituteId);
+            var model = await GetreportData(instituteId.Value);
 
             // Generate PDF using Rotativa
             return new ViewAsPdf("PrintReport", model)
@@ -1262,6 +1324,19 @@ namespace HemFoundation.Controllers
                 }
             }
             return model;
+        }
+
+        [HttpGet]
+        public IActionResult TestPdf()
+        {
+            return new Rotativa.AspNetCore.ViewAsPdf("TestPdf")
+            {
+                FileName = "Test.pdf",
+                PageSize = Rotativa.AspNetCore.Options.Size.A4,
+                CustomSwitches =
+                    "--enable-local-file-access " +
+                    "--javascript-delay 1000"
+            };
         }
     }
 

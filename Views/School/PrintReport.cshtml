@@ -1,11 +1,22 @@
 ﻿@model HemFoundation.DTOs.SchoolReportViewModel
 
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment
+
 @{
-    bool isPdf = ViewBag.IsPdf ?? false;
+    // =========================================================
+    // PDF / NORMAL VIEW MODE
+    // =========================================================
+
+    bool isPdf = ViewData["IsPdf"] is bool value && value;
 
     Layout = isPdf
         ? null
         : "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+
+
+    // =========================================================
+    // RESPONSIVE / PDF COLUMN LOGIC
+    // =========================================================
 
     string chartColumnClass = isPdf
         ? "col-6"
@@ -19,59 +30,97 @@
         ? "width:50%; float:left; padding:5px;"
         : "";
 
-    // ASP.NET Core replacement for Server.MapPath()
+
+    // =========================================================
+    // LOGO PATH
+    // =========================================================
+
     string logoPath = System.IO.Path.Combine(
-        ViewContext.HttpContext.RequestServices
-            .GetRequiredService<IWebHostEnvironment>()
-            .WebRootPath,
+        Environment.WebRootPath,
         "Content",
         "img",
         "hema-logo.png"
     );
 }
 
+
 @functions {
 
     // =========================================================
-    // HELPER 1: SIMPLE BAR CHART
+    // HELPER 1
+    // SIMPLE BAR CHART
     // =========================================================
-    public string GetChartImage(string labels, string data, string title)
+
+    public string GetChartImage(
+        string labels,
+        string data,
+        string title)
     {
         string chartConfig =
             "{" +
                 "type:'bar'," +
+
                 "data:{" +
+
                     "labels:[" + labels + "]," +
+
                     "datasets:[{" +
+
                         "label:'" + title + "'," +
+
                         "data:[" + data + "]," +
-                        "backgroundColor:['#007bff','#28a745','#dc3545','#17a2b8','#ffc107','#6c757d']" +
+
+                        "backgroundColor:[" +
+                            "'#007bff'," +
+                            "'#28a745'," +
+                            "'#dc3545'," +
+                            "'#17a2b8'," +
+                            "'#ffc107'," +
+                            "'#6c757d'" +
+                        "]" +
+
                     "}]" +
+
                 "}," +
+
                 "options:{" +
+
                     "plugins:{" +
+
                         "datalabels:{" +
                             "anchor:'end'," +
                             "align:'top'," +
                             "color:'black'," +
+
                             "font:{" +
                                 "weight:'bold'," +
                                 "size:10" +
                             "}" +
+
                         "}" +
+
                     "}," +
+
                     "legend:{" +
                         "display:false" +
                     "}," +
+
                     "scales:{" +
+
                         "yAxes:[{" +
+
                             "ticks:{" +
                                 "beginAtZero:true" +
                             "}" +
+
                         "}]" +
+
                     "}" +
+
                 "}" +
+
             "}";
+
 
         return "https://quickchart.io/chart?width=500&height=300&c="
             + Uri.EscapeDataString(chartConfig);
@@ -79,8 +128,10 @@
 
 
     // =========================================================
-    // HELPER 2: GROUPED PROJECT BAR CHART
+    // HELPER 2
+    // PROJECT GROUPED BAR CHART
     // =========================================================
+
     public string GetProjectChartImage(
         string labels,
         string data1,
@@ -89,9 +140,13 @@
     {
         string chartConfig =
             "{" +
+
                 "type:'bar'," +
+
                 "data:{" +
+
                     "labels:[" + labels + "]," +
+
                     "datasets:[" +
 
                         "{" +
@@ -113,29 +168,45 @@
                         "}" +
 
                     "]" +
+
                 "}," +
+
                 "options:{" +
+
                     "plugins:{" +
+
                         "datalabels:{" +
                             "display:true," +
                             "color:'white'," +
+
                             "font:{" +
                                 "weight:'bold'" +
                             "}" +
+
                         "}" +
+
                     "}," +
+
                     "legend:{" +
                         "display:true" +
                     "}," +
+
                     "scales:{" +
+
                         "yAxes:[{" +
+
                             "ticks:{" +
                                 "beginAtZero:true" +
                             "}" +
+
                         "}]" +
+
                     "}" +
+
                 "}" +
+
             "}";
+
 
         return "https://quickchart.io/chart?width=500&height=300&c="
             + Uri.EscapeDataString(chartConfig);
@@ -143,708 +214,1154 @@
 }
 
 
-@if (isPdf)
-{
-    @:<html>
-    @:<head>
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
     <title>Institute Report</title>
-}
-
-<style>
-
-    /* =========================================================
-       GENERAL
-       ========================================================= */
-
-    .report-body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #fff;
-        font-size: 12px;
-    }
-
-    .page-break {
-        page-break-after: always;
-        display: block;
-        clear: both;
-    }
-
-    .no-split {
-        page-break-inside: avoid !important;
-        margin-bottom: 20px;
-    }
-
-    .keep-together {
-        page-break-inside: avoid;
-        margin-bottom: 30px;
-        display: block;
-    }
-
-
-    /* =========================================================
-       CARDS
-       ========================================================= */
-
-    .card-report {
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        box-shadow: none;
-        margin-bottom: 15px;
-        background-color: #fff;
-    }
-
-    .card-report .card-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #ddd;
-        font-weight: bold;
-        padding: 8px 15px;
-        font-size: 14px;
-    }
-
-    .card-report .card-body {
-        padding: 10px;
-    }
-
-
-    /* =========================================================
-       IMAGES
-       ========================================================= */
-
-    .img-report {
-        max-width: 100%;
-        height: auto;
-    }
-
-
-    /* =========================================================
-       HEADER
-       ========================================================= */
-
-    .header-section {
-        text-align: center;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #007bff;
-        padding-bottom: 10px;
-    }
-
-
-    /* =========================================================
-       COURSE LIST
-       ========================================================= */
-
-    .course-list {
-        font-size: 10px;
-        color: #555;
-        margin-top: 4px;
-    }
-
-</style>
-
-
-@if (isPdf)
-{
-    <style>
-
-        /* =====================================================
-           PDF TABLE FIXES
-           ===================================================== */
-
-        .table-responsive {
-            display: block !important;
-            width: 100% !important;
-            overflow: visible !important;
-        }
-
-        table {
-            width: 100% !important;
-            table-layout: fixed !important;
-            border-collapse: collapse !important;
-        }
-
-        td,
-        th {
-            word-wrap: break-word !important;
-            white-space: normal !important;
-            overflow-wrap: break-word !important;
-        }
-
-        .table-sm td,
-        .table-sm th {
-            font-size: 10px !important;
-            padding: 4px !important;
-        }
-
-        thead {
-            display: table-header-group;
-        }
-
-        tr {
-            page-break-inside: avoid;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-        }
-
-    </style>
-}
-
-
-@if (isPdf)
-{
-    @:</head>
-    @:<body>
-}
-
-
-<div class="report-body">
 
 
     @* =========================================================
-       BROWSER ONLY TOP BAR
+       NORMAL BROWSER MODE
+       LOAD BOOTSTRAP / SITE CSS
        ========================================================= *@
 
     @if (!isPdf)
     {
-        <div class="container-fluid no-print"
-             style="margin-bottom:20px;">
+        <link rel="stylesheet"
+              href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
-            <div class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-center">
-
-                <span>
-                    <strong>Institute Dashboard</strong>
-                </span>
-
-                <a href="@Url.Action(
-                    "PrintReport",
-                    "Report",
-                    new { instituteId = Context.Request.Query["instituteId"].ToString() }
-                )"
-                   class="btn btn-primary">
-
-                    <i class="fa fa-file-pdf-o"></i>
-                    Download PDF
-
-                </a>
-
-            </div>
-
-        </div>
+        <link rel="stylesheet"
+              href="~/css/site.css" />
     }
 
 
-    @* =========================================================
-       INSTITUTE HEADER
-       ========================================================= *@
+    <style>
 
-    <div class="container-fluid keep-together">
+            /* =====================================================
+                       GLOBAL
+                       ===================================================== */
 
-        <div class="header-section">
-
-            @if (System.IO.File.Exists(logoPath))
-            {
-                string base64Image = Convert.ToBase64String(
-                    System.IO.File.ReadAllBytes(logoPath)
-                );
-
-                <img src="data:image/png;base64,@base64Image"
-                     style="height:80px;"
-                     class="img-report" />
+            * {
+                box-sizing: border-box;
             }
 
-            <h3 style="margin:0;">
-                @Model?.Header?.InstituteName
-            </h3>
 
-            <p class="text-muted"
-               style="margin:0;">
-
-                @Model?.Header?.Address
-                |
-                @Model?.Header?.City
-                -
-                @Model?.Header?.Pincode
-
-            </p>
-
-        </div>
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                background: #fff;
+            }
 
 
-        @* =====================================================
-           STUDENT + TEACHER CHARTS
-           ===================================================== *@
-
-        <div class="row"
-             style="@pdfRowStyle">
-
-
-            @* STUDENT COUNT *@
-
-            <div class="@chartColumnClass"
-                 style="@pdfColStyle">
-
-                <div class="card card-report no-split">
-
-                    <div class="card-header text-center">
-                        Student's Count
-                    </div>
-
-                    <div class="card-body">
-
-                        @{
-                            string sLabels = "'Total','Active','Inactive'";
-                            string sData = "0,0,0";
-
-                            if (Model?.studentStats != null)
-                            {
-                                sData =
-                                    $"{Model.studentStats.TotalStudents}," +
-                                    $"{Model.studentStats.ActiveStudents}," +
-                                    $"{Model.studentStats.InactiveStudents}";
-                            }
-                        }
-
-                        <img src="@GetChartImage(
-                            sLabels,
-                            sData,
-                            "Students"
-                        )"
-                             class="img-report d-block mx-auto"
-                             style="max-height:200px;" />
-
-                    </div>
-
-                </div>
-
-            </div>
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 12px;
+                color: #212529;
+            }
 
 
-            @* TEACHER COUNT *@
-
-            <div class="@chartColumnClass"
-                 style="@pdfColStyle">
-
-                <div class="card card-report no-split">
-
-                    <div class="card-header text-center">
-                        Teacher's Count
-                    </div>
-
-                    <div class="card-body">
-
-                        @{
-                            string tLabels = "'Total','Active','Inactive'";
-                            string tData = "0,0,0";
-
-                            if (Model?.teacherStats != null)
-                            {
-                                tData =
-                                    $"{Model.teacherStats.TotalTeacher}," +
-                                    $"{Model.teacherStats.ActiveTeacher}," +
-                                    $"{Model.teacherStats.InActiveTeacher}";
-                            }
-                        }
-
-                        <img src="@GetChartImage(
-                            tLabels,
-                            tData,
-                            "Teachers"
-                        )"
-                             class="img-report d-block mx-auto"
-                             style="max-height:200px;" />
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
+            .report-body {
+                width: 100%;
+                background: #fff;
+                font-size: 12px;
+            }
 
 
-    @* =========================================================
-       STANDARD WISE SUMMARY
-       ========================================================= *@
+            /* =====================================================
+                       CONTAINER
+                       ===================================================== */
 
-    <div class="container-fluid keep-together">
+            .container-fluid {
+                width: 100%;
+                padding-left: 15px;
+                padding-right: 15px;
+                margin-left: auto;
+                margin-right: auto;
+            }
 
-        <h4 class="text-center mb-3">
-            Standard Wise Summary
-        </h4>
+
+            /* =====================================================
+                       ROW / COLUMN
+                       ===================================================== */
+
+            .row {
+                display: flex;
+                flex-wrap: wrap;
+                width: 100%;
+            }
 
 
-        @* CHART *@
+            .col-6 {
+                width: 50%;
+            }
 
-        <div class="card card-report no-split">
 
-            <div class="card-body text-center">
+            .col-12 {
+                width: 100%;
+            }
 
-                @{
-                    var labelList = new List<string>();
-                    var dataList = new List<string>();
 
-                    if (Model?.standardSummaries != null)
-                    {
-                        foreach (var item in Model.standardSummaries)
-                        {
-                            string standard =
-                                (item.Standard ?? "")
-                                .Replace("'", "\\'");
+            /* =====================================================
+                       TEXT
+                       ===================================================== */
 
-                            labelList.Add("'" + standard + "'");
-                            dataList.Add(item.TotalStudents.ToString());
-                        }
-                    }
+            .text-center {
+                text-align: center !important;
+            }
 
-                    string stdLabels =
-                        string.Join(",", labelList);
 
-                    string stdData =
-                        string.Join(",", dataList);
+            .text-muted {
+                color: #6c757d !important;
+            }
+
+
+            .text-success {
+                color: #198754 !important;
+            }
+
+
+            .text-danger {
+                color: #dc3545 !important;
+            }
+
+
+            .fw-bold {
+                font-weight: 700 !important;
+            }
+
+
+            /* =====================================================
+                       SPACING
+                       ===================================================== */
+
+            .mb-0 {
+                margin-bottom: 0 !important;
+            }
+
+
+            .mb-3 {
+                margin-bottom: 1rem !important;
+            }
+
+
+            .p-0 {
+                padding: 0 !important;
+            }
+
+
+            .mx-auto {
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+
+
+            /* =====================================================
+                       DISPLAY
+                       ===================================================== */
+
+            .d-block {
+                display: block !important;
+            }
+
+
+            /* =====================================================
+                       CARD
+                       ===================================================== */
+
+            .card {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+                word-wrap: break-word;
+                background-color: #fff;
+                background-clip: border-box;
+            }
+
+
+            .card-report {
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-shadow: none;
+                margin-bottom: 15px;
+                background-color: #fff;
+            }
+
+
+                .card-report .card-header {
+                    background-color: #f8f9fa;
+                    border-bottom: 1px solid #ddd;
+                    font-weight: bold;
+                    padding: 8px 15px;
+                    font-size: 14px;
                 }
 
-                <img src="@GetChartImage(
-                    stdLabels,
-                    stdData,
-                    "Count"
-                )"
-                     class="img-report"
-                     style="max-height:250px;" />
 
-            </div>
-
-        </div>
-
-
-        @* TABLE *@
-
-        <div class="card card-report no-split">
-
-            <div class="card-body p-0">
-
-                <div class="table-responsive">
-
-                    <table class="table table-striped table-bordered mb-0">
-
-                        <thead>
-                            <tr>
-                                <th>Standard</th>
-                                <th>Total</th>
-                                <th>Active</th>
-                                <th>Inactive</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-
-                            @if (Model?.standardSummaries != null)
-                            {
-                                foreach (var item in Model.standardSummaries)
-                                {
-                                    <tr>
-                                        <td>@item.Standard</td>
-                                        <td>@item.TotalStudents</td>
-                                        <td>@item.ActiveStudents</td>
-                                        <td>@item.InactiveStudents</td>
-                                    </tr>
-                                }
-                            }
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    @* =========================================================
-       PROJECT WISE SUMMARY
-       ========================================================= *@
-
-    <div class="container-fluid keep-together">
-
-        <h4 class="text-center mb-3">
-            Project Wise Summary
-        </h4>
-
-
-        @* CHART *@
-
-        <div class="card card-report no-split">
-
-            <div class="card-body text-center">
-
-                @{
-                    var pLabels = new List<string>();
-                    var indData = new List<string>();
-                    var famData = new List<string>();
-                    var grpData = new List<string>();
-
-                    if (Model?.ProjectSummaries != null)
-                    {
-                        foreach (var item in Model.ProjectSummaries)
-                        {
-                            string standard =
-                                (item.Standard ?? "")
-                                .Replace("'", "\\'");
-
-                            pLabels.Add("'" + standard + "'");
-
-                            indData.Add(
-                                item.IndividualPBLCompleted.ToString()
-                            );
-
-                            famData.Add(
-                                item.FamilyPBLCompleted.ToString()
-                            );
-
-                            grpData.Add(
-                                item.GroupPBLCompleted.ToString()
-                            );
-                        }
-                    }
-
-                    string projLabels =
-                        string.Join(",", pLabels);
-
-                    string projInd =
-                        string.Join(",", indData);
-
-                    string projFam =
-                        string.Join(",", famData);
-
-                    string projGrp =
-                        string.Join(",", grpData);
+                .card-report .card-body {
+                    padding: 10px;
                 }
 
-                <img src="@GetProjectChartImage(
-                    projLabels,
-                    projInd,
-                    projGrp,
-                    projFam
-                )"
-                     class="img-report"
-                     style="max-height:250px;" />
 
-            </div>
+            /* =====================================================
+                       TABLE
+                       ===================================================== */
 
-        </div>
+            .table-responsive {
+                width: 100%;
+                overflow: visible;
+            }
 
 
-        @* TABLE *@
+            table {
+                width: 100%;
+                margin-bottom: 1rem;
+                color: #212529;
+                border-collapse: collapse !important;
+                border-spacing: 0;
+            }
 
-        <div class="card card-report no-split">
 
-            <div class="card-body p-0">
+            th,
+            td {
+                padding: 0.5rem;
+                vertical-align: top;
+                border-top: 1px solid #dee2e6;
+                text-align: left;
+            }
 
-                <div class="table-responsive">
 
-                    <table class="table table-bordered mb-0">
+            thead th {
+                vertical-align: bottom;
+                border-bottom: 2px solid #dee2e6;
+                font-weight: 600;
+            }
 
-                        <thead>
-                            <tr>
-                                <th>Standard</th>
-                                <th>Total Students</th>
-                                <th>Individual PBL</th>
-                                <th>Family PBL</th>
-                                <th>Group PBL</th>
-                            </tr>
-                        </thead>
 
-                        <tbody>
+            /* =====================================================
+                       TABLE BORDER
+                       ===================================================== */
 
-                            @if (Model?.ProjectSummaries != null)
-                            {
-                                foreach (var group in Model.ProjectSummaries)
-                                {
-                                    <tr>
-                                        <td>@group.Standard</td>
-                                        <td>@group.TotalStudents</td>
-                                        <td>@group.IndividualPBLCompleted</td>
-                                        <td>@group.FamilyPBLCompleted</td>
-                                        <td>@group.GroupPBLCompleted</td>
-                                    </tr>
-                                }
-                            }
+            .table-bordered {
+                border: 1px solid #dee2e6 !important;
+            }
 
-                        </tbody>
 
-                    </table>
+                .table-bordered th,
+                .table-bordered td {
+                    border: 1px solid #dee2e6 !important;
+                }
 
-                </div>
 
-            </div>
+                .table-bordered thead th,
+                .table-bordered thead td {
+                    border-bottom-width: 2px !important;
+                }
 
-        </div>
 
-    </div>
+            /* =====================================================
+                       TABLE STRIPED
+                       ===================================================== */
+
+            .table-striped tbody tr:nth-of-type(odd) {
+                background-color: rgba(0, 0, 0, 0.03);
+            }
+
+
+            /* =====================================================
+                       TABLE SMALL
+                       ===================================================== */
+
+            .table-sm th,
+            .table-sm td {
+                padding: 0.3rem;
+            }
+
+
+            /* =====================================================
+                       TABLE HEADER
+                       ===================================================== */
+
+            .thead-light th {
+                color: #495057;
+                background-color: #e9ecef;
+                border-color: #dee2e6;
+            }
+
+
+            /* =====================================================
+                       IMAGE
+                       ===================================================== */
+
+            .img-report {
+                max-width: 100%;
+                height: auto;
+            }
+
+
+            /* =====================================================
+                       HEADER
+                       ===================================================== */
+
+            .header-section {
+                text-align: center;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 10px;
+            }
+
+
+            /* =====================================================
+                       COURSE LIST
+                       ===================================================== */
+
+            .course-list {
+                font-size: 10px;
+                color: #555;
+                margin-top: 4px;
+            }
+
+
+            /* =====================================================
+                       PAGE BREAK
+                       ===================================================== */
+
+            .page-break {
+                page-break-after: always;
+                display: block;
+                clear: both;
+            }
+
+
+            .no-split {
+                page-break-inside: avoid !important;
+                margin-bottom: 20px;
+            }
+
+
+            .keep-together {
+                page-break-inside: avoid;
+                margin-bottom: 30px;
+                display: block;
+            }
+
+
+            /* =====================================================
+                       HEADINGS
+                       ===================================================== */
+
+            h4 {
+                display: block;
+                font-size: 18px;
+                font-weight: 500;
+                margin-top: 0;
+                margin-bottom: 1rem;
+                line-height: 1.2;
+            }
+
+
+            /* =====================================================
+                       NORMAL BROWSER DOWNLOAD BUTTON
+                       ===================================================== */
+
+            .no-print {
+                display: block;
+            }
+
+    </style>
 
 
     @* =========================================================
-       TOP 10 PERFORMERS
+       PDF SPECIFIC CSS
        ========================================================= *@
 
-    <div class="container-fluid page-break">
+    @if (isPdf)
+    {
+        <style>
 
-        <div class="card card-report no-split">
+                /* =====================================================
+                               PDF GLOBAL
+                               ===================================================== */
 
-            <div class="card-header">
-                Top 10 Performers (Institute Level)
-            </div>
+                html,
+                body {
+                    width: 100% !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    background: #fff !important;
+                }
 
-            <div class="card-body p-0">
 
-                <div class="table-responsive">
+                body {
+                    font-size: 14px !important;
+                    line-height: 1.5 !important;
+                    color: #212529 !important;
+                }
 
-                    <table class="table table-sm table-bordered mb-0">
 
-                        <thead class="thead-light">
+                .report-body {
+                    width: 100% !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    font-size: 14px !important;
+                }
 
-                            <tr>
-                                <th style="width:50px;">
-                                    Rank
-                                </th>
 
-                                <th>
-                                    Student Name
-                                </th>
+                .container-fluid {
+                    width: 100% !important;
+                    padding-left: 10px !important;
+                    padding-right: 10px !important;
+                    margin-left: 0 !important;
+                    margin-right: 0 !important;
+                }
 
-                                <th>
-                                    Standard
-                                </th>
 
-                                <th>
-                                    Points
-                                </th>
-                            </tr>
+                /* =====================================================
+                               CARDS
+                               ===================================================== */
 
-                        </thead>
+                .card-report {
+                    width: 100% !important;
+                    box-shadow: none !important;
+                    border: 1px solid #777 !important;
+                    border-radius: 0 !important;
+                    margin-bottom: 18px !important;
+                }
 
-                        <tbody>
 
-                            @if (Model?.top10Performer != null)
-                            {
-                                foreach (var student in Model.top10Performer)
-                                {
-                                    <tr>
-                                        <td>
-                                            @student.InstRank
-                                        </td>
+                    .card-report .card-header {
+                        padding: 10px 12px !important;
+                        font-size: 15px !important;
+                        line-height: 1.4 !important;
+                        font-weight: 700 !important;
+                        background-color: #eeeeee !important;
+                        border-bottom: 1px solid #777 !important;
+                    }
 
-                                        <td>
-                                            @student.Student_Name
-                                        </td>
 
-                                        <td>
-                                            @student.Standard
-                                        </td>
+                    .card-report .card-body {
+                        padding: 10px !important;
+                    }
 
-                                        <td>
-                                            @student.TotalPoints
-                                        </td>
-                                    </tr>
-                                }
-                            }
 
-                        </tbody>
+                /* =====================================================
+                               TABLES
+                               ===================================================== */
 
-                    </table>
+                .table-responsive {
+                    display: block !important;
+                    width: 100% !important;
+                    overflow: visible !important;
+                }
+
+
+                table {
+                    width: 100% !important;
+                    border-collapse: collapse !important;
+                    border-spacing: 0 !important;
+                    table-layout: fixed !important;
+                    margin-bottom: 0 !important;
+                    font-size: 13px !important;
+                    line-height: 1.45 !important;
+                }
+
+
+                th,
+                td {
+                    border: 1px solid #666 !important;
+                    padding: 7px 8px !important;
+                    vertical-align: middle !important;
+                    word-wrap: break-word !important;
+                    overflow-wrap: break-word !important;
+                    white-space: normal !important;
+                    font-size: 13px !important;
+                    line-height: 1.45 !important;
+                    color: #212529 !important;
+                }
+
+
+                .table-bordered {
+                    border: 1px solid #555 !important;
+                }
+
+
+                    .table-bordered th,
+                    .table-bordered td {
+                        border: 1px solid #555 !important;
+                    }
+
+
+                    .table-bordered thead th,
+                    .table-bordered thead td {
+                        border-bottom: 2px solid #555 !important;
+                    }
+
+
+                .table-sm th,
+                .table-sm td {
+                    padding: 6px 7px !important;
+                    font-size: 12px !important;
+                    line-height: 1.4 !important;
+                }
+
+
+                .thead-light th {
+                    background-color: #e9ecef !important;
+                    color: #212529 !important;
+                    border: 1px solid #555 !important;
+                    font-size: 13px !important;
+                    font-weight: 700 !important;
+                    padding: 7px 8px !important;
+                }
+
+
+                .table-striped tbody tr:nth-of-type(odd) {
+                    background-color: #f7f7f7 !important;
+                }
+
+
+                thead {
+                    display: table-header-group !important;
+                }
+
+
+                tbody {
+                    display: table-row-group !important;
+                }
+
+
+                tr {
+                    page-break-inside: avoid !important;
+                }
+
+
+                /* =====================================================
+                               HEADERS
+                               ===================================================== */
+
+                .header-section {
+                    margin-bottom: 18px !important;
+                    padding-bottom: 12px !important;
+                    border-bottom: 2px solid #007bff !important;
+                }
+
+
+                    .header-section h3 {
+                        font-size: 23px !important;
+                        line-height: 1.3 !important;
+                        margin: 7px 0 !important;
+                        font-weight: 700 !important;
+                    }
+
+
+                    .header-section p {
+                        font-size: 13px !important;
+                        line-height: 1.55 !important;
+                        margin: 4px 0 !important;
+                    }
+
+
+                h4 {
+                    font-size: 18px !important;
+                    line-height: 1.35 !important;
+                    font-weight: 700 !important;
+                    margin-top: 6px !important;
+                    margin-bottom: 12px !important;
+                }
+
+
+                p {
+                    font-size: 13px !important;
+                    line-height: 1.55 !important;
+                }
+
+
+                strong {
+                    font-weight: 700 !important;
+                }
+
+
+                /* =====================================================
+                               COURSE DETAILS
+                               ===================================================== */
+
+                .course-list {
+                    font-size: 11px !important;
+                    line-height: 1.5 !important;
+                    color: #444 !important;
+                    margin-top: 4px !important;
+                    word-wrap: break-word !important;
+                    overflow-wrap: break-word !important;
+                }
+
+
+                    .course-list strong {
+                        font-size: 11px !important;
+                    }
+
+
+                /* =====================================================
+                               LOGO
+                               ===================================================== */
+
+                .img-report {
+                    display: block !important;
+                    max-width: 100% !important;
+                    height: auto !important;
+                }
+
+
+                .header-section .img-report {
+                    margin-left: auto !important;
+                    margin-right: auto !important;
+                    height: 75px !important;
+                }
+
+
+                /* =====================================================
+                               ROW / COLUMNS
+                               ===================================================== */
+
+                .row {
+                    display: block !important;
+                    width: 100% !important;
+                    margin-left: 0 !important;
+                    margin-right: 0 !important;
+                }
+
+
+                .col-6 {
+                    width: 50% !important;
+                    float: left !important;
+                    display: block !important;
+                }
+
+
+                .col-12 {
+                    width: 100% !important;
+                    display: block !important;
+                    float: none !important;
+                }
+
+
+                /* =====================================================
+                               STUDENT / TEACHER CHART CENTERING
+                               ===================================================== */
+
+                .chart-container {
+                    width: 100% !important;
+                    display: block !important;
+                    text-align: center !important;
+                    margin: 0 auto !important;
+                    padding: 5px !important;
+                }
+
+
+                    .chart-container img {
+                        display: block !important;
+                        margin-left: auto !important;
+                        margin-right: auto !important;
+                        float: none !important;
+                    }
+
+
+                /* =====================================================
+                               STANDARD / PROJECT FULL WIDTH CHART CONTAINER
+
+                               IMPORTANT:
+                               These charts are NOT placed inside col-6.
+                               They get the complete report width.
+                               ===================================================== */
+
+                .chart-container-full {
+                    width: 100% !important;
+                    display: block !important;
+                    text-align: center !important;
+                    margin: 0 auto !important;
+                    padding: 10px 0 !important;
+                    clear: both !important;
+                    float: none !important;
+                }
+
+
+                    .chart-container-full img {
+                        display: block !important;
+                        margin-left: auto !important;
+                        margin-right: auto !important;
+                        margin-top: 0 !important;
+                        margin-bottom: 0 !important;
+                        float: none !important;
+                        position: static !important;
+                        left: auto !important;
+                        right: auto !important;
+                    }
+
+
+                .chart-img-centered {
+                    display: block !important;
+                    width: auto !important;
+                    max-width: 90% !important;
+                    height: auto !important;
+                    margin: 0 auto !important;
+                    float: none !important;
+                    position: static !important;
+                }
+
+
+                /* =====================================================
+                               PAGE BREAK
+                               ===================================================== */
+
+                .page-break {
+                    page-break-after: always !important;
+                    clear: both !important;
+                }
+
+
+                .no-split {
+                    page-break-inside: avoid !important;
+                }
+
+
+                .keep-together {
+                    page-break-inside: avoid !important;
+                }
+
+
+                .no-print {
+                    display: none !important;
+                }
+
+
+                /* =====================================================
+                               COLORS
+                               ===================================================== */
+
+                .text-muted {
+                    color: #555 !important;
+                }
+
+
+                .text-success {
+                    color: #198754 !important;
+                }
+
+
+                .text-danger {
+                    color: #dc3545 !important;
+                }
+
+
+                /* =====================================================
+                               GROUP HEADER
+                               ===================================================== */
+
+                .group-header td {
+                    font-size: 13px !important;
+                    font-weight: 700 !important;
+                    padding: 7px !important;
+                    background-color: #eeeeee !important;
+                }
+
+        </style>
+    }
+
+</head>
+
+
+<body>
+
+
+    <div class="report-body">
+
+
+        @* =========================================================
+           NORMAL BROWSER VIEW ONLY
+           ========================================================= *@
+
+        @if (!isPdf)
+        {
+            <div class="container-fluid no-print"
+                 style="margin-bottom:20px;">
+
+                <div class="alert alert-info
+                    d-flex
+                    flex-column
+                    flex-md-row
+                    justify-content-between
+                    align-items-center">
+
+                    <span>
+
+                        <strong>
+                            Institute Dashboard
+                        </strong>
+
+                    </span>
+
+
+                    @{
+                        string instituteId =
+                            Context.Request.Query["instituteId"].ToString();
+                    }
+
+
+                    <a href="@Url.Action(
+                                                                  "PrintInstituteReport",
+                                                                  "Report",
+                                                                  new { instituteId = instituteId }
+                                                              )"
+                       class="btn btn-primary">
+
+                        <i class="fa fa-file-pdf-o"></i>
+
+                        Download PDF
+
+                    </a>
 
                 </div>
 
             </div>
+        }
 
-        </div>
+
+        @* =========================================================
+           INSTITUTE HEADER
+           ========================================================= *@
+
+        <div class="container-fluid keep-together">
+
+            <div class="header-section">
 
 
-        @* =====================================================
-           STANDARD WISE TOP 3
-           ===================================================== *@
+                @* =================================================
+                   LOGO
+                   ================================================= *@
 
-        <div class="card card-report no-split">
+                @if (System.IO.File.Exists(logoPath))
+                {
+                    string base64Image =
+                        Convert.ToBase64String(
+                            System.IO.File.ReadAllBytes(logoPath)
+                        );
 
-            <div class="card-header">
-                Standard Wise Top 3 Performers
+                    <img src="data:image/png;base64,@base64Image"
+                         style="height:80px;"
+                         class="img-report" />
+                }
+
+
+                <h3 style="margin:0;">
+
+                    @Model?.Header?.InstituteName
+
+                </h3>
+
+
+                <p class="text-muted"
+                   style="margin:0;">
+
+                    @Model?.Header?.Address
+
+                    |
+
+                    @Model?.Header?.City
+
+                    -
+
+                    @Model?.Header?.Pincode
+
+                </p>
+
             </div>
 
-            <div class="card-body p-0">
 
-                <div class="table-responsive">
+            @* =====================================================
+               STUDENT + TEACHER CHARTS
+               ===================================================== *@
 
-                    <table class="table table-sm table-bordered mb-0">
+            <div class="row"
+                 style="@pdfRowStyle">
 
-                        <thead class="thead-light">
 
-                            <tr>
-                                <th style="width:50px;">
-                                    Rank
-                                </th>
+                @* =================================================
+                   STUDENT COUNT
+                   ================================================= *@
 
-                                <th>
-                                    Student Name
-                                </th>
+                <div class="@chartColumnClass"
+                     style="@pdfColStyle">
 
-                                <th>
-                                    Points
-                                </th>
-                            </tr>
+                    <div class="card card-report no-split">
 
-                        </thead>
+                        <div class="card-header text-center">
 
-                        <tbody>
+                            Student's Count
+
+                        </div>
+
+
+                        <div class="card-body">
 
                             @{
-                                var safePerformers =
-                                    Model?.Top3StdPerformers
-                                    ?? new List<HemFoundation.DTOs.TopStd3Performer>();
+                                string sLabels =
+                                    "'Total','Active','Inactive'";
+
+                                string sData =
+                                    "0,0,0";
+
+
+                                if (Model?.studentStats != null)
+                                {
+                                    sData =
+                                        $"{Model.studentStats.TotalStudents}," +
+                                        $"{Model.studentStats.ActiveStudents}," +
+                                        $"{Model.studentStats.InactiveStudents}";
+                                }
                             }
 
-                            @foreach (var group in safePerformers.GroupBy(x => x.Standard))
-                            {
-                                <tr class="group-header"
-                                    style="background-color:#eee;">
 
-                                    <td colspan="3">
-                                        <strong>
-                                            Standard: @group.Key
-                                        </strong>
-                                    </td>
+                            <div class="chart-container">
+
+                                <img src="@GetChartImage(
+                                                                                            sLabels,
+                                                                                            sData,
+                                                                                            "Students"
+                                                                                        )"
+                                     class="img-report"
+                                     style="max-height:230px;" />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                @* =================================================
+                   TEACHER COUNT
+                   ================================================= *@
+
+                <div class="@chartColumnClass"
+                     style="@pdfColStyle">
+
+                    <div class="card card-report no-split">
+
+                        <div class="card-header text-center">
+
+                            Teacher's Count
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            @{
+                                string tLabels =
+                                    "'Total','Active','Inactive'";
+
+                                string tData =
+                                    "0,0,0";
+
+
+                                if (Model?.teacherStats != null)
+                                {
+                                    tData =
+                                        $"{Model.teacherStats.TotalTeacher}," +
+                                        $"{Model.teacherStats.ActiveTeacher}," +
+                                        $"{Model.teacherStats.InActiveTeacher}";
+                                }
+                            }
+
+
+                            <div class="chart-container">
+
+                                <img src="@GetChartImage(
+                                                                                            tLabels,
+                                                                                            tData,
+                                                                                            "Teachers"
+                                                                                        )"
+                                     class="img-report"
+                                     style="max-height:230px;" />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        @* =========================================================
+           STANDARD WISE SUMMARY
+           ========================================================= *@
+
+        <div class="container-fluid keep-together">
+
+            <h4 class="text-center mb-3">
+
+                Standard Wise Summary
+
+            </h4>
+
+
+            @* =====================================================
+               STANDARD CHART
+
+               IMPORTANT:
+               Full width container is used here.
+               No col-6.
+               ===================================================== *@
+
+            <div class="card card-report no-split">
+
+                <div class="card-body">
+
+                    @{
+                        var labelList =
+                            new List<string>();
+
+                        var dataList =
+                            new List<string>();
+
+
+                        if (Model?.standardSummaries != null)
+                        {
+                            foreach (var item in Model.standardSummaries)
+                            {
+                                string standard =
+                                    (item.Standard ?? "")
+                                    .Replace("'", "\\'");
+
+
+                                labelList.Add(
+                                    "'" + standard + "'"
+                                );
+
+
+                                dataList.Add(
+                                    item.TotalStudents.ToString(
+                                        System.Globalization.CultureInfo.InvariantCulture
+                                    )
+                                );
+                            }
+                        }
+
+
+                        string stdLabels =
+                            string.Join(",", labelList);
+
+
+                        string stdData =
+                            string.Join(",", dataList);
+                    }
+
+
+                    @if (!string.IsNullOrWhiteSpace(stdLabels))
+                    {
+                        <div class="chart-container-full">
+
+                            <img src="@GetChartImage(
+                                                                                    stdLabels,
+                                                                                    stdData,
+                                                                                    "Count"
+                                                                                )"
+                                 class="chart-img-centered"
+                                 style="max-height:300px;" />
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+
+
+            @* =====================================================
+               STANDARD TABLE
+               ===================================================== *@
+
+            <div class="card card-report no-split">
+
+                <div class="card-body p-0">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped table-bordered mb-0">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Standard
+                                    </th>
+
+                                    <th>
+                                        Total
+                                    </th>
+
+                                    <th>
+                                        Active
+                                    </th>
+
+                                    <th>
+                                        Inactive
+                                    </th>
 
                                 </tr>
 
-                                foreach (var student in group)
+                            </thead>
+
+
+                            <tbody>
+
+                                @if (Model?.standardSummaries != null)
                                 {
-                                    <tr>
+                                    foreach (var item in Model.standardSummaries)
+                                    {
+                                        <tr>
 
-                                        <td>
-                                            @student.StdRank
-                                        </td>
+                                            <td>
+                                                @item.Standard
+                                            </td>
 
-                                        <td>
-                                            @student.Student_Name
-                                        </td>
+                                            <td>
+                                                @item.TotalStudents
+                                            </td>
 
-                                        <td>
-                                            @student.TotalPoints
-                                        </td>
+                                            <td>
+                                                @item.ActiveStudents
+                                            </td>
 
-                                    </tr>
+                                            <td>
+                                                @item.InactiveStudents
+                                            </td>
+
+                                        </tr>
+                                    }
                                 }
-                            }
 
-                        </tbody>
+                            </tbody>
 
-                    </table>
+                        </table>
+
+                    </div>
 
                 </div>
 
@@ -852,122 +1369,199 @@
 
         </div>
 
-    </div>
+
+        @* =========================================================
+           PROJECT WISE SUMMARY
+           ========================================================= *@
+
+        <div class="container-fluid keep-together">
+
+            <h4 class="text-center mb-3">
+
+                Project Wise Summary
+
+            </h4>
 
 
-    @* =========================================================
-       TEACHER DETAILS
-       ========================================================= *@
+            @* =====================================================
+               PROJECT CHART
 
-    <div class="container-fluid">
+               IMPORTANT:
+               Full width container is used here.
+               No col-6.
+               ===================================================== *@
 
-        <div class="card card-report no-split">
+            <div class="card card-report no-split">
 
-            <div class="card-header">
-                Certified Teacher Details
-            </div>
+                <div class="card-body">
 
-            <div class="card-body p-0">
+                    @{
+                        var pLabels =
+                            new List<string>();
 
-                <div class="table-responsive">
+                        var indData =
+                            new List<string>();
 
-                    <table class="table table-sm table-bordered mb-0">
+                        var famData =
+                            new List<string>();
 
-                        <thead class="thead-light">
+                        var grpData =
+                            new List<string>();
 
-                            <tr>
 
-                                <th style="width:25%;">
-                                    Teacher Name
-                                </th>
-
-                                <th style="width:15%;">
-                                    Stats
-                                </th>
-
-                                <th style="width:10%;">
-                                    Marks
-                                </th>
-
-                                <th style="width:50%;">
-                                    Course Details
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            @if (Model?.teacherCourseSummary != null)
+                        if (Model?.ProjectSummaries != null)
+                        {
+                            foreach (var item in Model.ProjectSummaries)
                             {
-                                foreach (var teacher in Model.teacherCourseSummary)
-                                {
-                                    <tr>
+                                string standard =
+                                    (item.Standard ?? "")
+                                    .Replace("'", "\\'");
 
-                                        <td>
-                                            <strong>
-                                                @teacher.Teacher_Name
-                                            </strong>
-                                        </td>
 
-                                        <td>
+                                pLabels.Add(
+                                    "'" + standard + "'"
+                                );
 
-                                            <span class="text-success">
-                                                @teacher.NoOFCourseCompleted
-                                            </span>
 
-                                            |
+                                indData.Add(
+                                    item.IndividualPBLCompleted.ToString(
+                                        System.Globalization.CultureInfo.InvariantCulture
+                                    )
+                                );
 
-                                            <span class="text-danger">
-                                                @teacher.NoofCoursePending
-                                            </span>
 
-                                        </td>
+                                famData.Add(
+                                    item.FamilyPBLCompleted.ToString(
+                                        System.Globalization.CultureInfo.InvariantCulture
+                                    )
+                                );
 
-                                        <td>
-                                            @teacher.TotalObtainedMarks
-                                        </td>
 
-                                        <td>
-
-                                            @if (!string.IsNullOrEmpty(teacher.CourseCompleted)
-                                                && teacher.CourseCompleted != "0")
-                                            {
-                                                <div class="course-list">
-
-                                                    <strong class="text-success">
-                                                        Comp:
-                                                    </strong>
-
-                                                    @teacher.CourseCompleted
-
-                                                </div>
-                                            }
-
-                                            @if (!string.IsNullOrEmpty(teacher.CoursePending)
-                                                && teacher.CoursePending != "0")
-                                            {
-                                                <div class="course-list">
-
-                                                    <strong class="text-danger">
-                                                        Pend:
-                                                    </strong>
-
-                                                    @teacher.CoursePending
-
-                                                </div>
-                                            }
-
-                                        </td>
-
-                                    </tr>
-                                }
+                                grpData.Add(
+                                    item.GroupPBLCompleted.ToString(
+                                        System.Globalization.CultureInfo.InvariantCulture
+                                    )
+                                );
                             }
+                        }
 
-                        </tbody>
 
-                    </table>
+                        string projLabels =
+                            string.Join(",", pLabels);
+
+
+                        string projInd =
+                            string.Join(",", indData);
+
+
+                        string projFam =
+                            string.Join(",", famData);
+
+
+                        string projGrp =
+                            string.Join(",", grpData);
+                    }
+
+
+                    @if (!string.IsNullOrWhiteSpace(projLabels))
+                    {
+                        <div class="chart-container-full">
+
+                            <img src="@GetProjectChartImage(
+                                                                                    projLabels,
+                                                                                    projInd,
+                                                                                    projGrp,
+                                                                                    projFam
+                                                                                )"
+                                 class="chart-img-centered"
+                                 style="max-height:300px;" />
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+
+
+            @* =====================================================
+               PROJECT TABLE
+               ===================================================== *@
+
+            <div class="card card-report no-split">
+
+                <div class="card-body p-0">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-bordered mb-0">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Standard
+                                    </th>
+
+                                    <th>
+                                        Total Students
+                                    </th>
+
+                                    <th>
+                                        Individual PBL
+                                    </th>
+
+                                    <th>
+                                        Family PBL
+                                    </th>
+
+                                    <th>
+                                        Group PBL
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                @if (Model?.ProjectSummaries != null)
+                                {
+                                    foreach (var group in Model.ProjectSummaries)
+                                    {
+                                        <tr>
+
+                                            <td>
+                                                @group.Standard
+                                            </td>
+
+                                            <td>
+                                                @group.TotalStudents
+                                            </td>
+
+                                            <td>
+                                                @group.IndividualPBLCompleted
+                                            </td>
+
+                                            <td>
+                                                @group.FamilyPBLCompleted
+                                            </td>
+
+                                            <td>
+                                                @group.GroupPBLCompleted
+                                            </td>
+
+                                        </tr>
+                                    }
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
 
                 </div>
 
@@ -976,20 +1570,208 @@
         </div>
 
 
-        @* =====================================================
-           CERTIFIED STUDENT DETAILS
-           ===================================================== *@
+        @* =========================================================
+           PAGE BREAK
+           ========================================================= *@
 
-        @if (Model?.studentsCertifiedStats != null
-            && Model.studentsCertifiedStats.Count > 0)
-        {
+        <div class="container-fluid page-break">
 
-            <div class="card card-report no-split"
-                 style="margin-top:20px;">
+
+            @* =====================================================
+               TOP 10 PERFORMERS
+               ===================================================== *@
+
+            <div class="card card-report no-split">
 
                 <div class="card-header">
-                    Certified Student Details
+
+                    Top 10 Performers (Institute Level)
+
                 </div>
+
+
+                <div class="card-body p-0">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-sm table-bordered mb-0">
+
+                            <thead class="thead-light">
+
+                                <tr>
+
+                                    <th style="width:50px;">
+                                        Rank
+                                    </th>
+
+                                    <th>
+                                        Student Name
+                                    </th>
+
+                                    <th>
+                                        Standard
+                                    </th>
+
+                                    <th>
+                                        Points
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                @if (Model?.top10Performer != null)
+                                {
+                                    foreach (var student in Model.top10Performer)
+                                    {
+                                        <tr>
+
+                                            <td>
+                                                @student.InstRank
+                                            </td>
+
+                                            <td>
+                                                @student.Student_Name
+                                            </td>
+
+                                            <td>
+                                                @student.Standard
+                                            </td>
+
+                                            <td>
+                                                @student.TotalPoints
+                                            </td>
+
+                                        </tr>
+                                    }
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            @* =====================================================
+               STANDARD WISE TOP 3
+               ===================================================== *@
+
+            <div class="card card-report no-split">
+
+                <div class="card-header">
+
+                    Standard Wise Top 3 Performers
+
+                </div>
+
+
+                <div class="card-body p-0">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-sm table-bordered mb-0">
+
+                            <thead class="thead-light">
+
+                                <tr>
+
+                                    <th style="width:50px;">
+                                        Rank
+                                    </th>
+
+                                    <th>
+                                        Student Name
+                                    </th>
+
+                                    <th>
+                                        Points
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                @{
+                                    var safePerformers =
+                                        Model?.Top3StdPerformers
+                                        ?? new List<HemFoundation.DTOs.TopStd3Performer>();
+                                }
+
+
+                                @foreach (var group in safePerformers.GroupBy(x => x.Standard))
+                                {
+                                    <tr class="group-header"
+                                        style="background-color:#eee;">
+
+                                        <td colspan="3">
+
+                                            <strong>
+                                                Standard: @group.Key
+                                            </strong>
+
+                                        </td>
+
+                                    </tr>
+
+
+                                    foreach (var student in group)
+                                    {
+                                        <tr>
+
+                                            <td>
+                                                @student.StdRank
+                                            </td>
+
+                                            <td>
+                                                @student.Student_Name
+                                            </td>
+
+                                            <td>
+                                                @student.TotalPoints
+                                            </td>
+
+                                        </tr>
+                                    }
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        @* =========================================================
+           TEACHER DETAILS
+           ========================================================= *@
+
+        <div class="container-fluid">
+
+            <div class="card card-report no-split">
+
+                <div class="card-header">
+
+                    Certified Teacher Details
+
+                </div>
+
 
                 <div class="card-body p-0">
 
@@ -1002,11 +1784,11 @@
                                 <tr>
 
                                     <th style="width:25%;">
-                                        Student Name
+                                        Teacher Name
                                     </th>
 
                                     <th style="width:15%;">
-                                        Standard
+                                        Stats
                                     </th>
 
                                     <th style="width:10%;">
@@ -1021,49 +1803,83 @@
 
                             </thead>
 
+
                             <tbody>
 
-                                @foreach (var student in Model.studentsCertifiedStats)
+                                @if (Model?.teacherCourseSummary != null)
                                 {
+                                    foreach (var teacher in Model.teacherCourseSummary)
+                                    {
+                                        <tr>
 
-                                    <tr>
+                                            <td>
 
-                                        <td>
-                                            <strong>
-                                                @student.Student_Name
-                                            </strong>
-                                        </td>
+                                                <strong>
+                                                    @teacher.Teacher_Name
+                                                </strong>
 
-                                        <td>
-                                            @student.Standard_
-                                        </td>
+                                            </td>
 
-                                        <td>
-                                            @student.MarksObtain
-                                        </td>
 
-                                        <td>
+                                            <td>
 
-                                            @if (!string.IsNullOrEmpty(student.Courses_Completed)
-                                                && student.Courses_Completed != "0")
-                                            {
+                                                <span class="text-success">
+                                                    @teacher.NoOFCourseCompleted
+                                                </span>
 
-                                                <div class="course-list">
+                                                |
 
-                                                    <strong class="text-success">
-                                                        Comp:
-                                                    </strong>
+                                                <span class="text-danger">
+                                                    @teacher.NoofCoursePending
+                                                </span>
 
-                                                    @student.Courses_Completed
+                                            </td>
 
-                                                </div>
 
-                                            }
+                                            <td>
 
-                                        </td>
+                                                @teacher.TotalObtainedMarks
 
-                                    </tr>
+                                            </td>
 
+
+                                            <td>
+
+                                                @if (!string.IsNullOrEmpty(
+                                                    teacher.CourseCompleted)
+                                                    && teacher.CourseCompleted != "0")
+                                                {
+                                                    <div class="course-list">
+
+                                                        <strong class="text-success">
+                                                            Comp:
+                                                        </strong>
+
+                                                        @teacher.CourseCompleted
+
+                                                    </div>
+                                                }
+
+
+                                                @if (!string.IsNullOrEmpty(
+                                                    teacher.CoursePending)
+                                                    && teacher.CoursePending != "0")
+                                                {
+                                                    <div class="course-list">
+
+                                                        <strong class="text-danger">
+                                                            Pend:
+                                                        </strong>
+
+                                                        @teacher.CoursePending
+
+                                                    </div>
+                                                }
+
+                                            </td>
+
+                                        </tr>
+                                    }
                                 }
 
                             </tbody>
@@ -1076,15 +1892,124 @@
 
             </div>
 
-        }
+
+            @* =====================================================
+               CERTIFIED STUDENT DETAILS
+               ===================================================== *@
+
+            @if (Model?.studentsCertifiedStats != null
+                && Model.studentsCertifiedStats.Count > 0)
+            {
+
+                <div class="card card-report no-split"
+                     style="margin-top:20px;">
+
+                    <div class="card-header">
+
+                        Certified Student Details
+
+                    </div>
+
+
+                    <div class="card-body p-0">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-sm table-bordered mb-0">
+
+                                <thead class="thead-light">
+
+                                    <tr>
+
+                                        <th style="width:25%;">
+                                            Student Name
+                                        </th>
+
+                                        <th style="width:15%;">
+                                            Standard
+                                        </th>
+
+                                        <th style="width:10%;">
+                                            Marks
+                                        </th>
+
+                                        <th style="width:50%;">
+                                            Course Details
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    @foreach (var student in Model.studentsCertifiedStats)
+                                    {
+                                        <tr>
+
+                                            <td>
+
+                                                <strong>
+                                                    @student.Student_Name
+                                                </strong>
+
+                                            </td>
+
+
+                                            <td>
+
+                                                @student.Standard_
+
+                                            </td>
+
+
+                                            <td>
+
+                                                @student.MarksObtain
+
+                                            </td>
+
+
+                                            <td>
+
+                                                @if (!string.IsNullOrEmpty(
+                                                    student.Courses_Completed)
+                                                    && student.Courses_Completed != "0")
+                                                {
+                                                    <div class="course-list">
+
+                                                        <strong class="text-success">
+                                                            Comp:
+                                                        </strong>
+
+                                                        @student.Courses_Completed
+
+                                                    </div>
+                                                }
+
+                                            </td>
+
+                                        </tr>
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            }
+
+        </div>
 
     </div>
 
-</div>
 
+</body>
 
-@if (isPdf)
-{
-    @:</body>
-    @:</html>
-}
+</html>
