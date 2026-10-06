@@ -150,7 +150,7 @@ namespace HemFoundation.Controllers.Api
                 standard = standard,
                 division = division,
                 guardianName = guardianName,
-                guardianEmail = guardianEmail,
+                guardianEmail = customUser.EmailID??"NA",
                 guardianMobile = guardianMobile,
                 studentInstituteName = studentInstituteName,
                 studentInstituteId = studentInstituteId
@@ -300,6 +300,7 @@ namespace HemFoundation.Controllers.Api
                         .SetProperty(u => u.CityName, string.IsNullOrWhiteSpace(model.City) ? customUser.CityName : model.City.Trim())
                         .SetProperty(u => u.Pincode, string.IsNullOrWhiteSpace(model.Pincode) ? customUser.Pincode : model.Pincode.Trim())
                         .SetProperty(u => u.PhotoUrl, string.IsNullOrWhiteSpace(photoUrl) ? customUser.PhotoUrl : photoUrl)
+                        .SetProperty(u => u.EmailID, string.IsNullOrWhiteSpace(model.GuardianEmail) ? customUser.EmailID : model.GuardianEmail)
                         .SetProperty(u => u.ModifiedDate, DateTime.UtcNow)
                     );
 
