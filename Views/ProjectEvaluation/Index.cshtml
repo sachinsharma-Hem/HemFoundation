@@ -1,8 +1,38 @@
-﻿@{
+﻿using Microsoft.Extensions.Configuration;
+@using System
+
+@inject IConfiguration Configuration
+
+@{
     ViewData["Title"] = "Project Evaluation";
     Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
-}
 
+    int? valueItemId = null;
+
+    if (ViewBag.ValueItemId != null)
+    {
+        int parsedValue;
+
+        if (int.TryParse(ViewBag.ValueItemId.ToString(), out parsedValue))
+        {
+            valueItemId = parsedValue;
+        }
+    }
+
+    string fileUploadApiUrl =
+        Configuration["FileSettings:InHouseUploadUrl"] ?? "";
+
+    string fileBaseUrl = "";
+
+    if (Uri.TryCreate(
+        fileUploadApiUrl,
+        UriKind.Absolute,
+        out Uri? fileUri))
+    {
+        fileBaseUrl =
+            $"{fileUri.Scheme}://{fileUri.Authority}";
+    }
+}
 <style>
     :root {
         --primary-color: #5850ec;
@@ -1204,6 +1234,24 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
+        const fileBaseUrl = '@Html.Raw(fileBaseUrl)';
+
+        function getFileUrl(filePath) {
+            if (!filePath) return '#';
+
+            if (
+                filePath.startsWith('http://') ||
+                filePath.startsWith('https://')
+            ) {
+                return filePath;
+            }
+
+            let cleanPath = filePath.replace(/^\/+/, '');
+
+            return fileBaseUrl.replace(/\/+$/, '') + '/' + cleanPath;
+        }
+
+
         let currentType = "";
         let currentPage = 1;
         let pageSize = 10;
@@ -1385,12 +1433,52 @@
                         let srNoOffset = (currentPage - 1) * pageSize;
 
                         res.data.forEach((item, index) => {
-                            let mediaHtml = item.fileLink ? `<a href="${item.fileLink}" target="_blank" class="btn btn-sm btn-outline-info">View</a>` : 'No Media';
+                            let mediaHtml = '';
+
+                            if (item.fileLink) {
+                                const fileUrl = getFileUrl(item.fileLink);
+
+                                mediaHtml = `
+                <a href="${fileUrl}"
+                   target="_blank"
+                   class="btn btn-sm btn-outline-info">
+                    <i class="bi bi-eye me-1"></i> View
+                </a>`;
+                            }
+
                             if (currentType === 'group-pbl') {
+
                                 mediaHtml = '';
-                                if (item.imageActivity) mediaHtml += `<a href="${item.imageActivity}" target="_blank" class="btn btn-sm btn-outline-primary me-1">Image</a>`;
-                                if (item.videoActivity) mediaHtml += `<a href="${item.videoActivity}" target="_blank" class="btn btn-sm btn-outline-success me-1">Video</a>`;
-                                if (!item.imageActivity && !item.videoActivity) mediaHtml = 'No Media';
+
+                                if (item.imageActivity) {
+                                    const imageUrl = getFileUrl(item.imageActivity);
+
+                                    mediaHtml += `
+                    <a href="${imageUrl}"
+                       target="_blank"
+                       class="btn btn-sm btn-outline-primary me-1">
+                        <i class="bi bi-image me-1"></i> Image
+                    </a>`;
+                                }
+
+                                if (item.videoActivity) {
+                                    const videoUrl = getFileUrl(item.videoActivity);
+
+                                    mediaHtml += `
+                    <a href="${videoUrl}"
+                       target="_blank"
+                       class="btn btn-sm btn-outline-success me-1">
+                        <i class="bi bi-play-circle me-1"></i> Video
+                    </a>`;
+                                }
+
+                                if (!item.imageActivity && !item.videoActivity) {
+                                    mediaHtml = 'No Media';
+                                }
+                            }
+
+                            if (!mediaHtml) {
+                                mediaHtml = 'No Media';
                             }
 
                             let statusClass = item.isEvaluated ? item.evaluatedColor.toLowerCase() : 'pending';
@@ -1472,12 +1560,39 @@
             previewContainer.innerHTML = "";
 
             if (fileLink) {
+
+                const mediaUrl = getFileUrl(fileLink);
+
                 let lowerLink = fileLink.toLowerCase();
-                if (lowerLink.endsWith(".mp4")) {
-                    previewContainer.innerHTML = `<video controls><source src="${fileLink}" type="video/mp4"></video>`;
+
+                if (lowerLink.endsWith(".mp4") ||
+                    lowerLink.endsWith(".webm") ||
+                    lowerLink.endsWith(".mov")) {
+
+                    previewContainer.innerHTML = `
+                    <video controls>
+                        <source src="${mediaUrl}">
+                        Your browser does not support video playback.
+                    </video>
+                `;
+
                     previewContainer.style.display = "block";
-                } else if (lowerLink.endsWith(".jpg") || lowerLink.endsWith(".png") || lowerLink.endsWith(".jpeg")) {
-                    previewContainer.innerHTML = `<img src="${fileLink}" />`;
+
+                }
+                else if (
+                    lowerLink.endsWith(".jpg") ||
+                    lowerLink.endsWith(".jpeg") ||
+                    lowerLink.endsWith(".png") ||
+                    lowerLink.endsWith(".gif") ||
+                    lowerLink.endsWith(".webp")
+                ) {
+
+                    previewContainer.innerHTML = `
+                    <img src="${mediaUrl}"
+                         alt="Project Media"
+                         class="img-fluid" />
+                `;
+
                     previewContainer.style.display = "block";
                 }
             }
