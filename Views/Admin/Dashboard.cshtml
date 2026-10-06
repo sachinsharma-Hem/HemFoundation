@@ -11,7 +11,72 @@
         userRole.Equals("Supervisor",
             StringComparison.OrdinalIgnoreCase);
 }
+<style>
+    /* ================= STATUS BADGE ================= */
 
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.status-badge.green {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.orange {
+    background: #fed7aa;
+    color: #92400e;
+}
+
+.status-badge.red {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-badge.yellow {
+    background: #fef3c7;
+    color: #78350f;
+}
+
+.status-badge.pending {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-badge.green .status-dot {
+    background: #10b981;
+}
+
+.status-badge.orange .status-dot {
+    background: #f59e0b;
+}
+
+.status-badge.red .status-dot {
+    background: #ef4444;
+}
+
+.status-badge.yellow .status-dot {
+    background: #eab308;
+}
+
+.status-badge.pending .status-dot {
+    background: #9ca3af;
+}
+</style>
 <div class="container-fluid py-4">
 
     
@@ -1027,41 +1092,55 @@
 
         function getStatusBadge(status) {
 
-            const statusMap = {
-                "green": {
-                    text: "Excellent",
-                    className: "bg-success-subtle text-success border border-success-subtle"
-                },
+    const key = status?.toLowerCase();
 
-                "orange": {
-                    text: "In Progress",
-                    className: "bg-warning-subtle text-warning-emphasis border border-warning-subtle"
-                },
+    const statusMap = {
+        "green": {
+            text: "Green",
+            className: "green"
+        },
 
-                "red": {
-                    text: "Needs Work",
-                    className: "bg-danger-subtle text-danger border border-danger-subtle"
-                }
-            };
+        "orange": {
+            text: "Orange",
+            className: "orange"
+        },
 
-            const key = status?.toLowerCase();
-            const statusInfo = statusMap[key];
+        "red": {
+            text: "Red",
+            className: "red"
+        },
 
-            if (!statusInfo) {
+        "yellow": {
+            text: "Yellow",
+            className: "yellow"
+        },
 
-                return `
-                    <span class="badge bg-secondary-subtle text-secondary border">
-                        ${status || "Unknown"}
-                    </span>
-                `;
-            }
-
-            return `
-                <span class="badge ${statusInfo.className} rounded-pill px-3 py-2">
-                    ${statusInfo.text}
-                </span>
-            `;
+        "pending": {
+            text: "Pending",
+            className: "pending"
         }
+    };
+
+    const statusInfo = statusMap[key];
+
+    if (!statusInfo) {
+        return `
+            <span class="status-badge pending">
+                <span class="status-dot"></span>
+                ${status || "Pending"}
+            </span>
+        `;
+    }
+
+    return `
+        <span class="status-badge ${statusInfo.className}">
+            <span class="status-dot"></span>
+            ${statusInfo.text}
+        </span>
+    `;
+}
+
+            
 
 
         function loadSupervisorEvaluatedHistory() {

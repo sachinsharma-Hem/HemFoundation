@@ -12,10 +12,13 @@ namespace HemFoundation.Controllers.Api
     public class ProjectEvaluationsApiController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-
-        public ProjectEvaluationsApiController(ApplicationDbContext context)
+        private readonly IConfiguration _configuration;
+        public ProjectEvaluationsApiController(
+     ApplicationDbContext context,
+     IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         [HttpGet("dashboard-counts")]
@@ -260,15 +263,57 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = list });
         }
 
-        private static string FormatWebPath(string path)
+        private string FormatWebPath(string path)
         {
-            if (string.IsNullOrEmpty(path)) return "";
-            string normalized = path.Replace("\\", "/");
-            if (normalized.Contains("Uploads/"))
+            if (string.IsNullOrWhiteSpace(path))
+                return "";
+
+            string normalized = path.Replace("\\", "/").Trim();
+
+            string uploadApiUrl =
+                _configuration["FileSettings:InHouseUploadUrl"] ?? "";
+
+            string fileBaseUrl = "";
+
+            if (Uri.TryCreate(
+                uploadApiUrl,
+                UriKind.Absolute,
+                out Uri? fileUri))
             {
-                int index = normalized.IndexOf("Uploads/");
-                return "https://hemvirtues.com/" + normalized.Substring(index);
+                fileBaseUrl = $"{fileUri.Scheme}://{fileUri.Authority}";
             }
+
+            if (string.IsNullOrWhiteSpace(fileBaseUrl))
+                return normalized;
+
+
+            int uploadsIndex = normalized.IndexOf(
+                "Uploads/",
+                StringComparison.OrdinalIgnoreCase);
+
+            if (uploadsIndex >= 0)
+            {
+                string uploadPath = normalized.Substring(uploadsIndex);
+
+                return fileBaseUrl.TrimEnd('/') +
+                       "/" +
+                       uploadPath.TrimStart('/');
+            }
+
+            if (normalized.StartsWith("/"))
+            {
+                return fileBaseUrl.TrimEnd('/') +
+                       normalized;
+            }
+
+            if (normalized.StartsWith("Uploads/",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                return fileBaseUrl.TrimEnd('/') +
+                       "/" +
+                       normalized;
+            }
+
             return normalized;
         }
 

@@ -88,7 +88,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// 4. Session & Caching
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
