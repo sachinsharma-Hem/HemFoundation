@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Rotativa.AspNetCore;
 using System.Text;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -163,4 +164,9 @@ var installedBrowser = await browserFetcher.DownloadAsync();
 Console.WriteLine(
     $"Chromium downloaded: {installedBrowser.GetExecutablePath()}"
 );
+RotativaConfiguration.Setup(
+    app.Environment.WebRootPath,
+    "Rotativa"
+);
+
 app.Run();

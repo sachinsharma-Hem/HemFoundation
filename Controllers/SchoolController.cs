@@ -1,17 +1,18 @@
 ﻿using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Drawing;
 using HemFoundation.Common; // Required for DBManager
+using HemFoundation.DTOs;
 using HemFoundation.Models; 
 using HemFoundation.Models.Entities; // Required for View_WJ_Teachercertificate (adjust namespace if needed)
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration; // Required for IConfiguration
 using Npgsql;
+using Rotativa.AspNetCore;
 using System.Collections.Generic;
 using System.Data;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using HemFoundation.DTOs;
 
 namespace HemFoundation.Controllers
 {
@@ -493,7 +494,478 @@ namespace HemFoundation.Controllers
             };
         }
 
+        public async Task<IActionResult> PrintReport(int instituteId)
+        {
+            ViewBag.IsPdf = true;
+
+            // Get all 9 report result sets from PostgreSQL
+            var model = await GetreportData(instituteId);
+
+            // Generate PDF using Rotativa
+            return new ViewAsPdf("PrintReport", model)
+            {
+                FileName = "InstituteReport.pdf",
+                PageSize = Rotativa.AspNetCore.Options.Size.A4,
+                CustomSwitches = "--javascript-delay 1000 --no-stop-slow-scripts"
+            };
+        }
+
         public async Task<SchoolReportViewModel> GetreportData(int instituteId)
+        {
+            var model = new SchoolReportViewModel();
+
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+
+            await using var conn = new NpgsqlConnection(connString);
+            await conn.OpenAsync();
+
+            string batchedQuery = @"
+
+        -- =========================================================
+        -- 1. Institute Header Details
+        -- =========================================================
+        SELECT
+            institute_name AS ""InstituteName"",
+            CONCAT(addressline1, cityname) AS ""Address"",
+            cityname AS ""City"",
+            pincode AS ""Pincode"",
+            emailid AS ""Email"",
+            mobileno AS ""MobileNo""
+        FROM view_wj_institutes
+        WHERE instituteid = @InstituteID
+        LIMIT 1;
+
+
+        -- =========================================================
+        -- 2. Student Counts
+        -- =========================================================
+        SELECT
+            associatedstudents AS ""TotalStudents"",
+            activestudents AS ""ActiveStudents"",
+            (associatedstudents - activestudents) AS ""InactiveStudents""
+        FROM vw_school_profile_details
+        WHERE instituteid = @InstituteID
+        LIMIT 1;
+
+
+        -- =========================================================
+        -- 3. Teacher Counts
+        -- =========================================================
+        SELECT
+            totalteachers AS ""TotalTeacher"",
+            activeteachers AS ""ActiveTeacher"",
+            (totalteachers - activeteachers) AS ""InActiveTeacher""
+        FROM vw_school_profile_details
+        WHERE instituteid = @InstituteID
+        LIMIT 1;
+
+
+        -- =========================================================
+        -- 4. Teacher Course Summary
+        -- =========================================================
+        SELECT
+            teacher_name AS ""Teacher_Name"",
+            coursecompleted AS ""CourseCompleted"",
+            coursepending AS ""CoursePending"",
+            noofcoursecompleted AS ""NoOFCourseCompleted"",
+            noofcoursepending AS ""NoofCoursePending"",
+            certifiedinmaincoursecount AS ""CertifiedinMainCourseCount"",
+            totalobtainedmarks AS ""TotalObtainedMarks""
+        FROM hf_view_teachercoursesummary
+        WHERE instituteid = @InstituteID;
+
+
+        -- =========================================================
+        -- 5. Standard Wise Student Summary
+        -- =========================================================
+        SELECT
+            ""Standard"",
+            ""TotalStudents"",
+            ""ActiveStudents"",
+            ""InactiveStudents""
+        FROM hf_view_institutestandardstudentsummary
+        WHERE ""InstituteID"" = @InstituteID
+        ORDER BY ""Standard"";
+
+
+        -- =========================================================
+        -- 6. Top 10 Institute Performers
+        -- =========================================================
+        SELECT
+            standard AS ""Standard"",
+            student_name AS ""Student_Name"",
+            totalpoints AS ""TotalPoints"",
+            instrank AS ""InstRank""
+        FROM hf_view_institutewisetop10studentperformer
+        WHERE instituteid = @InstituteID
+        ORDER BY instrank
+        LIMIT 10;
+
+
+        -- =========================================================
+        -- 7. Standard Wise Top 3 Performers
+        -- =========================================================
+        SELECT
+            standard AS ""Standard"",
+            student_name AS ""Student_Name"",
+            totalpoints AS ""TotalPoints"",
+            stdrank AS ""StdRank""
+        FROM hf_view_institutewisestdwiseTop3studentperformer
+        WHERE instituteid = @InstituteID
+        ORDER BY standard, stdrank;
+
+
+        -- =========================================================
+        -- 8. Project Summary
+        -- =========================================================
+        SELECT
+            standard AS ""Standard"",
+            totalstudents AS ""TotalStudents"",
+            grouppblcompleted AS ""GroupPBLCompleted"",
+            individualpblcompleted AS ""IndividualPBLCompleted"",
+            familypblcompleted AS ""FamilyPBLCompleted""
+        FROM hf_view_institutestudentpblsummary
+        WHERE instituteid = @InstituteID
+        ORDER BY standard;
+
+
+        -- =========================================================
+        -- 9. Students Wise Certified List
+        -- =========================================================
+        SELECT
+            ""Student_Name"",
+            ""Standard_"",
+            ""No_of_Courses_Completed"",
+           ""No_of_Courses_Pending"",
+            ""MarksObtain"",
+            ""Courses_Completed"",
+            ""Courses_Pending""
+        FROM hf_view_studentwisecompletedmaincourselistascertificatewise
+        WHERE ""InstituteID"" = @InstituteID;
+
+    ";
+
+            await using var cmd = new NpgsqlCommand(batchedQuery, conn);
+
+            cmd.Parameters.AddWithValue("@InstituteID", instituteId);
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            // =============================================================
+            // RESULT SET 1 : Institute Header
+            // =============================================================
+            if (await reader.ReadAsync())
+            {
+                model.Header = new InstituteDetails
+                {
+                    InstituteName = reader["InstituteName"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["InstituteName"]),
+
+                    Address = reader["Address"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Address"]),
+
+                    City = reader["City"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["City"]),
+
+                    Pincode = reader["Pincode"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Pincode"]),
+
+                    Email = reader["Email"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Email"]),
+
+                    MobileNo = reader["MobileNo"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["MobileNo"])
+                };
+            }
+
+            // =============================================================
+            // RESULT SET 2 : Student Counts
+            // =============================================================
+            await reader.NextResultAsync();
+
+            if (await reader.ReadAsync())
+            {
+                int totalStudents = reader["TotalStudents"] == DBNull.Value
+                    ? 0
+                    : Convert.ToInt32(reader["TotalStudents"]);
+
+                int activeStudents = reader["ActiveStudents"] == DBNull.Value
+                    ? 0
+                    : Convert.ToInt32(reader["ActiveStudents"]);
+
+                int inactiveStudents = reader["InactiveStudents"] == DBNull.Value
+                    ? totalStudents - activeStudents
+                    : Convert.ToInt32(reader["InactiveStudents"]);
+
+                model.studentStats = new StudentStats
+                {
+                    TotalStudents = totalStudents,
+                    ActiveStudents = activeStudents,
+                    InactiveStudents = inactiveStudents
+                };
+            }
+            else
+            {
+                model.studentStats = new StudentStats
+                {
+                    TotalStudents = 0,
+                    ActiveStudents = 0,
+                    InactiveStudents = 0
+                };
+            }
+
+            // =============================================================
+            // RESULT SET 3 : Teacher Counts
+            // =============================================================
+            await reader.NextResultAsync();
+
+            if (await reader.ReadAsync())
+            {
+                int totalTeachers = reader["TotalTeacher"] == DBNull.Value
+                    ? 0
+                    : Convert.ToInt32(reader["TotalTeacher"]);
+
+                int activeTeachers = reader["ActiveTeacher"] == DBNull.Value
+                    ? 0
+                    : Convert.ToInt32(reader["ActiveTeacher"]);
+
+                int inactiveTeachers = reader["InActiveTeacher"] == DBNull.Value
+                    ? totalTeachers - activeTeachers
+                    : Convert.ToInt32(reader["InActiveTeacher"]);
+
+                model.teacherStats = new TeacherStats
+                {
+                    TotalTeacher = totalTeachers,
+                    ActiveTeacher = activeTeachers,
+                    InActiveTeacher = inactiveTeachers
+                };
+            }
+            else
+            {
+                model.teacherStats = new TeacherStats
+                {
+                    TotalTeacher = 0,
+                    ActiveTeacher = 0,
+                    InActiveTeacher = 0
+                };
+            }
+
+            // =============================================================
+            // RESULT SET 4 : Teacher Course Summary
+            // =============================================================
+            await reader.NextResultAsync();
+
+            model.teacherCourseSummary = new List<TeacherCourseSummary>();
+
+            while (await reader.ReadAsync())
+            {
+                model.teacherCourseSummary.Add(new TeacherCourseSummary
+                {
+                    Teacher_Name = reader["Teacher_Name"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Teacher_Name"]),
+
+                    CourseCompleted = reader["CourseCompleted"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["CourseCompleted"]),
+
+                    CoursePending = reader["CoursePending"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["CoursePending"]),
+
+                    NoOFCourseCompleted = reader["NoOFCourseCompleted"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["NoOFCourseCompleted"]),
+
+                    NoofCoursePending = reader["NoofCoursePending"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["NoofCoursePending"]),
+
+                    CertifiedinMainCourseCount = reader["CertifiedinMainCourseCount"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["CertifiedinMainCourseCount"]),
+
+                    TotalObtainedMarks = reader["TotalObtainedMarks"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["TotalObtainedMarks"])
+                });
+            }
+
+            // =============================================================
+            // RESULT SET 5 : Standard Wise Student Summary
+            // =============================================================
+            await reader.NextResultAsync();
+
+            model.standardSummaries = new List<StandardSummary>();
+
+            while (await reader.ReadAsync())
+            {
+                model.standardSummaries.Add(new StandardSummary
+                {
+                    Standard = reader["Standard"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Standard"]),
+
+                    TotalStudents = reader["TotalStudents"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["TotalStudents"]),
+
+                    ActiveStudents = reader["ActiveStudents"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["ActiveStudents"]),
+
+                    InactiveStudents = reader["InactiveStudents"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["InactiveStudents"])
+                });
+            }
+
+            // =============================================================
+            // RESULT SET 6 : Top 10 Institute Performers
+            // =============================================================
+            await reader.NextResultAsync();
+
+            model.top10Performer = new List<Top10Performer>();
+
+            while (await reader.ReadAsync())
+            {
+                model.top10Performer.Add(new Top10Performer
+                {
+                    Standard = reader["Standard"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Standard"]),
+
+                    Student_Name = reader["Student_Name"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Student_Name"]),
+
+                    TotalPoints = reader["TotalPoints"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["TotalPoints"]),
+
+                    InstRank = reader["InstRank"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt64(reader["InstRank"])
+                });
+            }
+
+            // =============================================================
+            // RESULT SET 7 : Standard Wise Top 3 Performers
+            // =============================================================
+            await reader.NextResultAsync();
+
+            model.Top3StdPerformers = new List<TopStd3Performer>();
+
+            while (await reader.ReadAsync())
+            {
+                model.Top3StdPerformers.Add(new TopStd3Performer
+                {
+                    Standard = reader["Standard"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Standard"]),
+
+                    Student_Name = reader["Student_Name"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Student_Name"]),
+
+                    TotalPoints = reader["TotalPoints"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["TotalPoints"]),
+
+                    StdRank = reader["StdRank"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt64(reader["StdRank"])
+                });
+            }
+
+            // =============================================================
+            // RESULT SET 8 : Project Summary
+            // =============================================================
+            await reader.NextResultAsync();
+
+            model.ProjectSummaries = new List<ProjectStats>();
+
+            while (await reader.ReadAsync())
+            {
+                model.ProjectSummaries.Add(new ProjectStats
+                {
+                    Standard = reader["Standard"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Standard"]),
+
+                    TotalStudents = reader["TotalStudents"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["TotalStudents"]),
+
+                    GroupPBLCompleted = reader["GroupPBLCompleted"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["GroupPBLCompleted"]),
+
+                    IndividualPBLCompleted = reader["IndividualPBLCompleted"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["IndividualPBLCompleted"]),
+
+                    FamilyPBLCompleted = reader["FamilyPBLCompleted"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(reader["FamilyPBLCompleted"])
+                });
+            }
+
+            // =============================================================
+            // RESULT SET 9 : Students Wise Certified List
+            // =============================================================
+            await reader.NextResultAsync();
+
+            model.studentsCertifiedStats = new List<StudentsCertifiedStats>();
+
+            while (await reader.ReadAsync())
+            {
+                model.studentsCertifiedStats.Add(new StudentsCertifiedStats
+                {
+                    Student_Name = reader["Student_Name"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Student_Name"]),
+
+                    Standard_ = reader["Standard_"] == DBNull.Value
+                        ? string.Empty
+                        : Convert.ToString(reader["Standard_"]),
+
+                    No_of_Courses_Completed =
+                        reader["No_of_Courses_Completed"] == DBNull.Value
+                            ? 0
+                            : Convert.ToInt32(reader["No_of_Courses_Completed"]),
+
+                    No_of_Courses_Pending =
+                        reader["No_of_Courses_Pending"] == DBNull.Value
+                            ? 0
+                            : Convert.ToInt32(reader["No_of_Courses_Pending"]),
+
+                    MarksObtain =
+                        reader["MarksObtain"] == DBNull.Value
+                            ? 0
+                            : Convert.ToInt32(reader["MarksObtain"]),
+
+                    Courses_Completed =
+                        reader["Courses_Completed"] == DBNull.Value
+                            ? string.Empty
+                            : Convert.ToString(reader["Courses_Completed"]),
+
+                    Courses_Pending =
+                        reader["Courses_Pending"] == DBNull.Value
+                            ? string.Empty
+                            : Convert.ToString(reader["Courses_Pending"])
+                });
+            }
+
+            return model;
+        }
+        public async Task<SchoolReportViewModel> GetreportData1(int instituteId)
         {
             var model = new SchoolReportViewModel();
             string connString = _configuration.GetConnectionString("DefaultConnection");
@@ -504,76 +976,130 @@ namespace HemFoundation.Controllers
 
                 // Batched SQL containing all 9 query blocks in exact order of reading
                 string batchedQuery = @"
-                            -- 1. Header & Profile Stats (Students & Teachers)
-                           SELECT institute_name AS InstituteName,addressline1 Address,cityname City,pincode Pincode,
-                                 emailid Email,mobileno MobileNo, 
-                                        associatedstudents, activestudents, totalteachers, activeteachers 
-                                 FROM vw_school_profile_details
-                            WHERE instituteid = @InstituteID LIMIT 1;
 
-                            -- 2. Placeholder/Skipped (Integrated into Read 1)
-                            SELECT 1;
+            -- =========================================================
+            -- 1. Institute Header Details
+            -- =========================================================
+            SELECT
+                institute_name AS ""InstituteName"",
+                CONCAT(addressline1, cityname) AS ""Address"",
+                cityname AS ""City"",
+                pincode AS ""Pincode"",
+                emailid AS ""Email"",
+                mobileno AS ""MobileNo""
+            FROM view_wj_institutes
+            WHERE instituteid = 442074
+            LIMIT 1;
 
-                            -- 3. Placeholder/Skipped (Integrated into Read 1)
-                            SELECT 1;
 
-                            -- 4. Teacher Course Summary
-                            SELECT 
-                                u.firstname || ' ' || u.lastname AS Teacher_Name,
-                                '' AS CourseCompleted,
-                                '' AS CoursePending,
-                                0 AS NoOFCourseCompleted,
-                                0 AS NoofCoursePending,
-                                0 AS CertifiedinMainCourseCount,
-                                0 AS TotalObtainedMarks
-                            FROM wj_teacherassociates AS wjta
-                            INNER JOIN users AS u ON u.userid = wjta.teacherid
-                            WHERE wjta.instituteid = @InstituteID;
+            -- =========================================================
+            -- 2. Student Counts
+            -- =========================================================
+            SELECT
+                associatedstudents AS ""TotalStudents"",
+                activestudents AS ""ActiveStudents"",
+                (associatedstudents-activestudents) AS ""InactiveStudents""
+            FROM vw_school_profile_details
+            WHERE instituteid = @InstituteID
+            LIMIT 1;
 
-                            -- 5. Standard Summaries
-                            SELECT 
-                                standard AS Standard,
-                                COUNT(*) AS TotalStudents,
-                                SUM(CASE WHEN isactive THEN 1 ELSE 0 END) AS ActiveStudents,
-                                SUM(CASE WHEN NOT isactive THEN 1 ELSE 0 END) AS InactiveStudents
-                            FROM view_wj_students_details_info 
-                            WHERE instituteid = @InstituteID
-                            GROUP BY standard;
 
-                            -- 6. Top 10 Performers
-                           SELECT ""Standard"", ""Student_Name"", ""TotalPoints"", ""InstRank""        
-                            FROM ""HF_View_InstitutewiseTop10StudentPerformer"" 
-                            WHERE ""InstituteID"" = @InstituteID;
+            -- =========================================================
+            -- 3. Teacher Counts
+            -- =========================================================
+            SELECT
+                totalteachers AS ""TotalTeacher"",
+                activeteachers AS ""ActiveTeacher"",
+                (totalteachers-activeteachers) AS ""InActiveTeacher""
+            FROM vw_school_profile_details
+            WHERE instituteid = @InstituteID
+            LIMIT 1;
 
-                            -- 7. Std wise top 3 performer
-                            SELECT standard, student_name, totalpoints, 1 AS StdRank 
-                            FROM view_wj_students_details_info 
-                            WHERE instituteid = @InstituteID 
-                            ORDER BY standard, totalpoints DESC;
 
-                            -- 8. Project Summary
-                            SELECT 
-                                standard AS Standard,
-                                COUNT(*) AS TotalStudents,
-                                0 AS GroupPBLCompleted,
-                                0 AS IndividualPBLCompleted,
-                                0 AS FamilyPBLCompleted
-                            FROM view_wj_students_details_info 
-                            WHERE instituteid = @InstituteID
-                            GROUP BY standard;
+            -- =========================================================
+            -- 4. Teacher Course Summary
+            -- =========================================================
+            SELECT
+                teacher_name AS ""Teacher_Name"",
+                coursecompleted AS ""CourseCompleted"",
+                coursepending AS ""CoursePending"",
+                noofcoursecompleted AS ""NoOFCourseCompleted"",
+                noofcoursepending AS ""NoofCoursePending"",
+                certifiedinmaincoursecount AS ""CertifiedinMainCourseCount"",
+                totalobtainedmarks AS ""TotalObtainedMarks""
+            FROM hf_view_teachercoursesummary
+            WHERE instituteid = @InstituteID;
 
-                            -- 9. Students wise certified list
-                            SELECT 
-                                student_name AS Student_Name,
-                                standard AS Standard_,
-                                0 AS No_of_Courses_Completed,
-                                0 AS No_of_Courses_Pending,
-                                0 AS MarksObtain,
-                                '' AS Courses_Completed,
-                                '' AS Courses_Pending
-                            FROM view_wj_students_details_info 
-                            WHERE instituteid = @InstituteID;
-                        ";
+
+            -- =========================================================
+            -- 5. Standard Wise Student Summary
+            -- =========================================================
+            SELECT
+                 ""Standard"",
+                ""TotalStudents"",
+                ""ActiveStudents"",
+                 ""InactiveStudents""
+            FROM hf_view_institutestandardstudentsummary
+            WHERE instituteid = @InstituteID
+            ORDER BY standard;
+
+
+            -- =========================================================
+            -- 6. Top 10 Institute Performers
+            -- =========================================================
+            SELECT
+                standard AS ""Standard"",
+                student_name AS ""Student_Name"",
+                totalpoints AS ""TotalPoints"",
+                instrank AS ""InstRank""
+            FROM hf_view_institutewisetop10studentperformer
+            WHERE instituteid = @InstituteID
+            ORDER BY instrank
+            LIMIT 10;
+
+
+            -- =========================================================
+            -- 7. Standard Wise Top 3 Performers
+            -- =========================================================
+            SELECT
+                standard AS ""Standard"",
+                student_name AS ""Student_Name"",
+                totalpoints AS ""TotalPoints"",
+                stdrank AS ""StdRank""
+            FROM hf_view_institutewisestdwiseTop3studentperformer
+            WHERE instituteid = @InstituteID
+            ORDER BY standard, stdrank;
+
+
+            -- =========================================================
+            -- 8. Project Summary
+            -- =========================================================
+            SELECT
+                standard AS ""Standard"",
+                totalstudents AS ""TotalStudents"",
+                grouppblcompleted AS ""GroupPBLCompleted"",
+                individualpblcompleted AS ""IndividualPBLCompleted"",
+                familypblcompleted AS ""FamilyPBLCompleted""
+            FROM hf_view_institutestudentpblsummary
+            WHERE instituteid = @InstituteID
+            ORDER BY standard;
+
+
+            -- =========================================================
+            -- 9. Students Wise Certified List
+            -- =========================================================
+            SELECT
+                student_name AS ""Student_Name"",
+                standard_ AS ""Standard_"",
+                no_of_courses_completed AS ""No_of_Courses_Completed"",
+                no_of_courses_pending AS ""No_of_Courses_Pending"",
+                marksobtain AS ""MarksObtain"",
+                courses_completed AS ""Courses_Completed"",
+                courses_pending AS ""Courses_Pending""
+            FROM hf_view_studentwisecompletedmaincourselistascertificatewise
+            WHERE instituteid = @InstituteID;
+
+            ";
                 using (var cmd = new NpgsqlCommand(batchedQuery, conn))
                 {
                     cmd.Parameters.AddWithValue("@InstituteID", instituteId);
