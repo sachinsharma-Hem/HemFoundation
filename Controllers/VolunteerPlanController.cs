@@ -2,9 +2,12 @@
 using HemFoundation.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace HemFoundation.Controllers
 {
+    [Route("api/volunteer-plan")]
+    [ApiController]
     public class VolunteerPlanController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -16,7 +19,7 @@ namespace HemFoundation.Controllers
             _env = env;
         }
 
-        [HttpGet("VolunteerPlan/plan")]
+        [HttpGet("/VolunteerPlan/plan")]
         public IActionResult plan()
         {
             var isLoggedIn = HttpContext.Session.GetString("IsAdminLoggedIn");
@@ -30,20 +33,34 @@ namespace HemFoundation.Controllers
 
         private async Task<Volunteer?> GetCurrentVolunteerAsync()
         {
-            string? userId = HttpContext.Session.GetString("UserId") ?? User.Identity?.Name;
+            // 1. Try finding via Claims (NameIdentifier or Identity Name)
+            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.Identity?.Name;
+            Volunteer? volunteer = null;
 
-            var volunteer = await _context.Volunteers
-                .FirstOrDefaultAsync(v => (v.AspNetUserId == userId || v.MobileNo == userId) && !v.IsDeleted);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                volunteer = await _context.Volunteers
+                    .FirstOrDefaultAsync(v => (v.AspNetUserId == userId || v.MobileNo == userId) && !v.IsDeleted);
+            }
 
+            // 2. Fallback to Session keys if claim is not present
             if (volunteer == null)
             {
-                var sessVolId = HttpContext.Session.GetString("VolunteerId");
-                if (!string.IsNullOrEmpty(sessVolId) && int.TryParse(sessVolId, out int vId))
+                var sessVolId = HttpContext.Session.GetString("VolunteerId") ?? HttpContext.Session.GetString("UserId");
+                if (!string.IsNullOrEmpty(sessVolId))
                 {
-                    volunteer = await _context.Volunteers.FirstOrDefaultAsync(v => v.Id == vId && !v.IsDeleted);
+                    if (int.TryParse(sessVolId, out int vId))
+                    {
+                        volunteer = await _context.Volunteers.FirstOrDefaultAsync(v => v.Id == vId && !v.IsDeleted);
+                    }
+                    else
+                    {
+                        volunteer = await _context.Volunteers.FirstOrDefaultAsync(v => (v.AspNetUserId == sessVolId || v.MobileNo == sessVolId) && !v.IsDeleted);
+                    }
                 }
             }
 
+            // 3. Fallback for testing/development if single volunteer exists
             if (volunteer == null)
             {
                 volunteer = await _context.Volunteers.FirstOrDefaultAsync(v => !v.IsDeleted);
@@ -52,7 +69,7 @@ namespace HemFoundation.Controllers
             return volunteer;
         }
 
-        [HttpGet("api/volunteer-plan/list")]
+        [HttpGet("list")]
         public async Task<IActionResult> GetPlans()
         {
             var volunteer = await GetCurrentVolunteerAsync();
@@ -86,10 +103,7 @@ namespace HemFoundation.Controllers
                             .FirstOrDefault(),
 
                     p.ScheduleDate,
-
-                    // NULL is allowed
                     VisitDate = p.visitdate,
-
                     p.Purpose,
                     p.Status,
                     p.Remarks,
@@ -109,20 +123,19 @@ namespace HemFoundation.Controllers
         }
 
         // 4. Update Progress / Complete Visit
-        [HttpPost("api/volunteer-plan/update-progress")]
+        [HttpPost("update-progress")]
         public async Task<IActionResult> UpdateProgress(
-     [FromForm] int id,
-     [FromForm] string remarks,
-     [FromForm] string status,
-     [FromForm] DateTime? visitDate,
-     [FromForm] string? latitude,
-     [FromForm] string? longitude,
-     IFormFile? visitImage)
+            [FromForm] int id,
+            [FromForm] string remarks,
+            [FromForm] string status,
+            [FromForm] DateTime? visitDate,
+            [FromForm] string? latitude,
+            [FromForm] string? longitude,
+            IFormFile? visitImage)
         {
             var plan = await _context.VolunteerVisitPlans.FindAsync(id);
             if (plan == null) return NotFound(new { success = false, message = "Plan not found." });
 
-            // Yahan par check laga dein taaki locked plans update na ho sakein
             if (plan.Status != null && (plan.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase) || plan.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase)))
             {
                 return BadRequest(new { success = false, message = "Ye visit pehle hi complete ya cancel ho chuki hai, ab dubara update nahi ho sakti." });
@@ -160,7 +173,8 @@ namespace HemFoundation.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Visit status updated successfully." });
         }
-        [HttpGet("api/volunteer-plan/assigned-schools")]
+
+        [HttpGet("assigned-schools")]
         public async Task<IActionResult> GetAssignedSchools()
         {
             try
@@ -176,7 +190,6 @@ namespace HemFoundation.Controllers
                     });
                 }
 
-      
                 var instituteIds = await _context.VolunteerInstituteMappings
                     .Where(m =>
                         m.VolunteerId == volunteer.Id &&
@@ -195,9 +208,6 @@ namespace HemFoundation.Controllers
                     });
                 }
 
-                // ============================================
-                // 2. SchoolProfileDetails se schools
-                // ============================================
                 var schools = await _context.SchoolProfileDetails
                     .AsNoTracking()
                     .Where(s => instituteIds.Contains(s.instituteid))
@@ -227,23 +237,41 @@ namespace HemFoundation.Controllers
         }
 
         // 3. Save / Create Visit Plan
-        [HttpPost("api/volunteer-plan/save")]
+        [HttpPost("save")]
         public async Task<IActionResult> SavePlan([FromBody] VolunteerVisitPlan model)
         {
-            var volunteer = await GetCurrentVolunteerAsync();
-            if (volunteer == null) return Unauthorized(new { success = false, message = "Unauthorized" });
+            try
+            {
+                var volunteer = await GetCurrentVolunteerAsync();
+                if (volunteer == null)
+                    return Unauthorized(new { success = false, message = "Unauthorized volunteer session." });
 
-            model.VolunteerId = volunteer.Id;
-            model.CreatedDate = DateTime.UtcNow;
-            model.IsActive = true;
+                model.VolunteerId = volunteer.Id;
+                model.CreatedDate = DateTime.Now;
+                model.IsActive = true;
+                model.Status = string.IsNullOrEmpty(model.Status) ? "Pending" : model.Status;
 
-            _context.VolunteerVisitPlans.Add(model);
-            await _context.SaveChangesAsync();
+                _context.VolunteerVisitPlans.Add(model);
+                await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = "Visit plan scheduled successfully." });
+                return Ok(new { success = true, message = "Visit plan scheduled successfully." });
+            }
+            catch (Exception ex)
+            {
+                // Yeh line aapko Visual Studio output/console mein exact database error dikha degi
+                var exactError = ex.InnerException?.Message ?? ex.Message;
+                System.Diagnostics.Debug.WriteLine("DB SAVE ERROR: " + exactError);
+
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Error while saving visit plan.",
+                    error = exactError
+                });
+            }
         }
 
-        [HttpGet("api/volunteer-plan/dashboard-counts")]
+        [HttpGet("dashboard-counts")]
         public async Task<IActionResult> GetDashboardCounts(
             [FromQuery] DateTime? fromDate = null,
             [FromQuery] DateTime? toDate = null)
@@ -266,28 +294,17 @@ namespace HemFoundation.Controllers
                     !p.IsDeleted &&
                     p.IsActive);
 
-            // =====================================================
-            // DATE FILTER
-            // =====================================================
             if (fromDate.HasValue)
             {
                 var from = fromDate.Value.Date;
-
-                query = query.Where(p =>
-                    p.ScheduleDate >= from);
+                query = query.Where(p => p.ScheduleDate >= from);
             }
 
             if (toDate.HasValue)
             {
                 var to = toDate.Value.Date.AddDays(1);
-
-                query = query.Where(p =>
-                    p.ScheduleDate < to);
+                query = query.Where(p => p.ScheduleDate < to);
             }
-
-            // =====================================================
-            // COUNTS
-            // =====================================================
 
             var visitPlanCount = await query.CountAsync();
 

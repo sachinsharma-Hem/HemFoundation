@@ -1,5 +1,7 @@
 ﻿using ClosedXML.Excel;
+using HemFoundation.Common;
 using HemFoundation.Data;
+using HemFoundation.Models;
 using HemFoundation.Models.Entities;
 using HemFoundation.Models.Identity;
 using Humanizer.Configuration;
@@ -23,6 +25,7 @@ namespace HemFoundation.Controllers.Api
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IWebHostEnvironment _env;
+        private readonly SMSManager _smsManager;
 
         private readonly IConfiguration _configuration;
 
@@ -30,13 +33,14 @@ namespace HemFoundation.Controllers.Api
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            IWebHostEnvironment env, IConfiguration configuration)
+            IWebHostEnvironment env, IConfiguration configuration, SMSManager smsManager)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _env = env;
             _configuration = configuration;
+            _smsManager = smsManager;
         }
 
         private async Task<Users?> GetCurrentAffiliate()
@@ -45,7 +49,6 @@ namespace HemFoundation.Controllers.Api
             return await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
         }
 
-        // 1. GET ASSIGNED SCHOOLS (For Dropdown)
         [HttpGet("assigned-schools")]
         public async Task<IActionResult> GetAssignedSchools()
         {
@@ -78,7 +81,6 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
-        // 2. GET VOLUNTEERS LIST
         [HttpGet("list")]
         public async Task<IActionResult> GetList()
         {
@@ -93,6 +95,14 @@ namespace HemFoundation.Controllers.Api
                 join s in _context.SchoolProfileDetails
                     on v.InstituteId equals s.instituteid
 
+                join u in _context.Users
+                    on v.AspNetUserId equals u.AspNetUserID into userGroup
+                from u in userGroup.DefaultIfEmpty()
+
+                join an in _context.Set<ApplicationUser>()
+                    on v.AspNetUserId equals an.Id into aspNetGroup
+                from an in aspNetGroup.DefaultIfEmpty()
+
                 orderby v.CreatedDate descending
 
                 select new
@@ -104,7 +114,9 @@ namespace HemFoundation.Controllers.Api
                     SchoolName = s.institute_name,
                     v.IsActive,
                     v.CreatedDate,
-                    v.InstituteId
+                    v.InstituteId,
+                    UserName = an != null ? an.UserName : (v.MobileNo ?? "N/A"),
+                    Password = u != null ? u.Password_ : (v.Password_ ?? "N/A")
                 }
             ).ToListAsync();
 
@@ -155,7 +167,6 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
-        // 3. SINGLE REGISTRATION & UPDATE
         [HttpPost("register")]
         public async Task<IActionResult> RegisterVolunteer([FromBody] VolunteerDto model)
         {
@@ -164,9 +175,6 @@ namespace HemFoundation.Controllers.Api
             if (aff == null)
                 return Unauthorized();
 
-            // =====================================================
-            // UPDATE VOLUNTEER
-            // =====================================================
             if (model.Id > 0)
             {
                 var vol = await _context.Volunteers
@@ -182,10 +190,9 @@ namespace HemFoundation.Controllers.Api
                 vol.FirstName = model.FirstName;
                 vol.LastName = model.LastName;
 
-                // Ensure MobileNo is max 10 characters
                 string updateMobile = model.MobileNo?.Trim() ?? "";
                 if (updateMobile.Length > 10)
-                    updateMobile = updateMobile.Substring(updateMobile.Length - 10); // Takes last 10 digits
+                    updateMobile = updateMobile.Substring(updateMobile.Length - 10); 
                 vol.MobileNo = updateMobile;
 
                 vol.Email = model.Email;
@@ -197,11 +204,6 @@ namespace HemFoundation.Controllers.Api
                 return Ok(new { success = true, message = "Volunteer updated successfully." });
             }
 
-            // =====================================================
-            // NEW REGISTRATION
-            // =====================================================
-
-            // Ensure baseMobile is strictly 10 characters (removes country codes like +91)
             string baseMobile = model.MobileNo?.Trim() ?? "";
             if (baseMobile.Length > 10)
             {
@@ -211,13 +213,11 @@ namespace HemFoundation.Controllers.Api
             string uniqueUsername = baseMobile;
             int counter = 1;
 
-            // Checking uniqueness
             while (await _context.Set<ApplicationUser>().AnyAsync(x => x.UserName == uniqueUsername))
             {
-                // NOTE: Agar username limit 10 hai, toh suffix add karne ke liye aage ke digits hatane padenge
-                // Example: "98765432" + "_1" = 10 chars
+
                 string suffix = $"_{counter}";
-                int allowedBaseLength = 10 - suffix.Length; // 10 is max DB length
+                int allowedBaseLength = 10 - suffix.Length; 
 
                 if (allowedBaseLength > 0)
                 {
@@ -225,17 +225,13 @@ namespace HemFoundation.Controllers.Api
                 }
                 else
                 {
-                    uniqueUsername = $"{baseMobile}_{counter}"; // Agar DB column bada hai toh chal jayega
+                    uniqueUsername = $"{baseMobile}_{counter}"; 
                 }
                 counter++;
             }
 
-            // Password_ DB mein bada hona chahiye. Agar 10 ki limit hai to uniqueUsername 10 chars ka hi hona chahiye.
             string password = uniqueUsername;
 
-            // =====================================================
-            // ASPNETUSERS
-            // =====================================================
 
             var appUser = new ApplicationUser
             {
@@ -253,19 +249,11 @@ namespace HemFoundation.Controllers.Api
 
             _context.Set<ApplicationUser>().Add(appUser);
 
-            // =====================================================
-            // ROLE = Volunteer
-            // =====================================================
-
             var role = await _context.AspNetRoles.FirstOrDefaultAsync(x => x.Name == "HF_Volunteers");
             if (role == null)
             {
                 return BadRequest(new { success = false, message = "Role 'Volunteer' not found in aspnetroles." });
             }
-
-            // =====================================================
-            // ASPNETUSERROLES
-            // =====================================================
 
             _context.Set<IdentityUserRole<string>>().Add(
                 new IdentityUserRole<string>
@@ -275,9 +263,6 @@ namespace HemFoundation.Controllers.Api
                 }
             );
 
-            // =====================================================
-            // GENERATE SHARED ID
-            // =====================================================
             int nextId = 1;
             if (await _context.Users.AnyAsync())
             {
@@ -285,15 +270,11 @@ namespace HemFoundation.Controllers.Api
                 nextId = maxId + 1;
             }
 
-            // =====================================================
-            // USERS TABLE
-            // =====================================================
-
             var customUser = new Users
             {
                 UserID = nextId,
                 UserCode = uniqueUsername,
-                FirstName = model.FirstName, // Check DB limits for names too
+                FirstName = model.FirstName, 
                 LastName = model.LastName,
                 MobileNo = baseMobile,
                 EmailID = model.Email,
@@ -301,7 +282,7 @@ namespace HemFoundation.Controllers.Api
                 CreatedBy = aff.UserID,
                 CreatedDate = DateTime.UtcNow,
                 AspNetUserID = appUser.Id,
-                RegisterFrom = "Volunteer", // 9 chars
+                RegisterFrom = "Volunteer",
                 Password_ = password,
                 IsMobileVerified = false,
                 IsEmailVerified = false,
@@ -309,11 +290,6 @@ namespace HemFoundation.Controllers.Api
             };
 
             _context.Users.Add(customUser);
-
-            // =====================================================
-            // VOLUNTEERS TABLE
-            // =====================================================
-
             var volunteer = new Volunteer
             {
                 Id = nextId,
@@ -332,10 +308,6 @@ namespace HemFoundation.Controllers.Api
 
             _context.Volunteers.Add(volunteer);
 
-            // =====================================================
-            // SAVE ALL
-            // =====================================================
-
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -347,7 +319,6 @@ namespace HemFoundation.Controllers.Api
                 generatedId = nextId
             });
         }
-        // 4. DOWNLOAD SAMPLE EXCEL
         [HttpGet("download-sample")]
         [AllowAnonymous]
         public IActionResult DownloadSample()
@@ -357,7 +328,6 @@ namespace HemFoundation.Controllers.Api
 
             if (!System.IO.File.Exists(filePath))
             {
-                // Fallback direct generation if file doesn't exist
                 using var workbook = new XLWorkbook();
                 var ws = workbook.Worksheets.Add("Volunteers");
                 ws.Cell(1, 1).Value = "First Name";
@@ -374,7 +344,6 @@ namespace HemFoundation.Controllers.Api
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Volunteer_Sample_Format.xlsx");
         }
 
-        // 5. VALIDATE EXCEL DATA (BULK UPLOAD STEP 1)
         [HttpPost("validate-bulk")]
         public async Task<IActionResult> ValidateBulkUpload([FromForm] IFormFile excelFile)
         {
@@ -449,10 +418,7 @@ namespace HemFoundation.Controllers.Api
         {
             try
             {
-
-                if (request == null ||
-                    request.ValidData == null ||
-                    !request.ValidData.Any())
+                if (request == null || request.ValidData == null || !request.ValidData.Any())
                 {
                     return BadRequest(new
                     {
@@ -462,7 +428,6 @@ namespace HemFoundation.Controllers.Api
                 }
 
                 var aff = await GetCurrentAffiliate();
-
                 if (aff == null)
                 {
                     return Unauthorized(new
@@ -485,19 +450,14 @@ namespace HemFoundation.Controllers.Api
                 }
 
                 int nextId = 1;
-
-                var maxUserId = await _context.Users
-                    .Select(x => (int?)x.UserID)
-                    .MaxAsync();
-
-                if (maxUserId.HasValue)
+                if (await _context.Users.AnyAsync())
                 {
-                    nextId = maxUserId.Value + 1;
+                    int maxId = await _context.Users.MaxAsync(u => u.UserID);
+                    nextId = maxId + 1;
                 }
 
                 int addedCount = 0;
                 int failedCount = 0;
-
                 var errors = new List<object>();
 
                 foreach (var item in request.ValidData)
@@ -508,91 +468,64 @@ namespace HemFoundation.Controllers.Api
                         string lastName = item.LastName?.Trim() ?? "";
                         string baseMobile = item.MobileNo?.Trim() ?? "";
 
-                        string? cleanEmail =
-                            string.IsNullOrWhiteSpace(item.Email)
-                                ? null
-                                : item.Email.Trim();
+                        if (baseMobile.Length > 10)
+                        {
+                            baseMobile = baseMobile.Substring(baseMobile.Length - 10);
+                        }
 
-                        // -------------------------------------------------
-                        // BASIC VALIDATION
-                        // -------------------------------------------------
+                        string? cleanEmail = string.IsNullOrWhiteSpace(item.Email) ? null : item.Email.Trim();
+
                         if (string.IsNullOrWhiteSpace(firstName) ||
                             string.IsNullOrWhiteSpace(lastName) ||
                             string.IsNullOrWhiteSpace(baseMobile))
                         {
                             failedCount++;
-
                             errors.Add(new
                             {
                                 mobile = baseMobile,
                                 message = "First Name, Last Name and Mobile Number are required."
                             });
-
                             continue;
                         }
 
-                        // -------------------------------------------------
-                        // 7. UNIQUE USERNAME
-                        // Same logic as manual registration
-                        //
-                        // 9876543210
-                        // 9876543210_1
-                        // 9876543210_2
-                        // -------------------------------------------------
+                        // Unique username generation logic (jaise single register/universal mein hai)
                         string uniqueUsername = baseMobile;
                         int counter = 1;
-
-                        while (await _context.Set<ApplicationUser>()
-                            .AnyAsync(x => x.UserName == uniqueUsername))
+                        while (await _context.Set<ApplicationUser>().AnyAsync(x => x.UserName == uniqueUsername))
                         {
-                            uniqueUsername = $"{baseMobile}_{counter}";
+                            string suffix = $"_{counter}";
+                            int allowedBaseLength = 10 - suffix.Length;
+                            if (allowedBaseLength > 0 && baseMobile.Length >= allowedBaseLength)
+                            {
+                                uniqueUsername = $"{baseMobile.Substring(0, allowedBaseLength)}{suffix}";
+                            }
+                            else
+                            {
+                                uniqueUsername = $"{baseMobile}_{counter}";
+                            }
                             counter++;
                         }
 
-                        // Password = Username
                         string password = uniqueUsername;
 
-                        // -------------------------------------------------
-                        // 8. ASPNETUSERS
-                        // Same as manual registration
-                        // -------------------------------------------------
+                        // 1. Create AspNetUser (Identity)
                         var appUser = new ApplicationUser
                         {
                             Id = Guid.NewGuid().ToString(),
-
                             UserName = uniqueUsername,
-
-                            Email = string.IsNullOrWhiteSpace(cleanEmail)
-                                ? null
-                                : cleanEmail,
-
+                            Email = cleanEmail,
                             PhoneNumber = baseMobile,
-
                             EmailConfirmed = true,
-
                             PhoneNumberConfirmed = false,
-
                             SecurityStamp = Guid.NewGuid().ToString()
                         };
 
-                        // -------------------------------------------------
-                        // 9. PASSWORD HASH
-                        // Same PasswordHasher as manual registration
-                        // -------------------------------------------------
-                        var passwordHasher =
-                            new PasswordHasher<ApplicationUser>();
-
-                        appUser.PasswordHash =
-                            passwordHasher.HashPassword(
-                                appUser,
-                                password);
+                        var passwordHasher = new PasswordHasher<ApplicationUser>();
+                        appUser.PasswordHash = passwordHasher.HashPassword(appUser, password);
 
                         _context.Set<ApplicationUser>().Add(appUser);
 
-                        // -------------------------------------------------
-                        // 10. ASPNETUSERROLES
-                        // Direct role mapping
-                        // -------------------------------------------------
+                        // 2. Assign Role in Identity
                         _context.Set<IdentityUserRole<string>>().Add(
                             new IdentityUserRole<string>
                             {
@@ -601,40 +534,23 @@ namespace HemFoundation.Controllers.Api
                             }
                         );
 
-
                         var customUser = new Users
                         {
                             UserID = nextId,
-
                             UserCode = uniqueUsername,
-
                             FirstName = firstName,
-
                             LastName = lastName,
-
                             MobileNo = baseMobile,
-
                             EmailID = cleanEmail,
-
                             IsActive = true,
-
-
-
                             CreatedBy = aff.UserID,
-
                             CreatedDate = DateTime.UtcNow,
-
                             AspNetUserID = appUser.Id,
-
                             RegisterFrom = "Volunteer",
-
                             Password_ = password,
-
-                            IsMobileVerified = true,
-
-                            IsEmailVerified = true,
-
-                            isUserDeactivated = true
+                            IsMobileVerified = false,
+                            IsEmailVerified = false,
+                            isUserDeactivated = false
                         };
 
                         _context.Users.Add(customUser);
@@ -642,43 +558,57 @@ namespace HemFoundation.Controllers.Api
                         var volunteer = new Volunteer
                         {
                             Id = nextId,
-
                             FirstName = firstName,
-
                             LastName = lastName,
-
                             MobileNo = baseMobile,
-
                             Email = cleanEmail,
-
                             InstituteId = request.InstituteId,
-
                             AffiliateId = aff.UserID,
-
                             AspNetUserId = appUser.Id,
-
                             Password_ = password,
-
                             IsActive = true,
-
                             IsDeleted = false,
-
                             CreatedDate = DateTime.UtcNow
                         };
 
                         _context.Volunteers.Add(volunteer);
 
-                        // -------------------------------------------------
-                        // 13. NEXT ID
-                        // -------------------------------------------------
-                        nextId++;
+                        await _context.SaveChangesAsync();
 
+                        try
+                        {
+
+                            if (!string.IsNullOrEmpty(baseMobile))
+                            {
+                                _smsManager.StudentRegistration(baseMobile, volunteer.FirstName, uniqueUsername, baseMobile);
+                               
+                            }
+
+                            if (!string.IsNullOrEmpty(volunteer.Email))
+                            {
+                                var studentRegObj = new StudentRegistration
+                                {
+                                    FirstName = volunteer.FirstName,
+                                    LastName = volunteer.LastName,
+                                    EmailID = volunteer.Email,
+                                    UserName = uniqueUsername,
+                                    Password = baseMobile,
+                                    MobileNo = baseMobile
+                                };
+                                Utility.StudentRegistration(studentRegObj);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Notification dispatch failed: " + ex.ToString());
+                        }
+
+                        nextId++;
                         addedCount++;
                     }
                     catch (Exception ex)
                     {
                         failedCount++;
-
                         errors.Add(new
                         {
                             mobile = item.MobileNo,
@@ -687,25 +617,12 @@ namespace HemFoundation.Controllers.Api
                     }
                 }
 
-                // ---------------------------------------------------------
-                // 14. SAVE ALL
-                // ---------------------------------------------------------
-                await _context.SaveChangesAsync();
-
-                // ---------------------------------------------------------
-                // 15. RESPONSE
-                // ---------------------------------------------------------
                 return Ok(new
                 {
                     success = true,
-
-                    message =
-                        $"{addedCount} Volunteers registered successfully.",
-
+                    message = $"{addedCount} Volunteers registered successfully with SMS & login credentials pattern.",
                     addedCount,
-
                     failedCount,
-
                     errors
                 });
             }
@@ -714,17 +631,12 @@ namespace HemFoundation.Controllers.Api
                 return BadRequest(new
                 {
                     success = false,
-
                     message = "Error while saving bulk volunteers.",
-
-                    error =
-                        ex.InnerException?.Message
-                        ?? ex.Message
+                    error = ex.InnerException?.Message ?? ex.Message
                 });
             }
         }
 
-        // 7. DELETE VOLUNTEER
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -748,7 +660,6 @@ namespace HemFoundation.Controllers.Api
             var folder = Path.Combine(_env.WebRootPath, "uploads", "formats");
             if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
-            // Save standard format file (Override existing)
             var filePath = Path.Combine(folder, "Volunteer_Sample_Format.xlsx");
             using (var fs = new FileStream(filePath, FileMode.Create))
             {
@@ -927,9 +838,6 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
-        // =========================================================
-        // 10. SAVE MULTIPLE SCHOOL MAPPINGS FOR VOLUNTEER
-        // =========================================================
         [HttpPost("save-mapping")]
         public async Task<IActionResult> SaveVolunteerMapping(
      [FromBody] VolunteerMappingDto model)
@@ -1145,161 +1053,85 @@ namespace HemFoundation.Controllers.Api
         {
             try
             {
-                // =====================================================
-                // 1. Current logged-in user
-                // =====================================================
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
                 if (string.IsNullOrEmpty(userId))
-                    return Unauthorized(new
-                    {
-                        success = false,
-                        message = "User not authenticated."
-                    });
+                    return Unauthorized(new { success = false, message = "User not authenticated." });
 
-
-                // =====================================================
-                // 2. Current Volunteer find karo
-                // =====================================================
                 var volunteer = await _context.Volunteers
-                    .FirstOrDefaultAsync(v =>
-                        v.AspNetUserId == userId &&
-                        v.IsActive &&
-                        !v.IsDeleted);
+                    .FirstOrDefaultAsync(v => v.AspNetUserId == userId && v.IsActive && !v.IsDeleted);
 
                 if (volunteer == null)
                 {
-                    return Ok(new
-                    {
-                        success = true,
-                        data = new List<object>()
-                    });
+                    return Ok(new { success = true, data = new List<object>() });
                 }
 
-
-                // =====================================================
-                // 3. Volunteer ke active mappings
-                // =====================================================
                 var mappings = await _context.VolunteerInstituteMappings
-                    .Where(m =>
-                        m.VolunteerId == volunteer.Id &&
-                        m.IsActive &&
-                        !m.IsDeleted)
-                    .Select(m => new
-                    {
-                        m.InstituteId,
-                        m.CreatedDate,
-                        m.LastUpdatedBy
-                    })
+                    .Where(m => m.VolunteerId == volunteer.Id && m.IsActive && !m.IsDeleted)
+                    .Select(m => new { m.InstituteId, m.CreatedDate, m.LastUpdatedBy })
                     .ToListAsync();
 
                 if (!mappings.Any())
                 {
-                    return Ok(new
-                    {
-                        success = true,
-                        data = new List<object>()
-                    });
+                    return Ok(new { success = true, data = new List<object>() });
                 }
 
-
-                // =====================================================
-                // 4. Affiliate ka ReferralCode
-                // =====================================================
-                var affiliate = await _context.Users
-                    .FirstOrDefaultAsync(u =>
-                        u.AspNetUserID == volunteer.AspNetUserId);
-
-                if (affiliate == null)
+                // Referral Code check (AffiliateId agar long hai)
+                string? referralCode = null;
+                if (volunteer.AffiliateId > 0) // <-- Yahan .HasValue hatakar direct > 0 check kiya hai
                 {
-                    return Ok(new
-                    {
-                        success = true,
-                        data = new List<object>()
-                    });
+                    referralCode = await _context.WJ_ReferralCodes
+                        .Where(x => x.UserID == volunteer.AffiliateId) // <-- .Value bhi hata diya hai
+                        .Select(x => x.ReferralCode)
+                        .FirstOrDefaultAsync();
                 }
 
-                var referralCode = await _context.WJ_ReferralCodes
-                    .Where(x => x.UserID == volunteer.AffiliateId)
-                    .Select(x => x.ReferralCode)
-                    .FirstOrDefaultAsync();
+                var instituteIds = mappings.Select(x => x.InstituteId).Distinct().ToList();
 
+                var schoolsQuery = _context.SchoolProfileDetails
+                    .AsNoTracking()
+                    .Where(x => instituteIds.Contains(x.instituteid));
 
-                // =====================================================
-                // 5. SchoolProfileDetails se schools lao
-                // =====================================================
-                var instituteIds = mappings
-                    .Select(x => x.InstituteId)
-                    .Distinct()
-                    .ToList();
+                if (!string.IsNullOrEmpty(referralCode))
+                {
+                    schoolsQuery = schoolsQuery.Where(x => x.referralcode == referralCode);
+                }
 
-                var schools = await _context.SchoolProfileDetails
-                    .Where(x =>
-                        instituteIds.Contains(x.instituteid) &&
-                        x.referralcode == referralCode)
-                    .Select(x => new
-                    {
-                        InstituteID = x.instituteid,
-                        Name = x.institute_name
-                    })
+                var schools = await schoolsQuery
+                    .Select(x => new { InstituteID = x.instituteid, Name = x.institute_name })
                     .ToListAsync();
 
-
-                // =====================================================
-                // 6. Assigned By users
-                // =====================================================
                 var assignedByIds = mappings
                     .Where(x => !string.IsNullOrWhiteSpace(x.LastUpdatedBy))
                     .Select(x => x.LastUpdatedBy!)
                     .Distinct()
                     .ToList();
 
-                var users = await _context.Users
-                    .Where(u => assignedByIds.Contains(u.AspNetUserID))
-                    .Select(u => new
-                    {
-                        u.AspNetUserID,
-                        u.UserID,
-                        u.FirstName,
-                        u.MobileNo
-                    })
-                    .ToDictionaryAsync(
-                        x => x.AspNetUserID,
-                        x => !string.IsNullOrWhiteSpace(x.FirstName)
-                            ? x.FirstName
-                            : x.MobileNo
-                    );
+                var users = new Dictionary<string, string>();
+                if (assignedByIds.Any())
+                {
+                    users = await _context.Users
+                        .Where(u => assignedByIds.Contains(u.AspNetUserID))
+                        .Select(u => new { u.AspNetUserID, u.FirstName, u.MobileNo })
+                        .ToDictionaryAsync(
+                            x => x.AspNetUserID,
+                            x => !string.IsNullOrWhiteSpace(x.FirstName) ? x.FirstName : x.MobileNo
+                        );
+                }
 
-
-                // =====================================================
-                // 7. Final result
-                // =====================================================
                 var result = mappings
-                    .Join(
-                        schools,
-                        m => m.InstituteId,
-                        s => s.InstituteID,
-                        (m, s) => new
-                        {
-                            s.InstituteID,
-                            s.Name,
-                            AssignedDate = m.CreatedDate,
-
-                            AssignedBy =
-                                !string.IsNullOrWhiteSpace(m.LastUpdatedBy) &&
-                                users.ContainsKey(m.LastUpdatedBy!)
-                                    ? users[m.LastUpdatedBy!]
-                                    : m.LastUpdatedBy
-                        })
+                    .Join(schools, m => m.InstituteId, s => s.InstituteID, (m, s) => new
+                    {
+                        s.InstituteID,
+                        s.Name,
+                        AssignedDate = m.CreatedDate,
+                        AssignedBy = !string.IsNullOrWhiteSpace(m.LastUpdatedBy) && users.ContainsKey(m.LastUpdatedBy)
+                            ? users[m.LastUpdatedBy]
+                            : (m.LastUpdatedBy ?? "N/A")
+                    })
                     .OrderBy(x => x.Name)
                     .ToList();
 
-
-                return Ok(new
-                {
-                    success = true,
-                    data = result
-                });
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
@@ -1311,6 +1143,7 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
+
         [HttpGet("dashboard-summary-counts")]
         public async Task<IActionResult> GetDashboardSummaryCounts()
         {
@@ -1337,18 +1170,34 @@ namespace HemFoundation.Controllers.Api
                 {
                     await conn.OpenAsync();
 
-                    string summarySql = @"
-                -- 1. Find the active, non-deleted volunteer mapped to this AspNetUserId
-                SELECT id FROM volunteers 
-                WHERE aspnetuserid = @AspNetUserId AND isactive = TRUE AND isdeleted = FALSE 
-                LIMIT 1;
+                    // 1. Pehle Volunteer ki ID nikaal lete hain safely
+                    int volunteerId = 0;
+                    string getVolSql = @"SELECT id FROM volunteers WHERE aspnetuserid = @AspNetUserId AND isactive = TRUE AND isdeleted = FALSE LIMIT 1;";
 
-                -- 2. Extract mapped institute IDs and aggregate metrics in a single pass
+                    using (var cmdVol = new Npgsql.NpgsqlCommand(getVolSql, conn))
+                    {
+                        cmdVol.Parameters.AddWithValue("AspNetUserId", userId);
+                        var result = await cmdVol.ExecuteScalarAsync();
+                        if (result != null && result != DBNull.Value)
+                        {
+                            volunteerId = Convert.ToInt32(result);
+                        }
+                    }
+
+                    // Agar volunteer nahi mila toh sabhi counts 0 return kar do
+                    if (volunteerId <= 0)
+                    {
+                        return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
+                    }
+
+                    // 2. Ab us volunteerId ke base par saare aggregate counts ek single clean query mein nikalenge
+                    string summarySql = @"
                 WITH TargetInstitutes AS (
                     SELECT DISTINCT instituteid 
                     FROM volunteerinstitutemappings 
-                    WHERE volunteerid = (SELECT id FROM volunteers WHERE aspnetuserid = @AspNetUserId AND isactive = TRUE AND isdeleted = FALSE LIMIT 1)
-                      AND isactive = TRUE AND isdeleted = FALSE
+                    WHERE volunteerid = @VolunteerId 
+                      AND isactive = TRUE 
+                      AND isdeleted = FALSE 
                       AND instituteid IS NOT NULL
                 ),
                 AggregatedCounts AS (
@@ -1368,28 +1217,20 @@ namespace HemFoundation.Controllers.Api
 
                     using (var cmd = new Npgsql.NpgsqlCommand(summarySql, conn))
                     {
-                        cmd.Parameters.AddWithValue("AspNetUserId", userId);
+                        cmd.Parameters.AddWithValue("VolunteerId", volunteerId);
 
                         using (var reader = await cmd.ExecuteReaderAsync())
                         {
-                            // First result set: Check if volunteer exists
-                            bool volunteerExists = await reader.ReadAsync();
-                            if (!volunteerExists)
+                            if (await reader.ReadAsync())
                             {
-                                return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
-                            }
-
-                            // Move to the second result set (AggregatedCounts)
-                            if (await reader.NextResultAsync() && await reader.ReadAsync())
-                            {
-                                totalStudents = reader.GetInt32(0);
-                                activeStudents = reader.GetInt32(1);
-                                totalTeachers = reader.GetInt32(2);
-                                activeTeachers = reader.GetInt32(3);
-                                totalSelProjects = reader.GetInt32(4);
-                                familyProjects = reader.GetInt32(5);
-                                individualProjects = reader.GetInt32(6);
-                                groupPbl = reader.GetInt32(7);
+                                totalStudents = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                                activeStudents = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+                                totalTeachers = reader.IsDBNull(2) ? 0 : reader.GetInt32(2);
+                                activeTeachers = reader.IsDBNull(3) ? 0 : reader.GetInt32(3);
+                                totalSelProjects = reader.IsDBNull(4) ? 0 : reader.GetInt32(4);
+                                familyProjects = reader.IsDBNull(5) ? 0 : reader.GetInt32(5);
+                                individualProjects = reader.IsDBNull(6) ? 0 : reader.GetInt32(6);
+                                groupPbl = reader.IsDBNull(7) ? 0 : reader.GetInt32(7);
                             }
                         }
                     }
@@ -1422,6 +1263,119 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
+        //[HttpGet("dashboard-summary-counts")]
+        //public async Task<IActionResult> GetDashboardSummaryCounts()
+        //{
+        //    try
+        //    {
+        //        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //        if (string.IsNullOrEmpty(userId))
+        //        {
+        //            return Unauthorized(new { success = false, message = "User not authenticated." });
+        //        }
+
+        //        string connString = _configuration.GetConnectionString("DefaultConnection");
+
+        //        int totalStudents = 0;
+        //        int activeStudents = 0;
+        //        int totalTeachers = 0;
+        //        int activeTeachers = 0;
+        //        int totalSelProjects = 0;
+        //        int familyProjects = 0;
+        //        int individualProjects = 0;
+        //        int groupPbl = 0;
+
+        //        using (var conn = new Npgsql.NpgsqlConnection(connString))
+        //        {
+        //            await conn.OpenAsync();
+
+        //            string summarySql = @"
+        //        -- 1. Find the active, non-deleted volunteer mapped to this AspNetUserId
+        //        SELECT id FROM volunteers 
+        //        WHERE aspnetuserid = @AspNetUserId AND isactive = TRUE AND isdeleted = FALSE 
+        //        LIMIT 1;
+
+        //        -- 2. Extract mapped institute IDs and aggregate metrics in a single pass
+        //        WITH TargetInstitutes AS (
+        //            SELECT DISTINCT instituteid 
+        //            FROM volunteerinstitutemappings 
+        //            WHERE volunteerid = (SELECT id FROM volunteers WHERE aspnetuserid = @AspNetUserId AND isactive = TRUE AND isdeleted = FALSE LIMIT 1)
+        //              AND isactive = TRUE AND isdeleted = FALSE
+        //              AND instituteid IS NOT NULL
+        //        ),
+        //        AggregatedCounts AS (
+        //            SELECT 
+        //                (SELECT COUNT(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalStudents,
+        //                (SELECT COUNT(DISTINCT studentid) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type != 'Survey') AS ActiveStudents,
+        //                (SELECT COUNT(DISTINCT teacherid) FROM wj_teacherassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalTeachers,
+        //                (SELECT COUNT(DISTINCT teacherid) FROM hf_view_teacheractivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS ActiveTeachers,
+        //                (SELECT COUNT(DISTINCT instituteid) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalSelProjects,
+        //                (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Family PBL') AS FamilyProjects,
+        //                (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Individual PBL') AS IndividualProjects,
+        //                (SELECT COUNT(*) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS GroupPbl
+        //        )
+        //        SELECT TotalStudents, ActiveStudents, TotalTeachers, ActiveTeachers, TotalSelProjects, FamilyProjects, IndividualProjects, GroupPbl 
+        //        FROM AggregatedCounts;
+        //    ";
+
+        //            using (var cmd = new Npgsql.NpgsqlCommand(summarySql, conn))
+        //            {
+        //                cmd.Parameters.AddWithValue("AspNetUserId", userId);
+
+        //                using (var reader = await cmd.ExecuteReaderAsync())
+        //                {
+        //                    // First result set: Check if volunteer exists
+        //                    bool volunteerExists = await reader.ReadAsync();
+        //                    if (!volunteerExists)
+        //                    {
+        //                        return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
+        //                    }
+
+        //                    // Move to the second result set (AggregatedCounts)
+        //                    if (await reader.NextResultAsync() && await reader.ReadAsync())
+        //                    {
+        //                        totalStudents = reader.GetInt32(0);
+        //                        activeStudents = reader.GetInt32(1);
+        //                        totalTeachers = reader.GetInt32(2);
+        //                        activeTeachers = reader.GetInt32(3);
+        //                        totalSelProjects = reader.GetInt32(4);
+        //                        familyProjects = reader.GetInt32(5);
+        //                        individualProjects = reader.GetInt32(6);
+        //                        groupPbl = reader.GetInt32(7);
+        //                    }
+        //                }
+        //            }
+        //        }
+
+        //        return Ok(new
+        //        {
+        //            success = true,
+        //            data = new
+        //            {
+        //                totalStudents,
+        //                activeStudents,
+        //                totalTeachers,
+        //                activeTeachers,
+        //                totalSelProjects,
+        //                familyProjects,
+        //                individualProjects,
+        //                groupPbl
+        //            }
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new
+        //        {
+        //            success = false,
+        //            message = "Error loading volunteer dashboard summary counts.",
+        //            error = ex.Message,
+        //            innerException = ex.InnerException?.Message
+        //        });
+        //    }
+        //}
+
+
         [HttpGet("dashboard-summary-counts1")]
         public async Task<IActionResult> GetDashboardSummaryCounts1()
         {
@@ -1433,7 +1387,6 @@ namespace HemFoundation.Controllers.Api
                 return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
             }
 
-            // Cast as int? to securely compare against table columns that might be nullable
             var instituteIds = await _context.VolunteerInstituteMappings
                 .Where(m => m.VolunteerId == volunteer.Id && m.IsActive && !m.IsDeleted)
                 .Select(m => (int?)m.InstituteId)

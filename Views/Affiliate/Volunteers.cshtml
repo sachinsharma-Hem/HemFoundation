@@ -31,6 +31,8 @@
                         <th>Name</th>
                         <th>Contact Details</th>
                         <th>Associated School</th>
+                        <th>UserName</th>
+                        <th>Password</th>
                         <th>Status</th>
                         <th class="text-center">Action</th>
                     </tr>
@@ -234,7 +236,7 @@
         }
 
         function loadVolunteers() {
-            $('#volTableBody').html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div></td></tr>');
+            $('#volTableBody').html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>');
             $.ajax({
                 url: '/api/volunteer/list',
                 type: 'GET',
@@ -246,19 +248,21 @@
                             let badge = v.isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
 
                             html += `<tr>
-                                        <td><b class="text-dark">${v.name}</b><br><small class="text-muted">Joined: ${new Date(v.createdDate).toLocaleDateString('en-GB')}</small></td>
-                                        <td><i class="bi bi-telephone text-muted"></i> ${v.mobileNo}<br><i class="bi bi-envelope text-muted"></i> <small>${v.email || 'N/A'}</small></td>
-                                        <td><b>${v.schoolName}</b></td>
-                                        <td>${badge}</td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-light border text-primary shadow-none me-1" onclick="editVol(${v.id}, '${v.name.split(' ')[0]}', '${v.name.split(' ').slice(1).join(' ')}', '${v.mobileNo}', '${v.email || ''}', ${v.instituteId})"><i class="bi bi-pencil-square"></i></button>
-                                            <button class="btn btn-sm btn-light border text-danger shadow-none" onclick="deleteVol(${v.id})"><i class="bi bi-trash"></i></button>
-                                        </td>
-                                    </tr>`;
+                                                <td><b class="text-dark">${v.name}</b><br><small class="text-muted">Joined: ${new Date(v.createdDate).toLocaleDateString('en-GB')}</small></td>
+                                                <td><i class="bi bi-telephone text-muted"></i> ${v.mobileNo}<br><i class="bi bi-envelope text-muted"></i> <small>${v.email || 'N/A'}</small></td>
+                                                <td><b>${v.schoolName}</b></td>
+                                                <td><code class="text-primary fw-bold">${v.userName || 'N/A'}</code></td>
+                                                <td><code class="text-danger fw-bold">${v.password || 'N/A'}</code></td>
+                                                <td>${badge}</td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-light border text-primary shadow-none me-1" onclick="editVol(${v.id}, '${v.name.split(' ')[0]}', '${v.name.split(' ').slice(1).join(' ')}', '${v.mobileNo}', '${v.email || ''}', ${v.instituteId})"><i class="bi bi-pencil-square"></i></button>
+                                                    <button class="btn btn-sm btn-light border text-danger shadow-none" onclick="deleteVol(${v.id})"><i class="bi bi-trash"></i></button>
+                                                </td>
+                                            </tr>`;
                         });
                         $('#volTableBody').html(html);
                     } else {
-                        $('#volTableBody').html('<tr><td colspan="5" class="text-center py-5 text-muted">No volunteers registered yet.</td></tr>');
+                        $('#volTableBody').html('<tr><td colspan="7" class="text-center py-5 text-muted">No volunteers registered yet.</td></tr>');
                     }
                 }
             });
