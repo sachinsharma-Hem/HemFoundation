@@ -128,7 +128,17 @@ namespace HemFoundation.Controllers
             }
             return View("~/Views/Admin/UserDetails.cshtml");
         }
+        [HttpGet("passwordmismatch")]
+        public IActionResult PasswordMismatch()
+        {
+            var isLoggedIn = HttpContext.Session.GetString("IsAdminLoggedIn");
+            if (string.IsNullOrEmpty(isLoggedIn) || isLoggedIn != "true")
+            {
+                return RedirectToAction("Index", "Home");
+            }
 
+            return View("~/Views/Admin/PasswordMismatch.cshtml");
+        }
 
     }
 }

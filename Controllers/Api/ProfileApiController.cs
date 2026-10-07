@@ -164,7 +164,7 @@ namespace HemFoundation.Controllers.Api
                 {
                     user.Id,
                     fullName = (customUser != null ? $"{customUser.FirstName} {customUser.LastName}".Trim() : user.UserName),
-                    customUser.EmailID??"NA",
+                    Email = customUser?.EmailID ?? "NA",
                     phoneNumber = customUser?.MobileNo ?? user.PhoneNumber
                 },
                 profile = profileData

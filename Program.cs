@@ -1,6 +1,7 @@
 using HemFoundation.Common;
 using HemFoundation.Data;
 using HemFoundation.Data.Seed;
+using HemFoundation.Helpers;
 using HemFoundation.Models;
 using HemFoundation.Models.Identity;
 using HemFoundation.Services;
@@ -18,6 +19,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddHttpClient("InHouseFileStorage");
+
+
+builder.Services.AddScoped<IPasswordMismatchRepository,
+    PasswordMismatchRepository>();
+
+builder.Services.AddScoped<IPasswordHasher<IdentityUser>,
+    PasswordHasher<IdentityUser>>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {

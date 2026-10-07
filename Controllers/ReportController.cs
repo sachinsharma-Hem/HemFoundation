@@ -327,7 +327,9 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                         WHEN pa.title = 'Game' THEN (SELECT count(DISTINCT game24id) FROM game24solution WHERE game24solution.courseid = pa.courseid AND game24solution.iscreatedby = wjs.studentid AND game24solution.solutionanswers <> 'NA' AND game24solution.game24id <> 0) 
                         WHEN pa.title = 'Ken Ken' THEN (SELECT count(DISTINCT kmid) FROM ken_answers WHERE ken_answers.courseid = pa.courseid AND ken_answers.iscreatedby = wjs.studentid AND ken_answers.kmid NOT IN ('345','346','350','351','352')) 
                         WHEN pa.title = 'Futoshiki' THEN (SELECT count(DISTINCT fid) FROM futoshiki_answer WHERE futoshiki_answer.courseid = pa.courseid AND futoshiki_answer.iscreatedby = wjs.studentid AND futoshiki_answer.fid <> 0) 
-                        WHEN pa.title IN ('Puzzle','Scramble','Wordgame') THEN '2' 
+                         WHEN pa.title = 'Puzzle' THEN (SELECT COUNT(DISTINCT pztranid)*2 FROM puzzletransaction WHERE puzzletransaction.courseid = pa.courseid AND puzzletransaction.isresolvedby = wjs.studentid AND puzzletransaction.isresolved ='Y')   
+                         WHEN pa.title = 'Scramble' THEN (SELECT (COUNT(ansid) * 2)::text FROM wj_scrambleanswer WHERE userid = wjs.studentid AND answer IS NOT NULL AND questionid IN (SELECT questionid FROM wj_scramblequestion WHERE courseid = pa.courseid)) 
+                        WHEN pa.title IN ('Wordgame') THEN '2' 
                         ELSE '0' 
                     END AS ""MarksObtain"", 
                     p.createddate::DATE AS ""Activity_Date""
@@ -952,7 +954,9 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                  WHEN pa.title = 'Game' THEN (SELECT count(DISTINCT game24id) FROM game24solution WHERE game24solution.courseid = pa.courseid AND game24solution.iscreatedby = wjs.studentid AND game24solution.solutionanswers <> 'NA' AND game24solution.game24id <> 0) 
                  WHEN pa.title = 'Ken Ken' THEN (SELECT count(DISTINCT kmid) FROM ken_answers WHERE ken_answers.courseid = pa.courseid AND ken_answers.iscreatedby = wjs.studentid AND ken_answers.kmid NOT IN ('345','346','350','351','352')) 
                  WHEN pa.title = 'Futoshiki' THEN (SELECT count(DISTINCT fid) FROM futoshiki_answer WHERE futoshiki_answer.courseid = pa.courseid AND futoshiki_answer.iscreatedby = wjs.studentid AND futoshiki_answer.fid <> 0) 
-                 WHEN pa.title IN ('Puzzle','Scramble','Wordgame') THEN '2' 
+                 WHEN pa.title = 'Puzzle' THEN (SELECT COUNT(DISTINCT pztranid)*2 FROM puzzletransaction WHERE puzzletransaction.courseid = pa.courseid AND puzzletransaction.isresolvedby = wjs.studentid AND puzzletransaction.isresolved ='Y')   
+                 WHEN pa.title = 'Scramble' THEN (SELECT (COUNT(ansid) * 2)::text FROM wj_scrambleanswer WHERE userid = wjs.studentid AND answer IS NOT NULL AND questionid IN (SELECT questionid FROM wj_scramblequestion WHERE courseid = pa.courseid)) 
+                 WHEN pa.title IN ('Wordgame') THEN '2' 
                  ELSE '0' 
              END AS ""MarksObtain"", 
              p.createddate::DATE AS ""Activity_Date""
