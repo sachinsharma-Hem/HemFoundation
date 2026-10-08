@@ -21,11 +21,19 @@
                 </div>
 
                 <div class="row g-4 align-items-center">
-                    <!-- Box 1: Unassigned / Available Schools -->
+                    <!-- Box 1: Unassigned / Available Schools with Pincode Search Filter -->
                     <div class="col-md-5">
                         <div class="card border rounded-4 p-3 bg-light h-100">
-                            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-building me-1"></i> Available Schools (Not Assigned)</h6>
-                            <div class="border rounded-3 bg-white p-2" style="height: 250px; overflow-y: auto;">
+                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-building me-1"></i> Available Schools</h6>
+                            
+                            <!-- Pincode Search Filter Input -->
+                            <div class="input-group input-group-sm mb-2">
+                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                <input type="text" id="txtPincodeSearch" class="form-control shadow-none" placeholder="Search by Pincode..." onkeyup="filterUnassignedSchools()">
+                                <button class="btn btn-outline-secondary" type="button" onclick="$('#txtPincodeSearch').val(''); filterUnassignedSchools();"><i class="bi bi-x"></i></button>
+                            </div>
+
+                            <div class="border rounded-3 bg-white p-2" style="height: 230px; overflow-y: auto;">
                                 <ul id="listUnassignedSchools" class="list-group list-group-flush small">
                                     <li class="list-group-item text-muted text-center py-4">Please select a volunteer first</li>
                                 </ul>
@@ -46,8 +54,8 @@
                     <!-- Box 2: Assigned Schools -->
                     <div class="col-md-5">
                         <div class="card border rounded-4 p-3 bg-light h-100">
-                            <h6 class="fw-bold text-success mb-3"><i class="bi bi-building-check me-1"></i> Assigned Schools</h6>
-                            <div class="border rounded-3 bg-white p-2" style="height: 250px; overflow-y: auto;">
+                            <h6 class="fw-bold text-success mb-3"><i class="bi bi-building-check me-1"></i> Assigned to This Volunteer</h6>
+                            <div class="border rounded-3 bg-white p-2" style="height: 280px; overflow-y: auto;">
                                 <ul id="listAssignedSchools" class="list-group list-group-flush small">
                                     <li class="list-group-item text-muted text-center py-4">No schools assigned yet</li>
                                 </ul>
@@ -67,418 +75,232 @@
 </div>
 
 <script>
+    let globalUnassignedSchools = [];
 
     // =========================================================
     // OPEN ASSIGN SCHOOL MODAL
     // =========================================================
     function openAssignSchoolModal() {
-
-        let token =
-            localStorage.getItem('jwt_token') ||
-            sessionStorage.getItem('jwt_token') ||
-            '';
+        let token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '';
 
         $.ajax({
             url: '/api/volunteer/list',
             type: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + token
-            },
-
+            headers: { 'Authorization': 'Bearer ' + token },
             success: function(res) {
-
                 if (res.success && res.data) {
-
-                    let html =
-                        '<option value="">-- Choose Volunteer --</option>';
-
+                    let html = '<option value="">-- Choose Volunteer --</option>';
                     res.data.forEach(v => {
-
                         html += `
-                                <option value="${v.id}">
-                                    ${v.name} (${v.mobileNo})
-                                </option>
-                            `;
+                            <option value="${v.id}">
+                                ${v.name} (${v.mobileNo})
+                            </option>
+                        `;
                     });
-
                     $('#ddlAssignVolunteer').html(html);
-                }
-                else {
-
-                    $('#ddlAssignVolunteer').html(
-                        '<option value="">No volunteers found</option>'
-                    );
+                } else {
+                    $('#ddlAssignVolunteer').html('<option value="">No volunteers found</option>');
                 }
             },
-
             error: function(xhr) {
-
-                console.error(
-                    'Volunteer list error:',
-                    xhr.responseText
-                );
-
+                console.error('Volunteer list error:', xhr.responseText);
                 alert('Unable to load volunteers.');
             }
         });
 
-        // Reset lists
-        $('#listUnassignedSchools').html(
-            '<li class="list-group-item text-muted text-center py-4">' +
-            'Please select a volunteer first' +
-            '</li>'
-        );
-
-        $('#listAssignedSchools').html(
-            '<li class="list-group-item text-muted text-center py-4">' +
-            'No schools assigned yet' +
-            '</li>'
-        );
-
+        // Reset lists & search box
+        $('#txtPincodeSearch').val('');
+        globalUnassignedSchools = [];
+        $('#listUnassignedSchools').html('<li class="list-group-item text-muted text-center py-4">Please select a volunteer first</li>');
+        $('#listAssignedSchools').html('<li class="list-group-item text-muted text-center py-4">No schools assigned yet</li>');
         $('#assignSchoolModal').modal('show');
     }
-
 
     // =========================================================
     // FETCH VOLUNTEER SCHOOL MAPPINGS
     // =========================================================
     function fetchVolunteerMappings(volunteerId) {
-
         if (!volunteerId) {
-
-            $('#listUnassignedSchools').html(
-                '<li class="list-group-item text-muted text-center py-4">' +
-                'Please select a volunteer first' +
-                '</li>'
-            );
-
-            $('#listAssignedSchools').html(
-                '<li class="list-group-item text-muted text-center py-4">' +
-                'No schools assigned yet' +
-                '</li>'
-            );
-
+            $('#txtPincodeSearch').val('');
+            globalUnassignedSchools = [];
+            $('#listUnassignedSchools').html('<li class="list-group-item text-muted text-center py-4">Please select a volunteer first</li>');
+            $('#listAssignedSchools').html('<li class="list-group-item text-muted text-center py-4">No schools assigned yet</li>');
             return;
         }
 
-        let token =
-            localStorage.getItem('jwt_token') ||
-            sessionStorage.getItem('jwt_token') ||
-            '';
+        let token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '';
 
         $.ajax({
-
             url: `/api/volunteer/mapping-schools/${volunteerId}`,
-
             type: 'GET',
-
-            headers: {
-                'Authorization': 'Bearer ' + token
-            },
-
+            headers: { 'Authorization': 'Bearer ' + token },
             success: function(res) {
-
                 console.log('Mapping response:', res);
-
                 if (!res.success) {
-
                     alert(res.message || 'Unable to load mappings.');
                     return;
                 }
 
-                // =================================================
-                // UNASSIGNED SCHOOLS
-                // =================================================
-
-                let unassignedHtml = '';
-
-                if (
-                    res.unassignedSchools &&
-                    res.unassignedSchools.length > 0
-                ) {
-
-                    res.unassignedSchools.forEach(s => {
-
-                        unassignedHtml += `
-                                <li
-                                    class="list-group-item list-group-item-action
-                                           py-2 border-0 rounded-2 mb-1"
-                                    style="cursor:pointer;"
-                                    data-id="${s.instituteId}"
-                                    onclick="toggleSelect(this)"
-                                >
-                                    ${s.name}
-                                </li>
-                            `;
-                    });
-
-                }
-                else {
-
-                    unassignedHtml =
-                        '<li class="list-group-item text-muted text-center py-3 border-0">' +
-                        'All available schools are assigned' +
-                        '</li>';
-                }
-
-                $('#listUnassignedSchools').html(unassignedHtml);
-
+                // Store unassigned schools globally for filtering
+                globalUnassignedSchools = res.unassignedSchools || [];
+                renderUnassignedSchools(globalUnassignedSchools);
 
                 // =================================================
                 // ASSIGNED SCHOOLS
                 // =================================================
-
                 let assignedHtml = '';
-
-                if (
-                    res.assignedSchools &&
-                    res.assignedSchools.length > 0
-                ) {
-
+                if (res.assignedSchools && res.assignedSchools.length > 0) {
                     res.assignedSchools.forEach(s => {
+                        let otherVolunteersInfo = s.assignedVolunteers && s.assignedVolunteers !== "None"
+                            ? `<br><small class="text-muted">Also with: ${s.assignedVolunteers}</small>`
+                            : '';
+                        let pincodeBadge = s.pincode ? ` <span class="badge bg-light text-dark border float-end">Pin: ${s.pincode}</span>` : '';
 
                         assignedHtml += `
-                                <li
-                                    class="list-group-item list-group-item-action
-                                           py-2 border-0 rounded-2 mb-1"
-                                    style="cursor:pointer;"
-                                    data-id="${s.instituteId}"
-                                    onclick="toggleSelect(this)"
-                                >
-                                    ${s.name}
-                                </li>
-                            `;
+                            <li class="list-group-item list-group-item-action py-2 border-0 rounded-2 mb-1"
+                                style="cursor:pointer;"
+                                data-id="${s.instituteId}"
+                                onclick="toggleSelect(this)">
+                                <strong>${s.name}</strong>${pincodeBadge} ${otherVolunteersInfo}
+                            </li>
+                        `;
                     });
-
+                } else {
+                    assignedHtml = '<li class="list-group-item text-muted text-center py-3 border-0">No schools assigned</li>';
                 }
-                else {
-
-                    assignedHtml =
-                        '<li class="list-group-item text-muted text-center py-3 border-0">' +
-                        'No schools assigned' +
-                        '</li>';
-                }
-
                 $('#listAssignedSchools').html(assignedHtml);
             },
-
             error: function(xhr) {
-
-                console.error(
-                    'Mapping fetch error:',
-                    xhr.status,
-                    xhr.responseText
-                );
-
-                alert(
-                    xhr.responseJSON?.message ||
-                    'Unable to load school mappings.'
-                );
+                console.error('Mapping fetch error:', xhr.status, xhr.responseText);
+                alert(xhr.responseJSON?.message || 'Unable to load school mappings.');
             }
         });
     }
 
+    // =========================================================
+    // RENDER & FILTER UNASSIGNED SCHOOLS BY PINCODE
+    // =========================================================
+    function renderUnassignedSchools(schools) {
+        let unassignedHtml = '';
+        if (schools && schools.length > 0) {
+            schools.forEach(s => {
+                let otherVolunteersInfo = s.assignedVolunteers && s.assignedVolunteers !== "None"
+                    ? `<br><small class="text-muted">Assigned to: ${s.assignedVolunteers}</small>`
+                    : '';
+                let pincodeBadge = s.pincode ? ` <span class="badge bg-light text-dark border float-end">Pin: ${s.pincode}</span>` : '';
+
+                unassignedHtml += `
+                    <li class="list-group-item list-group-item-action py-2 border-0 rounded-2 mb-1"
+                        style="cursor:pointer;"
+                        data-id="${s.instituteId}"
+                        onclick="toggleSelect(this)">
+                        <strong>${s.name}</strong>${pincodeBadge} ${otherVolunteersInfo}
+                    </li>
+                `;
+            });
+        } else {
+            unassignedHtml = '<li class="list-group-item text-muted text-center py-3 border-0">No matching schools found</li>';
+        }
+        $('#listUnassignedSchools').html(unassignedHtml);
+    }
+
+    function filterUnassignedSchools() {
+        let query = $('#txtPincodeSearch').val().trim().toLowerCase();
+        if (!query) {
+            renderUnassignedSchools(globalUnassignedSchools);
+            return;
+        }
+
+        let filtered = globalUnassignedSchools.filter(s => {
+            return s.pincode && s.pincode.toLowerCase().includes(query);
+        });
+
+        renderUnassignedSchools(filtered);
+    }
 
     // =========================================================
     // SELECT / UNSELECT SCHOOL
     // =========================================================
     function toggleSelect(element) {
-
-        $(element).toggleClass(
-            'active bg-primary text-white'
-        );
+        $(element).toggleClass('active bg-primary text-white');
     }
-
 
     // =========================================================
     // MOVE SELECTED -> ASSIGNED
     // =========================================================
     function moveSelectedToAssigned() {
-
         $('#listUnassignedSchools .active').each(function() {
-
-            $(this)
-                .removeClass('active bg-primary text-white');
-
-            $('#listAssignedSchools').append(this);
+            $(this).removeClass('active bg-primary text-white');$('#listAssignedSchools').append(this);
         });
-
         $('#listAssignedSchools .text-muted').remove();
     }
-
 
     // =========================================================
     // MOVE SELECTED -> UNASSIGNED
     // =========================================================
     function moveSelectedToUnassigned() {
-
         $('#listAssignedSchools .active').each(function() {
-
-            $(this)
-                .removeClass('active bg-primary text-white');
-
+            $(this).removeClass('active bg-primary text-white');
+            // Re-render or push back to global array check can be handled, simplified via direct append
             $('#listUnassignedSchools').append(this);
         });
-
         $('#listUnassignedSchools .text-muted').remove();
     }
-
 
     // =========================================================
     // SAVE SCHOOL MAPPINGS
     // =========================================================
     function saveSchoolMappings() {
+        let volunteerId = $('#ddlAssignVolunteer').val();
 
-        let volunteerId =
-            $('#ddlAssignVolunteer').val();
-
-        // ---------------------------------------------------------
-        // VOLUNTEER VALIDATION
-        // ---------------------------------------------------------
         if (!volunteerId) {
-
             alert('Please select a volunteer.');
             return;
         }
 
-
-        // ---------------------------------------------------------
-        // COLLECT ASSIGNED SCHOOL IDs
-        // IMPORTANT:
-        // data-id se value read hogi
-        // ---------------------------------------------------------
         let instituteIds = [];
-
         $('#listAssignedSchools li[data-id]').each(function() {
-
-            let id = parseInt(
-                $(this).attr('data-id'),
-                10
-            );
-
-            // NaN ko payload me jane se roko
+            let id = parseInt($(this).attr('data-id'), 10);
             if (!isNaN(id) && id > 0) {
                 instituteIds.push(id);
             }
         });
 
-
-        // Duplicate IDs remove
         instituteIds = [...new Set(instituteIds)];
 
-
-        // ---------------------------------------------------------
-        // PAYLOAD
-        // ---------------------------------------------------------
         let payload = {
-
-            VolunteerId: parseInt(
-                volunteerId,
-                10
-            ),
-
+            VolunteerId: parseInt(volunteerId, 10),
             InstituteIds: instituteIds
         };
 
+        let token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '';
 
-        console.log(
-            'SAVE MAPPING PAYLOAD:',
-            payload
-        );
-
-
-        // ---------------------------------------------------------
-        // TOKEN
-        // ---------------------------------------------------------
-        let token =
-            localStorage.getItem('jwt_token') ||
-            sessionStorage.getItem('jwt_token') ||
-            '';
-
-
-        // ---------------------------------------------------------
-        // AJAX
-        // ---------------------------------------------------------
         $.ajax({
-
             url: '/api/volunteer/save-mapping',
-
             type: 'POST',
-
             contentType: 'application/json; charset=utf-8',
-
             dataType: 'json',
-
-            headers: {
-                'Authorization': 'Bearer ' + token
-            },
-
+            headers: { 'Authorization': 'Bearer ' + token },
             data: JSON.stringify(payload),
-
             success: function(res) {
-
-                console.log(
-                    'Save mapping response:',
-                    res
-                );
-
                 if (res.success) {
-
-                    alert(
-                        res.message ||
-                        'School mappings saved successfully.'
-                    );
-
+                    alert(res.message || 'School mappings saved successfully.');
                     $('#assignSchoolModal').modal('hide');
-
-                    if (
-                        typeof loadVolunteers ===
-                        'function'
-                    ) {
+                    if (typeof loadVolunteers === 'function') {
                         loadVolunteers();
                     }
-
-                }
-                else {
-
-                    alert(
-                        res.message ||
-                        'Unable to save mappings.'
-                    );
+                } else {
+                    alert(res.message || 'Unable to save mappings.');
                 }
             },
-
             error: function(xhr) {
-
-                // IMPORTANT:
-                // Actual backend error console me dikhega
-                console.error(
-                    'SAVE MAPPING ERROR:',
-                    xhr.status,
-                    xhr.responseText
-                );
-
-                let message =
-                    'Error saving mappings.';
-
+                console.error('SAVE MAPPING ERROR:', xhr.status, xhr.responseText);
+                let message = 'Error saving mappings.';
                 if (xhr.responseJSON) {
-
-                    message =
-                        xhr.responseJSON.message ||
-                        message;
-
-                    if (xhr.responseJSON.error) {
-
-                        console.error(
-                            'Backend error:',
-                            xhr.responseJSON.error
-                        );
-                    }
+                    message = xhr.responseJSON.message || message;
                 }
-
                 alert(message);
             }
         });
     }
-
 </script>

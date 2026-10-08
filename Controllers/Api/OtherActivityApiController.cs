@@ -268,15 +268,23 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
-
         [HttpGet("expense/list")]
-        public async Task<IActionResult> GetExpenses()
+        public async Task<IActionResult> GetExpenses([FromQuery] string? month)
         {
             long affId = await GetCurrentAffiliateIdAsync();
             if (affId == 0) return Unauthorized(new { success = false, message = "Unauthorized" });
 
-            var list = await _context.AffiliateExpenses
-                .Where(x => x.AffiliateId == affId && !x.IsDeleted)
+            var query = _context.AffiliateExpenses
+                .Where(x => x.AffiliateId == affId && !x.IsDeleted);
+
+            if (!string.IsNullOrEmpty(month) && DateTime.TryParse(month + "-01", out DateTime targetMonth))
+            {
+                int year = targetMonth.Year;
+                int m = targetMonth.Month;
+                query = query.Where(x => x.ExpenseDate.Year == year && x.ExpenseDate.Month == m);
+            }
+
+            var list = await query
                 .OrderByDescending(x => x.ExpenseDate)
                 .Select(x => new
                 {

@@ -2208,7 +2208,7 @@ namespace HemFoundation.Controllers.Api
 
                             return await _context.VolunteerInstituteMappings
                                 .AsNoTracking()
-                                 .Where(x => x.InstituteId == userid)
+                                 .Where(x => x.VolunteerId == userid)
                                 .Select(x => (int?)x.InstituteId)
                                 .Distinct()
                                 .ToListAsync();

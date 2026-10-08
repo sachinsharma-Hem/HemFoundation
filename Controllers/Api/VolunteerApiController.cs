@@ -750,28 +750,15 @@ namespace HemFoundation.Controllers.Api
         public async Task<IActionResult> GetVolunteerSchoolMapping(int volunteerId)
         {
             var aff = await GetCurrentAffiliate();
-
             if (aff == null)
-                return Unauthorized(new
-                {
-                    success = false,
-                    message = "Affiliate not found."
-                });
+                return Unauthorized(new { success = false, message = "Affiliate not found." });
 
             var volunteer = await _context.Volunteers
-                .FirstOrDefaultAsync(v =>
-                    v.Id == volunteerId &&
-                    v.AffiliateId == aff.UserID &&
-                    v.IsActive &&
-                    !v.IsDeleted);
+                .FirstOrDefaultAsync(v => v.Id == volunteerId && v.AffiliateId == aff.UserID && v.IsActive && !v.IsDeleted);
 
             if (volunteer == null)
             {
-                return NotFound(new
-                {
-                    success = false,
-                    message = "Volunteer not found."
-                });
+                return NotFound(new { success = false, message = "Volunteer not found." });
             }
 
             var referralCode = await _context.WJ_ReferralCodes
@@ -790,43 +777,54 @@ namespace HemFoundation.Controllers.Api
                 });
             }
 
-            // ---------------------------------------------------------
-            // GET ALL SCHOOLS OF AFFILIATE
-            // ---------------------------------------------------------
+            // Include pincode in school projection
             var allSchools = await _context.SchoolProfileDetails
                 .Where(x => x.referralcode == referralCode)
                 .Select(x => new
                 {
                     instituteId = x.instituteid,
-                    name = x.institute_name
+                    name = x.institute_name,
+                    pincode = x.pincode ?? ""
                 })
                 .OrderBy(x => x.name)
                 .ToListAsync();
 
-            // ---------------------------------------------------------
-            // GET EXISTING MAPPINGS
-            // ---------------------------------------------------------
+            // Fetch active mappings of all volunteers under this affiliate to show who else is mapped
+            var allActiveMappings = await (
+                from m in _context.VolunteerInstituteMappings
+                join v in _context.Volunteers on m.VolunteerId equals v.Id
+                where !m.IsDeleted && m.IsActive && v.AffiliateId == aff.UserID
+                select new { m.InstituteId, VolunteerName = v.FirstName + " " + v.LastName }
+            ).ToListAsync();
+
+            var schoolVolunteersDict = allActiveMappings
+                .GroupBy(x => x.InstituteId)
+                .ToDictionary(g => g.Key, g => string.Join(", ", g.Select(x => x.VolunteerName)));
+
             var mappedSchoolIds = await _context.VolunteerInstituteMappings
-                .Where(m =>
-                    m.VolunteerId == volunteerId &&
-                    !m.IsDeleted &&
-                    m.IsActive)
+                .Where(m => m.VolunteerId == volunteerId && !m.IsDeleted && m.IsActive)
                 .Select(m => m.InstituteId)
                 .Distinct()
                 .ToListAsync();
 
-            // ---------------------------------------------------------
-            // ASSIGNED
-            // ---------------------------------------------------------
             var assignedSchools = allSchools
                 .Where(s => mappedSchoolIds.Contains(s.instituteId))
+                .Select(s => new {
+                    s.instituteId,
+                    s.name,
+                    s.pincode,
+                    assignedVolunteers = schoolVolunteersDict.ContainsKey(s.instituteId) ? schoolVolunteersDict[s.instituteId] : "None"
+                })
                 .ToList();
 
-            // ---------------------------------------------------------
-            // UNASSIGNED
-            // ---------------------------------------------------------
             var unassignedSchools = allSchools
                 .Where(s => !mappedSchoolIds.Contains(s.instituteId))
+                .Select(s => new {
+                    s.instituteId,
+                    s.name,
+                    s.pincode,
+                    assignedVolunteers = schoolVolunteersDict.ContainsKey(s.instituteId) ? schoolVolunteersDict[s.instituteId] : "None"
+                })
                 .ToList();
 
             return Ok(new
@@ -839,39 +837,16 @@ namespace HemFoundation.Controllers.Api
         }
 
         [HttpPost("save-mapping")]
-        public async Task<IActionResult> SaveVolunteerMapping(
-     [FromBody] VolunteerMappingDto model)
+        public async Task<IActionResult> SaveVolunteerMapping([FromBody] VolunteerMappingDto model)
         {
             try
             {
                 var aff = await GetCurrentAffiliate();
-
                 if (aff == null)
-                {
-                    return Unauthorized(new
-                    {
-                        success = false,
-                        message = "Affiliate not found."
-                    });
-                }
+                    return Unauthorized(new { success = false, message = "Affiliate not found." });
 
-                if (model == null)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "Invalid mapping data received."
-                    });
-                }
-
-                if (model.VolunteerId <= 0)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "Invalid VolunteerId."
-                    });
-                }
+                if (model == null || model.VolunteerId <= 0)
+                    return BadRequest(new { success = false, message = "Invalid mapping data received." });
 
                 var instituteIds = model.InstituteIds?
                     .Where(x => x > 0)
@@ -879,103 +854,50 @@ namespace HemFoundation.Controllers.Api
                     .ToList()
                     ?? new List<int>();
 
-                // ---------------------------------------------------------
-                // CHECK VOLUNTEER
-                // ---------------------------------------------------------
                 var volunteer = await _context.Volunteers
-                    .FirstOrDefaultAsync(v =>
-                        v.Id == model.VolunteerId &&
-                        v.AffiliateId == aff.UserID &&
-                        v.IsActive &&
-                        !v.IsDeleted);
+                    .FirstOrDefaultAsync(v => v.Id == model.VolunteerId && v.AffiliateId == aff.UserID && v.IsActive && !v.IsDeleted);
 
                 if (volunteer == null)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "Volunteer not found or does not belong to this affiliate."
-                    });
-                }
+                    return BadRequest(new { success = false, message = "Volunteer not found." });
 
-                // ---------------------------------------------------------
-                // GET REFERRAL CODE
-                // ---------------------------------------------------------
                 var referralCode = await _context.WJ_ReferralCodes
                     .Where(x => x.UserID == aff.UserID)
                     .Select(x => x.ReferralCode)
                     .FirstOrDefaultAsync();
 
-                if (string.IsNullOrWhiteSpace(referralCode))
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "Referral code not found for current affiliate."
-                    });
-                }
-
-                // ---------------------------------------------------------
-                // GET AFFILIATE SCHOOLS
-                // ---------------------------------------------------------
                 var affiliateSchoolIds = await _context.SchoolProfileDetails
                     .Where(x => x.referralcode == referralCode)
                     .Select(x => x.instituteid)
                     .Distinct()
                     .ToListAsync();
 
-                // ---------------------------------------------------------
-                // CHECK INVALID SCHOOL IDs
-                // ---------------------------------------------------------
-                var invalidInstituteIds = instituteIds
-                    .Except(affiliateSchoolIds)
-                    .ToList();
-
+                var invalidInstituteIds = instituteIds.Except(affiliateSchoolIds).ToList();
                 if (invalidInstituteIds.Any())
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "One or more selected schools do not belong to this affiliate.",
-                        invalidInstituteIds
-                    });
-                }
+                    return BadRequest(new { success = false, message = "One or more selected schools do not belong to this affiliate." });
 
-                // ---------------------------------------------------------
-                // CURRENT USER
-                // ---------------------------------------------------------
-                string currentUserId =
-                    User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? aff.UserID.ToString();
+                string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? aff.UserID.ToString();
 
-                // ---------------------------------------------------------
-                // EXISTING MAPPINGS
-                // ---------------------------------------------------------
-                var existingMappings =
-                    await _context.VolunteerInstituteMappings
-                        .Where(m =>
-                            m.VolunteerId == model.VolunteerId)
-                        .ToListAsync();
+                // Existing mappings for this specific volunteer
+                var existingMappings = await _context.VolunteerInstituteMappings
+                    .Where(m => m.VolunteerId == model.VolunteerId)
+                    .ToListAsync();
 
-                // ---------------------------------------------------------
-                // SOFT DELETE OLD MAPPINGS
-                // ---------------------------------------------------------
+                // Soft delete old mappings that are no longer selected
                 foreach (var mapping in existingMappings)
                 {
-                    mapping.IsDeleted = true;
-                    mapping.IsActive = false;
-                    mapping.ModifiedDate = DateTime.UtcNow;
-                    mapping.LastUpdatedBy = currentUserId;
+                    if (!instituteIds.Contains(mapping.InstituteId))
+                    {
+                        mapping.IsDeleted = true;
+                        mapping.IsActive = false;
+                        mapping.ModifiedDate = DateTime.UtcNow;
+                        mapping.LastUpdatedBy = currentUserId;
+                    }
                 }
 
-                // ---------------------------------------------------------
-                // ADD / REACTIVATE SELECTED MAPPINGS
-                // ---------------------------------------------------------
+                // Add or Reactivate selected mappings (Many-to-Many allowed, so no check for other volunteers)
                 foreach (var instituteId in instituteIds)
                 {
-                    var existingMapping = existingMappings
-                        .FirstOrDefault(x =>
-                            x.InstituteId == instituteId);
+                    var existingMapping = existingMappings.FirstOrDefault(x => x.InstituteId == instituteId);
 
                     if (existingMapping != null)
                     {
@@ -983,50 +905,23 @@ namespace HemFoundation.Controllers.Api
                         existingMapping.IsActive = true;
                         existingMapping.ModifiedDate = DateTime.UtcNow;
                         existingMapping.LastUpdatedBy = currentUserId;
-
-                        continue;
                     }
-
-                    // -----------------------------------------------------
-                    // SCHOOL ALREADY ASSIGNED TO OTHER VOLUNTEER?
-                    // -----------------------------------------------------
-                    var assignedToOther =
-                        await _context.VolunteerInstituteMappings
-                            .AnyAsync(m =>
-                                m.InstituteId == instituteId &&
-                                m.VolunteerId != model.VolunteerId &&
-                                !m.IsDeleted &&
-                                m.IsActive);
-
-                    if (assignedToOther)
+                    else
                     {
-                        return BadRequest(new
-                        {
-                            success = false,
-                            message =
-                                $"School ID {instituteId} is already assigned to another volunteer."
-                        });
+                        _context.VolunteerInstituteMappings.Add(
+                            new VolunteerInstituteMapping
+                            {
+                                VolunteerId = model.VolunteerId,
+                                InstituteId = instituteId,
+                                IsActive = true,
+                                IsDeleted = false,
+                                CreatedDate = DateTime.UtcNow,
+                                ModifiedDate = DateTime.UtcNow,
+                                LastUpdatedBy = currentUserId
+                            });
                     }
-
-                    // -----------------------------------------------------
-                    // NEW MAPPING
-                    // -----------------------------------------------------
-                    _context.VolunteerInstituteMappings.Add(
-                        new VolunteerInstituteMapping
-                        {
-                            VolunteerId = model.VolunteerId,
-                            InstituteId = instituteId,
-                            IsActive = true,
-                            IsDeleted = false,
-                            CreatedDate = DateTime.UtcNow,
-                            ModifiedDate = DateTime.UtcNow,
-                            LastUpdatedBy = currentUserId
-                        });
                 }
 
-                // ---------------------------------------------------------
-                // SAVE
-                // ---------------------------------------------------------
                 await _context.SaveChangesAsync();
 
                 return Ok(new
@@ -1144,19 +1039,23 @@ namespace HemFoundation.Controllers.Api
             }
         }
 
+        
         [HttpGet("dashboard-summary-counts")]
-        public async Task<IActionResult> GetDashboardSummaryCounts()
+        public async Task<IActionResult> GetDashboardSummaryCounts([FromQuery] string? affiliateUserId)
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
+                Int32 reportaffiliateid = Convert.ToInt32(affiliateUserId);
+
+                if (reportaffiliateid == 0)
                 {
-                    return Unauthorized(new { success = false, message = "User not authenticated." });
+                    int loggedInUserID = HttpContext.Session.GetInt32("UserID") ?? 0;
+                    reportaffiliateid = loggedInUserID;
                 }
 
                 string connString = _configuration.GetConnectionString("DefaultConnection");
 
+                int totalinstitute = 0;
                 int totalStudents = 0;
                 int activeStudents = 0;
                 int totalTeachers = 0;
@@ -1170,67 +1069,31 @@ namespace HemFoundation.Controllers.Api
                 {
                     await conn.OpenAsync();
 
-                    // 1. Pehle Volunteer ki ID nikaal lete hain safely
-                    int volunteerId = 0;
-                    string getVolSql = @"SELECT id FROM volunteers WHERE aspnetuserid = @AspNetUserId AND isactive = TRUE AND isdeleted = FALSE LIMIT 1;";
-
-                    using (var cmdVol = new Npgsql.NpgsqlCommand(getVolSql, conn))
-                    {
-                        cmdVol.Parameters.AddWithValue("AspNetUserId", userId);
-                        var result = await cmdVol.ExecuteScalarAsync();
-                        if (result != null && result != DBNull.Value)
-                        {
-                            volunteerId = Convert.ToInt32(result);
-                        }
-                    }
-
-                    // Agar volunteer nahi mila toh sabhi counts 0 return kar do
-                    if (volunteerId <= 0)
-                    {
-                        return Ok(new { success = true, data = new { totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
-                    }
-
-                    // 2. Ab us volunteerId ke base par saare aggregate counts ek single clean query mein nikalenge
-                    string summarySql = @"
-                WITH TargetInstitutes AS (
-                    SELECT DISTINCT instituteid 
-                    FROM volunteerinstitutemappings 
-                    WHERE volunteerid = @VolunteerId 
-                      AND isactive = TRUE 
-                      AND isdeleted = FALSE 
-                      AND instituteid IS NOT NULL
-                ),
-                AggregatedCounts AS (
-                    SELECT 
-                        (SELECT COUNT(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalStudents,
-                        (SELECT COUNT(DISTINCT studentid) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type != 'Survey') AS ActiveStudents,
-                        (SELECT COUNT(DISTINCT teacherid) FROM wj_teacherassociates WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalTeachers,
-                        (SELECT COUNT(DISTINCT teacherid) FROM hf_view_teacheractivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS ActiveTeachers,
-                        (SELECT COUNT(DISTINCT instituteid) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS TotalSelProjects,
-                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Family PBL') AS FamilyProjects,
-                        (SELECT COUNT(*) FROM hf_view_studentactivitylog WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes) AND activity_type = 'Individual PBL') AS IndividualProjects,
-                        (SELECT COUNT(*) FROM creativityactivitessubmission2021 WHERE instituteid IN (SELECT instituteid FROM TargetInstitutes)) AS GroupPbl
-                )
-                SELECT TotalStudents, ActiveStudents, TotalTeachers, ActiveTeachers, TotalSelProjects, FamilyProjects, IndividualProjects, GroupPbl 
-                FROM AggregatedCounts;
-            ";
+                    string summarySql = "SELECT schoolcount, totalstudents, activestudents, totalteachers, activeteachers, totalselprojects, familyprojects, individualprojects, grouppbl FROM public.get_volunteer_dashboard_summary(@AffiliateId)";
 
                     using (var cmd = new Npgsql.NpgsqlCommand(summarySql, conn))
                     {
-                        cmd.Parameters.AddWithValue("VolunteerId", volunteerId);
+                        cmd.Parameters.AddWithValue("AffiliateId", reportaffiliateid);
 
                         using (var reader = await cmd.ExecuteReaderAsync())
                         {
+                            // Read the single returned row from the stored procedure
                             if (await reader.ReadAsync())
                             {
-                                totalStudents = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
-                                activeStudents = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
-                                totalTeachers = reader.IsDBNull(2) ? 0 : reader.GetInt32(2);
-                                activeTeachers = reader.IsDBNull(3) ? 0 : reader.GetInt32(3);
-                                totalSelProjects = reader.IsDBNull(4) ? 0 : reader.GetInt32(4);
-                                familyProjects = reader.IsDBNull(5) ? 0 : reader.GetInt32(5);
-                                individualProjects = reader.IsDBNull(6) ? 0 : reader.GetInt32(6);
-                                groupPbl = reader.IsDBNull(7) ? 0 : reader.GetInt32(7);
+                                totalinstitute = reader.GetInt32(0);
+                                totalStudents = reader.GetInt32(1);
+                                activeStudents = reader.GetInt32(2);
+                                totalTeachers = reader.GetInt32(3);
+                                activeTeachers = reader.GetInt32(4);
+                                totalSelProjects = reader.GetInt32(5);
+                                familyProjects = reader.GetInt32(6);
+                                individualProjects = reader.GetInt32(7);
+                                groupPbl = reader.GetInt32(8);
+                            }
+                            else
+                            {
+                                // If no row returned (e.g. invalid affiliate ID), return zeroes
+                                return Ok(new { success = true, data = new { totalinstitute = 0, totalStudents = 0, activeStudents = 0, totalTeachers = 0, activeTeachers = 0, totalSelProjects = 0, familyProjects = 0, individualProjects = 0, groupPbl = 0 } });
                             }
                         }
                     }
@@ -1241,6 +1104,7 @@ namespace HemFoundation.Controllers.Api
                     success = true,
                     data = new
                     {
+                        totalinstitute,
                         totalStudents,
                         activeStudents,
                         totalTeachers,
@@ -1257,12 +1121,13 @@ namespace HemFoundation.Controllers.Api
                 return StatusCode(500, new
                 {
                     success = false,
-                    message = "Error loading volunteer dashboard summary counts.",
+                    message = "Error loading dashboard summary counts.",
                     error = ex.Message,
                     innerException = ex.InnerException?.Message
                 });
             }
         }
+
         //[HttpGet("dashboard-summary-counts")]
         //public async Task<IActionResult> GetDashboardSummaryCounts()
         //{
