@@ -132,24 +132,27 @@ namespace HemFoundation.Helpers
             try
             {
                 const string selectSql = @"
-                    SELECT
-                        CAST(u.aspnetuserid AS nvarchar(450)) AS UserId,
-                        u.userName,
-                        u.emailid AS Email,
-                        u.password_ AS PlainPassword,
-                        au.PasswordHash
-                    FROM Users u
-                    INNER JOIN aspnetusers au
-                        ON CAST(u.aspnetuserid AS nvarchar(450)) = CAST(au.id AS nvarchar(450))
-                    WHERE
-                        CAST(u.aspnetuserid AS nvarchar(450)) IN @UserIds
-                        AND u.password_ IS NOT NULL
-                        AND LTRIM(RTRIM(u.password_)) <> '';
-                ";
+                       SELECT
+        CAST(u.aspnetuserid AS text) AS UserId,
+        au.username AS UserName,
+        u.emailid AS Email,
+        u.password_ AS PlainPassword,
+        au.passwordhash AS PasswordHash
+    FROM users u
+    INNER JOIN aspnetusers au
+        ON CAST(u.aspnetuserid AS text) = CAST(au.id AS text)
+    WHERE
+        CAST(u.aspnetuserid AS text) = ANY(@UserIds)
+        AND u.password_ IS NOT NULL
+        AND BTRIM(u.password_::text) <> '';
+                    ";
 
                 var users = await connection.QueryAsync<UserPasswordInternal>(
                     selectSql,
-                    new { UserIds = userIds },
+                    new
+                    {
+                        UserIds = userIds.ToArray()
+                    },
                     transaction);
 
                 var processedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -205,7 +208,7 @@ namespace HemFoundation.Helpers
                         const string updateSql = @"
                             UPDATE aspnetusers
                             SET PasswordHash = @PasswordHash
-                            WHERE CAST(id AS nvarchar(450)) = @UserId;
+                          WHERE CAST(id AS text) = @UserId;
                         ";
 
                         var affected = await connection.ExecuteAsync(
