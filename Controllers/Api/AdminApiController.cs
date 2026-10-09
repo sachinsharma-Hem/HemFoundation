@@ -1277,7 +1277,7 @@ namespace HemFoundation.Controllers.Api
                 {
                     await conn.OpenAsync();
 
-                    string dashboardSql = "SELECT metric_type, schoolcount, totalstudents, activestudents, totalteachers, activeteachers, totalselprojects, familyprojects, individualprojects, grouppbl FROM public.get_overall_dashboard_summary()";
+                    string dashboardSql = "SELECT metric_type, schoolcount, totalstudents, activestudents, totalteachers, activeteachers, totalselprojects, familyprojects, individualprojects, grouppbl FROM public.get_overall_dashboardupdated_summary()";
 
                     using (var cmd = new Npgsql.NpgsqlCommand(dashboardSql, conn))
                     {
@@ -1770,21 +1770,66 @@ namespace HemFoundation.Controllers.Api
         }
 
         [HttpGet("overall-details-paged")]
-        public async Task<IActionResult> GetOverallDetailsPaged(string category, string type, int page = 1, int pageSize = 100, string search = "",int affiliateid=0)
+        public async Task<IActionResult> GetOverallDetailsPaged(
+    string category,
+    string type,
+    int page = 1,
+    int pageSize = 100,
+    string search = "",
+    int affiliateid = 0)
         {
             try
             {
+                // ============================================================
+                // NORMALIZE INPUT
+                // ============================================================
                 category = category?.Trim().ToLower() ?? "";
                 type = type?.Trim().ToLower() ?? "";
-                page = page < 1 ? 1 : page;
-                pageSize = pageSize <= 0 ? 100 : pageSize;
                 search = search?.Trim() ?? "";
 
+                page = page < 1 ? 1 : page;
+                pageSize = pageSize <= 0 ? 100 : pageSize;
+
+                // Optional protection against very large page sizes
+                if (pageSize > 1000)
+                    pageSize = 1000;
+
+
+                // ============================================================
+                // USER / ROLE
+                // ============================================================
+                string role =
+                    HttpContext.Session.GetString("UserRole") ?? "";
+
+                bool isAdmin =
+                    role == "WJ_Admin" ||
+                    role == "Admin" ||
+                    role == "Management";
+
+
+                // ============================================================
+                // ADMIN + PERFORMANCE
+                //
+                // Admin Performance sees ALL records.
+                // No InstituteID filtering is required.
+                // ============================================================
+                bool adminAllData =
+                    isAdmin &&
+                    category.Equals(
+                        "performance",
+                        StringComparison.OrdinalIgnoreCase
+                    );
+
+
+                // ============================================================
+                // INSTITUTE SCOPE
+                // ============================================================
                 List<int?> instituteIds = new List<int?>();
 
-                string role = HttpContext.Session.GetString("UserRole") ?? "";
-               
 
+                // ------------------------------------------------------------
+                // Explicit affiliate ID
+                // ------------------------------------------------------------
                 if (affiliateid != 0)
                 {
                     instituteIds =
@@ -1794,21 +1839,39 @@ namespace HemFoundation.Controllers.Api
                             role
                         );
                 }
-                else if (
-                    role == "WJ_Admin" ||
-                    role == "Admin" ||
-                    role == "Management"
-                )
+
+
+                // ------------------------------------------------------------
+                // ADMIN
+                // ------------------------------------------------------------
+                else if (isAdmin)
                 {
-                    instituteIds =
-                        await GetInstituteIdsForCategoryAsync(category);
+                    if (category.Equals(
+                            "focused",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Admin + Focused
+                        // Only focused institutes
+                        instituteIds =
+                            await GetInstituteIdsForCategoryAsync(
+                                category
+                            );
+                    }
+
+                    // Admin + Performance:
+                    // Leave instituteIds empty.
+                    // adminAllData = true.
                 }
+
+
+                // ------------------------------------------------------------
+                // AFFILIATE / VOLUNTEER
+                // ------------------------------------------------------------
                 else if (
                     role == "WJ_Affiliate" ||
-                    role == "HF_Volunteers"
-                )
+                    role == "HF_Volunteers")
                 {
-                    Int32 userId =
+                    int userId =
                         HttpContext.Session.GetInt32("UserID") ?? 0;
 
                     instituteIds =
@@ -1818,6 +1881,11 @@ namespace HemFoundation.Controllers.Api
                             role
                         );
                 }
+
+
+                // ------------------------------------------------------------
+                // UNAUTHORIZED
+                // ------------------------------------------------------------
                 else
                 {
                     return Ok(new
@@ -1827,55 +1895,146 @@ namespace HemFoundation.Controllers.Api
                         totalRecords = 0,
                         totalPages = 0,
                         page = page,
+                        pageSize = pageSize,
                         message = "Unauthorised User"
                     });
                 }
 
-                if (!instituteIds.Any())
+
+                // ============================================================
+                // VALIDATE DATA SCOPE
+                //
+                // Admin Performance is allowed to have zero institute IDs
+                // because it intentionally loads all records.
+                //
+                // Admin Focused MUST have institute IDs.
+                // ============================================================
+                if (!adminAllData && !instituteIds.Any())
                 {
-                    return Ok(new { success = true, data = new List<object>(), totalRecords = 0, totalPages = 0, page });
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new List<object>(),
+                        totalRecords = 0,
+                        totalPages = 0,
+                        page = page,
+                        pageSize = pageSize
+                    });
                 }
 
-                var query = BuildDetailsQuery(category, type, instituteIds, search);
 
-                int totalRecords = await query.CountAsync();
-                int totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+                // ============================================================
+                // BUILD QUERY
+                // ============================================================
+                var query = BuildDetailsQuery(
+                    category,
+                    type,
+                    instituteIds,
+                    search,
+                    isAdmin
+                );
 
-                var pagedData = await query
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
 
+                // ============================================================
+                // TOTAL COUNT
+                // ============================================================
+                int totalRecords =
+                    await query.CountAsync();
+
+                int totalPages =
+                    (int)Math.Ceiling(
+                        totalRecords / (double)pageSize
+                    );
+
+
+                // ============================================================
+                // PAGINATION
+                // ============================================================
+                var pagedData =
+                    await query
+                        .Skip((page - 1) * pageSize)
+                        .Take(pageSize)
+                        .ToListAsync();
+
+
+                // ============================================================
+                // RESPONSE
+                // ============================================================
                 return Ok(new
                 {
                     success = true,
-                    page,
-                    pageSize,
-                    totalRecords,
-                    totalPages,
+                    page = page,
+                    pageSize = pageSize,
+                    totalRecords = totalRecords,
+                    totalPages = totalPages,
                     data = pagedData
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = ex.Message });
+                return StatusCode(
+                    500,
+                    new
+                    {
+                        success = false,
+                        message = ex.Message
+                    }
+                );
             }
         }
 
         [HttpGet("export-details-excel")]
-        public async Task<IActionResult> ExportDetailsExcel(string category, string type, string search = "", int affiliateid = 0)
+        public async Task<IActionResult> ExportDetailsExcel(
+    string category,
+    string type,
+    string search = "",
+    int affiliateid = 0)
         {
             try
             {
+                // ============================================================
+                // NORMALIZE INPUT
+                // ============================================================
                 category = category?.Trim().ToLower() ?? "";
                 type = type?.Trim().ToLower() ?? "";
                 search = search?.Trim() ?? "";
 
-                List<int?> instituteIds = new List<int?>();
 
-                string role = HttpContext.Session.GetString("UserRole") ?? "";
+                // ============================================================
+                // USER / ROLE
+                // ============================================================
+                string role =
+                    HttpContext.Session.GetString("UserRole") ?? "";
+
+                bool isAdmin =
+                    role == "WJ_Admin" ||
+                    role == "Admin" ||
+                    role == "Management";
 
 
+                // ============================================================
+                // ADMIN + PERFORMANCE
+                //
+                // Admin Performance = ALL records.
+                // ============================================================
+                bool adminAllData =
+                    isAdmin &&
+                    category.Equals(
+                        "performance",
+                        StringComparison.OrdinalIgnoreCase
+                    );
+
+
+                // ============================================================
+                // INSTITUTE SCOPE
+                // ============================================================
+                List<int?> instituteIds =
+                    new List<int?>();
+
+
+                // ------------------------------------------------------------
+                // Explicit affiliate ID
+                // ------------------------------------------------------------
                 if (affiliateid != 0)
                 {
                     instituteIds =
@@ -1885,21 +2044,39 @@ namespace HemFoundation.Controllers.Api
                             role
                         );
                 }
-                else if (
-                    role == "WJ_Admin" ||
-                    role == "Admin" ||
-                    role == "Management"
-                )
+
+
+                // ------------------------------------------------------------
+                // ADMIN
+                // ------------------------------------------------------------
+                else if (isAdmin)
                 {
-                    instituteIds =
-                        await GetInstituteIdsForCategoryAsync(category);
+                    if (category.Equals(
+                            "focused",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Admin + Focused
+                        // Only focused institutes
+                        instituteIds =
+                            await GetInstituteIdsForCategoryAsync(
+                                category
+                            );
+                    }
+
+                    // Admin + Performance:
+                    // Do NOT populate instituteIds.
+                    // adminAllData = true.
                 }
+
+
+                // ------------------------------------------------------------
+                // AFFILIATE / VOLUNTEER
+                // ------------------------------------------------------------
                 else if (
                     role == "WJ_Affiliate" ||
-                    role == "HF_Volunteers"
-                )
+                    role == "HF_Volunteers")
                 {
-                    Int32 userId =
+                    int userId =
                         HttpContext.Session.GetInt32("UserID") ?? 0;
 
                     instituteIds =
@@ -1909,6 +2086,11 @@ namespace HemFoundation.Controllers.Api
                             role
                         );
                 }
+
+
+                // ------------------------------------------------------------
+                // UNAUTHORIZED
+                // ------------------------------------------------------------
                 else
                 {
                     return Ok(new
@@ -1917,184 +2099,480 @@ namespace HemFoundation.Controllers.Api
                         data = new List<object>(),
                         totalRecords = 0,
                         totalPages = 0,
-                        
                         message = "Unauthorised User"
                     });
                 }
-                if (!instituteIds.Any())
+
+
+                // ============================================================
+                // VALIDATE DATA SCOPE
+                //
+                // Admin Performance does NOT need institute IDs.
+                //
+                // Admin Focused / Affiliate / Volunteer DO need institute IDs.
+                // ============================================================
+                if (!adminAllData && !instituteIds.Any())
                 {
-                    return BadRequest("No records found to export.");
+                    return BadRequest(
+                        "No records found to export."
+                    );
                 }
 
-                var query = BuildDetailsQuery(category, type, instituteIds, search);
-                var exportList = await query.ToListAsync();
 
+                // ============================================================
+                // BUILD QUERY
+                // ============================================================
+                var query = BuildDetailsQuery(
+                    category,
+                    type,
+                    instituteIds,
+                    search,
+                    isAdmin
+                );
+
+
+                // ============================================================
+                // GET ALL EXPORT RECORDS
+                // ============================================================
+                var exportList =
+                    await query.ToListAsync();
+
+
+                // ============================================================
+                // NO RECORDS
+                // ============================================================
+                if (!exportList.Any())
+                {
+                    return BadRequest(
+                        "No records found to export."
+                    );
+                }
+
+
+                // ============================================================
+                // CREATE EXCEL
+                // ============================================================
                 using (XLWorkbook wb = new XLWorkbook())
                 {
-                    DataTable dt = ConvertListToDataTable(exportList);
-                    wb.Worksheets.Add(dt, $"{type.ToUpper()} Report");
+                    DataTable dt =
+                        ConvertListToDataTable(exportList);
 
-                    using (MemoryStream stream = new MemoryStream())
+                    wb.Worksheets.Add(
+                        dt,
+                        $"{type.ToUpper()} Report"
+                    );
+
+
+                    // ========================================================
+                    // SAVE EXCEL TO MEMORY
+                    // ========================================================
+                    using (MemoryStream stream =
+                           new MemoryStream())
                     {
                         wb.SaveAs(stream);
-                        stream.Seek(0, SeekOrigin.Begin);
-                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{category}_{type}_Report.xlsx");
+
+                        stream.Seek(
+                            0,
+                            SeekOrigin.Begin
+                        );
+
+
+                        // ====================================================
+                        // DOWNLOAD
+                        // ====================================================
+                        return File(
+                            stream.ToArray(),
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            $"{category}_{type}_Report.xlsx"
+                        );
                     }
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Export error: {ex.Message}");
+                return StatusCode(
+                    500,
+                    new
+                    {
+                        success = false,
+                        message = $"Export error: {ex.Message}"
+                    }
+                );
             }
         }
 
-       
-        private IQueryable<object> BuildDetailsQuery(string category, string type, List<int?> instituteIds, string search)
+        private IQueryable<object> BuildDetailsQuery(
+    string category,
+    string type,
+    List<int?> instituteIds,
+    string search,
+    bool isAdmin)
         {
             string pattern = $"%{search}%";
             bool hasSearch = !string.IsNullOrEmpty(search);
 
+            // IMPORTANT:
+            // Admin + Performance = ALL records, irrespective of InstituteID
+            // Admin + Focused     = ONLY focused institutes
+            bool adminAllData =
+                isAdmin &&
+                category.Equals("performance", StringComparison.OrdinalIgnoreCase);
+
             return type switch
             {
+                // ============================================================
+                // TOTAL STUDENTS
+                // ============================================================
                 "total-students" => _context.Set<hf_view_studentsdetails>()
                     .AsNoTracking()
-                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) &&
-                           (!hasSearch ||
+                    .Where(x =>
+                        (
+                            adminAllData ||
+                            (
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID)
+                            )
+                        )
+                        &&
+                        (
+                            !hasSearch ||
                             EF.Functions.ILike(x.FirstName ?? "", pattern) ||
                             EF.Functions.ILike(x.LastName ?? "", pattern) ||
                             EF.Functions.ILike(x.MobileNo ?? "", pattern) ||
                             EF.Functions.ILike(x.Standard ?? "", pattern) ||
                             EF.Functions.ILike(x.CityName ?? "", pattern) ||
                             EF.Functions.ILike(x.EmailId ?? "", pattern) ||
-                            EF.Functions.ILike(x.Username ?? "", pattern))).Select(x => (object)new
-                            {
-                                StudentId = x.StudentId,
-                                FirstName = x.FirstName,
-                                LastName = x.LastName,
-                                InstituteID = x.InstituteID,
-                                Institute_Name = x.InstituteName,
-                                Standard = x.Standard,
-                                Division = x.Division,
-                                MobileNo = x.MobileNo,
-                                EmailId = x.EmailId,
-                                GardianName = x.GardianName,
-                                Gender = x.Gender,
-                                Dob = x.Dob,
-                                AddressLine1 = x.AddressLine1,
-                                RegistrationDate=x.RegistrationDate,
-                                CityName = x.CityName,
-                                Pincode = x.Pincode,
-                                Username = x.Username,
-                                Password = x.Password
-                            }),
+                            EF.Functions.ILike(x.Username ?? "", pattern)
+                        )
+                    )
+                    .Select(x => (object)new
+                    {
+                        StudentId = x.StudentId,
+                        FirstName = x.FirstName,
+                        LastName = x.LastName,
+                        InstituteID = x.InstituteID,
+                        Institute_Name = x.InstituteName,
+                        Standard = x.Standard,
+                        Division = x.Division,
+                        MobileNo = x.MobileNo,
+                        EmailId = x.EmailId,
+                        GardianName = x.GardianName,
+                        Gender = x.Gender,
+                        Dob = x.Dob,
+                        AddressLine1 = x.AddressLine1,
+                        RegistrationDate = x.RegistrationDate,
+                        CityName = x.CityName,
+                        Pincode = x.Pincode,
+                        Username = x.Username,
+                        Password = x.Password
+                    }),
 
-                "active-students" => (from log in _context.StudentActivityLogs.AsNoTracking()
-                                      join student in _context.Set<ViewWjStudentsDetailsInfo>() on log.StudentID equals student.StudentId
-                                      where log.InstituteID != null && instituteIds.Contains(log.InstituteID) && log.ActivityType != "Survey" &&
-                                            (!hasSearch ||
-                                             EF.Functions.ILike(student.FirstName ?? "", pattern) ||
-                                             EF.Functions.ILike(student.LastName ?? "", pattern) ||
-                                             EF.Functions.ILike(student.MobileNo ?? "", pattern) ||
-                                             EF.Functions.ILike(student.Standard ?? "", pattern) ||
-                                             EF.Functions.ILike(student.CityName ?? "", pattern) ||
-                                             EF.Functions.ILike(student.EmailId ?? "", pattern) ||
-                                             EF.Functions.ILike(log.ActivityType ?? "", pattern))
-                                      select student).Distinct(),
 
+                // ============================================================
+                // ACTIVE STUDENTS
+                // ============================================================
+                "active-students" =>
+                    (
+                        from log in _context.StudentActivityLogs.AsNoTracking()
+
+                        join student in _context.Set<ViewWjStudentsDetailsInfo>()
+                            on log.StudentID equals student.StudentId
+
+                        where
+                            (
+                                adminAllData ||
+                                (
+                                    log.InstituteID != null &&
+                                    instituteIds.Contains(log.InstituteID)
+                                )
+                            )
+                            &&
+                            log.ActivityType != "Survey"
+                            &&
+                            (
+                                !hasSearch ||
+                                EF.Functions.ILike(student.FirstName ?? "", pattern) ||
+                                EF.Functions.ILike(student.LastName ?? "", pattern) ||
+                                EF.Functions.ILike(student.MobileNo ?? "", pattern) ||
+                                EF.Functions.ILike(student.Standard ?? "", pattern) ||
+                                EF.Functions.ILike(student.CityName ?? "", pattern) ||
+                                EF.Functions.ILike(student.EmailId ?? "", pattern) ||
+                                EF.Functions.ILike(log.ActivityType ?? "", pattern)
+                            )
+
+                        select student
+                    )
+                    .Distinct(),
+
+
+                // ============================================================
+                // TOTAL TEACHERS
+                // ============================================================
                 "total-teachers" => _context.Set<ViewHfTeacherDetails>()
                     .AsNoTracking()
-                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) &&
-                           (!hasSearch ||
+                    .Where(x =>
+                        (
+                            adminAllData ||
+                            (
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID)
+                            )
+                        )
+                        &&
+                        (
+                            !hasSearch ||
                             EF.Functions.ILike(x.FirstName ?? "", pattern) ||
                             EF.Functions.ILike(x.LastName ?? "", pattern) ||
                             EF.Functions.ILike(x.InstituteName ?? "", pattern) ||
-                          //  EF.Functions.ILike(x.EmailId ?? "", pattern) ||
+                            // EF.Functions.ILike(x.EmailId ?? "", pattern) ||
                             EF.Functions.ILike(x.MobileNo ?? "", pattern) ||
-                            EF.Functions.ILike(x.Standard ?? "", pattern))),
+                            EF.Functions.ILike(x.Standard ?? "", pattern)
+                        )
+                    ),
 
-                "active-teachers" => (from log in _context.TeacherActivityLogs.AsNoTracking()
-                                      join teacher in _context.Set<ViewHfTeacherDetails>() on log.TeacherID equals teacher.TeacherID
-                                      where log.InstituteID != null && instituteIds.Contains(log.InstituteID) &&
-                                            (!hasSearch ||
-                                             EF.Functions.ILike(teacher.FirstName ?? "", pattern) ||
-                                             EF.Functions.ILike(teacher.LastName ?? "", pattern) ||
-                                             EF.Functions.ILike(teacher.InstituteName ?? "", pattern) ||
-                                          //   EF.Functions.ILike(teacher.EmailId ?? "", pattern) ||
-                                             EF.Functions.ILike(teacher.MobileNo ?? "", pattern))
-                                      select teacher).Distinct(),
 
+                // ============================================================
+                // ACTIVE TEACHERS
+                // ============================================================
+                "active-teachers" =>
+                    (
+                        from log in _context.TeacherActivityLogs.AsNoTracking()
+
+                        join teacher in _context.Set<ViewHfTeacherDetails>()
+                            on log.TeacherID equals teacher.TeacherID
+
+                        where
+                            (
+                                adminAllData ||
+                                (
+                                    log.InstituteID != null &&
+                                    instituteIds.Contains(log.InstituteID)
+                                )
+                            )
+                            &&
+                            (
+                                !hasSearch ||
+                                EF.Functions.ILike(teacher.FirstName ?? "", pattern) ||
+                                EF.Functions.ILike(teacher.LastName ?? "", pattern) ||
+                                EF.Functions.ILike(teacher.InstituteName ?? "", pattern) ||
+                                // EF.Functions.ILike(teacher.EmailId ?? "", pattern) ||
+                                EF.Functions.ILike(teacher.MobileNo ?? "", pattern)
+                            )
+
+                        select teacher
+                    )
+                    .Distinct(),
+
+
+                // ============================================================
+                // SEL PROJECTS
+                // ============================================================
                 "sel-projects" => _context.creativityActivitiesSubmission2021s
                     .AsNoTracking()
-                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) &&
-                           (!hasSearch ||
-                            EF.Functions.ILike(x.ShortDescription ?? "", pattern) 
-                            //||
-                            //EF.Functions.ILike(x.InstituteName ?? "", pattern) ||
-                            //EF.Functions.ILike(x.CourseName ?? "", pattern)
-                            )),
+                    .Where(x =>
+                        (
+                            adminAllData ||
+                            (
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID)
+                            )
+                        )
+                        &&
+                        (
+                            !hasSearch ||
+                            EF.Functions.ILike(
+                                x.ShortDescription ?? "",
+                                pattern
+                            )
+                        )
+                    ),
 
+
+                // ============================================================
+                // FAMILY PROJECTS
+                // ============================================================
                 "family-projects" => _context.StudentActivityLogs
                     .AsNoTracking()
-                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Family PBL" &&
-                           (!hasSearch ||
-                            EF.Functions.ILike(x.StudentName ?? "", pattern) ||
-                            EF.Functions.ILike(x.MainCourseName ?? "", pattern) ||
-                            EF.Functions.ILike(x.InstituteName ?? "", pattern) ||
-                            EF.Functions.ILike(x.CourseName ?? "", pattern))),
+                    .Where(x =>
+                        (
+                            adminAllData ||
+                            (
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID)
+                            )
+                        )
+                        &&
+                        x.ActivityType == "Family PBL"
+                        &&
+                        (
+                            !hasSearch ||
+                            EF.Functions.ILike(
+                                x.StudentName ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.MainCourseName ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.InstituteName ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.CourseName ?? "",
+                                pattern
+                            )
+                        )
+                    ),
 
+
+                // ============================================================
+                // INDIVIDUAL PROJECTS
+                // ============================================================
                 "individual-projects" => _context.StudentActivityLogs
                     .AsNoTracking()
-                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) && x.ActivityType == "Individual PBL" &&
-                           (!hasSearch ||
-                            EF.Functions.ILike(x.StudentName ?? "", pattern) ||
-                            EF.Functions.ILike(x.MainCourseName ?? "", pattern) ||
-                            EF.Functions.ILike(x.InstituteName ?? "", pattern) ||
-                            EF.Functions.ILike(x.CourseName ?? "", pattern))),
+                    .Where(x =>
+                        (
+                            adminAllData ||
+                            (
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID)
+                            )
+                        )
+                        &&
+                        x.ActivityType == "Individual PBL"
+                        &&
+                        (
+                            !hasSearch ||
+                            EF.Functions.ILike(
+                                x.StudentName ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.MainCourseName ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.InstituteName ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.CourseName ?? "",
+                                pattern
+                            )
+                        )
+                    ),
 
+
+                // ============================================================
+                // GROUP PBL
+                // ============================================================
                 "group-pbl" => _context.creativityActivitiesSubmission2021s
                     .AsNoTracking()
-                    .Where(x => x.InstituteID != null && instituteIds.Contains(x.InstituteID) &&
-                           (!hasSearch ||
-                            EF.Functions.ILike(x.ShortDescription ?? "", pattern)
-                            //||
-                            //EF.Functions.ILike(x.InstituteName ?? "", pattern) ||
-                            //EF.Functions.ILike(x.CourseName ?? "", pattern)
-                            )),
+                    .Where(x =>
+                        (
+                            adminAllData ||
+                            (
+                                x.InstituteID != null &&
+                                instituteIds.Contains(x.InstituteID)
+                            )
+                        )
+                        &&
+                        (
+                            !hasSearch ||
+                            EF.Functions.ILike(
+                                x.ShortDescription ?? "",
+                                pattern
+                            )
+                        )
+                    ),
 
+
+                // ============================================================
+                // TOTAL SCHOOLS
+                // ============================================================
                 "total-schools" => _context.SchoolProfileDetails
                     .AsNoTracking()
-                    .Where(x => x.instituteid != null && instituteIds.Contains(x.instituteid) &&
-                           (!hasSearch ||
-                            EF.Functions.ILike(x.institute_name ?? "", pattern) ||
-                            EF.Functions.ILike(x.firstname ?? "", pattern) ||
-                            EF.Functions.ILike(x.lastname ?? "", pattern) ||
-                            EF.Functions.ILike(x.cityname ?? "", pattern) ||
-                            EF.Functions.ILike(x.referralcode ?? "", pattern) ||
-                            EF.Functions.ILike(x.mobileno ?? "", pattern) ||
-                            EF.Functions.ILike(x.emailid ?? "", pattern) ||
-                            EF.Functions.ILike(x.username ?? "", pattern)))
+                    .Where(x =>
+                        (
+                            adminAllData ||
+                            (
+                                x.instituteid != null &&
+                                instituteIds.Contains(x.instituteid)
+                            )
+                        )
+                        &&
+                        (
+                            !hasSearch ||
+                            EF.Functions.ILike(
+                                x.institute_name ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.firstname ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.lastname ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.cityname ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.referralcode ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.mobileno ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.emailid ?? "",
+                                pattern
+                            ) ||
+                            EF.Functions.ILike(
+                                x.username ?? "",
+                                pattern
+                            )
+                            ||
+                            EF.Functions.ILike(
+                                x.affiliatename ?? "",
+                                pattern
+                            )
+                        )
+                    )
                     .Select(x => (object)new
                     {
                         InstituteID = x.instituteid,
-                        ReferralCode = x.referralcode,
+                       
                         Institute_Name = x.institute_name,
                         FirstName = x.firstname,
                         LastName = x.lastname,
                         MobileNo = x.mobileno,
+                        EmailId = x.emailid,
+                        ReferralCode = x.referralcode,
+                        AffiliateName = x.affiliatename,
                         CityName = x.cityname,
                         Pincode = x.pincode,
-                        username=x.username,
-                        password=x.password_,
+                        username = x.username,
+                        password = x.password_,
                         AssociatedStudents = x.associatedstudents,
                         ActiveStudents = x.activestudents,
                         TotalTeachers = x.totalteachers,
                         ActiveTeachers = x.activeteachers
+                        
+                       
                     }),
 
+
+                // ============================================================
+                // DEFAULT
+                // ============================================================
                 _ => Enumerable.Empty<object>().AsQueryable()
             };
         }
-        
         private async Task<List<int?>> GetInstituteIdsForCategoryAsync(string category)
         {
             if (category == "performance")

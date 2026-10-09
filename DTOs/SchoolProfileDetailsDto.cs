@@ -8,6 +8,8 @@
         public string? profileurl { get; set; }
         public bool? institute_isactive { get; set; }
         public string? referralcode { get; set; }
+        public string? affiliatename { get; set; }      
+
         public bool isverify { get; set; }
         public string? firstname { get; set; }
         public string? lastname { get; set; }

@@ -218,6 +218,8 @@ namespace HemFoundation.Data
 
                 entity.Property(e => e.referralcode)
                     .HasColumnName("referralcode");
+                entity.Property(e => e.affiliatename)
+                   .HasColumnName("affiliatename");
 
                 entity.Property(e => e.isverify)
                     .HasColumnName("isverify");

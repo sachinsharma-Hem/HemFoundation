@@ -23,12 +23,12 @@ namespace HemFoundation.Controllers
         }
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetMismatchUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        public async Task<IActionResult> GetMismatchUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 150)
         {
             try
             {
                 // Safety cap on page size
-                if (pageSize > 200) pageSize = 200;
+               // if (pageSize > 200) pageSize = 200;
 
                 var (users, totalCount) = await _repository.GetMismatchUsersPagedAsync(page, pageSize);
 
