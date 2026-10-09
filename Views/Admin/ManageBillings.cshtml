@@ -335,7 +335,46 @@
         </div>
     </div>
 </div>
-
+<!-- ================= MODAL: VIEW AFFILIATE INDIVIDUAL EXPENSES & ATTACHMENTS ================= -->
+<div class="modal fade" id="affiliateExpensesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg p-3">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="fw-bold text-primary m-0"><i class="bi bi-wallet2 me-2"></i> Affiliate Individual Expense Details</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-1" id="lblModalAffiliateName">-</h6>
+                        <p class="text-muted small mb-0" id="lblModalMonthYear">-</p>
+                    </div>
+                    <div>
+                        <button type="button" id="btnDownloadMergedPdf" onclick="downloadMergedPdf()" class="btn btn-success rounded-pill px-4 fw-semibold shadow-sm">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download Merged PDF (Bill + Receipts)
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive border rounded-3">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-3">Date</th>
+                                <th>Expense Detail</th>
+                                <th>Amount</th>
+                                <th class="text-center">Receipt / Attachment</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalExpenseTableBody">
+                            <tr><td colspan="5" class="text-center text-muted py-4">Loading expenses...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @section Scripts {
     <script>
         const fileBaseUrl = '@fileBaseUrl';
@@ -489,7 +528,7 @@
             });
         });
 
-        // ================= MONTHLY EXPENSES ADMIN LOGIC (FIXED URL) =================
+        // ================= MONTHLY EXPENSES ADMIN LOGIC (FIXED) =================
         function loadAdminExpenseBills() {
             let affId = $('#fltExpenseAffiliate').val();
             let month = $('#fltExpenseMonth').val();
@@ -505,33 +544,32 @@
                         let html = '';
                         res.data.forEach(b => {
                             let badge = b.status == 'Paid' ? 'success' : (b.status == 'Approved' ? 'primary' : (b.status == 'Rejected' ? 'danger' : 'warning'));
+
+                            // Yahan humne saari possible variations handle kar li hain taaki undefined na aaye
+                            let affiliateIdVal = b.affiliateId || b.AffiliateId || 0;
+
                             let docs = b.generatedPdfUrl
-                                ? `<a href="${getCentralFileUrl(b.generatedPdfUrl)}"
-                 target="_blank"
-                 class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0">
-                 System PDF
-               </a>`
+                                ? `<a href="${getCentralFileUrl(b.generatedPdfUrl)}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0">System PDF</a>`
                                 : '';
 
                             if (b.signedPdfUrl) {
-                                docs += ` <br>
-                <a href="${getCentralFileUrl(b.signedPdfUrl)}"
-                   target="_blank"
-                   class="btn btn-sm btn-success rounded-pill px-2 py-0 mt-1">
-                   Signed Copy
-                </a>`;
+                                docs += ` <br><a href="${getCentralFileUrl(b.signedPdfUrl)}" target="_blank" class="btn btn-sm btn-success rounded-pill px-2 py-0 mt-1">Signed Copy</a>`;
                             }
 
                             html += `<tr>
-                                                        <td><b>${b.monthYear}</b></td>
-                                                        <td><span class="text-primary fw-bold">${b.affiliateName}</span></td>
-                                                        <td><b class="text-success">₹${b.totalAmount.toFixed(2)}</b></td>
-                                                        <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>
-                                                        <td class="text-center">${docs}</td>
-                                                        <td class="text-center">
-                                                            <button class="btn btn-sm btn-outline-dark rounded-pill px-3 shadow-none" onclick="openProcessExpenseModal(${b.id}, '${b.status}')">Process</button>
-                                                        </td>
-                                                    </tr>`;
+                                        <td><b>${b.monthYear}</b></td>
+                                        <td>
+                                                    <a href="javascript:void(0);" class="text-primary fw-bold text-decoration-underline" onclick="openAffiliateExpensesModal(${b.id}, '${b.monthYear}', '${b.affiliateName}')">
+                                                ${b.affiliateName}
+                                            </a>
+                                        </td>
+                                        <td><b class="text-success">₹${b.totalAmount.toFixed(2)}</b></td>
+                                        <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>
+                                        <td class="text-center">${docs}</td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-dark rounded-pill px-3 shadow-none" onclick="openProcessExpenseModal(${b.id}, '${b.status}')">Process</button>
+                                        </td>
+                                    </tr>`;
                         });
                         $('#tblAdminExpenseBills').html(html);
                     } else {
@@ -540,7 +578,91 @@
                 }
             });
         }
+        let currentAffiliateName = "";
+        let currentMonthYear = "";
 
+        function openAffiliateExpensesModal(billId, monthYear, affiliateName) {
+            currentSelectedBillId = billId;
+            currentAffiliateName = affiliateName || "Affiliate";
+            currentMonthYear = monthYear || "Month";
+
+            $('#lblModalAffiliateName').text("Affiliate: " + affiliateName);
+            $('#lblModalMonthYear').text("Month: " + monthYear);
+
+            $('#modalExpenseTableBody').html(`<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div> Loading individual expenses...</td></tr>`);
+            $('#affiliateExpensesModal').modal('show');
+
+            $.ajax({
+                url: `/api/financials/admin/affiliate-monthly-expenses?billId=${billId}`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if (res.success && res.data.expenses && res.data.expenses.length > 0) {
+                        let rows = '';
+                        res.data.expenses.forEach(e => {
+                            let receiptLink = e.receiptPath
+                                ? `<a href="${getCentralFileUrl(e.receiptPath)}" target="_blank" class="btn btn-sm btn-outline-primary px-2 py-1">View Receipt</a>`
+                                : '<span class="text-muted">-</span>';
+
+                            rows += `<tr>
+                                        <td class="px-3 fw-semibold">${formatDate(e.expenseDate)}</td>
+                                        <td>${e.expenseDetail || '-'}</td>
+                                        <td class="fw-bold text-success">₹ ${Number(e.amount || 0).toFixed(2)}</td>
+                                        <td class="text-center">${receiptLink}</td>
+                                        <td><span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill">${e.status || 'Pending'}</span></td>
+                                    </tr>`;
+                        });
+                        $('#modalExpenseTableBody').html(rows);
+                    } else {
+                        $('#modalExpenseTableBody').html(`<tr><td colspan="5" class="text-center text-muted py-4">No individual expenses found for this month.</td></tr>`);
+                    }
+                },
+                error: function() {
+                    $('#modalExpenseTableBody').html(`<tr><td colspan="5" class="text-center text-danger py-4">Failed to load individual expenses.</td></tr>`);
+                }
+            });
+        }
+
+        function downloadMergedPdf() {
+            if (!currentSelectedBillId) return;
+
+            let btn = $('#btnDownloadMergedPdf');
+            let originalText = btn.html();
+            btn.prop('disabled', true).html(`<span class="spinner-border spinner-border-sm me-1"></span> Downloading...`);
+
+            $.ajax({
+                url: `/api/financials/admin/download-merged-expense-pdf?billId=${currentSelectedBillId}`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function(blob) {
+                    let link = document.createElement('a');
+                    let url = window.URL.createObjectURL(blob);
+                    link.href = url;
+
+                    let now = new Date();
+                    let pad = (n) => String(n).padStart(2, '0');
+                    let timestamp = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+                    let safeAffName = currentAffiliateName.replace(/[^\w\s_-]/gi, '').replace(/\s+/g, '_');
+
+                    // Dynamic naming assignment
+                    link.download = `${safeAffName}_${currentMonthYear}_${timestamp}.pdf`;
+
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                },
+                error: function(err) {
+                    alert("Failed to download merged PDF.");
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html(originalText);
+                }
+            });
+        }
         function openProcessExpenseModal(id, status) {
             $('#hdnProcExpenseId').val(id);
             $('#pExpStatus').val(status == 'Uploaded' ? 'Approved' : status);

@@ -9,9 +9,14 @@
             <h3 class="fw-bold text-dark m-0"><i class="bi bi-people text-primary me-2"></i> Volunteer Directory</h3>
             <p class="text-muted small m-0">View all volunteers, filter by affiliate/school, and manage download formats.</p>
         </div>
-        <button class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="$('#formatModal').modal('show')">
-            <i class="bi bi-file-earmark-arrow-up me-1"></i> Upload Excel Format
-        </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openAssignSchoolModal()">
+                <i class="bi bi-building-add me-1"></i> Assign Schools
+            </button>
+            <button class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="$('#formatModal').modal('show')">
+                <i class="bi bi-file-earmark-arrow-up me-1"></i> Upload Excel Format
+            </button>
+        </div>
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
@@ -48,7 +53,7 @@
                         <th>Volunteer Name</th>
                         <th>Contact Details</th>
                         <th>Associated Affiliate</th>
-                        <th>Assigned School</th>
+                        <th>Assigned Schools</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -57,10 +62,85 @@
                 </tbody>
             </table>
         </div>
-        
+
         <div class="d-flex justify-content-between align-items-center mt-3">
             <span class="small text-muted" id="pageInfo">Showing 0 records</span>
             <ul class="pagination pagination-sm m-0 shadow-sm" id="pagination"></ul>
+        </div>
+    </div>
+</div>
+
+<!-- ================= VOLUNTEER SCHOOL ASSIGN MODAL ================= -->
+<div class="modal fade" id="assignSchoolModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-4 bg-white">
+            <div class="modal-header border-bottom pb-3">
+                <div class="d-flex align-items-center gap-3">
+                    <button type="button" class="btn btn-light btn-sm border rounded-pill px-3 fw-semibold shadow-sm" data-bs-dismiss="modal">
+                        <i class="bi bi-arrow-left me-1"></i> Back
+                    </button>
+                    <h5 class="fw-bold text-dark m-0"><i class="bi bi-building-add text-primary me-2"></i> Assign Schools to Volunteer (Admin)</h5>
+                </div>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body py-4">
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-muted">Select Volunteer <span class="text-danger">*</span></label>
+                    <select id="ddlAssignVolunteer" class="form-select rounded-3 shadow-none" onchange="fetchVolunteerMappings(this.value)">
+                        <option value="">-- Choose Volunteer --</option>
+                    </select>
+                </div>
+
+                <div class="row g-4 align-items-center">
+                    <!-- Box 1: Available Schools with Pincode Filter -->
+                    <div class="col-md-5">
+                        <div class="card border rounded-4 p-3 bg-light h-100">
+                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-building me-1"></i> Available Schools</h6>
+
+                            <div class="input-group input-group-sm mb-2">
+                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                <input type="text" id="txtPincodeSearch" class="form-control shadow-none" placeholder="Search by Pincode..." onkeyup="filterUnassignedSchools()">
+                                <button class="btn btn-outline-secondary" type="button" onclick="$('#txtPincodeSearch').val(''); filterUnassignedSchools();"><i class="bi bi-x"></i></button>
+                            </div>
+
+                            <div class="border rounded-3 bg-white p-2" style="height: 230px; overflow-y: auto;">
+                                <ul id="listUnassignedSchools" class="list-group list-group-flush small">
+                                    <li class="list-group-item text-muted text-center py-4">Please select a volunteer first</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transfer Action Buttons -->
+                    <div class="col-md-2 text-center d-flex flex-column justify-content-center gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill fw-semibold shadow-sm" onclick="moveSelectedToAssigned()">
+                            Assign <i class="bi bi-chevron-right"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill fw-semibold shadow-sm" onclick="moveSelectedToUnassigned()">
+                            <i class="bi bi-chevron-left"></i> Remove
+                        </button>
+                    </div>
+
+                    <!-- Box 2: Assigned Schools -->
+                    <div class="col-md-5">
+                        <div class="card border rounded-4 p-3 bg-light h-100">
+                            <h6 class="fw-bold text-success mb-3"><i class="bi bi-building-check me-1"></i> Assigned to This Volunteer</h6>
+                            <div class="border rounded-3 bg-white p-2" style="height: 280px; overflow-y: auto;">
+                                <ul id="listAssignedSchools" class="list-group list-group-flush small">
+                                    <li class="list-group-item text-muted text-center py-4">No schools assigned yet</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <button type="button" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm py-2" onclick="saveSchoolMappings()">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -90,83 +170,52 @@
         let allSchools = [];
         let allAffiliates = [];
         let currentPage = 1;
+        let globalUnassignedSchools = [];
 
-        $(function () {
+        $(function() {
             loadFiltersData();
             loadTableData(1);
         });
 
         function getAuthToken() { return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || ''; }
 
-       function loadFiltersData() {
-    $.ajax({
-        url: '/api/volunteer/admin/filters-data',
-        type: 'GET',
-        headers: {
-            'Authorization': 'Bearer ' + getAuthToken()
-        },
-        success: function (res) {
+        function loadFiltersData() {
+            $.ajax({
+                url: '/api/volunteer/admin/filters-data',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if (res.success) {
+                        allSchools = res.schools || [];
+                        allAffiliates = res.affiliates || [];
 
-            if (res.success) {
-
-                allSchools = res.schools || [];
-                allAffiliates = res.affiliates || [];
-
-                let affHtml = '<option value="">All Affiliates</option>';
-
-                allAffiliates.forEach(a => {
-                    affHtml += `
-                        <option value="${a.id}" data-code="${a.referralCode || ''}">
-                            ${a.name}
-                        </option>`;
-                });
-
-                $('#fltAffiliate').html(affHtml);
-
-                populateSchoolsDropdown('');
-            }
-        },
-        error: function (xhr) {
-            console.error('Error loading filters:', xhr);
+                        let affHtml = '<option value="">All Affiliates</option>';
+                        allAffiliates.forEach(a => {
+                            affHtml += `<option value="${a.id}" data-code="${a.referralCode || ''}">${a.name}</option>`;
+                        });
+                        $('#fltAffiliate').html(affHtml);
+                        populateSchoolsDropdown('');
+                    }
+                },
+                error: function(xhr) { console.error('Error loading filters:', xhr); }
+            });
         }
-    });
-}
 
-       function onAffiliateChange() {
+        function onAffiliateChange() {
+            let selectedCode = $('#fltAffiliate').find(':selected').attr('data-code');
+            populateSchoolsDropdown(selectedCode || '');
+            loadTableData(1);
+        }
 
-    let selectedCode = $('#fltAffiliate')
-        .find(':selected')
-        .attr('data-code');
+        function populateSchoolsDropdown(affiliateReferralCode) {
+            let filteredSchools = affiliateReferralCode ? allSchools.filter(s => s.referralCode === affiliateReferralCode) : allSchools;
+            let schHtml = '<option value="">All Schools</option>';
+            filteredSchools.forEach(s => {
+                schHtml += `<option value="${s.id}">${s.name}</option>`;
+            });
+            $('#fltSchool').html(schHtml);
+        }
 
-    populateSchoolsDropdown(selectedCode || '');
-
-    loadTableData(1);
-}
-
-
-function populateSchoolsDropdown(affiliateReferralCode) {
-
-    let filteredSchools = affiliateReferralCode
-        ? allSchools.filter(s =>
-            s.referralCode === affiliateReferralCode
-        )
-        : allSchools;
-
-    let schHtml = '<option value="">All Schools</option>';
-
-    filteredSchools.forEach(s => {
-        schHtml += `
-            <option value="${s.id}">
-                ${s.name}
-            </option>`;
-    });
-
-    $('#fltSchool').html(schHtml);
-}
-
-      
-
-        // ================= TABLE & PAGINATION =================
         function loadTableData(page) {
             currentPage = page;
             $('#tblAdminVols').html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div></td></tr>');
@@ -179,19 +228,18 @@ function populateSchoolsDropdown(affiliateReferralCode) {
                 url: `/api/volunteer/admin/list?page=${page}&pageSize=10&affiliateId=${affId}&instituteId=${schId}&search=${srch}`,
                 type: 'GET',
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                success: function (res) {
+                success: function(res) {
                     if (res.success && res.data.length > 0) {
                         let html = '';
                         res.data.forEach(v => {
                             let badge = v.isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
-                            
                             html += `<tr>
-                                <td><b class="text-dark">${v.name}</b><br><small class="text-muted">Joined: ${new Date(v.createdDate).toLocaleDateString('en-GB')}</small></td>
-                                <td><i class="bi bi-telephone text-muted"></i> ${v.mobileNo}<br><i class="bi bi-envelope text-muted"></i> <small>${v.email || 'N/A'}</small></td>
-                                <td><b class="text-primary">${v.affiliateName || 'N/A'}</b></td>
-                                <td><b>${v.schoolName || 'N/A'}</b></td>
-                                <td>${badge}</td>
-                            </tr>`;
+                                        <td><b class="text-dark">${v.name}</b><br><small class="text-muted">Joined: ${new Date(v.createdDate).toLocaleDateString('en-GB')}</small></td>
+                                        <td><i class="bi bi-telephone text-muted"></i> ${v.mobileNo}<br><i class="bi bi-envelope text-muted"></i> <small>${v.email || 'N/A'}</small></td>
+                                        <td><b class="text-primary">${v.affiliateName || 'N/A'}</b></td>
+                                        <td><b>${v.schoolNames || 'N/A'}</b></td>
+                                        <td>${badge}</td>
+                                    </tr>`;
                         });
                         $('#tblAdminVols').html(html);
                         $('#pageInfo').text(`Showing Page ${res.currentPage} of ${res.totalPages} (Total ${res.totalRecords} Records)`);
@@ -207,23 +255,20 @@ function populateSchoolsDropdown(affiliateReferralCode) {
 
         function buildPagination(current, total) {
             let pgHtml = '';
-            // Prev Button
             if (current > 1) {
                 pgHtml += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadTableData(${current - 1})">Prev</a></li>`;
             } else {
                 pgHtml += `<li class="page-item disabled"><a class="page-link" href="javascript:void(0)">Prev</a></li>`;
             }
 
-            // Pages (Simplified)
             for (let i = 1; i <= total; i++) {
-                if(i === current) {
+                if (i === current) {
                     pgHtml += `<li class="page-item active"><a class="page-link" href="javascript:void(0)">${i}</a></li>`;
                 } else {
                     pgHtml += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadTableData(${i})">${i}</a></li>`;
                 }
             }
 
-            // Next Button
             if (current < total) {
                 pgHtml += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadTableData(${current + 1})">Next</a></li>`;
             } else {
@@ -248,8 +293,8 @@ function populateSchoolsDropdown(affiliateReferralCode) {
                 contentType: false,
                 processData: false,
                 headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-                success: function (res) {
-                    if(res.success) {
+                success: function(res) {
+                    if (res.success) {
                         alert(res.message);
                         $('#formatModal').modal('hide');
                         $('#frmUploadFormat')[0].reset();
@@ -262,121 +307,141 @@ function populateSchoolsDropdown(affiliateReferralCode) {
         });
 
         function openAssignSchoolModal() {
-        // Load volunteers dropdown for selection inside modal
-        $.ajax({
-            url: '/api/volunteer/list',
-            type: 'GET',
-            headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-            success: function (res) {
-                if (res.success && res.data) {
+            $.ajax({
+                url: '/api/volunteer/admin/list?pageSize=1000',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    let list = res.data || [];
                     let html = '<option value="">-- Choose Volunteer --</option>';
-                    res.data.forEach(v => {
+                    list.forEach(v => {
                         html += `<option value="${v.id}">${v.name} (${v.mobileNo})</option>`;
                     });
                     $('#ddlAssignVolunteer').html(html);
                 }
-            }
-        });
+            });
 
-        $('#listUnassignedSchools').html('<li class="list-group-item text-muted text-center py-4">Please select a volunteer first</li>');
-        $('#listAssignedSchools').html('<li class="list-group-item text-muted text-center py-4">No schools assigned yet</li>');
-        $('#assignSchoolModal').modal('show');
-    }
-
-    function fetchVolunteerMappings(volunteerId) {
-        if (!volunteerId) {
+            $('#txtPincodeSearch').val('');
+            globalUnassignedSchools = [];
             $('#listUnassignedSchools').html('<li class="list-group-item text-muted text-center py-4">Please select a volunteer first</li>');
             $('#listAssignedSchools').html('<li class="list-group-item text-muted text-center py-4">No schools assigned yet</li>');
-            return;
+            $('#assignSchoolModal').modal('show');
         }
 
-        $.ajax({
-            url: `/api/volunteer/mapping-schools/${volunteerId}`,
-            type: 'GET',
-            headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-            success: function (res) {
-                if (res.success) {
-                    let unassignedHtml = '';
-                    if (res.unassignedSchools.length > 0) {
-                        res.unassignedSchools.forEach(s => {
-                            unassignedHtml += `<li class="list-group-item list-group-item-action py-2" style="cursor:pointer;" data-id="${s.instituteID}" onclick="toggleSelect(this)">${s.name}</li>`;
-                        });
-                    } else {
-                        unassignedHtml = '<li class="list-group-item text-muted text-center py-3">No available schools</li>';
-                    }
-                    $('#listUnassignedSchools').html(unassignedHtml);
-
-                    let assignedHtml = '';
-                    if (res.assignedSchools.length > 0) {
-                        res.assignedSchools.forEach(s => {
-                            assignedHtml += `<li class="list-group-item list-group-item-action py-2" style="cursor:pointer;" data-id="${s.instituteID}" onclick="toggleSelect(this)">${s.name}</li>`;
-                        });
-                    } else {
-                        assignedHtml = '<li class="list-group-item text-muted text-center py-3">No schools assigned</li>';
-                    }
-                    $('#listAssignedSchools').html(assignedHtml);
-                }
+        function fetchVolunteerMappings(volunteerId) {
+            if (!volunteerId) {
+                $('#txtPincodeSearch').val('');
+                globalUnassignedSchools = [];
+                $('#listUnassignedSchools').html('<li class="list-group-item text-muted text-center py-4">Please select a volunteer first</li>');
+                $('#listAssignedSchools').html('<li class="list-group-item text-muted text-center py-4">No schools assigned yet</li>');
+                return;
             }
-        });
-    }
 
-    function toggleSelect(element) {
-        $(element).toggleClass('active bg-primary text-white');
-    }
+            $.ajax({
+                url: `/api/volunteer/admin/mapping-schools/${volunteerId}`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                success: function(res) {
+                    if (res.success) {
+                        globalUnassignedSchools = res.unassignedSchools || [];
+                        renderUnassignedSchools(globalUnassignedSchools);
 
-    function moveSelectedToAssigned() {
-        $('#listUnassignedSchools .active').each(function() {
-            $(this).removeClass('active bg-primary text-white');
-            $('#listAssignedSchools').append(this);
-        });
-        // Remove 'no data' placeholder if exists
-        $('#listAssignedSchools .text-muted').remove();
-    }
-
-    function moveSelectedToUnassigned() {
-        $('#listAssignedSchools .active').each(function() {
-            $(this).removeClass('active bg-primary text-white');
-            $('#listUnassignedSchools').append(this);
-        });
-        $('#listUnassignedSchools .text-muted').remove();
-    }
-
-    function saveSchoolMappings() {
-        let volunteerId = $('#ddlAssignVolunteer').val();
-        if (!volunteerId) {
-            alert("Please select a volunteer.");
-            return;
+                        let assignedHtml = '';
+                        if (res.assignedSchools && res.assignedSchools.length > 0) {
+                            res.assignedSchools.forEach(s => {
+                                let otherVol = s.assignedVolunteers && s.assignedVolunteers !== "None" ? `<br><small class="text-muted">Also with: ${s.assignedVolunteers}</small>` : '';
+                                let pin = s.pincode ? ` <span class="badge bg-light text-dark border float-end">Pin: ${s.pincode}</span>` : '';
+                                assignedHtml += `<li class="list-group-item list-group-item-action py-2 border-0 rounded-2 mb-1" style="cursor:pointer;" data-id="${s.instituteId}" onclick="toggleSelect(this)"><strong>${s.name}</strong>${pin} ${otherVol}</li>`;
+                            });
+                        } else {
+                            assignedHtml = '<li class="list-group-item text-muted text-center py-3 border-0">No schools assigned</li>';
+                        }
+                        $('#listAssignedSchools').html(assignedHtml);
+                    }
+                }
+            });
         }
 
-        let instituteIds = [];
-        $('#listAssignedSchools li[data-id]').each(function() {
-            instituteIds.push(parseInt($(this).attr('data-id')));
-        });
-
-        let payload = {
-            VolunteerId: parseInt(volunteerId),
-            InstituteIds: instituteIds
-        };
-
-        $.ajax({
-            url: '/api/volunteer/save-mapping',
-            type: 'POST',
-            contentType: 'application/json',
-            headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-            data: JSON.stringify(payload),
-            success: function (res) {
-                if (res.success) {
-                    alert(res.message);
-                    $('#assignSchoolModal').modal('hide');
-                    loadVolunteers(); // Refresh table
-                } else {
-                    alert(res.message);
-                }
-            },
-            error: function () {
-                alert("Error saving mappings.");
+        function renderUnassignedSchools(schools) {
+            let html = '';
+            if (schools && schools.length > 0) {
+                schools.forEach(s => {
+                    let otherVol = s.assignedVolunteers && s.assignedVolunteers !== "None" ? `<br><small class="text-muted">Assigned to: ${s.assignedVolunteers}</small>` : '';
+                    let pin = s.pincode ? ` <span class="badge bg-light text-dark border float-end">Pin: ${s.pincode}</span>` : '';
+                    html += `<li class="list-group-item list-group-item-action py-2 border-0 rounded-2 mb-1" style="cursor:pointer;" data-id="${s.instituteId}" onclick="toggleSelect(this)"><strong>${s.name}</strong>${pin} ${otherVol}</li>`;
+                });
+            } else {
+                html = '<li class="list-group-item text-muted text-center py-3 border-0">No matching schools found</li>';
             }
-        });
-    }
+            $('#listUnassignedSchools').html(html);
+        }
+
+        function filterUnassignedSchools() {
+            let q = $('#txtPincodeSearch').val().trim().toLowerCase();
+            if (!q) {
+                renderUnassignedSchools(globalUnassignedSchools);
+                return;
+            }
+            let filtered = globalUnassignedSchools.filter(s => s.pincode && s.pincode.toLowerCase().includes(q));
+            renderUnassignedSchools(filtered);
+        }
+
+        function toggleSelect(element) {
+            $(element).toggleClass('active bg-primary text-white');
+        }
+
+        function moveSelectedToAssigned() {
+            $('#listUnassignedSchools .active').each(function() {
+                $(this).removeClass('active bg-primary text-white'); $('#listAssignedSchools').append(this);
+            });
+            $('#listAssignedSchools .text-muted').remove();
+        }
+
+        function moveSelectedToUnassigned() {
+            $('#listAssignedSchools .active').each(function() {
+                $(this).removeClass('active bg-primary text-white'); $('#listUnassignedSchools').append(this);
+            });
+            $('#listUnassignedSchools .text-muted').remove();
+        }
+
+        function saveSchoolMappings() {
+            let volunteerId = $('#ddlAssignVolunteer').val();
+            if (!volunteerId) {
+                alert("Please select a volunteer.");
+                return;
+            }
+
+            let instituteIds = [];
+            $('#listAssignedSchools li[data-id]').each(function() {
+                instituteIds.push(parseInt($(this).attr('data-id'), 10));
+            });
+
+            instituteIds = [...new Set(instituteIds)];
+
+            let payload = {
+                VolunteerId: parseInt(volunteerId, 10),
+                InstituteIds: instituteIds
+            };
+
+            $.ajax({
+                url: '/api/volunteer/save-mapping',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    if (res.success) {
+                        alert(res.message);
+                        $('#assignSchoolModal').modal('hide');
+                        loadTableData(currentPage);
+                    } else {
+                        alert(res.message);
+                    }
+                },
+                error: function() {
+                    alert("Error saving mappings.");
+                }
+            });
+        }
     </script>
 }
