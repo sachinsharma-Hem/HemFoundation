@@ -171,14 +171,20 @@
                 </div>
 
                 <!-- INDIVIDUAL EXPENSE LIST -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
                     <div>
                         <h5 class="fw-bold mb-1">Individual Expense List</h5>
                         <p class="text-muted small mb-0">Track your individual submitted expenses.</p>
                     </div>
-                    <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3" id="btnRefreshExpenses">
-                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Month Filter Dropdown -->
+                        <div style="width: 180px;">
+                            <input type="month" id="filterExpenseMonth" class="form-control form-control-sm rounded-3 shadow-none">
+                        </div>
+                        <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3" id="btnRefreshExpenses">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                        </button>
+                    </div>
                 </div>
                 <div class="table-responsive border rounded-3">
                     <table class="table table-hover align-middle mb-0">
@@ -701,33 +707,49 @@
             }
         };
 
+        function initExpenseMonthFilter() {
+            const monthInput = document.getElementById("filterExpenseMonth");
+            if (monthInput && !monthInput.value) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, "0");
+                monthInput.value = `${year}-${month}`;
+            }
+        }
+
         async function loadExpenses() {
+            initExpenseMonthFilter();
+            const selectedMonthYear = document.getElementById("filterExpenseMonth").value; // e.g. "2026-10"
             const tbody = document.getElementById("expenseTableBody");
+
             tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-success me-2"></div> Loading expenses...</td></tr>`;
+
             try {
-                const res = await apiRequest("/api/other-activity/expense/list");
+                const url = selectedMonthYear
+                    ? `/api/other-activity/expense/list?month=${selectedMonthYear}`
+                    : "/api/other-activity/expense/list";
+
+                const res = await apiRequest(url);
                 if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-5">No expenses found.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-5">No expenses found for this month.</td></tr>`;
                     return;
                 }
+
                 let html = "";
                 res.data.forEach(item => {
                     let receiptHtml = item.receiptPath
-                        ? `<a href="${escapeHtml(getCentralFileUrl(item.receiptPath))}"
-              target="_blank"
-              class="btn btn-sm btn-outline-primary">
-              View
-           </a>`
+                        ? `<a href="${escapeHtml(getCentralFileUrl(item.receiptPath))}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>`
                         : "-";
+
                     html += `
-                                <tr>
-                                    <td class="px-3 fw-semibold">${formatDate(item.expenseDate)}</td>
-                                    <td>${escapeHtml(item.expenseDetail || "-")}</td>
-                                    <td class="fw-bold text-success">₹ ${Number(item.amount || 0).toFixed(2)}</td>
-                                    <td>${receiptHtml}</td>
-                                    <td>${getStatusBadge(item.status)}</td>
-                                </tr>
-                            `;
+                            <tr>
+                                <td class="px-3 fw-semibold">${formatDate(item.expenseDate)}</td>
+                                <td>${escapeHtml(item.expenseDetail || "-")}</td>
+                                <td class="fw-bold text-success">₹ ${Number(item.amount || 0).toFixed(2)}</td>
+                                <td>${receiptHtml}</td>
+                                <td>${getStatusBadge(item.status)}</td>
+                            </tr>
+                        `;
                 });
                 tbody.innerHTML = html;
             } catch {
@@ -934,6 +956,7 @@ if (b.signedPdfUrl) {
             });
             document.getElementById("btnRefreshActivities").addEventListener("click", loadActivities);
             document.getElementById("btnRefreshExpenses").addEventListener("click", loadExpenses);
+            document.getElementById("filterExpenseMonth").addEventListener("change", loadExpenses); // <-- Yeh line yahan add kar di gayi hai
             document.getElementById("activitiesTabBtn").addEventListener("click", showActivities);
             document.getElementById("expensesTabBtn").addEventListener("click", showExpenses);
             document.getElementById("activityForm").addEventListener("submit", createActivity);

@@ -1,361 +1,176 @@
 ﻿<partial name="~/Views/Dashboard/Partials/_UserProfileCard.cshtml" />
 
-<div class="container-fluid py-4">
+@using Microsoft.AspNetCore.Http
+@{
+    var affiliateId = Context.Session.GetInt32("UserID") ?? 0;
+}
 
-    <div class="d-flex align-items-center mb-3">
-        <h4 class="fw-bolder text-dark m-0">
-            <i class="bi bi-speedometer2 text-primary me-2"></i>
-            Performance Dashboard
-        </h4>
-    </div>
-
-    <div class="row g-4 mb-5">
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-blue">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-building"></i></div>
-                    <div>
-                        <div class="stat-number" id="lblActiveSchoolCount">
-                            <span class="spinner-border spinner-border-sm text-white" role="status"></span>
-                        </div>
-                        <div class="stat-label">Total School</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" id="btnOpenAssignedSchools" class="btn-more shadow-sm border-0">More Info <i class="bi bi-arrow-right ms-1"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-green">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-people-fill"></i></div>
-                    <div>
-                        <div class="stat-number" id="lblTotalStudentCount">0</div>
-                        <div class="stat-label">Total Student</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" id="btnOpenTotalStudents" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-orange">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-person-check-fill"></i></div>
-                    <div>
-                        <div class="stat-number" id="lblActiveStudentCount">0</div>
-                        <div class="stat-label">Active Student</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" id="btnOpenActiveStudents" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-teal">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-display"></i></div>
-                    <div>
-                        <div class="stat-number" id="lblTotalTeacherCount">0</div>
-                        <div class="stat-label">Total Teacher</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" id="btnOpenTotalTeachers" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-purple">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-person-badge"></i></div>
-                    <div>
-                        <div class="stat-number" id="lblActiveTeacherCount">0</div>
-                        <div class="stat-label">Active Teacher</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" id="btnOpenActiveTeachers" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-pink">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-heart-fill"></i></div>
-                    <div>
-                        <div class="stat-number" id="lblTotalSelProjectCount">0</div>
-                        <div class="stat-label">Total SEL Project</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" id="btnOpenSelProjects" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-yellow">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-house-door-fill"></i></div>
-                    <div>
-                        <div class="stat-number" id="lblFamilyProjectCount">0</div>
-                        <div class="stat-label">No of Family Project</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" id="btnOpenFamilyProjects" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-cyan">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-person-fill"></i></div>
-                    <div>
-                        <div class="stat-number" id="lblIndividualProjectCount">0</div>
-                        <div class="stat-label">No of Individual Project</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" id="btnOpenIndividualProjects" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-indigo">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-diagram-3-fill"></i></div>
-                    <div>
-                        <div class="stat-number" id="lblGroupPblCount">0</div>
-                        <div class="stat-label">No of Group PBL</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" id="btnOpenGroupPbl" class="btn-more shadow-sm border-0" hidden>More Info <i class="bi bi-arrow-right ms-1"></i></button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="d-flex align-items-center mb-3">
-    <h4 class="fw-bolder text-dark m-0">
-        <i class="bi bi-speedometer2 text-primary me-2"></i>
-        Activity Dashboard
-    </h4>
-</div>
-    <div class="row g-4 mb-5">
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-blue">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-calendar-event-fill"></i>
-                    </div>
-                    <div>
-                        <div class="stat-number" id="lblVisitPlanCount">0</div>
-                        <div class="stat-label">Visit Plan</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0" onclick="location.href='/VolunteerPlan/plan'">
-                        More Info
-                        <i class="bi bi-arrow-right ms-1"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-green">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-geo-alt-fill"></i>
-                    </div>
-                    <div>
-                        <div class="stat-number" id="lblVisitedCount">0</div>
-                        <div class="stat-label">Visited</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0" onclick="location.href='/VolunteerPlan/plan'">
-                        More Info
-                        <i class="bi bi-arrow-right ms-1"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-orange">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-clock-fill"></i>
-                    </div>
-                    <div>
-                        <div class="stat-number" id="lblVisitPendingCount">0</div>
-                        <div class="stat-label">Visit Pending</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0" onclick="location.href='/VolunteerPlan/plan'">
-                        More Info
-                        <i class="bi bi-arrow-right ms-1"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-teal">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-clipboard-check-fill"></i>
-                    </div>
-                    <div>
-                        <div class="stat-number" id="lblActivityUpdatedCount">0</div>
-                        <div class="stat-label">Activity Updated</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0" onclick="location.href='/VolunteerPlan/plan'">
-                        More Info
-                        <i class="bi bi-arrow-right ms-1"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-lg-4 col-sm-6">
-            <div class="premium-card bg-red">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle shadow-sm me-3">
-                        <i class="bi bi-clipboard-x-fill"></i>
-                    </div>
-                    <div>
-                        <div class="stat-number" id="lblActivityPendingCount">0</div> 
-                        <div class="stat-label">Activity Pending</div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="text-center">
-                    <button type="button" class="btn-more shadow-sm border-0" onclick="location.href='/VolunteerPlan/plan'">
-                        More Info
-                        <i class="bi bi-arrow-right ms-1"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-<div class="d-none" id="lblAssignedSchoolCount">0</div>
-
-<div class="modal fade" id="volunteerSchoolsModal" tabindex="-1" aria-labelledby="volunteerSchoolsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-4 border-0 shadow-lg bg-white">
-            <div class="modal-header border-bottom px-4 py-3">
-                <div>
-                    <h5 class="fw-bold text-dark m-0" id="volunteerSchoolsModalLabel">
-                        <i class="bi bi-building text-primary me-2"></i>
-                        My Assigned Schools
-                    </h5>
-                    <small class="text-muted">
-                        Schools currently assigned to you
-                    </small>
-                </div>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <!-- BODY -->
-            <div class="modal-body p-4">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle small mb-0">
-                        <thead class="table-light text-muted">
-                            <tr>
-                                <th style="width:60px;">#</th>
-                                <th>School</th>
-                                <th>Assigned Date</th>
-                                <th>Assigned By</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tblAssignedSchoolsList">
-                            <tr>
-                                <td colspan="4" class="text-center py-5 text-muted">
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                    Loading schools...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- FOOTER -->
-            <div class="modal-footer border-top px-4 py-3">
-                <span class="text-muted small me-auto">
-                    Total Assigned:
-                    <strong id="modalAssignedSchoolCount">0</strong>
-                </span>
-                <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="genericDetailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-4 border-0 shadow-lg bg-white">
-            <div class="modal-header border-bottom px-4 py-3">
-                <div>
-                    <h5 class="fw-bold text-dark m-0" id="genericModalTitle">
-                        <i class="bi bi-list-task text-primary me-2"></i> Details List
-                    </h5>
-                    <small class="text-muted" id="genericModalSubtitle">Records associated with your assigned scope</small>
-                </div>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle small mb-0">
-                        <thead class="table-light text-muted" id="genericTableHead">
-                            <tr><th>#</th><th>Details</th></tr>
-                        </thead>
-                        <tbody id="genericTableBody">
-                            <tr><td colspan="2" class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Loading...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer border-top px-4 py-3">
-                <span class="text-muted small me-auto">Total Records: <strong id="genericModalCount">0</strong></span>
-                <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- =============================================================
+     STYLES
+     ============================================================= -->
 <style>
+    .cursor-pointer { cursor: pointer; }
+
+    /* ---------- Associated schools table ---------- */
+    .associated-schools-table-wrapper {
+        width: 100%;
+        max-width: 100%;
+        height: 550px;
+        max-height: 550px;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+        display: block;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        background: #ffffff;
+        position: relative;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: auto;
+        scrollbar-color: #adb5bd #f1f3f5;
+    }
+
+    #associatedSchoolsDetailsTable {
+        width: max-content !important;
+        min-width: 2600px !important;
+        margin: 0 !important;
+        table-layout: auto !important;
+    }
+
+    #associatedSchoolsDetailsTable th,
+    #associatedSchoolsDetailsTable td { vertical-align: middle; }
+
+    #associatedSchoolsDetailsTable thead th {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background-color: #f8f9fa !important;
+        color: #495057;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        padding: 12px 10px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    #associatedSchoolsDetailsTable tbody td {
+        font-size: 13px;
+        padding: 10px;
+        white-space: nowrap;
+    }
+
+    /* School Name = 3rd column */
+    #associatedSchoolsDetailsTable th:nth-child(3),
+    #associatedSchoolsDetailsTable td:nth-child(3) { min-width: 190px; max-width: 220px; }
+    #associatedSchoolsDetailsTable td:nth-child(3) { white-space: normal; word-break: break-word; }
+
+    /* Email = 9th column */
+    #associatedSchoolsDetailsTable th:nth-child(9),
+    #associatedSchoolsDetailsTable td:nth-child(9) { min-width: 230px; }
+
+    /* Address, Address 2 = 10th, 11th column */
+    #associatedSchoolsDetailsTable th:nth-child(10),
+    #associatedSchoolsDetailsTable td:nth-child(10),
+    #associatedSchoolsDetailsTable th:nth-child(11),
+    #associatedSchoolsDetailsTable td:nth-child(11) { min-width: 220px; max-width: 320px; }
+    #associatedSchoolsDetailsTable td:nth-child(10),
+    #associatedSchoolsDetailsTable td:nth-child(11) { white-space: normal; word-break: break-word; }
+
+    /* Count columns = 17 to 20 */
+    #associatedSchoolsDetailsTable th:nth-child(n+17),
+    #associatedSchoolsDetailsTable td:nth-child(n+17) { min-width: 135px; text-align: center; }
+
+    .school-url {
+        display: inline-block;
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+    .school-status-badge { min-width: 65px; display: inline-block; text-align: center; }
+    .school-count-badge  { min-width: 55px; display: inline-block; text-align: center; }
+
+    .associated-schools-table-wrapper::-webkit-scrollbar { width: 11px; height: 12px; }
+    .associated-schools-table-wrapper::-webkit-scrollbar-track { background: #f1f3f5; border-radius: 10px; }
+    .associated-schools-table-wrapper::-webkit-scrollbar-thumb {
+        background: #adb5bd; border-radius: 10px; border: 2px solid #f1f3f5;
+    }
+    .associated-schools-table-wrapper::-webkit-scrollbar-thumb:hover { background: #6c757d; }
+
+    /* ---------- Global loader ---------- */
+    .global-loader-overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+        z-index: 99999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    /* ---------- Details modal ---------- */
+    .modal-loader { padding: 3rem 0; }
+    #modalTable thead th { white-space: nowrap; user-select: none; }
+    #modalTable tbody td { white-space: nowrap; vertical-align: middle; }
+    .modal-table-wrapper { max-height: calc(100vh - 260px); overflow: auto; }
+    .modal-table-wrapper thead th {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: #f8f9fa !important;
+    }
+
+    /* ---------- Page layout ---------- */
+    .dash-page { max-width: 1500px; margin: 0 auto; padding: 4px 0 24px; }
+
+    .dash-header {
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+    }
+    .dash-header h3 { margin: 0; font-weight: 800; color: #14532d; }
+    .dash-header p  { margin: 2px 0 0; color: #6b7280; font-size: 0.875rem; }
+
+    .dash-section {
+        background: #ffffff;
+        border: 1px solid #d9dfe5;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+    }
+    .dash-section__head {
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 12px;
+        padding-bottom: 16px; margin-bottom: 20px;
+        border-bottom: 1px solid #eef0f3;
+    }
+    .dash-section__title { margin: 0; font-size: 1.15rem; font-weight: 700; color: #198754; }
+    .dash-section__title i { margin-right: 8px; }
+    .dash-section__desc  { margin: 2px 0 0; font-size: 0.8rem; color: #6b7280; }
+
+    .dash-subtitle {
+        font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase; color: #6b7280; margin: 0 0 12px;
+    }
+    .dash-subtitle.spaced { margin-top: 28px; }
+
+    .dash-note {
+        text-align: center; padding: 12px; margin-top: 20px;
+        border: 1px dashed #d9dfe5; border-radius: 10px;
+        background: #f8f9fa; color: #6b7280; font-size: 0.8rem;
+    }
+
+    /* ---------- Gradient card (used by ALL cards) ---------- */
+    .stat-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+    }
+
     .premium-card {
         border-radius: 12px;
         border: none;
@@ -365,43 +180,23 @@
         overflow: hidden;
         transition: transform 0.3s, box-shadow 0.3s;
         height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
-    .premium-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 25px rgba(0,0,0,0.15);
-    }
-    
+    .premium-card:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
+
     .premium-card .icon-circle {
-        width: 65px;
-        height: 65px;
+        width: 65px; height: 65px;
         background-color: #fff;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
         font-size: 2rem;
         flex-shrink: 0;
     }
-    
-    .premium-card .stat-number {
-        font-size: 2.2rem;
-        font-weight: 800;
-        line-height: 1.1;
-        margin-bottom: 2px;
-    }
-    
-    .premium-card .stat-label {
-        font-size: 0.95rem;
-        font-weight: 600;
-        opacity: 0.9;
-        text-transform: capitalize;
-    }
-    
-    .premium-card .divider {
-        border-top: 1px solid rgba(255, 255, 255, 0.3);
-        margin: 18px 0 15px 0;
-    }
-    
+    .premium-card .stat-number { font-size: 2.2rem; font-weight: 800; line-height: 1.1; margin-bottom: 2px; }
+    .premium-card .stat-label  { font-size: 0.95rem; font-weight: 600; opacity: 0.9; text-transform: capitalize; }
+    .premium-card .divider     { border-top: 1px solid rgba(255,255,255,0.3); margin: 18px 0 15px 0; }
     .premium-card .btn-more {
         background-color: #fff;
         border-radius: 50px;
@@ -412,922 +207,1148 @@
         display: inline-block;
         transition: background-color 0.2s;
     }
-    .premium-card .btn-more:hover {
-        background-color: #f1f1f1;
-    }
+    .premium-card .btn-more:hover:not(:disabled) { background-color: #f1f1f1; }
+    .premium-card .btn-more:disabled { opacity: 0.75; cursor: not-allowed; }
 
-    /* Gradients and Theme Colors */
-    .bg-blue { background: linear-gradient(135deg, #00c6ff, #0072ff); }
-    .bg-blue .icon-circle, .bg-blue .btn-more { color: #0072ff; }
-
-    .bg-green { background: linear-gradient(135deg, #28c76f, #059669); }
-    .bg-green .icon-circle, .bg-green .btn-more { color: #059669; }
-
+    .bg-blue   { background: linear-gradient(135deg, #00c6ff, #0072ff); }
+    .bg-blue .icon-circle,   .bg-blue .btn-more   { color: #0072ff; }
+    .bg-green  { background: linear-gradient(135deg, #28c76f, #059669); }
+    .bg-green .icon-circle,  .bg-green .btn-more  { color: #059669; }
     .bg-orange { background: linear-gradient(135deg, #ff9f43, #f57c00); }
     .bg-orange .icon-circle, .bg-orange .btn-more { color: #f57c00; }
-
-    .bg-teal { background: linear-gradient(135deg, #00cfe8, #009688); }
-    .bg-teal .icon-circle, .bg-teal .btn-more { color: #009688; }
-
+    .bg-teal   { background: linear-gradient(135deg, #00cfe8, #009688); }
+    .bg-teal .icon-circle,   .bg-teal .btn-more   { color: #009688; }
     .bg-purple { background: linear-gradient(135deg, #9722ff, #6610f2); }
     .bg-purple .icon-circle, .bg-purple .btn-more { color: #6610f2; }
-
-    .bg-pink { background: linear-gradient(135deg, #ff7eb3, #e83e8c); }
-    .bg-pink .icon-circle, .bg-pink .btn-more { color: #e83e8c; }
-
+    .bg-pink   { background: linear-gradient(135deg, #ff7eb3, #e83e8c); }
+    .bg-pink .icon-circle,   .bg-pink .btn-more   { color: #e83e8c; }
     .bg-indigo { background: linear-gradient(135deg, #818cf8, #4f46e5); }
     .bg-indigo .icon-circle, .bg-indigo .btn-more { color: #4f46e5; }
-
     .bg-yellow { background: linear-gradient(135deg, #f6d365, #fd7e14); }
     .bg-yellow .icon-circle, .bg-yellow .btn-more { color: #fd7e14; }
-
-    .bg-cyan { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-    .bg-cyan .icon-circle, .bg-cyan .btn-more { color: #008b8b; }
-    
-    .bg-red { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
-    .bg-red .icon-circle, .bg-red .btn-more { color: #ff4b2b; }
-
-    /* Modal Table Styles */
-    #tblAssignedSchoolsList tr { transition: background-color .2s ease; }
-    #tblAssignedSchoolsList td { vertical-align: middle; }
-    .school-name { font-weight: 600; color: #212529; }
-    .school-id { font-size: 0.72rem; color: #6c757d; }
+    .bg-cyan   { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+    .bg-cyan .icon-circle,   .bg-cyan .btn-more   { color: #008b8b; }
+    .bg-red    { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
+    .bg-red .icon-circle,    .bg-red .btn-more    { color: #ff4b2b; }
 </style>
 
-<script>
-    (function() {
-        "use strict";
-
-      
-        function getAuthToken() {
-            return localStorage.getItem("jwt_token")
-                || sessionStorage.getItem("jwt_token")
-                || "";
-        }
-
-       
-        function escapeHtml(value) {
-            if (value === null || value === undefined) {
-                return "";
-            }
-
-            var div = document.createElement("div");
-            div.textContent = String(value);
-            return div.innerHTML;
-        }
-
-     
-        function setSchoolCount(count) {
-
-            var finalCount = Number.isFinite(Number(count))
-                ? Number(count)
-                : 0;
-
-            var assignedCountElement =
-                document.getElementById("lblAssignedSchoolCount");
-
-            if (assignedCountElement) {
-                assignedCountElement.textContent = finalCount;
-            }
-
-            var activeSchoolCountElement =
-                document.getElementById("lblActiveSchoolCount");
-
-            if (activeSchoolCountElement) {
-                activeSchoolCountElement.textContent = finalCount;
-            }
-
-            var modalCount =
-                document.getElementById("modalAssignedSchoolCount");
-
-            if (modalCount) {
-                modalCount.textContent = finalCount;
-            }
-        }
-
-       
-        function showCountLoading() {
-
-            var countElement =
-                document.getElementById("lblAssignedSchoolCount");
-
-            if (countElement) {
-                countElement.innerHTML = `
-                    <span class="spinner-border spinner-border-sm text-white"
-                          role="status"
-                          aria-hidden="true">
-                    </span>
-                `;
-            }
-        }
-
-        async function fetchAssignedSchools() {
-
-            var token = getAuthToken();
-
-            var headers = {
-                "Accept": "application/json"
-            };
-
-            if (token) {
-                headers["Authorization"] =
-                    "Bearer " + token;
-            }
-
-            try {
-
-                var response = await fetch(
-                    "/api/volunteer/my-assigned-schools",
-                    {
-                        method: "GET",
-                        headers: headers,
-                        credentials: "same-origin",
-                        cache: "no-store"
-                    }
-                );
-
-                if (!response.ok) {
-
-                    console.error(
-                        "Assigned schools API failed:",
-                        response.status,
-                        response.statusText
-                    );
-
-                    throw new Error(
-                        "API returned " + response.status
-                    );
-                }
-
-                var result =
-                    await response.json();
-
-                if (
-                    result &&
-                    result.success &&
-                    Array.isArray(result.data)
-                ) {
-                    return result.data;
-                }
-
-                return [];
-            }
-            catch (error) {
-
-                console.error(
-                    "Unable to load assigned schools:",
-                    error
-                );
-
-                return null;
-            }
-        }
-
-        // =========================================================
-        // LOAD SCHOOL COUNT
-        // =========================================================
-        async function loadVolunteerAssignedSchoolCount() {
-
-            showCountLoading();
-
-            var schools =
-                await fetchAssignedSchools();
-
-            if (schools === null) {
-                setSchoolCount(0);
-                return;
-            }
-
-            setSchoolCount(schools.length);
-        }
-
-        // =========================================================
-        // FORMAT DATE
-        // =========================================================
-        function formatAssignedDate(dateValue) {
-
-            if (!dateValue) {
-                return "-";
-            }
-
-            var date =
-                new Date(dateValue);
-
-            if (isNaN(date.getTime())) {
-                return "-";
-            }
-
-            return date.toLocaleDateString(
-                "en-IN",
-                {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric"
-                }
-            );
-        }
-
-        // =========================================================
-        // RENDER ASSIGNED SCHOOL TABLE
-        // =========================================================
-        function renderAssignedSchools(schools) {
-
-            var tableBody =
-                document.getElementById(
-                    "tblAssignedSchoolsList"
-                );
-
-            if (!tableBody) {
-                return;
-            }
-
-            if (
-                !schools ||
-                schools.length === 0
-            ) {
-
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="4"
-                            class="text-center py-5 text-muted">
-
-                            <i class="bi bi-building fs-1 d-block mb-3"></i>
-
-                            <div class="fw-semibold">
-                                No schools assigned
-                            </div>
-
-                            <small>
-                                No school is currently assigned to you.
-                            </small>
-
-                        </td>
-                    </tr>
-                `;
-
-                return;
-            }
-
-            var rows = "";
-
-            schools.forEach(function(school, index) {
-
-                var schoolName =
-                    school.name || "-";
-
-                var instituteId =
-                    school.instituteID
-                    ?? school.InstituteID
-                    ?? "-";
-
-                var assignedDate =
-                    formatAssignedDate(
-                        school.assignedDate
-                        ?? school.AssignedDate
-                    );
-
-                var assignedBy =
-                    school.assignedBy
-                    ?? school.AssignedBy
-                    ?? "-";
-
-                rows += `
-                    <tr>
-
-                        <td class="fw-bold text-muted">
-                            ${index + 1}
-                        </td>
-
-                        <td>
-                            <div class="school-name">
-                                ${escapeHtml(schoolName)}
-                            </div>
-
-                            <div class="school-id">
-                                School ID:
-                                ${escapeHtml(instituteId)}
-                            </div>
-                        </td>
-
-                        <td>
-                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
-                                ${escapeHtml(assignedDate)}
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="fw-medium text-dark">
-                                ${escapeHtml(assignedBy)}
-                            </span>
-                        </td>
-
-                    </tr>
-                `;
-            });
-
-            tableBody.innerHTML = rows;
-        }
-
-        // =========================================================
-        // OPEN ASSIGNED SCHOOL MODAL
-        // =========================================================
-        async function openAssignedSchoolsModal() {
-
-            var modalElement =
-                document.getElementById(
-                    "volunteerSchoolsModal"
-                );
-
-            if (!modalElement) {
-
-                console.error(
-                    "volunteerSchoolsModal not found."
-                );
-
-                return;
-            }
-
-            var tableBody =
-                document.getElementById(
-                    "tblAssignedSchoolsList"
-                );
-
-            if (tableBody) {
-
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="4"
-                            class="text-center py-5 text-muted">
-
-                            <span class="spinner-border spinner-border-sm me-2">
-                            </span>
-
-                            Loading assigned schools...
-
-                        </td>
-                    </tr>
-                `;
-            }
-
-            var modal =
-                bootstrap.Modal.getOrCreateInstance(
-                    modalElement
-                );
-
-            modal.show();
-
-            var schools =
-                await fetchAssignedSchools();
-
-            if (schools === null) {
-
-                if (tableBody) {
-
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="4"
-                                class="text-center py-5 text-danger">
-
-                                <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
-
-                                Failed to load assigned schools.
-
-                            </td>
-                        </tr>
-                    `;
-                }
-
-                return;
-            }
-
-            setSchoolCount(schools.length);
-
-            renderAssignedSchools(schools);
-        }
-
-        // =========================================================
-        // =========================================================
-        // ACTIVITY DASHBOARD
-        // =========================================================
-        // =========================================================
-
-
-        // =========================================================
-        // SET ACTIVITY COUNTS
-        // =========================================================
-        function setActivityCounts(data) {
-
-            if (!data) {
-                data = {};
-            }
-
-            var visitPlanElement =
-                document.getElementById("lblVisitPlanCount");
-
-            var visitedElement =
-                document.getElementById("lblVisitedCount");
-
-            var visitPendingElement =
-                document.getElementById("lblVisitPendingCount");
-
-            var activityUpdatedElement =
-                document.getElementById("lblActivityUpdatedCount");
-
-            var activityPendingElement =
-                document.getElementById("lblActivityPendingCount");
-
-
-            if (visitPlanElement) {
-                visitPlanElement.textContent =
-                    data.visitPlan ?? 0;
-            }
-
-            if (visitedElement) {
-                visitedElement.textContent =
-                    data.visited ?? 0;
-            }
-
-            if (visitPendingElement) {
-                visitPendingElement.textContent =
-                    data.visitPending ?? 0;
-            }
-
-            if (activityUpdatedElement) {
-                activityUpdatedElement.textContent =
-                    data.activityUpdated ?? 0;
-            }
-
-            if (activityPendingElement) {
-                activityPendingElement.textContent =
-                    data.activityPending ?? 0;
-            }
-        }
-
-
-        // =========================================================
-        // SHOW ACTIVITY LOADING
-        // =========================================================
-        function showActivityLoading() {
-
-            var ids = [
-                "lblVisitPlanCount",
-                "lblVisitedCount",
-                "lblVisitPendingCount",
-                "lblActivityUpdatedCount",
-                "lblActivityPendingCount"
-            ];
-
-            ids.forEach(function(id) {
-
-                var element =
-                    document.getElementById(id);
-
-                if (element) {
-
-                    element.innerHTML = `
-                        <span class="spinner-border spinner-border-sm"
-                              role="status"
-                              aria-hidden="true">
+<!-- =============================================================
+     PAGE LAYOUT
+     ============================================================= -->
+<div class="dash-page animate-fade-in">
+
+    <div class="dash-header">
+        <div>
+            <h3><i class="bi bi-speedometer2 me-2"></i>Dashboard</h3>
+            <p>Real-time statistics, school data, and user activity overview.</p>
+        </div>
+    </div>
+
+    <!-- ===================== PERFORMANCE ===================== -->
+    <section class="dash-section">
+        <div class="dash-section__head">
+            <div>
+                <h4 class="dash-section__title"><i class="bi bi-bar-chart-fill"></i>Performance Dashboard</h4>
+                <p class="dash-section__desc">Schools, students, teachers and project submissions under your network.</p>
+            </div>
+        </div>
+
+        <h6 class="dash-subtitle">Schools &amp; People</h6>
+        <div class="stat-grid">
+            <div class="premium-card bg-blue">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-building"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblTotalAssociatedSchool">0</div>
+                        <div class="stat-label">Associated Schools</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" id="btnOpenassociatedSchools" onclick="event.stopPropagation(); openDetailsModal('performance','total-schools');">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="premium-card bg-green">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-people-fill"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblTotalStudentCount">0</div>
+                        <div class="stat-label">Associated Students</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" id="btnOpenTotalStudentss" onclick="event.stopPropagation(); openDetailsModal('performance','total-students');">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="premium-card bg-yellow">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-person-check-fill"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblActiveStudentCount">0</div>
+                        <div class="stat-label">Active Students</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" id="btn_ExportAdminStudentsReport">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="premium-card bg-cyan">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-person-workspace"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblTotalTeacherCount">0</div>
+                        <div class="stat-label">Associated Teachers</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" id="btnOpenTotalTeacherss" onclick="event.stopPropagation(); openDetailsModal('performance','total-teachers');">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="premium-card bg-red">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-person-badge-fill"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblActiveTeacherCount">0</div>
+                        <div class="stat-label">Active Teachers</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" id="btnOpenActiveTeacherss" onclick="event.stopPropagation(); openDetailsModal('performance','active-teachers');">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="dash-subtitle spaced">Project Submissions</h6>
+        <div class="stat-grid">
+            <div class="premium-card bg-pink">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-journal-check"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblTotalSelProjectCount">0</div>
+                        <div class="stat-label">SEL Submission Schools</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" id="btn_ExportPerfSelSubmissions">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="premium-card bg-indigo">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-people"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblGroupPblCount">0</div>
+                        <div class="stat-label">Group Project Submissions</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" id="btnOpenGroupPbl">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="premium-card bg-purple">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-house-heart-fill"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblFamilyProjectCount">0</div>
+                        <div class="stat-label">Family Project Submissions</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" id="btn_ExportPerfFamilyPbl">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="premium-card bg-teal">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-person-lines-fill"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblIndividualProjectCount">0</div>
+                        <div class="stat-label">Individual Project Submissions</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" id="btn_ExportPerfIndividualPbl">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== ACTIVITY ===================== -->
+    <section class="dash-section">
+        <div class="dash-section__head">
+            <div>
+                <h4 class="dash-section__title"><i class="bi bi-activity"></i>Activity Dashboard</h4>
+                <p class="dash-section__desc">Visit plans and activity updates.</p>
+            </div>
+
+            <!-- Date filter (JS is wired to these IDs) -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <input type="date" id="activityFromDate" class="form-control form-control-sm shadow-none" style="width: 150px;" aria-label="From date" />
+                <input type="date" id="activityToDate" class="form-control form-control-sm shadow-none" style="width: 150px;" aria-label="To date" />
+                <button type="button" id="btnActivityDateSearch" class="btn btn-success btn-sm rounded-pill px-3">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+            </div>
+        </div>
+
+        <div class="stat-grid">
+            <div class="premium-card bg-blue">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-calendar-event-fill"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblVisitPlanCount">0</div>
+                        <div class="stat-label">Visit Plan</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" onclick="location.href='/VolunteerPlan/plan'">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="premium-card bg-green">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblVisitedCount">0</div>
+                        <div class="stat-label">Visited</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" onclick="location.href='/VolunteerPlan/plan'">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="premium-card bg-orange">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-clock-fill"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblVisitPendingCount">0</div>
+                        <div class="stat-label">Visit Pending</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" onclick="location.href='/VolunteerPlan/plan'">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="premium-card bg-teal">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-clipboard-check-fill"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblActivityUpdatedCount">0</div>
+                        <div class="stat-label">Activity Updated</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" onclick="location.href='/VolunteerPlan/plan'">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="premium-card bg-red">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle shadow-sm me-3"><i class="bi bi-clipboard-x-fill"></i></div>
+                    <div>
+                        <div class="stat-number" id="lblActivityPendingCount">0</div>
+                        <div class="stat-label">Activity Pending</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="divider"></div>
+                    <div class="text-center">
+                        <button type="button" class="btn-more shadow-sm border-0" onclick="location.href='/VolunteerPlan/plan'">
+                            More Info <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-note">
+            <i class="bi bi-info-circle me-1"></i> All metrics update automatically based on system live records.
+        </div>
+    </section>
+
+</div><!-- /dash-page -->
+
+
+
+<!-- =============================================================
+     DETAILS MODAL (server-side pagination, search, export)
+     ============================================================= -->
+<div class="modal fade" id="dashboardDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+
+            <div class="modal-header border-bottom px-4 py-3 flex-wrap gap-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-1" id="modalTitle">Records List</h5>
+                    <small class="text-muted" id="modalSubtitle">Loading records...</small>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 ms-auto flex-wrap">
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="modalTableSearch" class="form-control border-start-0 shadow-none" placeholder="Search database...">
+                        <button class="btn btn-outline-secondary border-start-0" type="button" id="btnClearSearch" aria-label="Clear search">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+
+                    <select id="modalPageSize" class="form-select form-select-sm shadow-none" style="width: 110px;" aria-label="Rows per page">
+                        <option value="25">25 rows</option>
+                        <option value="50">50 rows</option>
+                        <option value="100" selected>100 rows</option>
+                        <option value="250">250 rows</option>
+                        <option value="500">500 rows</option>
+                        <option value="1000">1000 rows</option>
+                        <option value="10000">10000 rows</option>
+                    </select>
+
+                    <button type="button" class="btn btn-sm btn-success shadow-sm" id="btnExportModalData">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+                    </button>
+                </div>
+
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <div class="table-responsive border rounded-3 modal-table-wrapper">
+                    <table class="table table-hover align-middle mb-0" id="modalTable">
+                        <thead class="table-light"></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer border-top px-4 py-3 justify-content-between align-items-center bg-light rounded-bottom-4">
+                <div class="text-muted small" id="paginationInfo">Showing 0 to 0 of 0 entries</div>
+                <nav aria-label="Modal Pagination">
+                    <ul class="pagination pagination-sm mb-0" id="modalPagination"></ul>
+                </nav>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- =============================================================
+     ASSOCIATED SCHOOLS DETAILS MODAL
+     (not wired to a card right now; open with openAssociatedSchoolsModal())
+     ============================================================= -->
+<div class="modal fade" id="associatedSchoolsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down" style="max-width: 98vw !important;">
+        <div class="modal-content rounded-4 border-0 shadow-lg bg-white" style="border-top: 5px solid #198754 !important;">
+
+            <div class="modal-header border-bottom px-4 py-3 align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="bg-success-subtle text-success p-3 rounded-4 me-3 fs-4 d-flex align-items-center justify-content-center"
+                         style="width: 52px; height: 52px;">
+                        <i class="bi bi-building-check"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-dark mb-1">Associated Schools Directory</h4>
+                        <p class="text-muted small mb-0">Complete details of schools currently mapped under your referral network.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close shadow-none fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-3 overflow-hidden">
+
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">
+                            <i class="bi bi-buildings me-1"></i> Associated Schools
                         </span>
-                    `;
-                }
-            });
-        }
-
-
-        // =========================================================
-        // LOAD ACTIVITY COUNTS
-        // =========================================================
-        async function loadVolunteerActivityCounts() {
-
-            showActivityLoading();
-
-            var token =
-                getAuthToken();
-
-            var headers = {
-                "Accept": "application/json"
-            };
-
-            if (token) {
-
-                headers["Authorization"] =
-                    "Bearer " + token;
-            }
-
-            try {
-
-                // -----------------------------------------------
-                // DATE VALUES
-                // -----------------------------------------------
-                var fromDateElement =
-                    document.getElementById(
-                        "activityFromDate"
-                    );
-
-                var toDateElement =
-                    document.getElementById(
-                        "activityToDate"
-                    );
-
-
-                var fromDate =
-                    fromDateElement
-                        ? fromDateElement.value
-                        : "";
-
-                var toDate =
-                    toDateElement
-                        ? toDateElement.value
-                        : "";
-
-
-                // -----------------------------------------------
-                // BUILD API URL
-                // -----------------------------------------------
-                var url =
-                    "/api/volunteer-plan/dashboard-counts";
-
-
-                var params =
-                    new URLSearchParams();
-
-
-                if (fromDate) {
-
-                    params.append(
-                        "fromDate",
-                        fromDate
-                    );
-                }
-
-
-                if (toDate) {
-
-                    params.append(
-                        "toDate",
-                        toDate
-                    );
-                }
-
-
-                var queryString =
-                    params.toString();
-
-
-                if (queryString) {
-
-                    url +=
-                        "?" + queryString;
-                }
-
-
-                console.log(
-                    "Dashboard Count API:",
-                    url
-                );
-
-
-                // -----------------------------------------------
-                // API CALL
-                // -----------------------------------------------
-                var response =
-                    await fetch(
-                        url,
-                        {
-                            method: "GET",
-                            headers: headers,
-                            credentials: "same-origin",
-                            cache: "no-store"
-                        }
-                    );
-
-
-                if (!response.ok) {
-
-                    var errorText = "";
-
-                    try {
-                        errorText =
-                            await response.text();
-                    }
-                    catch (e) {
-                        errorText = "";
-                    }
-
-
-                    console.error(
-                        "Activity dashboard API failed:",
-                        response.status,
-                        errorText
-                    );
-
-
-                    throw new Error(
-                        "Dashboard API returned " +
-                        response.status
-                    );
-                }
-
-
-                // -----------------------------------------------
-                // RESPONSE
-                // -----------------------------------------------
-                var result =
-                    await response.json();
-
-
-                console.log(
-                    "Activity Dashboard Response:",
-                    result
-                );
-
-
-                if (
-                    !result ||
-                    !result.success ||
-                    !result.data
-                ) {
-
-                    console.warn(
-                        "Invalid dashboard response:",
-                        result
-                    );
-
-                    setActivityCounts({});
-
-                    return;
-                }
-
-
-                // -----------------------------------------------
-                // SET COUNTS
-                // -----------------------------------------------
-                setActivityCounts(
-                    result.data
-                );
-
-            }
-            catch (error) {
-
-                console.error(
-                    "Unable to load volunteer activity counts:",
-                    error
-                );
-
-                setActivityCounts({});
-            }
-        }
-
-
-        // =========================================================
-        // ACTIVITY DATE FILTER
-        // =========================================================
-        function initializeActivityDateFilter() {
-
-            var fromDate =
-                document.getElementById(
-                    "activityFromDate"
-                );
-
-            var toDate =
-                document.getElementById(
-                    "activityToDate"
-                );
-
-            var searchButton =
-                document.getElementById(
-                    "btnActivityDateSearch"
-                );
-
-
-            // -----------------------------------------------------
-            // SEARCH BUTTON
-            // -----------------------------------------------------
-            if (searchButton) {
-
-                searchButton.addEventListener(
-                    "click",
-                    function() {
-
-                        // Validate date range
-                        if (
-                            fromDate &&
-                            toDate &&
-                            fromDate.value &&
-                            toDate.value
-                        ) {
-
-                            if (
-                                fromDate.value >
-                                toDate.value
-                            ) {
-
-                                alert(
-                                    "From date cannot be greater than To date."
-                                );
-
-                                return;
-                            }
-                        }
-
-
-                        loadVolunteerActivityCounts();
-                    }
-                );
-            }
-
-
-            // -----------------------------------------------------
-            // ENTER KEY
-            // -----------------------------------------------------
-            [fromDate, toDate].forEach(
-                function(element) {
-
-                    if (!element) {
-                        return;
-                    }
-
-                    element.addEventListener(
-                        "keydown",
-                        function(event) {
-
-                            if (
-                                event.key === "Enter"
-                            ) {
-
-                                if (
-                                    searchButton
-                                ) {
-                                    searchButton.click();
-                                }
-                            }
-                        }
-                    );
-                }
-            );
-        }
-
-
-        // =========================================================
-        // INITIALIZE EVERYTHING
-        // =========================================================
-        function initializeDashboard() {
-
-            // Assigned schools
-            var schoolButton =
-                document.getElementById(
-                    "btnOpenAssignedSchools"
-                );
-
-            if (schoolButton) {
-
-                schoolButton.addEventListener(
-                    "click",
-                    openAssignedSchoolsModal
-                );
-            }
-
-
-            // Load school count
-            loadVolunteerAssignedSchoolCount();
-
-
-            // Activity date filter
-            initializeActivityDateFilter();
-
-
-            // Load activity dashboard counts
-            loadVolunteerActivityCounts();
-        }
-
-
-        // =========================================================
-        // PAGE LOAD
-        // =========================================================
-        if (
-            document.readyState === "loading"
-        ) {
-
-            document.addEventListener(
-                "DOMContentLoaded",
-                initializeDashboard
-            );
-
-        }
-        else {
-
-            initializeDashboard();
-        }
-
-    })();
-</script>
+                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                            Total: <strong id="associatedSchoolsTotalCount">0</strong>
+                        </span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <small class="text-muted d-none d-lg-inline">
+                            <i class="bi bi-arrows-expand me-1"></i>
+                            Use the horizontal scrollbar below to view all columns
+                        </small>
+                        <button type="button" id="btnExportAssociatedSchools"
+                                class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="associated-schools-table-wrapper">
+                    <table class="table table-hover table-bordered align-middle mb-0 bg-white" id="associatedSchoolsDetailsTable">
+                        <thead class="table-light text-uppercase small">
+                            <tr>
+                                <th>School ID</th>
+                                <th>Institute Type</th>
+                                <th>School Name</th>
+                                <th>Institute Active</th>
+                                <th>Referral Code</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Mobile No.</th>
+                                <th>Email ID</th>
+                                <th>Address</th>
+                                <th>Address 2</th>
+                                <th>City</th>
+                                <th>Pincode</th>
+                                <th>User Active</th>
+                                <th>Created Date</th>
+                                <th>Modified Date</th>
+                                <th class="text-center">Associated Students</th>
+                                <th class="text-center">Active Students</th>
+                                <th class="text-center">Total Teachers</th>
+                                <th class="text-center">Active Teachers</th>
+                            </tr>
+                        </thead>
+                        <tbody id="associatedSchoolsTableBody">
+                            <tr>
+                                <td colspan="20" class="text-center py-5">
+                                    <div class="spinner-border text-success spinner-border-sm me-2" role="status"></div>
+                                    <span class="text-muted fw-semibold">Loading associated schools...</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <div class="modal-footer border-top px-4 py-3 d-flex justify-content-between align-items-center">
+                <div class="text-muted small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Showing complete school information from active system records.
+                </div>
+                <button type="button" class="px-4 btn btn-secondary btn-sm rounded-pill shadow-none" data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- =============================================================
+     GLOBAL LOADER
+     ============================================================= -->
+<div id="globalLoader" class="global-loader-overlay" style="display: none;">
+    <div class="text-center">
+        <div class="spinner-border text-primary shadow-lg" style="width: 3.5rem; height: 3.5rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="fw-bold text-dark mt-3 fs-5" id="globalLoaderText">Generating Report, Please Wait...</div>
+    </div>
+</div>
+
+
+<!-- =============================================================
+     SCRIPT (single block, jQuery-safe)
+     ============================================================= -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    
-    // Helper to get JWT token from storage
-    function getAuthToken() {
-        return localStorage.getItem("jwt_token")
-            || sessionStorage.getItem("jwt_token")
-            || "";
+(function () {
+    "use strict";
+
+    /* ---------- jQuery-safe bootstrap ----------
+       Partial ke andar script jQuery se pehle chal sakti hai (jQuery _Layout
+       me body ke end me load hota hai), isliye jQuery aane tak wait karte hain. */
+    function whenReady(fn) {
+        function waitForJq(tries) {
+            if (window.jQuery) { window.jQuery(fn); return; }
+            if (tries <= 0) { console.error("jQuery not loaded on Dashboard."); return; }
+            setTimeout(function () { waitForJq(tries - 1); }, 50);
+        }
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", function () { waitForJq(100); });
+        } else {
+            waitForJq(100);
+        }
     }
 
+    /* ---------- Config / helpers ---------- */
+    const AFFILIATE_ID = '@affiliateId';
+    const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+    function getAuthToken() {
+        return localStorage.getItem("jwt_token") || sessionStorage.getItem("jwt_token") || "";
+    }
+
+    function escapeHtml(value) {
+        if (value === null || value === undefined) return "";
+        return String(value)
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function formatColumnName(key) {
+        if (!key) return "";
+        const s = String(key).replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]/g, " ");
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    function formatDate(value) {
+        if (!value) return "-";
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return escapeHtml(value);
+        return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    }
+
+    function getStatusBadge(value) {
+        const active = value === true || value === 1 || value === "1" ||
+                       value === "true" || value === "True";
+        return active
+            ? '<span class="badge bg-success-subtle text-success school-status-badge">Active</span>'
+            : '<span class="badge bg-secondary-subtle text-secondary school-status-badge">Inactive</span>';
+    }
+
+    function pick(obj, keys, fallback) {
+        for (const k of keys) {
+            if (obj[k] !== undefined && obj[k] !== null) return obj[k];
+        }
+        return fallback;
+    }
+
+    function showGlobalLoader(msg) {
+        document.getElementById("globalLoaderText").textContent = msg || "Please Wait...";
+        document.getElementById("globalLoader").style.display = "flex";
+    }
+    function hideGlobalLoader() {
+        document.getElementById("globalLoader").style.display = "none";
+    }
+    window.showGlobalLoader = showGlobalLoader;
+    window.hideGlobalLoader = hideGlobalLoader;
+
+    function authHeaders() {
+        const t = getAuthToken();
+        const h = { "Accept": "application/json" };
+        if (t) h["Authorization"] = "Bearer " + t;
+        return h;
+    }
+
+    function setText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = (value === null || value === undefined) ? 0 : value;
+    }
+
+    /* ---------- Reusable Excel download (fetch + blob) ---------- */
+    async function downloadExcel(opts) {
+        const token = getAuthToken();
+        if (!token) { alert("Login session expired. Please login again."); return; }
+
+        const btn = opts.button;
+        const originalHtml = btn ? btn.innerHTML : "";
+
+        try {
+            showGlobalLoader(opts.loaderText || "Generating Report, Please Wait...");
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Generating...';
+            }
+
+            const response = await fetch(opts.url, {
+                method: opts.method || "GET",
+                headers: Object.assign(
+                    { "Authorization": "Bearer " + token },
+                    opts.body ? { "Content-Type": "application/json; charset=utf-8" } : {}
+                ),
+                body: opts.body ? JSON.stringify(opts.body) : undefined,
+                credentials: "same-origin",
+                cache: "no-store"
+            });
+
+            if (!response.ok) throw new Error("HTTP " + response.status);
+
+            const blob = new Blob([await response.arrayBuffer()], { type: XLSX_MIME });
+
+            let filename = opts.filename || "Report.xlsx";
+            const cd = response.headers.get("Content-Disposition");
+            if (cd) {
+                const m = cd.match(/filename\*?=(?:UTF-8''|")?([^;"']+)/i);
+                if (m && m[1]) {
+                    try { filename = decodeURIComponent(m[1].replace(/"/g, "")); } catch (e) { /* keep default */ }
+                }
+            }
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 100);
+        } catch (err) {
+            console.error((opts.loaderText || "Export") + " error:", err);
+            alert(opts.errorText || "Error downloading report.");
+        } finally {
+            hideGlobalLoader();
+            if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+        }
+    }
+
+    function guardAffiliate() {
+        if (!AFFILIATE_ID || AFFILIATE_ID === "0") {
+            alert("Logged-in user ID not found.");
+            return false;
+        }
+        return true;
+    }
+
+    /* ---------- Report exports ---------- */
+    function exportActiveStudentsReport(filterVal, title, btn) {
+        if (!guardAffiliate()) return;
+        filterVal = filterVal || "A";
+        downloadExcel({
+            url: "/api/Report/affiliate-active-students?AffiliateID=" +
+                 encodeURIComponent(AFFILIATE_ID) + "&filter=" + encodeURIComponent(filterVal),
+            filename: filterVal === "F" ? "FocusedActiveStudentsReport.xlsx" : "ActiveStudentsReport.xlsx",
+            loaderText: "Generating " + (title || "Active Students") + " Report...",
+            errorText: "Error downloading active students report.",
+            button: btn
+        });
+    }
+
+    function exportCreativityReport(filterVal, title, btn) {
+        if (!guardAffiliate()) return;
+        downloadExcel({
+            url: "/api/Report/creativity-combined-report?AffiliateID=" +
+                 encodeURIComponent(AFFILIATE_ID) + "&filter=" + encodeURIComponent(filterVal),
+            filename: "AffiliateSchoolCreativityCombinedReport_" + (filterVal === "F" ? "Focused" : "All") + ".xlsx",
+            loaderText: "Generating " + title + " Report...",
+            button: btn
+        });
+    }
+
+    function exportPblReport(endpoint, filterVal, title, btn) {
+        if (!guardAffiliate()) return;
+        downloadExcel({
+            url: endpoint + "?AffiliateID=" + encodeURIComponent(AFFILIATE_ID) +
+                 "&filter=" + encodeURIComponent(filterVal),
+            filename: title.replace(/\s+/g, "") + "_" + (filterVal === "F" ? "Focused" : "All") + ".xlsx",
+            loaderText: "Generating " + title + " Report...",
+            button: btn
+        });
+    }
+
+    window.exportSingleInstituteReport = function (instituteId, btn) {
+        if (!instituteId || Number(instituteId) <= 0) { alert("Invalid Institute ID."); return; }
+        downloadExcel({
+            url: "/api/Report/export-institute-summary",
+            method: "POST",
+            body: { instituteIDstr: String(instituteId) },
+            filename: "Institute_" + instituteId + "_PerformanceReport.xlsx",
+            loaderText: "Generating Institute Performance Report...",
+            errorText: "Error downloading institute report.",
+            button: btn
+        });
+    };
+
+    function exportAssociatedSchoolsExcel(btn) {
+        downloadExcel({
+            url: "/api/affiliate-dashboard/export-associated-schools",
+            filename: "AssociatedSchoolsReport.xlsx",
+            loaderText: "Generating Associated Schools Report...",
+            errorText: "Error downloading associated schools report.",
+            button: btn
+        });
+    }
+
+    /* ---------- Summary counts ---------- */
     async function loadSummaryCounts() {
         try {
-            var token = getAuthToken();
-            var headers = {
-                "Accept": "application/json"
-            };
-
-            if (token) {
-                headers["Authorization"] = "Bearer " + token;
-            }
-
-            const res = await fetch("/api/volunteer/dashboard-summary-counts", {
-                method: "GET",
-                headers: headers,
-                credentials: "same-origin",
-                cache: "no-store"
+            const response = await fetch("/api/volunteer/dashboard-summary-counts", {
+                method: "GET", headers: authHeaders(), credentials: "same-origin", cache: "no-store"
             });
+            if (!response.ok) throw new Error("HTTP " + response.status);
 
-            const json = await res.json();
-            if (json.success && json.data) {
-                document.getElementById("lblTotalStudentCount").textContent = json.data.totalStudents || 0;
-                document.getElementById("lblActiveStudentCount").textContent = json.data.activeStudents || 0;
-                document.getElementById("lblTotalTeacherCount").textContent = json.data.totalTeachers || 0;
-                document.getElementById("lblActiveTeacherCount").textContent = json.data.activeTeachers || 0;
-                document.getElementById("lblTotalSelProjectCount").textContent = json.data.totalSelProjects || 0;
-                document.getElementById("lblFamilyProjectCount").textContent = json.data.familyProjects || 0;
-                document.getElementById("lblIndividualProjectCount").textContent = json.data.individualProjects || 0;
-                document.getElementById("lblGroupPblCount").textContent = json.data.groupPbl || 0;
-            }
-        } catch (err) {
-            console.error("Failed to load summary counts", err);
+            const json = await response.json();
+            if (!json || !json.success || !json.data) return;
+            const d = json.data;
+
+            setText("lblTotalAssociatedSchool", d.totalinstitute);
+            setText("lblTotalStudentCount", d.totalStudents);
+            setText("lblActiveStudentCount", d.activeStudents);
+            setText("lblTotalTeacherCount", d.totalTeachers);
+            setText("lblActiveTeacherCount", d.activeTeachers);
+            setText("lblTotalSelProjectCount", d.totalSelProjects);
+            setText("lblFamilyProjectCount", d.familyProjects);
+            setText("lblIndividualProjectCount", d.individualProjects);
+            setText("lblGroupPblCount", d.groupPbl);
+        } catch (error) {
+            console.error("Failed to load dashboard summary counts:", error);
         }
     }
 
-    async function openGenericModal(type, title) {
-        const modalEl = document.getElementById("genericDetailModal");
-        document.getElementById("genericModalTitle").innerHTML = `<i class="bi bi-folder2-open text-primary me-2"></i> ${title}`;
-        document.getElementById("genericModalCount").textContent = "0";
-        
-        const tbody = document.getElementById("genericTableBody");
-        tbody.innerHTML = `<tr><td colspan="2" class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Loading records...</td></tr>`;
-        
-        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    /* ---------- Activity counts ---------- */
+    const ACTIVITY_IDS = {
+        lblVisitPlanCount: "visitPlan",
+        lblVisitedCount: "visited",
+        lblVisitPendingCount: "visitPending",
+        lblActivityUpdatedCount: "activityUpdated",
+        lblActivityPendingCount: "activityPending"
+    };
+
+    function setActivityCounts(data) {
+        data = data || {};
+        Object.keys(ACTIVITY_IDS).forEach(function (id) {
+            setText(id, data[ACTIVITY_IDS[id]]);
+        });
+    }
+
+    function showActivityLoading() {
+        Object.keys(ACTIVITY_IDS).forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+        });
+    }
+
+    async function loadVolunteerActivityCounts() {
+        showActivityLoading();
+        try {
+            const params = new URLSearchParams();
+            const from = document.getElementById("activityFromDate");
+            const to = document.getElementById("activityToDate");
+            if (from && from.value) params.append("fromDate", from.value);
+            if (to && to.value) params.append("toDate", to.value);
+
+            const qs = params.toString();
+            const url = "/api/volunteer-plan/dashboard-counts" + (qs ? "?" + qs : "");
+
+            const response = await fetch(url, {
+                method: "GET", headers: authHeaders(), credentials: "same-origin", cache: "no-store"
+            });
+            if (!response.ok) throw new Error("Dashboard API returned " + response.status);
+
+            const result = await response.json();
+            if (!result || !result.success || !result.data) {
+                setActivityCounts({});
+                return;
+            }
+            setActivityCounts(result.data);
+        } catch (error) {
+            console.error("Unable to load volunteer activity counts:", error);
+            setActivityCounts({});
+        }
+    }
+
+    function initializeActivityDateFilter() {
+        const from = document.getElementById("activityFromDate");
+        const to = document.getElementById("activityToDate");
+        const searchBtn = document.getElementById("btnActivityDateSearch");
+        if (!searchBtn) return;
+
+        searchBtn.addEventListener("click", function () {
+            if (from && to && from.value && to.value && from.value > to.value) {
+                alert("From date cannot be greater than To date.");
+                return;
+            }
+            loadVolunteerActivityCounts();
+        });
+
+        [from, to].forEach(function (el) {
+            if (!el) return;
+            el.addEventListener("keydown", function (e) {
+                if (e.key === "Enter") searchBtn.click();
+            });
+        });
+    }
+
+    /* ---------- Associated Schools modal ---------- */
+    window.openAssociatedSchoolsModal = function () {
+        const el = document.getElementById("associatedSchoolsModal");
+        if (!el) return;
+        bootstrap.Modal.getOrCreateInstance(el).show();
+        loadAssociatedSchoolsDetails();
+    };
+
+    async function loadAssociatedSchoolsDetails() {
+        const tbody = document.getElementById("associatedSchoolsTableBody");
+        if (!tbody) return;
+
+        tbody.innerHTML = '<tr><td colspan="20" class="text-center py-5">' +
+            '<span class="spinner-border spinner-border-sm text-success me-2"></span>' +
+            '<span class="text-muted fw-semibold">Loading associated schools...</span></td></tr>';
 
         try {
-            var token = getAuthToken();
-            var headers = { "Accept": "application/json" };
-            if (token) {
-                headers["Authorization"] = "Bearer " + token;
+            const response = await fetch("/api/affiliate-dashboard/associated-schools-details", {
+                method: "GET", headers: authHeaders(), credentials: "same-origin", cache: "no-store"
+            });
+            if (!response.ok) throw new Error("HTTP " + response.status);
+
+            const result = await response.json();
+            if (!result || result.success === false) {
+                throw new Error((result && result.message) || "Unable to load associated schools.");
             }
 
-            const res = await fetch(`/api/volunteer/details-list/${type}`, {
-                method: "GET",
-                headers: headers,
-                credentials: "same-origin",
-                cache: "no-store"
-            });
-            const json = await res.json();
-            
-            if (json.success && Array.isArray(json.data)) {
-                document.getElementById("genericModalCount").textContent = json.data.length;
-                if (json.data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="2" class="text-center py-4 text-muted">No records found.</td></tr>`;
-                    return;
-                }
-                
-                let rows = "";
-                json.data.forEach((item, index) => {
-                    let displayVal = JSON.stringify(item, null, 2);
-                    rows += `<tr><td class="fw-bold text-muted">${index + 1}</td><td><pre class="m-0 bg-light p-2 rounded small">${escapeHtml(displayVal)}</pre></td></tr>`;
-                });
-                tbody.innerHTML = rows;
-            } else {
-                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-danger py-4">Failed to load details.</td></tr>`;
+            const data = Array.isArray(result.data) ? result.data : [];
+            document.getElementById("associatedSchoolsTotalCount").textContent = data.length;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="20" class="text-center py-5 text-muted">' +
+                    '<i class="bi bi-inbox fs-1 d-block mb-2"></i>' +
+                    '<div class="fw-semibold">No associated schools found.</div></td></tr>';
+                return;
             }
-        } catch (ex) {
-            tbody.innerHTML = `<tr><td colspan="2" class="text-center text-danger py-4">Error loading data.</td></tr>`;
+
+            const badge = function (cls, v) {
+                return '<span class="badge bg-' + cls + '-subtle text-' + cls +
+                       ' school-count-badge">' + (Number(v) || 0) + '</span>';
+            };
+
+            tbody.innerHTML = data.map(function (s) {
+                const email = pick(s, ["emailID", "EmailID", "email", "Email"], "-");
+                return "<tr>" +
+                    "<td>" + escapeHtml(pick(s, ["schoolID", "SchoolID", "instituteID", "InstituteID", "instituteId"], "-")) + "</td>" +
+                    "<td>" + escapeHtml(pick(s, ["instituteType", "InstituteType"], "-")) + "</td>" +
+                    '<td><div class="fw-semibold">' + escapeHtml(pick(s, ["schoolName", "SchoolName", "name", "Name"], "-")) + "</div></td>" +
+                    "<td>" + getStatusBadge(pick(s, ["instituteActive", "InstituteActive"])) + "</td>" +
+                    "<td>" + escapeHtml(pick(s, ["referralCode", "ReferralCode"], "-")) + "</td>" +
+                    "<td>" + escapeHtml(pick(s, ["firstName", "FirstName"], "-")) + "</td>" +
+                    "<td>" + escapeHtml(pick(s, ["lastName", "LastName"], "-")) + "</td>" +
+                    "<td>" + escapeHtml(pick(s, ["mobileNo", "MobileNo", "mobile", "Mobile"], "-")) + "</td>" +
+                    '<td><span class="school-url" title="' + escapeHtml(email) + '">' + escapeHtml(email) + "</span></td>" +
+                    "<td>" + escapeHtml(pick(s, ["address", "Address"], "-")) + "</td>" +
+                    "<td>" + escapeHtml(pick(s, ["address2", "Address2"], "-")) + "</td>" +
+                    "<td>" + escapeHtml(pick(s, ["city", "City"], "-")) + "</td>" +
+                    "<td>" + escapeHtml(pick(s, ["pincode", "Pincode"], "-")) + "</td>" +
+                    "<td>" + getStatusBadge(pick(s, ["userActive", "UserActive"])) + "</td>" +
+                    "<td>" + formatDate(pick(s, ["createdDate", "CreatedDate"])) + "</td>" +
+                    "<td>" + formatDate(pick(s, ["modifiedDate", "ModifiedDate"])) + "</td>" +
+                    '<td class="text-center">' + badge("primary", pick(s, ["associatedStudents", "AssociatedStudents", "totalStudents", "TotalStudents"], 0)) + "</td>" +
+                    '<td class="text-center">' + badge("success", pick(s, ["activeStudents", "ActiveStudents"], 0)) + "</td>" +
+                    '<td class="text-center">' + badge("info", pick(s, ["totalTeachers", "TotalTeachers"], 0)) + "</td>" +
+                    '<td class="text-center">' + badge("danger", pick(s, ["activeTeachers", "ActiveTeachers"], 0)) + "</td>" +
+                    "</tr>";
+            }).join("");
+        } catch (error) {
+            console.error("Associated schools details error:", error);
+            document.getElementById("associatedSchoolsTotalCount").textContent = "0";
+            tbody.innerHTML = '<tr><td colspan="20" class="text-center py-5 text-danger">' +
+                '<i class="bi bi-exclamation-triangle fs-2 d-block mb-2"></i>' +
+                '<div class="fw-semibold">Failed to load associated schools.</div>' +
+                "<small>Please try again.</small></td></tr>";
         }
     }
 
-    function escapeHtml(str) {
-        if (!str) return "";
-        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    /* ---------- Paged details modal ---------- */
+    let currentCategory = "";
+    let currentType = "";
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentRows = [];
+    let sortState = { key: null, asc: true };
+    let searchTimeout = null;
+
+    const TITLE_MAP = {
+        "total-schools": "Associated Schools",
+        "total-students": "Total Students",
+        "active-students": "Active Students",
+        "total-teachers": "Total Teachers",
+        "active-teachers": "Active Teachers",
+        "sel-projects": "Total SEL Projects",
+        "family-projects": "Family Projects",
+        "individual-projects": "Individual Projects",
+        "group-pbl": "Group PBL"
+    };
+
+    function showModalLoader() {
+        $("#modalTable thead").html("");
+        $("#modalTable tbody").html(
+            '<tr><td colspan="100%" class="text-center"><div class="modal-loader">' +
+            '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>' +
+            '<div class="text-muted small mt-3">Fetching records from server...</div></div></td></tr>'
+        );
     }
 
-    // Attach Click Events to Buttons
-    document.getElementById("btnOpenTotalStudents").addEventListener("click", () => openGenericModal("total-students", "Total Students List"));
-    document.getElementById("btnOpenActiveStudents").addEventListener("click", () => openGenericModal("active-students", "Active Students List"));
-    document.getElementById("btnOpenTotalTeachers").addEventListener("click", () => openGenericModal("total-teachers", "Total Teachers List"));
-    document.getElementById("btnOpenActiveTeachers").addEventListener("click", () => openGenericModal("active-teachers", "Active Teachers List"));
-    document.getElementById("btnOpenSelProjects").addEventListener("click", () => openGenericModal("sel-projects", "Total SEL Projects List"));
-    document.getElementById("btnOpenFamilyProjects").addEventListener("click", () => openGenericModal("family-projects", "Family Projects List"));
-    document.getElementById("btnOpenIndividualProjects").addEventListener("click", () => openGenericModal("individual-projects", "Individual Projects List"));
-    document.getElementById("btnOpenGroupPbl").addEventListener("click", () => openGenericModal("group-pbl", "Group PBL List"));
+    window.openDetailsModal = function (category, type) {
+        if (!window.jQuery) { console.error("jQuery not loaded yet."); return; }
 
-    // Initial Load Call
-    loadSummaryCounts();
-});
+        currentCategory = category;
+        currentType = type;
+        currentPage = 1;
+        sortState = { key: null, asc: true };
+        $("#modalTableSearch").val("");
+
+        const categoryTitle = category === "performance" ? "Performance Report" : "Focused Report";
+        $("#modalTitle").text(categoryTitle + " - " + (TITLE_MAP[type] || "Details"));
+
+        showModalLoader();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("dashboardDetailsModal")).show();
+        loadModalDataPaged();
+    };
+
+    function loadModalDataPaged() {
+        const pageSize = parseInt($("#modalPageSize").val(), 10) || 100;
+        const searchTerm = $("#modalTableSearch").val().trim();
+
+        $.ajax({
+            url: "/api/admin/overall-details-paged",
+            type: "GET",
+            data: {
+                category: currentCategory,
+                type: currentType,
+                page: currentPage,
+                pageSize: pageSize,
+                search: searchTerm,
+                affiliateid: AFFILIATE_ID
+            },
+            headers: { "Authorization": "Bearer " + getAuthToken() },
+            success: function (res) {
+                if (!res || !res.success || !res.data || res.data.length === 0) {
+                    currentRows = [];
+                    $("#modalTable thead").html("");
+                    $("#modalTable tbody").html(
+                        '<tr><td colspan="100%" class="text-center py-5"><div class="text-muted">' +
+                        '<i class="bi bi-inbox fs-1 d-block mb-2"></i>' +
+                        '<div class="fw-semibold">No records found</div>' +
+                        "<small>No matching data available for your search criteria.</small></div></td></tr>"
+                    );
+                    $("#modalSubtitle").text("0 records");
+                    $("#paginationInfo").text("Showing 0 entries");
+                    $("#modalPagination").html("");
+                    return;
+                }
+
+                totalPages = res.totalPages || 1;
+                currentRows = res.data;
+                renderTableHeaders(currentRows[0]);
+                renderTableRows(currentRows);
+                renderPagination(res.page, totalPages, res.totalRecords, pageSize);
+            },
+            error: function (xhr) {
+                console.error("Paged API error:", xhr);
+                $("#modalTable tbody").html(
+                    '<tr><td colspan="100%" class="text-center py-4 text-danger">Failed to load records from server.</td></tr>'
+                );
+            }
+        });
+    }
+
+    function renderTableHeaders(sampleRow) {
+        const keys = Object.keys(sampleRow);
+        let html = "<tr>";
+        keys.forEach(function (key) {
+            html += '<th class="sortable-th" style="cursor:pointer;" data-key="' + escapeHtml(key) + '">' +
+                    escapeHtml(formatColumnName(key)) +
+                    ' <i class="bi bi-arrow-down-up text-muted small ms-1"></i></th>';
+        });
+        if (currentType === "total-schools") html += "<th>Action</th>";
+        html += "</tr>";
+        $("#modalTable thead").html(html);
+    }
+
+    function renderTableRows(rows) {
+        const keys = Object.keys(rows[0]);
+        let html = "";
+
+        rows.forEach(function (row) {
+            html += "<tr>";
+            keys.forEach(function (key) {
+                let v = row[key];
+                if (v === null || v === undefined || v === "") v = "-";
+                html += "<td>" + escapeHtml(v) + "</td>";
+            });
+
+            if (currentType === "total-schools") {
+                const instId = row.instituteId || row.InstituteID || row.id || row.ID || row.instituteID || 0;
+                html += '<td><button type="button" class="btn btn-sm btn-outline-primary btn-export-institute" data-id="' +
+                        escapeHtml(instId) + '"><i class="bi bi-file-earmark-excel me-1"></i> Export</button></td>';
+            }
+            html += "</tr>";
+        });
+
+        $("#modalTable tbody").html(html);
+    }
+
+    function sortModalRows(key) {
+        if (!currentRows.length) return;
+        sortState.asc = sortState.key === key ? !sortState.asc : true;
+        sortState.key = key;
+
+        const dir = sortState.asc ? 1 : -1;
+        currentRows.sort(function (a, b) {
+            const A = a[key], B = b[key];
+            const nA = parseFloat(A), nB = parseFloat(B);
+            if (!isNaN(nA) && !isNaN(nB) &&
+                String(nA) === String(A).trim() && String(nB) === String(B).trim()) {
+                return (nA - nB) * dir;
+            }
+            return String(A === null || A === undefined ? "" : A)
+                .localeCompare(String(B === null || B === undefined ? "" : B)) * dir;
+        });
+        renderTableRows(currentRows);
+    }
+
+    function renderPagination(page, totalP, totalRec, pageSize) {
+        const start = totalRec === 0 ? 0 : ((page - 1) * pageSize) + 1;
+        const end = Math.min(page * pageSize, totalRec);
+
+        $("#modalSubtitle").text(totalRec + " total records");
+        $("#paginationInfo").text("Showing " + start + " to " + end + " of " + totalRec + " entries");
+
+        const item = function (label, target, disabled, active) {
+            return '<li class="page-item ' + (disabled ? "disabled" : "") + " " + (active ? "active" : "") + '">' +
+                   '<a class="page-link" href="javascript:void(0)" data-page="' + target + '">' + label + "</a></li>";
+        };
+
+        let html = item("Prev", page - 1, page <= 1, false);
+
+        const maxVisible = 5;
+        let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalP, startPage + maxVisible - 1);
+        startPage = Math.max(1, endPage - maxVisible + 1);
+
+        for (let i = startPage; i <= endPage; i++) {
+            html += item(i, i, false, i === page);
+        }
+        html += item("Next", page + 1, page >= totalP, false);
+
+        $("#modalPagination").html(html);
+    }
+
+    function changePage(target) {
+        if (target < 1 || target > totalPages) return;
+        currentPage = target;
+        showModalLoader();
+        loadModalDataPaged();
+    }
+
+    /* ---------- Init ---------- */
+    whenReady(function () {
+
+        /* Summary + activity */
+        loadSummaryCounts();
+        initializeActivityDateFilter();
+        loadVolunteerActivityCounts();
+
+        /* Card export buttons */
+        const bind = function (selector, handler) {
+            $(selector).off("click.dashboard").on("click.dashboard", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                handler(this);
+            });
+        };
+
+        bind("#btn_ExportAdminStudentsReport", function (b) { exportActiveStudentsReport("A", "Active Students", b); });
+        bind("#btn_ExportPerfSelSubmissions",  function (b) { exportCreativityReport("A", "Performance SEL Submissions", b); });
+        bind("#btnOpenGroupPbl",               function (b) { exportCreativityReport("A", "Performance Group Projects", b); });
+        bind("#btn_ExportPerfFamilyPbl",       function (b) { exportPblReport("/api/Report/affiliate-individual-project", "A", "Performance Family PBL", b); });
+        bind("#btn_ExportPerfIndividualPbl",   function (b) { exportPblReport("/api/Report/affiliate-teacher-individual-project", "A", "Performance Individual PBL", b); });
+        bind("#btnExportAssociatedSchools",    function (b) { exportAssociatedSchoolsExcel(b); });
+
+        /* Modal: sorting, pagination, per-institute export (delegated) */
+        $("#modalTable thead").on("click", ".sortable-th", function () {
+            sortModalRows($(this).data("key"));
+        });
+
+        $("#modalPagination").on("click", "a.page-link", function (e) {
+            e.preventDefault();
+            if ($(this).parent().hasClass("disabled")) return;
+            changePage(parseInt($(this).data("page"), 10));
+        });
+
+        $("#modalTable tbody").on("click", ".btn-export-institute", function () {
+            window.exportSingleInstituteReport($(this).data("id"), this);
+        });
+
+        /* Modal: search / clear / page size */
+        $("#modalTableSearch").on("keyup", function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function () {
+                currentPage = 1;
+                showModalLoader();
+                loadModalDataPaged();
+            }, 400);
+        });
+
+        $("#btnClearSearch").on("click", function () {
+            $("#modalTableSearch").val("");
+            currentPage = 1;
+            showModalLoader();
+            loadModalDataPaged();
+        });
+
+        $("#modalPageSize").on("change", function () {
+            currentPage = 1;
+            showModalLoader();
+            loadModalDataPaged();
+        });
+
+        /* Modal: export filtered data (JWT header ke saath) */
+        $("#btnExportModalData").on("click", function () {
+            const searchTerm = $("#modalTableSearch").val().trim();
+            downloadExcel({
+                url: "/api/admin/export-details-excel?category=" + encodeURIComponent(currentCategory) +
+                     "&type=" + encodeURIComponent(currentType) +
+                     "&search=" + encodeURIComponent(searchTerm) +
+                     "&affiliateid=" + encodeURIComponent(AFFILIATE_ID),
+                filename: currentCategory + "_" + currentType + "_Export.xlsx",
+                loaderText: "Generating Excel Export for Filtered Records...",
+                button: this
+            });
+        });
+    });
+})();
 </script>

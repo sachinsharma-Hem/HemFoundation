@@ -258,7 +258,6 @@ namespace HemFoundation.Controllers
             }
             catch (Exception ex)
             {
-                // Yeh line aapko Visual Studio output/console mein exact database error dikha degi
                 var exactError = ex.InnerException?.Message ?? ex.Message;
                 System.Diagnostics.Debug.WriteLine("DB SAVE ERROR: " + exactError);
 
