@@ -166,159 +166,482 @@ namespace HemFoundation.Controllers.Api
                 reports = reportsCount
             });
         }
-
         [HttpPost("register")]
         public async Task<IActionResult> RegisterVolunteer([FromBody] VolunteerDto model)
         {
-            var aff = await GetCurrentAffiliate();
-
-            if (aff == null)
-                return Unauthorized();
-
-            if (model.Id > 0)
+            try
             {
-                var vol = await _context.Volunteers
-                    .FirstOrDefaultAsync(v =>
-                        v.Id == model.Id &&
-                        v.AffiliateId == aff.UserID);
+                var aff = await GetCurrentAffiliate();
 
-                if (vol == null)
+                if (aff == null)
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        message = "Affiliate not found."
+                    });
+
+                if (model == null)
                 {
-                    return NotFound(new { success = false, message = "Volunteer not found." });
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Invalid request."
+                    });
                 }
 
-                vol.FirstName = model.FirstName;
-                vol.LastName = model.LastName;
+                // ============================================================
+                // UPDATE
+                // ============================================================
 
-                string updateMobile = model.MobileNo?.Trim() ?? "";
-                if (updateMobile.Length > 10)
-                    updateMobile = updateMobile.Substring(updateMobile.Length - 10); 
-                vol.MobileNo = updateMobile;
+                if (model.Id > 0)
+                {
+                    var vol = await _context.Volunteers
+                        .FirstOrDefaultAsync(v =>
+                            v.Id == model.Id &&
+                            v.AffiliateId == aff.UserID);
 
-                vol.Email = model.Email;
-                vol.InstituteId = model.InstituteId;
-                vol.ModifiedDate = DateTime.UtcNow;
+                    if (vol == null)
+                    {
+                        return NotFound(new
+                        {
+                            success = false,
+                            message = "Volunteer not found."
+                        });
+                    }
+
+                    vol.FirstName = model.FirstName;
+                    vol.LastName = model.LastName;
+
+                    string updateMobile = model.MobileNo?.Trim() ?? "";
+
+                    if (updateMobile.Length > 10)
+                    {
+                        updateMobile =
+                            updateMobile.Substring(updateMobile.Length - 10);
+                    }
+
+                    vol.MobileNo = updateMobile;
+                    vol.Email = model.Email;
+                    vol.InstituteId = model.InstituteId;
+                    vol.ModifiedDate = DateTime.UtcNow;
+
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Volunteer updated successfully."
+                    });
+                }
+
+                // ============================================================
+                // MOBILE
+                // ============================================================
+
+                string baseMobile = model.MobileNo?.Trim() ?? "";
+
+                if (baseMobile.Length > 10)
+                {
+                    baseMobile =
+                        baseMobile.Substring(baseMobile.Length - 10);
+                }
+
+                if (string.IsNullOrWhiteSpace(baseMobile))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Mobile number is required."
+                    });
+                }
+
+                if (baseMobile.Length != 10)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Please enter a valid 10 digit mobile number."
+                    });
+                }
+
+                string? cleanEmail =
+                    string.IsNullOrWhiteSpace(model.Email)
+                        ? null
+                        : model.Email.Trim();
+
+                // ============================================================
+                // USERNAME
+                // ============================================================
+
+                string uniqueUsername = baseMobile;
+                int counter = 1;
+
+                while (await _context.Set<ApplicationUser>()
+                    .AnyAsync(x => x.UserName == uniqueUsername))
+                {
+                    uniqueUsername = $"{baseMobile}_{counter}";
+                    counter++;
+                }
+
+                // IMPORTANT:
+                // Password = mobile only
+                string password = baseMobile;
+
+                // ============================================================
+                // ROLE
+                // ============================================================
+
+                var role = await _context.AspNetRoles
+                    .FirstOrDefaultAsync(x => x.Name == "HF_Volunteers");
+
+                if (role == null)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Role 'HF_Volunteers' not found in aspnetroles."
+                    });
+                }
+
+                // ============================================================
+                // ASP.NET USER
+                // ============================================================
+
+                var appUser = new ApplicationUser
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    UserName = uniqueUsername,
+                    Email = cleanEmail,
+                    PhoneNumber = baseMobile,
+                    EmailConfirmed = true,
+                    PhoneNumberConfirmed = false,
+                    SecurityStamp = Guid.NewGuid().ToString()
+                };
+
+                var passwordHasher =
+                    new PasswordHasher<ApplicationUser>();
+
+                appUser.PasswordHash =
+                    passwordHasher.HashPassword(
+                        appUser,
+                        password
+                    );
+
+                _context.Set<ApplicationUser>().Add(appUser);
+
+                // ============================================================
+                // ROLE ASSIGNMENT
+                // ============================================================
+
+                _context.Set<IdentityUserRole<string>>().Add(
+                    new IdentityUserRole<string>
+                    {
+                        UserId = appUser.Id,
+                        RoleId = role.Id
+                    }
+                );
+
+                // ============================================================
+                // NEXT USER ID
+                // ============================================================
+
+                int nextId = 1;
+
+                if (await _context.Users.AnyAsync())
+                {
+                    int maxId = await _context.Users
+                        .MaxAsync(u => u.UserID);
+
+                    nextId = maxId + 1;
+                }
+
+                // ============================================================
+                // CUSTOM USER
+                // ============================================================
+
+                var customUser = new Users
+                {
+                    UserID = nextId,
+
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+
+                    MobileNo = baseMobile,
+                    EmailID = cleanEmail,
+
+                    IsActive = true,
+
+                    CreatedBy = aff.UserID,
+                    CreatedDate = DateTime.UtcNow,
+
+                    AspNetUserID = appUser.Id,
+
+                    RegisterFrom = "Volunteer",
+
+                    Password_ = password,
+
+                    IsMobileVerified = false,
+                    IsEmailVerified = false,
+
+                    isUserDeactivated = false
+                };
+
+                _context.Users.Add(customUser);
+
+                // ============================================================
+                // VOLUNTEER
+                // ============================================================
+
+                var volunteer = new Volunteer
+                {
+                    Id = nextId,
+
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+
+                    MobileNo = baseMobile,
+                    Email = cleanEmail,
+
+                    InstituteId = model.InstituteId,
+
+                    AffiliateId = aff.UserID,
+
+                    AspNetUserId = appUser.Id,
+
+                    Password_ = password,
+
+                    IsActive = true,
+                    IsDeleted = false,
+
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                _context.Volunteers.Add(volunteer);
+
+                // ============================================================
+                // SAVE
+                // ============================================================
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { success = true, message = "Volunteer updated successfully." });
-            }
+                // ============================================================
+                // SMS + EMAIL
+                // ============================================================
 
-            string baseMobile = model.MobileNo?.Trim() ?? "";
-            if (baseMobile.Length > 10)
-            {
-                baseMobile = baseMobile.Substring(baseMobile.Length - 10);
-            }
-
-            string uniqueUsername = baseMobile;
-            int counter = 1;
-
-            while (await _context.Set<ApplicationUser>().AnyAsync(x => x.UserName == uniqueUsername))
-            {
-
-                string suffix = $"_{counter}";
-                int allowedBaseLength = 10 - suffix.Length; 
-
-                if (allowedBaseLength > 0)
+                try
                 {
-                    uniqueUsername = $"{baseMobile.Substring(0, allowedBaseLength)}{suffix}";
+                    if (!string.IsNullOrWhiteSpace(baseMobile))
+                    {
+                        _smsManager.StudentRegistration(
+                            baseMobile,
+                            volunteer.FirstName,
+                            uniqueUsername,
+                            password
+                        );
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(volunteer.Email))
+                    {
+                        var studentRegObj = new StudentRegistration
+                        {
+                            FirstName = volunteer.FirstName,
+                            LastName = volunteer.LastName,
+                            EmailID = volunteer.Email,
+                            UserName = uniqueUsername,
+                            Password = password,
+                            MobileNo = baseMobile
+                        };
+
+                        Utility.StudentRegistration(studentRegObj);
+                    }
                 }
-                else
+                catch (Exception notificationEx)
                 {
-                    uniqueUsername = $"{baseMobile}_{counter}"; 
+                    // Notification fail hone par registration fail nahi hoga
+                    Console.WriteLine(
+                        "Notification dispatch failed: " +
+                        notificationEx.ToString()
+                    );
                 }
-                counter++;
-            }
 
-            string password = uniqueUsername;
-
-
-            var appUser = new ApplicationUser
-            {
-                Id = Guid.NewGuid().ToString(),
-                UserName = uniqueUsername,
-                Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim(),
-                PhoneNumber = baseMobile,
-                EmailConfirmed = true,
-                PhoneNumberConfirmed = false,
-                SecurityStamp = Guid.NewGuid().ToString()
-            };
-
-            var passwordHasher = new PasswordHasher<ApplicationUser>();
-            appUser.PasswordHash = passwordHasher.HashPassword(appUser, password);
-
-            _context.Set<ApplicationUser>().Add(appUser);
-
-            var role = await _context.AspNetRoles.FirstOrDefaultAsync(x => x.Name == "HF_Volunteers");
-            if (role == null)
-            {
-                return BadRequest(new { success = false, message = "Role 'Volunteer' not found in aspnetroles." });
-            }
-
-            _context.Set<IdentityUserRole<string>>().Add(
-                new IdentityUserRole<string>
+                return Ok(new
                 {
-                    UserId = appUser.Id,
-                    RoleId = role.Id
-                }
-            );
-
-            int nextId = 1;
-            if (await _context.Users.AnyAsync())
-            {
-                int maxId = await _context.Users.MaxAsync(u => u.UserID);
-                nextId = maxId + 1;
+                    success = true,
+                    message =
+                        "Volunteer registered successfully with synchronized IDs. SMS and email notification sent.",
+                    username = uniqueUsername,
+                    password = password,
+                    generatedId = nextId
+                });
             }
-
-            var customUser = new Users
+            catch (Exception ex)
             {
-                UserID = nextId,
-                UserCode = uniqueUsername,
-                FirstName = model.FirstName, 
-                LastName = model.LastName,
-                MobileNo = baseMobile,
-                EmailID = model.Email,
-                IsActive = true,
-                CreatedBy = aff.UserID,
-                CreatedDate = DateTime.UtcNow,
-                AspNetUserID = appUser.Id,
-                RegisterFrom = "Volunteer",
-                Password_ = password,
-                IsMobileVerified = false,
-                IsEmailVerified = false,
-                isUserDeactivated = false
-            };
+                // ============================================================
+                // ACTUAL ERROR RETURN
+                // ============================================================
 
-            _context.Users.Add(customUser);
-            var volunteer = new Volunteer
-            {
-                Id = nextId,
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                MobileNo = baseMobile,
-                Email = model.Email,
-                InstituteId = model.InstituteId,
-                AffiliateId = aff.UserID,
-                AspNetUserId = appUser.Id,
-                Password_ = password,
-                IsActive = true,
-                IsDeleted = false,
-                CreatedDate = DateTime.UtcNow
-            };
-
-            _context.Volunteers.Add(volunteer);
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                success = true,
-                message = "Volunteer registered successfully with synchronized IDs.",
-                username = uniqueUsername,
-                password = password,
-                generatedId = nextId
-            });
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error while registering volunteer.",
+                    error = ex.Message,
+                    innerError = ex.InnerException?.Message,
+                    detail = ex.InnerException?.InnerException?.Message
+                });
+            }
         }
+        //[HttpPost("register")]
+        //public async Task<IActionResult> RegisterVolunteer([FromBody] VolunteerDto model)
+        //{
+        //    var aff = await GetCurrentAffiliate();
+
+        //    if (aff == null)
+        //        return Unauthorized();
+
+        //    if (model.Id > 0)
+        //    {
+        //        var vol = await _context.Volunteers
+        //            .FirstOrDefaultAsync(v =>
+        //                v.Id == model.Id &&
+        //                v.AffiliateId == aff.UserID);
+
+        //        if (vol == null)
+        //        {
+        //            return NotFound(new { success = false, message = "Volunteer not found." });
+        //        }
+
+        //        vol.FirstName = model.FirstName;
+        //        vol.LastName = model.LastName;
+
+        //        string updateMobile = model.MobileNo?.Trim() ?? "";
+        //        if (updateMobile.Length > 10)
+        //            updateMobile = updateMobile.Substring(updateMobile.Length - 10); 
+        //        vol.MobileNo = updateMobile;
+
+        //        vol.Email = model.Email;
+        //        vol.InstituteId = model.InstituteId;
+        //        vol.ModifiedDate = DateTime.UtcNow;
+
+        //        await _context.SaveChangesAsync();
+
+        //        return Ok(new { success = true, message = "Volunteer updated successfully." });
+        //    }
+
+        //    string baseMobile = model.MobileNo?.Trim() ?? "";
+        //    if (baseMobile.Length > 10)
+        //    {
+        //        baseMobile = baseMobile.Substring(baseMobile.Length - 10);
+        //    }
+
+        //    string uniqueUsername = baseMobile;
+        //    int counter = 1;
+
+        //    while (await _context.Set<ApplicationUser>().AnyAsync(x => x.UserName == uniqueUsername))
+        //    {
+
+        //        string suffix = $"_{counter}";
+        //        int allowedBaseLength = 10 - suffix.Length; 
+
+        //        if (allowedBaseLength > 0)
+        //        {
+        //            uniqueUsername = $"{baseMobile.Substring(0, allowedBaseLength)}{suffix}";
+        //        }
+        //        else
+        //        {
+        //            uniqueUsername = $"{baseMobile}_{counter}"; 
+        //        }
+        //        counter++;
+        //    }
+
+        //    string password = uniqueUsername;
+
+
+        //    var appUser = new ApplicationUser
+        //    {
+        //        Id = Guid.NewGuid().ToString(),
+        //        UserName = uniqueUsername,
+        //        Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim(),
+        //        PhoneNumber = baseMobile,
+        //        EmailConfirmed = true,
+        //        PhoneNumberConfirmed = false,
+        //        SecurityStamp = Guid.NewGuid().ToString()
+        //    };
+
+        //    var passwordHasher = new PasswordHasher<ApplicationUser>();
+        //    appUser.PasswordHash = passwordHasher.HashPassword(appUser, password);
+
+        //    _context.Set<ApplicationUser>().Add(appUser);
+
+        //    var role = await _context.AspNetRoles.FirstOrDefaultAsync(x => x.Name == "HF_Volunteers");
+        //    if (role == null)
+        //    {
+        //        return BadRequest(new { success = false, message = "Role 'Volunteer' not found in aspnetroles." });
+        //    }
+
+        //    _context.Set<IdentityUserRole<string>>().Add(
+        //        new IdentityUserRole<string>
+        //        {
+        //            UserId = appUser.Id,
+        //            RoleId = role.Id
+        //        }
+        //    );
+
+        //    int nextId = 1;
+        //    if (await _context.Users.AnyAsync())
+        //    {
+        //        int maxId = await _context.Users.MaxAsync(u => u.UserID);
+        //        nextId = maxId + 1;
+        //    }
+
+        //    var customUser = new Users
+        //    {
+        //        UserID = nextId,
+        //        UserCode = uniqueUsername,
+        //        FirstName = model.FirstName, 
+        //        LastName = model.LastName,
+        //        MobileNo = baseMobile,
+        //        EmailID = model.Email,
+        //        IsActive = true,
+        //        CreatedBy = aff.UserID,
+        //        CreatedDate = DateTime.UtcNow,
+        //        AspNetUserID = appUser.Id,
+        //        RegisterFrom = "Volunteer",
+        //        Password_ = password,
+        //        IsMobileVerified = false,
+        //        IsEmailVerified = false,
+        //        isUserDeactivated = false
+        //    };
+
+        //    _context.Users.Add(customUser);
+        //    var volunteer = new Volunteer
+        //    {
+        //        Id = nextId,
+        //        FirstName = model.FirstName,
+        //        LastName = model.LastName,
+        //        MobileNo = baseMobile,
+        //        Email = model.Email,
+        //        InstituteId = model.InstituteId,
+        //        AffiliateId = aff.UserID,
+        //        AspNetUserId = appUser.Id,
+        //        Password_ = password,
+        //        IsActive = true,
+        //        IsDeleted = false,
+        //        CreatedDate = DateTime.UtcNow
+        //    };
+
+        //    _context.Volunteers.Add(volunteer);
+
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok(new
+        //    {
+        //        success = true,
+        //        message = "Volunteer registered successfully with synchronized IDs.",
+        //        username = uniqueUsername,
+        //        password = password,
+        //        generatedId = nextId
+        //    });
+        //}
         [HttpGet("download-sample")]
         [AllowAnonymous]
         public IActionResult DownloadSample()
@@ -418,7 +741,9 @@ namespace HemFoundation.Controllers.Api
         {
             try
             {
-                if (request == null || request.ValidData == null || !request.ValidData.Any())
+                if (request == null ||
+                    request.ValidData == null ||
+                    !request.ValidData.Any())
                 {
                     return BadRequest(new
                     {
@@ -428,6 +753,7 @@ namespace HemFoundation.Controllers.Api
                 }
 
                 var aff = await GetCurrentAffiliate();
+
                 if (aff == null)
                 {
                     return Unauthorized(new
@@ -436,6 +762,10 @@ namespace HemFoundation.Controllers.Api
                         message = "Affiliate not found."
                     });
                 }
+
+                // ============================================================
+                // GET VOLUNTEER ROLE
+                // ============================================================
 
                 var role = await _context.AspNetRoles
                     .FirstOrDefaultAsync(x => x.Name == "HF_Volunteers");
@@ -449,16 +779,28 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
+                // ============================================================
+                // GET NEXT CUSTOM USER ID
+                // ============================================================
+
                 int nextId = 1;
+
                 if (await _context.Users.AnyAsync())
                 {
-                    int maxId = await _context.Users.MaxAsync(u => u.UserID);
+                    int maxId = await _context.Users
+                        .MaxAsync(u => u.UserID);
+
                     nextId = maxId + 1;
                 }
 
                 int addedCount = 0;
                 int failedCount = 0;
+
                 var errors = new List<object>();
+
+                // ============================================================
+                // PROCESS EACH VOLUNTEER
+                // ============================================================
 
                 foreach (var item in request.ValidData)
                 {
@@ -466,66 +808,133 @@ namespace HemFoundation.Controllers.Api
                     {
                         string firstName = item.FirstName?.Trim() ?? "";
                         string lastName = item.LastName?.Trim() ?? "";
+
                         string baseMobile = item.MobileNo?.Trim() ?? "";
+
+                        // ----------------------------------------------------
+                        // Keep last 10 digits
+                        // ----------------------------------------------------
 
                         if (baseMobile.Length > 10)
                         {
-                            baseMobile = baseMobile.Substring(baseMobile.Length - 10);
+                            baseMobile =
+                                baseMobile.Substring(baseMobile.Length - 10);
                         }
 
-                        string? cleanEmail = string.IsNullOrWhiteSpace(item.Email) ? null : item.Email.Trim();
+                        string? cleanEmail =
+                            string.IsNullOrWhiteSpace(item.Email)
+                                ? null
+                                : item.Email.Trim();
+
+                        // ----------------------------------------------------
+                        // VALIDATION
+                        // ----------------------------------------------------
 
                         if (string.IsNullOrWhiteSpace(firstName) ||
                             string.IsNullOrWhiteSpace(lastName) ||
                             string.IsNullOrWhiteSpace(baseMobile))
                         {
                             failedCount++;
+
                             errors.Add(new
                             {
                                 mobile = baseMobile,
-                                message = "First Name, Last Name and Mobile Number are required."
+                                message =
+                                    "First Name, Last Name and Mobile Number are required."
                             });
+
                             continue;
                         }
 
-                        // Unique username generation logic (jaise single register/universal mein hai)
-                        string uniqueUsername = baseMobile;
-                        int counter = 1;
-                        while (await _context.Set<ApplicationUser>().AnyAsync(x => x.UserName == uniqueUsername))
+                        if (baseMobile.Length != 10)
                         {
-                            string suffix = $"_{counter}";
-                            int allowedBaseLength = 10 - suffix.Length;
-                            if (allowedBaseLength > 0 && baseMobile.Length >= allowedBaseLength)
+                            failedCount++;
+
+                            errors.Add(new
                             {
-                                uniqueUsername = $"{baseMobile.Substring(0, allowedBaseLength)}{suffix}";
-                            }
-                            else
-                            {
-                                uniqueUsername = $"{baseMobile}_{counter}";
-                            }
+                                mobile = baseMobile,
+                                message =
+                                    "Mobile number must be exactly 10 digits."
+                            });
+
+                            continue;
+                        }
+
+                        // ====================================================
+                        // USERNAME GENERATION
+                        //
+                        // First:
+                        // 9876543210
+                        //
+                        // Duplicate:
+                        // 9876543210_1
+                        // 9876543210_2
+                        // 9876543210_3
+                        // ====================================================
+
+                        string uniqueUsername = baseMobile;
+
+                        int counter = 1;
+
+                        while (await _context.Set<ApplicationUser>()
+                            .AnyAsync(x => x.UserName == uniqueUsername))
+                        {
+                            uniqueUsername =
+                                $"{baseMobile}_{counter}";
+
                             counter++;
                         }
 
-                        string password = uniqueUsername;
+                        // ====================================================
+                        // PASSWORD
+                        //
+                        // ALWAYS 10 DIGIT MOBILE NUMBER
+                        //
+                        // Username:
+                        // 9876543210_1
+                        //
+                        // Password:
+                        // 9876543210
+                        // ====================================================
 
-                        // 1. Create AspNetUser (Identity)
+                        string password = baseMobile;
+
+                        // ====================================================
+                        // 1. CREATE ASP.NET IDENTITY USER
+                        // ====================================================
+
                         var appUser = new ApplicationUser
                         {
                             Id = Guid.NewGuid().ToString(),
+
                             UserName = uniqueUsername,
+
                             Email = cleanEmail,
+
                             PhoneNumber = baseMobile,
+
                             EmailConfirmed = true,
+
                             PhoneNumberConfirmed = false,
+
                             SecurityStamp = Guid.NewGuid().ToString()
                         };
 
-                        var passwordHasher = new PasswordHasher<ApplicationUser>();
-                        appUser.PasswordHash = passwordHasher.HashPassword(appUser, password);
+                        var passwordHasher =
+                            new PasswordHasher<ApplicationUser>();
+
+                        appUser.PasswordHash =
+                            passwordHasher.HashPassword(
+                                appUser,
+                                password
+                            );
 
                         _context.Set<ApplicationUser>().Add(appUser);
 
-                        // 2. Assign Role in Identity
+                        // ====================================================
+                        // 2. ASSIGN IDENTITY ROLE
+                        // ====================================================
+
                         _context.Set<IdentityUserRole<string>>().Add(
                             new IdentityUserRole<string>
                             {
@@ -534,95 +943,184 @@ namespace HemFoundation.Controllers.Api
                             }
                         );
 
+                        // ====================================================
+                        // 3. CREATE CUSTOM USERS RECORD
+                        // ====================================================
+
                         var customUser = new Users
                         {
                             UserID = nextId,
-                            UserCode = uniqueUsername,
+
+
                             FirstName = firstName,
+
                             LastName = lastName,
+
                             MobileNo = baseMobile,
+
                             EmailID = cleanEmail,
+
                             IsActive = true,
+
                             CreatedBy = aff.UserID,
+
                             CreatedDate = DateTime.UtcNow,
+
                             AspNetUserID = appUser.Id,
+
                             RegisterFrom = "Volunteer",
+
                             Password_ = password,
+
                             IsMobileVerified = false,
+
                             IsEmailVerified = false,
+
                             isUserDeactivated = false
                         };
 
                         _context.Users.Add(customUser);
 
+                        // ====================================================
+                        // 4. CREATE VOLUNTEER RECORD
+                        // ====================================================
+
                         var volunteer = new Volunteer
                         {
                             Id = nextId,
+
                             FirstName = firstName,
+
                             LastName = lastName,
+
                             MobileNo = baseMobile,
+
                             Email = cleanEmail,
+
                             InstituteId = request.InstituteId,
+
                             AffiliateId = aff.UserID,
+
                             AspNetUserId = appUser.Id,
+
                             Password_ = password,
+
                             IsActive = true,
+
                             IsDeleted = false,
+
                             CreatedDate = DateTime.UtcNow
                         };
 
                         _context.Volunteers.Add(volunteer);
 
+                        // ====================================================
+                        // 5. SAVE DATABASE RECORDS
+                        // ====================================================
+
                         await _context.SaveChangesAsync();
+
+                        // ====================================================
+                        // 6. SEND SMS + EMAIL
+                        //
+                        // Notification failure should NOT fail registration.
+                        // ====================================================
 
                         try
                         {
+                            // ------------------------------------------------
+                            // SMS
+                            // ------------------------------------------------
 
-                            if (!string.IsNullOrEmpty(baseMobile))
+                            if (!string.IsNullOrWhiteSpace(baseMobile))
                             {
-                                _smsManager.StudentRegistration(baseMobile, volunteer.FirstName, uniqueUsername, baseMobile);
-                               
+                                _smsManager.StudentRegistration(
+                                    baseMobile,
+                                    volunteer.FirstName,
+                                    uniqueUsername,
+                                    password
+                                );
                             }
 
-                            if (!string.IsNullOrEmpty(volunteer.Email))
+                            // ------------------------------------------------
+                            // EMAIL
+                            // ------------------------------------------------
+
+                            if (!string.IsNullOrWhiteSpace(volunteer.Email))
                             {
-                                var studentRegObj = new StudentRegistration
-                                {
-                                    FirstName = volunteer.FirstName,
-                                    LastName = volunteer.LastName,
-                                    EmailID = volunteer.Email,
-                                    UserName = uniqueUsername,
-                                    Password = baseMobile,
-                                    MobileNo = baseMobile
-                                };
-                                Utility.StudentRegistration(studentRegObj);
+                                var studentRegObj =
+                                    new StudentRegistration
+                                    {
+                                        FirstName =
+                                            volunteer.FirstName,
+
+                                        LastName =
+                                            volunteer.LastName,
+
+                                        EmailID =
+                                            volunteer.Email,
+
+                                        UserName =
+                                            uniqueUsername,
+
+                                        Password =
+                                            password,
+
+                                        MobileNo =
+                                            baseMobile
+                                    };
+
+                                Utility.StudentRegistration(
+                                    studentRegObj
+                                );
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception notificationEx)
                         {
-                            System.Diagnostics.Debug.WriteLine("Notification dispatch failed: " + ex.ToString());
+                            System.Diagnostics.Debug.WriteLine(
+                                "Volunteer notification dispatch failed: "
+                                + notificationEx
+                            );
                         }
+
+                        // ====================================================
+                        // SUCCESS
+                        // ====================================================
 
                         nextId++;
+
                         addedCount++;
                     }
                     catch (Exception ex)
                     {
                         failedCount++;
+
                         errors.Add(new
                         {
                             mobile = item.MobileNo,
-                            message = ex.InnerException?.Message ?? ex.Message
+
+                            message =
+                                ex.InnerException?.Message
+                                ?? ex.Message
                         });
                     }
                 }
 
+                // ============================================================
+                // FINAL RESPONSE
+                // ============================================================
+
                 return Ok(new
                 {
                     success = true,
-                    message = $"{addedCount} Volunteers registered successfully with SMS & login credentials pattern.",
+
+                    message =
+                        $"{addedCount} Volunteers registered successfully with SMS & login credentials pattern.",
+
                     addedCount,
+
                     failedCount,
+
                     errors
                 });
             }
@@ -631,8 +1129,13 @@ namespace HemFoundation.Controllers.Api
                 return BadRequest(new
                 {
                     success = false,
-                    message = "Error while saving bulk volunteers.",
-                    error = ex.InnerException?.Message ?? ex.Message
+
+                    message =
+                        "Error while saving bulk volunteers.",
+
+                    error =
+                        ex.InnerException?.Message
+                        ?? ex.Message
                 });
             }
         }
@@ -712,39 +1215,69 @@ namespace HemFoundation.Controllers.Api
                 query = query.Where(v => v.AffiliateId == affiliateId);
 
             if (instituteId.HasValue && instituteId > 0)
-                query = query.Where(v => v.InstituteId == instituteId);
+            {
+                var matchingVolunteerIds = await _context.VolunteerInstituteMappings
+                    .Where(m => m.InstituteId == instituteId && !m.IsDeleted && m.IsActive)
+                    .Select(m => m.VolunteerId)
+                    .Distinct()
+                    .ToListAsync();
+
+                query = query.Where(v => matchingVolunteerIds.Contains(v.Id));
+            }
 
             if (!string.IsNullOrEmpty(search))
             {
                 search = search.ToLower();
                 query = query.Where(v => v.FirstName.ToLower().Contains(search) ||
-                                         v.LastName.ToLower().Contains(search) ||
-                                         v.MobileNo.Contains(search) ||
-                                         (!string.IsNullOrEmpty(v.Email) && v.Email.ToLower().Contains(search)));
+                                       v.LastName.ToLower().Contains(search) ||
+                                       v.MobileNo.Contains(search) ||
+                                       (!string.IsNullOrEmpty(v.Email) && v.Email.ToLower().Contains(search)));
             }
 
             int totalRecords = await query.CountAsync();
             int totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
 
-            var list = await query
+            var volunteers = await query
                 .OrderByDescending(v => v.CreatedDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(v => new
-                {
-                    v.Id,
-                    Name = v.FirstName + " " + v.LastName,
-                    v.MobileNo,
-                    v.Email,
-                    SchoolName = _context.WJ_Institutes.Where(i => i.InstituteID == v.InstituteId).Select(i => i.Name).FirstOrDefault(),
-                    AffiliateName = _context.Users.Where(a => a.UserID == v.AffiliateId).Select(a => a.FirstName + " " + a.LastName).FirstOrDefault(),
-                    v.IsActive,
-                    v.CreatedDate
-                }).ToListAsync();
+                .ToListAsync();
+
+            var volunteerIds = volunteers.Select(v => v.Id).ToList();
+
+            var mappings = await _context.VolunteerInstituteMappings
+                .Where(m => volunteerIds.Contains(m.VolunteerId) && !m.IsDeleted && m.IsActive)
+                .ToListAsync();
+
+            var instituteIds = mappings.Select(m => m.InstituteId).Distinct().ToList();
+
+            var schools = await _context.SchoolProfileDetails
+                .Where(s => instituteIds.Contains(s.instituteid))
+                .Select(s => new { s.instituteid, s.institute_name })
+                .ToDictionaryAsync(s => s.instituteid, s => s.institute_name);
+
+            var affiliateIds = volunteers.Select(v => (int)v.AffiliateId).Distinct().ToList();
+            var affiliates = await _context.Users
+                .Where(u => affiliateIds.Contains(u.UserID))
+                .Select(u => new { u.UserID, Name = (u.FirstName ?? "") + " " + (u.LastName ?? "") })
+                .ToDictionaryAsync(u => u.UserID, u => u.Name.Trim());
+
+            var list = volunteers.Select(v => new
+            {
+                v.Id,
+                Name = v.FirstName + " " + v.LastName,
+                v.MobileNo,
+                v.Email,
+                SchoolNames = string.Join(", ", mappings
+                    .Where(m => m.VolunteerId == v.Id && schools.ContainsKey(m.InstituteId))
+                    .Select(m => schools[m.InstituteId])),
+                AffiliateName = affiliates.ContainsKey((int)v.AffiliateId) ? affiliates[(int)v.AffiliateId] : "N/A",
+                v.IsActive,
+                v.CreatedDate
+            }).ToList();
 
             return Ok(new { success = true, data = list, totalRecords, totalPages, currentPage = page });
         }
-
 
         [HttpGet("mapping-schools/{volunteerId}")]
         public async Task<IActionResult> GetVolunteerSchoolMapping(int volunteerId)
@@ -835,18 +1368,15 @@ namespace HemFoundation.Controllers.Api
                 unassignedSchools
             });
         }
-
         [HttpPost("save-mapping")]
         public async Task<IActionResult> SaveVolunteerMapping([FromBody] VolunteerMappingDto model)
         {
             try
             {
-                var aff = await GetCurrentAffiliate();
-                if (aff == null)
-                    return Unauthorized(new { success = false, message = "Affiliate not found." });
-
                 if (model == null || model.VolunteerId <= 0)
+                {
                     return BadRequest(new { success = false, message = "Invalid mapping data received." });
+                }
 
                 var instituteIds = model.InstituteIds?
                     .Where(x => x > 0)
@@ -854,30 +1384,74 @@ namespace HemFoundation.Controllers.Api
                     .ToList()
                     ?? new List<int>();
 
-                var volunteer = await _context.Volunteers
-                    .FirstOrDefaultAsync(v => v.Id == model.VolunteerId && v.AffiliateId == aff.UserID && v.IsActive && !v.IsDeleted);
+                // Session se check karein ki Admin logged in hai ya nahi
+                bool isAdmin = HttpContext.Session.GetString("IsAdminLoggedIn") == "true";
+
+                Users? aff = null;
+                if (!isAdmin)
+                {
+                    aff = await GetCurrentAffiliate();
+                    if (aff == null)
+                    {
+                        return Unauthorized(new { success = false, message = "Affiliate not found." });
+                    }
+                }
+
+                // Find volunteer based on context (Admin or Affiliate)
+                Volunteer? volunteer;
+                if (isAdmin)
+                {
+                    volunteer = await _context.Volunteers
+                        .FirstOrDefaultAsync(v => v.Id == model.VolunteerId && v.IsActive && !v.IsDeleted);
+                }
+                else
+                {
+                    volunteer = await _context.Volunteers
+                        .FirstOrDefaultAsync(v => v.Id == model.VolunteerId && v.AffiliateId == aff!.UserID && v.IsActive && !v.IsDeleted);
+                }
 
                 if (volunteer == null)
+                {
                     return BadRequest(new { success = false, message = "Volunteer not found." });
+                }
 
-                var referralCode = await _context.WJ_ReferralCodes
-                    .Where(x => x.UserID == aff.UserID)
-                    .Select(x => x.ReferralCode)
-                    .FirstOrDefaultAsync();
+                // Validation for Affiliate vs Admin
+                if (!isAdmin)
+                {
+                    var referralCode = await _context.WJ_ReferralCodes
+                        .Where(x => x.UserID == aff!.UserID)
+                        .Select(x => x.ReferralCode)
+                        .FirstOrDefaultAsync();
 
-                var affiliateSchoolIds = await _context.SchoolProfileDetails
-                    .Where(x => x.referralcode == referralCode)
-                    .Select(x => x.instituteid)
-                    .Distinct()
-                    .ToListAsync();
+                    var affiliateSchoolIds = await _context.SchoolProfileDetails
+                        .Where(x => x.referralcode == referralCode)
+                        .Select(x => x.instituteid)
+                        .Distinct()
+                        .ToListAsync();
 
-                var invalidInstituteIds = instituteIds.Except(affiliateSchoolIds).ToList();
-                if (invalidInstituteIds.Any())
-                    return BadRequest(new { success = false, message = "One or more selected schools do not belong to this affiliate." });
+                    var invalidInstituteIds = instituteIds.Except(affiliateSchoolIds).ToList();
+                    if (invalidInstituteIds.Any())
+                    {
+                        return BadRequest(new { success = false, message = "One or more selected schools do not belong to this affiliate." });
+                    }
+                }
+                else
+                {
+                    var existingSchoolIds = await _context.SchoolProfileDetails
+                        .Where(x => instituteIds.Contains(x.instituteid))
+                        .Select(x => x.instituteid)
+                        .ToListAsync();
 
-                string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? aff.UserID.ToString();
+                    var invalidInstituteIds = instituteIds.Except(existingSchoolIds).ToList();
+                    if (invalidInstituteIds.Any())
+                    {
+                        return BadRequest(new { success = false, message = "One or more selected schools are invalid." });
+                    }
+                }
 
-                // Existing mappings for this specific volunteer
+                string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? (aff?.UserID.ToString() ?? "Admin");
+
+                // Existing mappings for this volunteer
                 var existingMappings = await _context.VolunteerInstituteMappings
                     .Where(m => m.VolunteerId == model.VolunteerId)
                     .ToListAsync();
@@ -889,12 +1463,12 @@ namespace HemFoundation.Controllers.Api
                     {
                         mapping.IsDeleted = true;
                         mapping.IsActive = false;
-                        mapping.ModifiedDate = DateTime.UtcNow;
+                        mapping.ModifiedDate = DateTime.Now;
                         mapping.LastUpdatedBy = currentUserId;
                     }
                 }
 
-                // Add or Reactivate selected mappings (Many-to-Many allowed, so no check for other volunteers)
+                // Add or Reactivate selected mappings (Many-to-Many supported)
                 foreach (var instituteId in instituteIds)
                 {
                     var existingMapping = existingMappings.FirstOrDefault(x => x.InstituteId == instituteId);
@@ -903,7 +1477,7 @@ namespace HemFoundation.Controllers.Api
                     {
                         existingMapping.IsDeleted = false;
                         existingMapping.IsActive = true;
-                        existingMapping.ModifiedDate = DateTime.UtcNow;
+                        existingMapping.ModifiedDate = DateTime.Now;
                         existingMapping.LastUpdatedBy = currentUserId;
                     }
                     else
@@ -915,8 +1489,8 @@ namespace HemFoundation.Controllers.Api
                                 InstituteId = instituteId,
                                 IsActive = true,
                                 IsDeleted = false,
-                                CreatedDate = DateTime.UtcNow,
-                                ModifiedDate = DateTime.UtcNow,
+                                CreatedDate = DateTime.Now,
+                                ModifiedDate = DateTime.Now,
                                 LastUpdatedBy = currentUserId
                             });
                     }
@@ -942,6 +1516,112 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
+        //[HttpPost("save-mapping")]
+        //public async Task<IActionResult> SaveVolunteerMapping([FromBody] VolunteerMappingDto model)
+        //{
+        //    try
+        //    {
+        //        var aff = await GetCurrentAffiliate();
+        //        if (aff == null)
+        //            return Unauthorized(new { success = false, message = "Affiliate not found." });
+
+        //        if (model == null || model.VolunteerId <= 0)
+        //            return BadRequest(new { success = false, message = "Invalid mapping data received." });
+
+        //        var instituteIds = model.InstituteIds?
+        //            .Where(x => x > 0)
+        //            .Distinct()
+        //            .ToList()
+        //            ?? new List<int>();
+
+        //        var volunteer = await _context.Volunteers
+        //            .FirstOrDefaultAsync(v => v.Id == model.VolunteerId && v.AffiliateId == aff.UserID && v.IsActive && !v.IsDeleted);
+
+        //        if (volunteer == null)
+        //            return BadRequest(new { success = false, message = "Volunteer not found." });
+
+        //        var referralCode = await _context.WJ_ReferralCodes
+        //            .Where(x => x.UserID == aff.UserID)
+        //            .Select(x => x.ReferralCode)
+        //            .FirstOrDefaultAsync();
+
+        //        var affiliateSchoolIds = await _context.SchoolProfileDetails
+        //            .Where(x => x.referralcode == referralCode)
+        //            .Select(x => x.instituteid)
+        //            .Distinct()
+        //            .ToListAsync();
+
+        //        var invalidInstituteIds = instituteIds.Except(affiliateSchoolIds).ToList();
+        //        if (invalidInstituteIds.Any())
+        //            return BadRequest(new { success = false, message = "One or more selected schools do not belong to this affiliate." });
+
+        //        string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? aff.UserID.ToString();
+
+        //        // Existing mappings for this specific volunteer
+        //        var existingMappings = await _context.VolunteerInstituteMappings
+        //            .Where(m => m.VolunteerId == model.VolunteerId)
+        //            .ToListAsync();
+
+        //        // Soft delete old mappings that are no longer selected
+        //        foreach (var mapping in existingMappings)
+        //        {
+        //            if (!instituteIds.Contains(mapping.InstituteId))
+        //            {
+        //                mapping.IsDeleted = true;
+        //                mapping.IsActive = false;
+        //                mapping.ModifiedDate = DateTime.UtcNow;
+        //                mapping.LastUpdatedBy = currentUserId;
+        //            }
+        //        }
+
+        //        // Add or Reactivate selected mappings (Many-to-Many allowed, so no check for other volunteers)
+        //        foreach (var instituteId in instituteIds)
+        //        {
+        //            var existingMapping = existingMappings.FirstOrDefault(x => x.InstituteId == instituteId);
+
+        //            if (existingMapping != null)
+        //            {
+        //                existingMapping.IsDeleted = false;
+        //                existingMapping.IsActive = true;
+        //                existingMapping.ModifiedDate = DateTime.UtcNow;
+        //                existingMapping.LastUpdatedBy = currentUserId;
+        //            }
+        //            else
+        //            {
+        //                _context.VolunteerInstituteMappings.Add(
+        //                    new VolunteerInstituteMapping
+        //                    {
+        //                        VolunteerId = model.VolunteerId,
+        //                        InstituteId = instituteId,
+        //                        IsActive = true,
+        //                        IsDeleted = false,
+        //                        CreatedDate = DateTime.UtcNow,
+        //                        ModifiedDate = DateTime.UtcNow,
+        //                        LastUpdatedBy = currentUserId
+        //                    });
+        //            }
+        //        }
+
+        //        await _context.SaveChangesAsync();
+
+        //        return Ok(new
+        //        {
+        //            success = true,
+        //            message = "School mappings saved successfully.",
+        //            volunteerId = model.VolunteerId,
+        //            mappedSchools = instituteIds.Count
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            success = false,
+        //            message = "Error saving mappings.",
+        //            error = ex.InnerException?.Message ?? ex.Message
+        //        });
+        //    }
+        //}
 
         [HttpGet("my-assigned-schools")]
         public async Task<IActionResult> GetMyAssignedSchools()
@@ -1379,6 +2059,73 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, data = result });
         }
 
+        [HttpGet("admin/mapping-schools/{volunteerId}")]
+        public async Task<IActionResult> GetAdminVolunteerSchoolMapping(int volunteerId)
+        {
+            var volunteer = await _context.Volunteers
+                .FirstOrDefaultAsync(v => v.Id == volunteerId && v.IsActive && !v.IsDeleted);
+
+            if (volunteer == null)
+            {
+                return NotFound(new { success = false, message = "Volunteer not found." });
+            }
+
+            var allSchools = await _context.SchoolProfileDetails
+                .Select(x => new
+                {
+                    instituteId = x.instituteid,
+                    name = x.institute_name,
+                    pincode = x.pincode ?? ""
+                })
+                .OrderBy(x => x.name)
+                .ToListAsync();
+
+            // Get active mappings across all volunteers
+            var allActiveMappings = await (
+                from m in _context.VolunteerInstituteMappings
+                join v in _context.Volunteers on m.VolunteerId equals v.Id
+                where !m.IsDeleted && m.IsActive
+                select new { m.InstituteId, VolunteerName = v.FirstName + " " + v.LastName }
+            ).ToListAsync();
+
+            var schoolVolunteersDict = allActiveMappings
+                .GroupBy(x => x.InstituteId)
+                .ToDictionary(g => g.Key, g => string.Join(", ", g.Select(x => x.VolunteerName)));
+
+            var mappedSchoolIds = await _context.VolunteerInstituteMappings
+                .Where(m => m.VolunteerId == volunteerId && !m.IsDeleted && m.IsActive)
+                .Select(m => m.InstituteId)
+                .Distinct()
+                .ToListAsync();
+
+            var assignedSchools = allSchools
+                .Where(s => mappedSchoolIds.Contains(s.instituteId))
+                .Select(s => new {
+                    s.instituteId,
+                    s.name,
+                    s.pincode,
+                    assignedVolunteers = schoolVolunteersDict.ContainsKey(s.instituteId) ? schoolVolunteersDict[s.instituteId] : "None"
+                })
+                .ToList();
+
+            var unassignedSchools = allSchools
+                .Where(s => !mappedSchoolIds.Contains(s.instituteId))
+                .Select(s => new {
+                    s.instituteId,
+                    s.name,
+                    s.pincode,
+                    assignedVolunteers = schoolVolunteersDict.ContainsKey(s.instituteId) ? schoolVolunteersDict[s.instituteId] : "None"
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                success = true,
+                volunteerId = volunteer.Id,
+                assignedSchools,
+                unassignedSchools
+            });
+        }
     }
 
     public class VolunteerMappingDto

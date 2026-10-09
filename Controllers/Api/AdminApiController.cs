@@ -2236,6 +2236,19 @@ namespace HemFoundation.Controllers.Api
 
             try
             {
+                // 1. Database se log record aur school name fetch karein based on FilePath
+                var logRecord = await (from l in _context.BulkUploadLogs
+                                       join i in _context.WJ_Institutes on l.InstituteID equals i.InstituteID
+                                       where l.FilePath == filePath
+                                       select new
+                                       {
+                                           SchoolName = i.Name,
+                                           UploadType = l.UploadType,
+                                           OriginalFileName = l.FileName,
+                                           UploadedDate = l.UploadedDate
+                                       }).FirstOrDefaultAsync();
+
+                // 2. File bytes download karein central storage se
                 var fileResult = await _fileStorage.DownloadAsync(filePath);
 
                 if (fileResult == null ||
@@ -2249,11 +2262,30 @@ namespace HemFoundation.Controllers.Api
                     });
                 }
 
+                // 3. Custom File Name Generate karna: SchoolName + Type + FileName + UploadDate
+                string customFileName = fileResult.FileName; // Fallback
+
+                if (logRecord != null)
+                {
+                    // Sanitize school name and type to remove special characters/spaces for safe filename
+                    string safeSchool = System.Text.RegularExpressions.Regex.Replace(logRecord.SchoolName ?? "School", @"[^\w\s_-]", "").Replace(" ", "_");
+                    string safeType = System.Text.RegularExpressions.Regex.Replace(logRecord.UploadType ?? "Bulk", @"[^\w\s_-]", "").Replace(" ", "_");
+
+                    // Format Upload Date (e.g., 09-10-2026)
+                    string dateStr = logRecord.UploadedDate.ToString("dd-MM-yyyy");
+
+                    // Extract original file extension (e.g., .xlsx)
+                    string extension = Path.GetExtension(logRecord.OriginalFileName ?? filePath);
+                    if (string.IsNullOrEmpty(extension)) extension = ".xlsx";
+
+                    // Final Custom Name Format
+                    customFileName = $"{safeSchool}_{safeType}_{dateStr}{extension}";
+                }
+
                 return File(
                     fileResult.FileBytes,
-                    fileResult.ContentType ??
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    fileResult.FileName
+                    fileResult.ContentType ?? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    customFileName
                 );
             }
             catch (Exception ex)

@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using PuppeteerSharp;
 using PuppeteerSharp.Media;
 using System.Security.Claims;
+using PdfSharpCore.Pdf;
+using PdfSharpCore.Pdf.IO;
+using PdfSharpCore.Drawing;
 
 namespace HemFoundation.Controllers.Api
 {
@@ -16,11 +19,13 @@ namespace HemFoundation.Controllers.Api
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private static IConfiguration? _configuration;
 
-        public FinancialsApiController(ApplicationDbContext context, IWebHostEnvironment env)
+        public FinancialsApiController(ApplicationDbContext context, IWebHostEnvironment env, IConfiguration configuration)
         {
             _context = context;
             _env = env;
+            _configuration = configuration;
         }
 
         private async Task<long> GetAffiliateId()
@@ -1555,7 +1560,178 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, message = "Monthly expense bill status updated successfully." });
         }
 
-       
+      
+        [HttpGet("admin/affiliate-monthly-expenses")]
+        public async Task<IActionResult> GetAffiliateMonthlyExpenses([FromQuery] long billId)
+        {
+            try
+            {
+                var bill = await _context.MonthlyExpenseBills
+                    .FirstOrDefaultAsync(x => x.Id == billId && !x.IsDeleted);
+
+                if (bill == null)
+                {
+                    return NotFound(new { success = false, message = "Bill not found." });
+                }
+
+                if (!DateTime.TryParseExact(bill.MonthYear, "MMMM-yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime targetMonth))
+                {
+                    return BadRequest(new { success = false, message = "Invalid month format." });
+                }
+
+                int year = targetMonth.Year;
+                int month = targetMonth.Month;
+
+                var expenses = await _context.AffiliateExpenses
+                    .Where(x => x.AffiliateId == bill.AffiliateId && !x.IsDeleted &&
+                                x.ExpenseDate.Year == year && x.ExpenseDate.Month == month)
+                    .OrderBy(x => x.ExpenseDate)
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = new { bill, expenses } });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        private string GetCentralFileUrl(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                return string.Empty;
+
+            if (Uri.TryCreate(filePath, UriKind.Absolute, out _))
+                return filePath;
+
+            string baseUrl = _configuration["FileSettings:BaseUrl"] ?? string.Empty;
+            return $"{baseUrl.TrimEnd('/')}/{filePath.TrimStart('/')}";
+        }
+        [HttpGet("admin/download-merged-expense-pdf")]
+        public async Task<IActionResult> DownloadMergedExpensePdf([FromQuery] long billId)
+        {
+            try
+            {
+                var bill = await _context.MonthlyExpenseBills
+                    .FirstOrDefaultAsync(x => x.Id == billId && !x.IsDeleted);
+
+                if (bill == null)
+                {
+                    return NotFound(new { success = false, message = "Bill not found." });
+                }
+
+                // Affiliate ka naam fetch karna taaki filename mein use kar sakein
+                var affiliate = await _context.Users.FirstOrDefaultAsync(x => x.UserID == bill.AffiliateId);
+                string affiliateName = affiliate != null ? $"{affiliate.FirstName}_{affiliate.LastName}".Trim() : "Affiliate";
+                affiliateName = System.Text.RegularExpressions.Regex.Replace(affiliateName, @"[^\w\s_-]", "").Replace(" ", "_");
+
+                // Pehle Signed PDF check karenge, agar available na ho toh Generated PDF use karenge
+                string primaryPdfRelativePath = !string.IsNullOrEmpty(bill.SignedPdfUrl) ? bill.SignedPdfUrl : bill.GeneratedPdfUrl;
+
+                if (string.IsNullOrEmpty(primaryPdfRelativePath))
+                {
+                    return NotFound(new { success = false, message = "No bill PDF found for merging." });
+                }
+
+                if (!DateTime.TryParseExact(bill.MonthYear, "MMMM-yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime targetMonth))
+                {
+                    return BadRequest(new { success = false, message = "Invalid month format." });
+                }
+
+                var expenses = await _context.AffiliateExpenses
+                    .Where(x => x.AffiliateId == bill.AffiliateId && !x.IsDeleted &&
+                                x.ExpenseDate.Year == targetMonth.Year && x.ExpenseDate.Month == targetMonth.Month)
+                    .ToListAsync();
+
+                using var outputDocument = new PdfSharpCore.Pdf.PdfDocument();
+                using var httpClient = new HttpClient();
+
+                // 1. Primary PDF (Signed PDF / Generated PDF) ko central URL se download karke add karein
+                string primaryPdfUrl = GetCentralFileUrl(primaryPdfRelativePath);
+                if (!string.IsNullOrEmpty(primaryPdfUrl))
+                {
+                    try
+                    {
+                        byte[] primaryBytes = await httpClient.GetByteArrayAsync(primaryPdfUrl);
+                        using var primaryStream = new MemoryStream(primaryBytes);
+                        using var inputDocument = PdfSharpCore.Pdf.IO.PdfReader.Open(primaryStream, PdfSharpCore.Pdf.IO.PdfDocumentOpenMode.Import);
+                        foreach (var page in inputDocument.Pages)
+                        {
+                            outputDocument.AddPage(page);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to load primary PDF from URL {primaryPdfUrl}: {ex.Message}");
+                    }
+                }
+
+                // 2. Uske baad saare individual expense receipts (.pdf, .jpg, .png, .jpeg, .webp) ko append karein
+                foreach (var exp in expenses)
+                {
+                    if (!string.IsNullOrEmpty(exp.ReceiptPath))
+                    {
+                        string receiptUrl = GetCentralFileUrl(exp.ReceiptPath);
+                        if (!string.IsNullOrEmpty(receiptUrl))
+                        {
+                            try
+                            {
+                                byte[] fileBytes = await httpClient.GetByteArrayAsync(receiptUrl);
+                                string ext = Path.GetExtension(exp.ReceiptPath).ToLower();
+
+                                if (ext == ".pdf")
+                                {
+                                    using var receiptStream = new MemoryStream(fileBytes);
+                                    using var receiptPdf = PdfSharpCore.Pdf.IO.PdfReader.Open(receiptStream, PdfSharpCore.Pdf.IO.PdfDocumentOpenMode.Import);
+                                    foreach (var page in receiptPdf.Pages)
+                                    {
+                                        outputDocument.AddPage(page);
+                                    }
+                                }
+                                else if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".webp")
+                                {
+                                    var page = outputDocument.AddPage();
+                                    using var gfx = PdfSharpCore.Drawing.XGraphics.FromPdfPage(page);
+                                    using var imageStream = new MemoryStream(fileBytes);
+                                    using var image = PdfSharpCore.Drawing.XImage.FromStream(() => imageStream);
+
+                                    double width = page.Width.Point - 40;
+                                    double height = (image.PixelHeight * width) / image.PixelWidth;
+                                    double maxHeight = page.Height.Point - 40;
+
+                                    if (height > maxHeight)
+                                    {
+                                        height = maxHeight;
+                                        width = (image.PixelWidth * height) / image.PixelHeight;
+                                    }
+
+                                    gfx.DrawImage(image, 20, 20, width, height);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Failed to load receipt from URL {receiptUrl}: {ex.Message}");
+                            }
+                        }
+                    }
+                }
+
+                using var finalStream = new MemoryStream();
+                outputDocument.Save(finalStream, false);
+                byte[] bytes = finalStream.ToArray();
+                string currentTimestamp = DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss");
+                string downloadableFileName = $"{affiliateName}_{bill.MonthYear}_{currentTimestamp}.pdf";
+
+                // Header mein filename set karne ke liye:
+                Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{downloadableFileName}\"");
+
+                return File(bytes, "application/pdf", downloadableFileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
     }
 
     public class OrganizationDto
