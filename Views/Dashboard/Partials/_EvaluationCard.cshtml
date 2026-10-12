@@ -1,0 +1,389 @@
+﻿<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" id="ehCard">
+
+    <div class="card-header bg-white border-bottom px-3 px-md-4 py-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex align-items-center gap-3">
+                <span class="bg-primary-subtle text-primary rounded-3 p-2 lh-1 fs-5"><i class="bi bi-clock-history"></i></span>
+                <div>
+                    <h6 class="fw-bold mb-0" style="color: rgb(52 96 214 / 94%);">Evaluated Project History</h6>
+                    <small class="text-muted">History of projects evaluated for your school</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold shadow-sm" onclick="toggleChartView()">
+                    <i class="bi bi-bar-chart-fill me-1" id="chartBtnIcon"></i> <span id="chartBtnText">View Graph</span>
+                </button>
+                <span class="badge rounded-pill px-3 py-2 text-white" style="background-color: rgb(52 96 214 / 94%);">School Evaluations</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body p-3 p-md-4">
+
+        <!-- Quick stats -->
+        <div class="row g-2 g-md-3 mb-3">
+            <div class="col-4">
+                <div class="bg-primary-subtle rounded-3 px-3 py-2 h-100">
+                    <div class="fs-5 fw-bold text-primary-emphasis lh-1" id="ehStatTotal">0</div>
+                    <small class="text-primary-emphasis opacity-75"><i class="bi bi-journal-check me-1"></i>Evaluated</small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="bg-secondary-subtle rounded-3 px-3 py-2 h-100">
+                    <div class="fs-5 fw-bold text-secondary-emphasis lh-1" id="ehStatAvg">0</div>
+                    <small class="text-secondary-emphasis opacity-75"><i class="bi bi-graph-up-arrow me-1"></i>Avg marks</small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="bg-warning-subtle rounded-3 px-3 py-2 h-100">
+                    <div class="fs-5 fw-bold text-warning-emphasis lh-1" id="ehStatMax">0</div>
+                    <small class="text-warning-emphasis opacity-75"><i class="bi bi-trophy me-1"></i>Highest</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph Section (hidden by default) -->
+        <div id="chartSection" class="d-none mb-3">
+            <div class="row g-3">
+
+                <!-- Left: status summary (progress bars) -->
+                <div class="col-12 col-lg-4">
+                    <div class="border rounded-3 p-3 h-100 bg-light">
+                        <h6 class="fw-bold small mb-1"><i class="bi bi-pie-chart me-1 text-primary"></i>Status Summary</h6>
+                        <div id="statusBars"></div>
+                    </div>
+                </div>
+
+                <!-- Right: marks per project -->
+                <div class="col-12 col-lg-8">
+                    <div class="border rounded-3 p-3 h-100 bg-light">
+                        <h6 class="fw-bold small mb-1"><i class="bi bi-bar-chart-line me-1 text-primary"></i>Marks per Project</h6>
+                        <p class="text-muted small mb-2" id="chartHint">Latest evaluated projects (old → new).</p>
+                        <div style="height: 240px;"><canvas id="evaluationBarChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive rounded-3 border">
+            <table class="table table-hover table-sm align-middle mb-0 small" id="schoolEvaluatedTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3 d-none d-md-table-cell" style="width:50px">#</th>
+                        <th class="ps-3 ps-md-0">ProjectNumber</th>
+                        <th class="d-none d-md-table-cell">Project Type</th>
+                        <th>Status</th>
+                        <th class="text-center">Marks</th>
+                        <th>Evaluate Remarks</th>
+                        <th class="d-none d-lg-table-cell pe-3">Evaluated On</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 mt-3">
+            <div class="text-muted small" id="schoolPaginationInfo">Showing 0 to 0 of 0 entries</div>
+            <nav aria-label="School Evaluations Pagination">
+                <ul class="pagination pagination-sm flex-wrap justify-content-center mb-0" id="schoolPaginationNav"></ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    let schoolAllData = [];
+    let schoolCurrentPage = 1;
+    let schoolPageSize = 5;
+    let myEvaluationChart = null;
+    let isChartVisible = false;
+    const CHART_MAX_BARS = 10;
+
+    const projectTypeMap = {
+        "individual-projects": "Individual Project",
+        "group-pbl": "Group Project",
+        "family-projects": "Family Project",
+        "sel-projects": "SEL Project"
+    };
+
+    const statusMap = {
+        green: { text: "Green", hex: "#10b981", badge: "bg-success-subtle text-success-emphasis", dot: "text-success", style: "" },
+        blue: { text: "Blue", hex: "#3b82f6", badge: "bg-primary-subtle text-primary-emphasis", dot: "text-primary", style: "" },
+        yellow: { text: "Yellow", hex: "#eab308", badge: "bg-warning-subtle text-warning-emphasis", dot: "text-warning", style: "" },
+        orange: { text: "Orange", hex: "#f97316", badge: "", dot: "", style: "background:#fed7aa;color:#92400e;" },
+        red: { text: "Red", hex: "#ef4444", badge: "bg-danger-subtle text-danger-emphasis", dot: "text-danger", style: "" },
+        pending: { text: "Pending", hex: "#9ca3af", badge: "bg-secondary-subtle text-secondary-emphasis", dot: "text-secondary", style: "" }
+    };
+
+    const statusKey = (s) => {
+        const k = (s || "pending").toString().trim().toLowerCase();
+        return statusMap[k] ? k : "pending";
+    };
+
+    function escapeHtml(text) {
+        if (text === null || text === undefined) return "";
+        return String(text).replace(/[&<>"']/g, c => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        }[c]));
+    }
+
+    function statusBadge(status) {
+        const s = statusMap[statusKey(status)];
+        return `<span class="badge rounded-pill ${s.badge} d-inline-flex align-items-center gap-2 fw-semibold" style="${s.style}">
+                            <span class="spinner-grow ${s.dot}" style="width:.5rem;height:.5rem;" aria-hidden="true"></span>${s.text}
+                        </span>`;
+    }
+
+    function updateStats() {
+        const marks = schoolAllData.map(d => Number(d.marks) || 0);
+        const total = marks.length;
+        const avg = total ? marks.reduce((a, b) => a + b, 0) / total : 0;
+        document.getElementById("ehStatTotal").textContent = total;
+        document.getElementById("ehStatAvg").textContent = avg.toFixed(Number.isInteger(avg) ? 0 : 1);
+        document.getElementById("ehStatMax").textContent = total ? Math.max(...marks) : 0;
+    }
+
+    function loadHistory() {
+        let apiEndpoint = window.evaluationApiUrl || "/api/project-evaluations/school-history";
+
+        fetch(apiEndpoint)
+            .then(res => res.json())
+            .then(res => {
+                schoolAllData = (res.success && res.data) ? res.data : [];
+                schoolCurrentPage = 1;
+                updateStats();
+                renderTable();
+                if (isChartVisible) renderGraph();
+            })
+            .catch(err => {
+                console.error("Error loading evaluation history:", err);
+            });
+    }
+
+    /* ---------------- Graph ---------------- */
+    function toggleChartView() {
+        isChartVisible = !isChartVisible;
+        const section = document.getElementById("chartSection");
+        const btnText = document.getElementById("chartBtnText");
+        const btnIcon = document.getElementById("chartBtnIcon");
+
+        if (isChartVisible) {
+            section.classList.remove("d-none");
+            section.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }],
+                { duration: 350, easing: "ease-out" });
+            btnText.textContent = "Hide Graph";
+            btnIcon.className = "bi bi-x-lg me-1";
+            renderGraph();
+        } else {
+            section.classList.add("d-none");
+            btnText.textContent = "View Graph";
+            btnIcon.className = "bi bi-bar-chart-fill me-1";
+        }
+    }
+
+    function renderGraph() {
+        renderStatusBars();
+        renderMarksChart();
+    }
+
+    // Left side: simple progress bars — easiest to understand
+    function renderStatusBars() {
+        const box = document.getElementById("statusBars");
+        const total = schoolAllData.length;
+
+        if (!total) {
+            box.innerHTML = `<div class="text-muted small text-center py-4">Koi data nahi hai</div>`;
+            return;
+        }
+
+        const counts = {};
+        schoolAllData.forEach(d => { const k = statusKey(d.statusColor); counts[k] = (counts[k] || 0) + 1; });
+
+        box.innerHTML = Object.keys(statusMap).filter(k => counts[k]).map(k => {
+            const s = statusMap[k];
+            const pct = Math.round((counts[k] / total) * 100);
+            return `<div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center small mb-1">
+                                <span class="fw-semibold d-inline-flex align-items-center gap-2">
+                                    <span class="rounded-circle d-inline-block" style="width:10px;height:10px;background:${s.hex};"></span>${s.text}
+                                </span>
+                                <span class="text-muted">${counts[k]} project${counts[k] > 1 ? "s" : ""} <span class="fw-semibold text-dark">(${pct}%)</span></span>
+                            </div>
+                            <div class="progress" style="height:8px;">
+                                <div class="progress-bar rounded-pill" role="progressbar" style="width:0%;background:${s.hex};" data-w="${pct}"></div>
+                            </div>
+                        </div>`;
+        }).join("") + `<div class="border-top pt-2 small text-muted">Total <span class="fw-bold text-dark">${total}</span> evaluations</div>`;
+
+        setTimeout(() => box.querySelectorAll(".progress-bar").forEach(b => b.style.width = b.dataset.w + "%"), 60);
+    }
+
+    function renderMarksChart() {
+        const canvas = document.getElementById("evaluationBarChart");
+        if (myEvaluationChart) { myEvaluationChart.destroy(); myEvaluationChart = null; }
+        if (!schoolAllData.length) return;
+
+        const allMarks = schoolAllData.map(d => Number(d.marks) || 0);
+        const avg = allMarks.reduce((a, b) => a + b, 0) / allMarks.length;
+
+        // oldest -> newest, keep latest N
+        const sorted = [...schoolAllData].sort((a, b) => new Date(a.evaluatedDate || 0) - new Date(b.evaluatedDate || 0));
+        const items = sorted.slice(-CHART_MAX_BARS);
+
+        document.getElementById("chartHint").textContent =
+            (schoolAllData.length > CHART_MAX_BARS ? `Latest ${CHART_MAX_BARS} evaluated projects` : "All evaluated projects") +
+            " (old → new).";
+
+        const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit" }) : "-";
+
+        myEvaluationChart = new Chart(canvas.getContext("2d"), {
+            data: {
+                labels: items.map(d => "#" + d.projectID),
+                datasets: [
+                    {
+                        type: "bar",
+                        label: "Marks",
+                        data: items.map(d => Number(d.marks) || 0),
+                        backgroundColor: items.map(d => statusMap[statusKey(d.statusColor)].hex + "cc"),
+                        borderColor: items.map(d => statusMap[statusKey(d.statusColor)].hex),
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        maxBarThickness: 46
+                    },
+                    {
+                        type: "line",
+                        label: `Average (${avg.toFixed(1)})`,
+                        data: items.map(() => avg),
+                        borderColor: "#64748b",
+                        borderDash: [6, 6],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 800, easing: "easeOutQuart" },
+                plugins: {
+                    legend: {
+                        position: "top",
+                        align: "end",
+                        labels: { usePointStyle: true, boxWidth: 8, filter: (i) => i.datasetIndex === 1 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: (ctx) => "Project " + ctx[0].label,
+                            label: (ctx) => ctx.datasetIndex === 0 ? ` Marks: ${ctx.parsed.y}` : ` ${ctx.dataset.label}`,
+                            afterLabel: (ctx) => {
+                                if (ctx.datasetIndex !== 0) return "";
+                                const d = items[ctx.dataIndex];
+                                return [
+                                    ` Status: ${statusMap[statusKey(d.statusColor)].text}`,
+                                    ` Type: ${projectTypeMap[(d.projectType || "").toLowerCase()] || d.projectType || "-"}`,
+                                    ` Date: ${fmtDate(d.evaluatedDate)}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, title: { display: true, text: "Project Number", color: "#64748b", font: { size: 11 } } },
+                    y: { beginAtZero: true, grace: "10%", title: { display: true, text: "Marks", color: "#64748b", font: { size: 11 } } }
+                }
+            }
+        });
+    }
+
+    /* ---------------- Table ---------------- */
+    function renderTable() {
+        const tbody = document.querySelector("#schoolEvaluatedTable tbody");
+        if (!tbody) return;
+
+        if (schoolAllData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-5">
+                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                        <div class="fw-semibold">No evaluation history found</div>
+                        <small>Evaluated projects will appear here.</small></td></tr>`;
+            document.getElementById("schoolPaginationInfo").textContent = "Showing 0 entries";
+            document.getElementById("schoolPaginationNav").innerHTML = "";
+            return;
+        }
+
+        let total = schoolAllData.length;
+        let totalPages = Math.ceil(total / schoolPageSize);
+        if (schoolCurrentPage > totalPages) schoolCurrentPage = totalPages;
+
+        let start = (schoolCurrentPage - 1) * schoolPageSize;
+        let end = Math.min(start + schoolPageSize, total);
+
+        tbody.innerHTML = schoolAllData.slice(start, end).map((item, i) => {
+            const type = projectTypeMap[(item.projectType || "").toLowerCase()] || item.projectType || "-";
+            const date = item.evaluatedDate
+                ? new Date(item.evaluatedDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit" })
+                : "-";
+            const desc = item.description || "-";
+
+            return `<tr>
+                        <td class="ps-3 text-muted fw-semibold d-none d-md-table-cell">${start + i + 1}</td>
+                        <td class="ps-3 ps-md-0">
+                            <span class="badge bg-light text-dark border">#${escapeHtml(item.projectID)}</span>
+                            <div class="text-muted d-md-none mt-1">${escapeHtml(type)}</div>
+                            <div class="text-muted d-lg-none"><i class="bi bi-calendar3 me-1"></i>${date}</div>
+                        </td>
+                        <td class="d-none d-md-table-cell">
+                            <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis border border-primary-subtle">${escapeHtml(type)}</span>
+                        </td>
+                        <td>${statusBadge(item.statusColor)}</td>
+                        <td class="text-center">
+                            <span class="badge text-bg-dark rounded-pill"><i class="bi bi-star-fill text-warning me-1"></i>${escapeHtml(item.marks ?? 0)}</span>
+                        </td>
+                        <td>
+                            <span class="text-muted text-truncate d-block" style="max-width:170px; cursor:pointer;" title="${escapeHtml(desc)}">${escapeHtml(desc)}</span>
+                        </td>
+                        <td class="d-none d-lg-table-cell pe-3 text-muted text-nowrap"><i class="bi bi-calendar3 me-1"></i>${date}</td>
+                    </tr>`;
+        }).join("");
+
+        document.getElementById("schoolPaginationInfo").textContent = `Showing ${start + 1} to ${end} of ${total} entries`;
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        const cur = schoolCurrentPage;
+        const pages = [];
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || Math.abs(i - cur) <= 1) pages.push(i);
+            else if (pages[pages.length - 1] !== "...") pages.push("...");
+        }
+
+        let h = `<li class="page-item ${cur === 1 ? "disabled" : ""}"><a class="page-link" href="#" data-page="${cur - 1}">Prev</a></li>`;
+        pages.forEach(p => {
+            h += p === "..."
+                ? `<li class="page-item disabled"><span class="page-link">…</span></li>`
+                : `<li class="page-item ${p === cur ? "active" : ""}"><a class="page-link" href="#" data-page="${p}">${p}</a></li>`;
+        });
+        h += `<li class="page-item ${cur === totalPages ? "disabled" : ""}"><a class="page-link" href="#" data-page="${cur + 1}">Next</a></li>`;
+        document.getElementById("schoolPaginationNav").innerHTML = h;
+    }
+
+    document.addEventListener("click", function(e) {
+        const navClick = e.target.closest("#schoolPaginationNav a[data-page]");
+        if (navClick) {
+            e.preventDefault();
+            const page = parseInt(navClick.getAttribute("data-page"), 10);
+            const totalPages = Math.ceil(schoolAllData.length / schoolPageSize);
+            if (page < 1 || page > totalPages || page === schoolCurrentPage) return;
+            schoolCurrentPage = page;
+            renderTable();
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        loadHistory();
+    });
+</script>

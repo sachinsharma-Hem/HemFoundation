@@ -1,5 +1,5 @@
 ﻿@using System
-
+@using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
 
 @{
@@ -478,6 +478,11 @@
             color: #78350f;
         }
 
+        .status-badge.blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
     .status-dot {
         width: 8px;
         height: 8px;
@@ -499,6 +504,10 @@
 
     .status-badge.yellow .status-dot {
         background: #eab308;
+    }
+
+    .status-badge.blue .status-dot {
+        background: #3b82f6;
     }
 
     .status-badge.pending .status-dot {
@@ -564,7 +573,7 @@
 
     .color-option {
         text-align: center;
-        padding: 1rem;
+        padding: 0.75rem 0.5rem;
         border-radius: 10px;
         border: 2px solid #e5e7eb;
         cursor: pointer;
@@ -582,10 +591,10 @@
         }
 
         .color-option .circle {
-            width: 50px;
-            height: 50px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
-            margin: 0 auto 0.75rem;
+            margin: 0 auto 0.5rem;
         }
 
     .marks-container {
@@ -716,244 +725,6 @@
         color: #475569;
         white-space: nowrap;
     }
-    /* =========================================
-   MOBILE HEADER FIX
-   ========================================= */
-
-@@media (max-width: 768px) {
-
-    .header-section {
-        width: 100%;
-        max-width: 100%;
-        padding: 0.85rem;
-        overflow: hidden;
-    }
-
-    .header-section .row {
-        margin: 0;
-    }
-
-    .header-section .col-md-6 {
-        padding-left: 0;
-        padding-right: 0;
-        width: 100%;
-    }
-
-    /* Title */
-    .header-section h2 {
-        font-size: 1.05rem;
-        margin-bottom: 0.15rem;
-    }
-
-    .header-section .text-muted {
-        font-size: 0.7rem;
-    }
-
-    /* Right section */
-    .dashboard-header-right {
-        width: 100%;
-    }
-
-    /* IMPORTANT:
-       Desktop = nowrap
-       Mobile = wrap
-    */
-    .filters-container {
-        width: 100%;
-        display: flex;
-        flex-wrap: wrap !important;
-        justify-content: flex-start !important;
-        align-items: center;
-        gap: 6px;
-        margin-top: 10px;
-        overflow: hidden;
-    }
-
-    /* All Time stats */
-    .badge-container {
-        width: 100%;
-        max-width: 100%;
-        display: grid !important;
-
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-
-        gap: 6px;
-        padding: 0;
-        margin: 0;
-    }
-
-    /* All Time label */
-    .badge-container .all-time-label,
-    .badge-container > span:first-child {
-        grid-column: 1 / -1;
-
-        font-size: 0.7rem !important;
-        font-weight: 700 !important;
-
-        color: #475569;
-
-        margin-bottom: 1px;
-    }
-
-    /* Individual stats */
-    .badge-container .badge {
-        width: 100%;
-        min-width: 0;
-        max-width: 100%;
-
-        height: 32px;
-
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-        gap: 4px;
-
-        padding: 5px 8px;
-
-        font-size: 0.65rem;
-        white-space: nowrap;
-        overflow: hidden;
-    }
-
-    .badge-container .badge span {
-        font-size: 0.9rem;
-        font-weight: 800;
-        flex-shrink: 0;
-    }
-
-    /* Filters */
-    #filterMonth {
-        width: calc(50% - 3px) !important;
-        min-width: 0;
-        flex: 1;
-    }
-
-    #filterYear {
-        width: calc(25% - 3px) !important;
-        min-width: 70px;
-        flex: 1;
-    }
-
-    .btn-analytics {
-        width: calc(25% - 3px);
-        min-width: 90px;
-
-        height: 34px;
-        padding: 0 8px;
-
-        font-size: 0.7rem;
-    }
-        /* =========================================
-       MOBILE HEADER FIX
-       ========================================= */
-        @@media (max-width: 768px) {
-
-            .header-section {
-                width: 100%;
-                max-width: 100%;
-                padding: 0.85rem;
-                overflow: hidden;
-            }
-
-                .header-section .row {
-                    margin: 0;
-                }
-
-                .header-section .col-md-6 {
-                    padding-left: 0;
-                    padding-right: 0;
-                    width: 100%;
-                }
-                /* Title */
-                .header-section h2 {
-                    font-size: 1.05rem;
-                    margin-bottom: 0.15rem;
-                }
-
-                .header-section .text-muted {
-                    font-size: 0.7rem;
-                }
-            /* Right section */
-            .dashboard-header-right {
-                width: 100%;
-            }
-            /* IMPORTANT:
-           Desktop = nowrap
-           Mobile = wrap
-        */
-            .filters-container {
-                width: 100%;
-                display: flex;
-                flex-wrap: wrap !important;
-                justify-content: flex-start !important;
-                align-items: center;
-                gap: 6px;
-                margin-top: 10px;
-                overflow: hidden;
-            }
-            /* All Time stats */
-            .badge-container {
-                width: 100%;
-                max-width: 100%;
-                display: grid !important;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 6px;
-                padding: 0;
-                margin: 0;
-            }
-                /* All Time label */
-                .badge-container .all-time-label,
-                .badge-container > span:first-child {
-                    grid-column: 1 / -1;
-                    font-size: 0.7rem !important;
-                    font-weight: 700 !important;
-                    color: #475569;
-                    margin-bottom: 1px;
-                }
-                /* Individual stats */
-                .badge-container .badge {
-                    width: 100%;
-                    min-width: 0;
-                    max-width: 100%;
-                    height: 32px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    gap: 4px;
-                    padding: 5px 8px;
-                    font-size: 0.65rem;
-                    white-space: nowrap;
-                    overflow: hidden;
-                }
-
-                    .badge-container .badge span {
-                        font-size: 0.9rem;
-                        font-weight: 800;
-                        flex-shrink: 0;
-                    }
-            /* Filters */
-            #filterMonth {
-                width: calc(50% - 3px) !important;
-                min-width: 0;
-                flex: 1;
-            }
-
-            #filterYear {
-                width: calc(25% - 3px) !important;
-                min-width: 70px;
-                flex: 1;
-            }
-
-            .btn-analytics {
-                width: calc(25% - 3px);
-                min-width: 90px;
-                height: 34px;
-                padding: 0 8px;
-                font-size: 0.7rem;
-            }
-        }
-}
 </style>
 
 <div class="container-fluid py-4">
@@ -975,9 +746,6 @@
                 <div class="filters-container justify-content-md-end">
 
                     <div class="badge-container">
-
-                        
-
                         <span class="badge bg-primary">
                             SEL Projects
                             <span id="all-sel">0</span>
@@ -997,7 +765,6 @@
                             Group Projects
                             <span id="all-group">0</span>
                         </span>
-
                     </div>
 
                     <!-- Month -->
@@ -1005,7 +772,6 @@
                             class="form-select form-select-sm"
                             onchange="onFilterChange()"
                             style="width: 120px;">
-
                         <option value="">All Months</option>
                         <option value="1">January</option>
                         <option value="2">February</option>
@@ -1019,7 +785,6 @@
                         <option value="10">October</option>
                         <option value="11">November</option>
                         <option value="12">December</option>
-
                     </select>
 
                     <!-- Year -->
@@ -1027,21 +792,17 @@
                             class="form-select form-select-sm"
                             onchange="onFilterChange()"
                             style="width: 90px;">
-
                         <option value="2026">2026</option>
                         <option value="2025">2025</option>
                         <option value="2024">2024</option>
-
                     </select>
 
                     <!-- Analytics -->
                     <button type="button"
                             class="btn-analytics"
                             onclick="toggleAnalytics()">
-
                         <i class="bi bi-bar-chart-fill me-1"></i>
                         Analytics
-
                     </button>
 
                 </div>
@@ -1049,6 +810,7 @@
 
         </div>
     </div>
+
     <!-- Metrics Cards -->
     <div class="metrics-grid">
         <div class="metric-card primary">
@@ -1081,8 +843,6 @@
             <a href="#" class="metric-link eval-card" data-type="group-pbl"><i class="bi bi-arrow-right"></i> View Details</a>
         </div>
     </div>
-
-
 
     <!-- Projects Inspection Section -->
     <div class="inspection-card" id="inspection-section" style="display:none;">
@@ -1175,34 +935,48 @@
                 <input type="hidden" id="modalInstituteId" />
                 <input type="hidden" id="modalCourseName" />
                 <input type="hidden" id="selectedColor" value="Green" />
-                <input type="hidden" id="selectedMarks" value="1" />
+                <input type="hidden" id="selectedMarks" value="3" />
 
                 <!-- Media Preview -->
                 <div id="media-preview-container" class="media-preview" style="display:none;"></div>
 
-                <!-- Status Color Selection -->
+                <!-- Status Color Selection (5 Colors) -->
                 <div class="mb-4">
                     <label class="form-label fw-bold">Select Evaluation Status:</label>
                     <div class="row g-2">
-                        <div class="col-4">
+                        <div class="col" style="flex: 0 0 20%; max-width: 20%;">
                             <div class="color-option" data-color="Red" onclick="selectColor('Red')" style="background: #fee2e2;">
                                 <div class="circle" style="background: #ef4444;"></div>
-                                <div style="font-weight: 600; color: #991b1b;">Red</div>
-                                <div style="font-size: 0.75rem; color: #7f1d1d;">Needs Work</div>
+                                <div style="font-weight: 600; color: #991b1b; font-size: 0.75rem;">Red</div>
+                                <div style="font-size: 0.65rem; color: #7f1d1d;">0 Marks</div>
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col" style="flex: 0 0 20%; max-width: 20%;">
                             <div class="color-option" data-color="Orange" onclick="selectColor('Orange')" style="background: #fed7aa;">
                                 <div class="circle" style="background: #f59e0b;"></div>
-                                <div style="font-weight: 600; color: #92400e;">Orange</div>
-                                <div style="font-size: 0.75rem; color: #78350f;">In Progress</div>
+                                <div style="font-weight: 600; color: #92400e; font-size: 0.75rem;">Orange</div>
+                                <div style="font-size: 0.65rem; color: #78350f;">2 Marks</div>
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col" style="flex: 0 0 20%; max-width: 20%;">
+                            <div class="color-option" data-color="Blue" onclick="selectColor('Blue')" style="background: #dbeafe;">
+                                <div class="circle" style="background: #3b82f6;"></div>
+                                <div style="font-weight: 600; color: #1e40af; font-size: 0.75rem;">Blue</div>
+                                <div style="font-size: 0.65rem; color: #1e3a8a;">2 Marks</div>
+                            </div>
+                        </div>
+                        <div class="col" style="flex: 0 0 20%; max-width: 20%;">
+                            <div class="color-option" data-color="Yellow" onclick="selectColor('Yellow')" style="background: #fef3c7;">
+                                <div class="circle" style="background: #eab308;"></div>
+                                <div style="font-weight: 600; color: #78350f; font-size: 0.75rem;">Yellow</div>
+                                <div style="font-size: 0.65rem; color: #451a03;">3 Marks</div>
+                            </div>
+                        </div>
+                        <div class="col" style="flex: 0 0 20%; max-width: 20%;">
                             <div class="color-option selected" data-color="Green" onclick="selectColor('Green')" style="background: #d1fae5;">
                                 <div class="circle" style="background: #10b981;"></div>
-                                <div style="font-weight: 600; color: #065f46;">Green</div>
-                                <div style="font-size: 0.75rem; color: #047857;">Excellent</div>
+                                <div style="font-weight: 600; color: #065f46; font-size: 0.75rem;">Green</div>
+                                <div style="font-size: 0.65rem; color: #047857;">3 Marks</div>
                             </div>
                         </div>
                     </div>
@@ -1250,7 +1024,6 @@
             return fileBaseUrl.replace(/\/+$/, '') + '/' + cleanPath;
         }
 
-
         let currentType = "";
         let currentPage = 1;
         let pageSize = 10;
@@ -1275,12 +1048,10 @@
             var modal = new bootstrap.Modal(document.getElementById('analyticsModal'));
             modal.show();
 
-            // Load the analytics partial view from controller action
             fetch('/ProjectEvaluation/GetAnalyticsPartial')
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('analytics-content').innerHTML = html;
-                    // Initialize charts after content is loaded
                     setTimeout(initializeAnalyticsCharts, 150);
                 })
                 .catch(error => {
@@ -1290,21 +1061,17 @@
         }
 
         function initializeAnalyticsCharts() {
-            // This function will be called after the partial is loaded
-            // It will initialize charts using the Chart.js library
             if (typeof Chart === 'undefined') {
                 console.warn('Chart.js not loaded yet');
                 return;
             }
 
-            // Fetch analytics data
             fetch('/api/project-evaluations/dashboard-counts')
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
                         let counts = data.data.filtered;
 
-                        // Project Submission Split
                         const submissionCtx = document.getElementById('submissionSplitChart')?.getContext('2d');
                         if (submissionCtx) {
                             new Chart(submissionCtx, {
@@ -1322,7 +1089,6 @@
                             });
                         }
 
-                        // Evaluation Status
                         const statusCtx = document.getElementById('evaluationStatusChart')?.getContext('2d');
                         if (statusCtx) {
                             new Chart(statusCtx, {
@@ -1331,29 +1097,29 @@
                                     labels: ['Individual', 'Family', 'Group', 'SEL'],
                                     datasets: [
                                         { label: 'Green', data: [Math.floor(counts.individualProjects * 0.65), Math.floor(counts.familyProjects * 0.60), Math.floor(counts.groupPbl * 0.70), Math.floor(counts.totalSelProjects * 0.55)], backgroundColor: '#10b981', borderRadius: 4 },
-                                        { label: 'Orange', data: [Math.floor(counts.individualProjects * 0.20), Math.floor(counts.familyProjects * 0.25), Math.floor(counts.groupPbl * 0.15), Math.floor(counts.totalSelProjects * 0.25)], backgroundColor: '#f59e0b', borderRadius: 4 },
-                                        { label: 'Red', data: [Math.floor(counts.individualProjects * 0.10), Math.floor(counts.familyProjects * 0.10), Math.floor(counts.groupPbl * 0.10), Math.floor(counts.totalSelProjects * 0.15)], backgroundColor: '#ef4444', borderRadius: 4 },
-                                        { label: 'Pending', data: [Math.floor(counts.individualProjects * 0.05), Math.floor(counts.familyProjects * 0.05), Math.floor(counts.groupPbl * 0.05), Math.floor(counts.totalSelProjects * 0.05)], backgroundColor: '#d1d5db', borderRadius: 4 }
+                                        { label: 'Yellow', data: [Math.floor(counts.individualProjects * 0.10), Math.floor(counts.familyProjects * 0.10), Math.floor(counts.groupPbl * 0.10), Math.floor(counts.totalSelProjects * 0.15)], backgroundColor: '#eab308', borderRadius: 4 },
+                                        { label: 'Blue', data: [Math.floor(counts.individualProjects * 0.05), Math.floor(counts.familyProjects * 0.05), Math.floor(counts.groupPbl * 0.05), Math.floor(counts.totalSelProjects * 0.05)], backgroundColor: '#3b82f6', borderRadius: 4 },
+                                        { label: 'Orange', data: [Math.floor(counts.individualProjects * 0.10), Math.floor(counts.familyProjects * 0.15), Math.floor(counts.groupPbl * 0.10), Math.floor(counts.totalSelProjects * 0.15)], backgroundColor: '#f59e0b', borderRadius: 4 },
+                                        { label: 'Red', data: [Math.floor(counts.individualProjects * 0.05), Math.floor(counts.familyProjects * 0.05), Math.floor(counts.groupPbl * 0.05), Math.floor(counts.totalSelProjects * 0.05)], backgroundColor: '#ef4444', borderRadius: 4 }
                                     ]
                                 },
                                 options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#e5e7eb' } } }, plugins: { legend: { display: false } } }
                             });
                         }
 
-                        // Overall Status
                         const overallCtx = document.getElementById('overallStatusChart')?.getContext('2d');
                         if (overallCtx) {
                             let total = counts.individualProjects + counts.familyProjects + counts.groupPbl + counts.totalSelProjects;
-                            let excellent = Math.floor(total * 0.65);
-                            let good = Math.floor(total * 0.25);
-                            let needsWork = total - excellent - good;
+                            let greenYellow = Math.floor(total * 0.75);
+                            let orangeBlue = Math.floor(total * 0.20);
+                            let red = total - greenYellow - orangeBlue;
 
                             new Chart(overallCtx, {
                                 type: 'doughnut',
                                 data: {
-                                    labels: ['Excellent', 'Good', 'Needs Work'],
+                                    labels: ['High (Green/Yellow)', 'Medium (Blue/Orange)', 'Low (Red)'],
                                     datasets: [{
-                                        data: [excellent, good, needsWork],
+                                        data: [greenYellow, orangeBlue, red],
                                         backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
                                         borderColor: '#ffffff',
                                         borderWidth: 2
@@ -1436,39 +1202,35 @@
 
                             if (item.fileLink) {
                                 const fileUrl = getFileUrl(item.fileLink);
-
                                 mediaHtml = `
-                <a href="${fileUrl}"
-                   target="_blank"
-                   class="btn btn-sm btn-outline-info">
-                    <i class="bi bi-eye me-1"></i> View
-                </a>`;
+                                        <a href="${fileUrl}"
+                                           target="_blank"
+                                           class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-eye me-1"></i> View
+                                        </a>`;
                             }
 
                             if (currentType === 'group-pbl') {
-
                                 mediaHtml = '';
 
                                 if (item.imageActivity) {
                                     const imageUrl = getFileUrl(item.imageActivity);
-
                                     mediaHtml += `
-                    <a href="${imageUrl}"
-                       target="_blank"
-                       class="btn btn-sm btn-outline-primary me-1">
-                        <i class="bi bi-image me-1"></i> Image
-                    </a>`;
+                                            <a href="${imageUrl}"
+                                               target="_blank"
+                                               class="btn btn-sm btn-outline-primary me-1">
+                                                <i class="bi bi-image me-1"></i> Image
+                                            </a>`;
                                 }
 
                                 if (item.videoActivity) {
                                     const videoUrl = getFileUrl(item.videoActivity);
-
                                     mediaHtml += `
-                    <a href="${videoUrl}"
-                       target="_blank"
-                       class="btn btn-sm btn-outline-success me-1">
-                        <i class="bi bi-play-circle me-1"></i> Video
-                    </a>`;
+                                            <a href="${videoUrl}"
+                                               target="_blank"
+                                               class="btn btn-sm btn-outline-success me-1">
+                                                <i class="bi bi-play-circle me-1"></i> Video
+                                            </a>`;
                                 }
 
                                 if (!item.imageActivity && !item.videoActivity) {
@@ -1486,14 +1248,14 @@
                                 : `<span class="status-badge pending"><span class="status-dot"></span>Pending</span>`;
 
                             let rowHtml = `<tr>
-                                                <td>${srNoOffset + index + 1}</td>
-                                                <td>${item.schoolName}</td>
-                                                <td>${item.title}</td>
-                                                <td>${item.firstName} ${item.lastName}</td>
-                                                <td>${statusBadge}</td>
-                                                <td>${mediaHtml}</td>
-                                                <td><button class="btn btn-sm btn-primary" onclick='openModal(${item.id}, ${JSON.stringify(item.fileLink || item.videoActivity || item.imageActivity)}, ${item.studentId || 0}, ${item.instituteId || 0}, ${JSON.stringify(item.courseName || "")})'>Evaluate</button></td>
-                                            </tr>`;
+                                                    <td>${srNoOffset + index + 1}</td>
+                                                    <td>${item.schoolName}</td>
+                                                    <td>${item.title}</td>
+                                                    <td>${item.firstName} ${item.lastName}</td>
+                                                    <td>${statusBadge}</td>
+                                                    <td>${mediaHtml}</td>
+                                                    <td><button class="btn btn-sm btn-primary" onclick='openModal(${item.id}, ${JSON.stringify(item.fileLink || item.videoActivity || item.imageActivity)}, ${item.studentId || 0}, ${item.instituteId || 0}, ${JSON.stringify(item.courseName || "")})'>Evaluate</button></td>
+                                                </tr>`;
                             tbody.innerHTML += rowHtml;
                         });
                     } else {
@@ -1526,18 +1288,18 @@
         function buildMarksCircles(color) {
             let container = document.getElementById("marks-circles-container");
             container.innerHTML = "";
-            let maxMarks = (color === "Red") ? 0 : (color === "Orange" ? 3 : 5);
 
-            if (maxMarks === 0) {
-                container.innerHTML = `<button type="button" class="mark-btn active" onclick="selectMark(0)">0</button>`;
-                selectMark(0);
-                return;
+            let markValue = 3;
+            if (color === "Red") {
+                markValue = 0;
+            } else if (color === "Orange" || color === "Blue") {
+                markValue = 2;
+            } else if (color === "Yellow" || color === "Green") {
+                markValue = 3;
             }
 
-            for (let i = 1; i <= maxMarks; i++) {
-                container.innerHTML += `<button type="button" id="mark-btn-${i}" class="mark-btn" onclick="selectMark(${i})">${i}</button>`;
-            }
-            selectMark(1);
+            container.innerHTML = `<button type="button" id="mark-btn-${markValue}" class="mark-btn active" onclick="selectMark(${markValue})">${markValue}</button>`;
+            selectMark(markValue);
         }
 
         function selectMark(mark) {
@@ -1554,47 +1316,10 @@
             document.getElementById("modalInstituteId").value = instituteId;
             document.getElementById("modalCourseName").value = courseName;
 
+            // Media preview container ko hide kar diya hai taaki wo modal mein na dikhe
             let previewContainer = document.getElementById("media-preview-container");
             previewContainer.style.display = "none";
             previewContainer.innerHTML = "";
-
-            if (fileLink) {
-
-                const mediaUrl = getFileUrl(fileLink);
-
-                let lowerLink = fileLink.toLowerCase();
-
-                if (lowerLink.endsWith(".mp4") ||
-                    lowerLink.endsWith(".webm") ||
-                    lowerLink.endsWith(".mov")) {
-
-                    previewContainer.innerHTML = `
-                    <video controls>
-                        <source src="${mediaUrl}">
-                        Your browser does not support video playback.
-                    </video>
-                `;
-
-                    previewContainer.style.display = "block";
-
-                }
-                else if (
-                    lowerLink.endsWith(".jpg") ||
-                    lowerLink.endsWith(".jpeg") ||
-                    lowerLink.endsWith(".png") ||
-                    lowerLink.endsWith(".gif") ||
-                    lowerLink.endsWith(".webp")
-                ) {
-
-                    previewContainer.innerHTML = `
-                    <img src="${mediaUrl}"
-                         alt="Project Media"
-                         class="img-fluid" />
-                `;
-
-                    previewContainer.style.display = "block";
-                }
-            }
 
             selectColor("Green");
             document.getElementById("projectDescription").value = "";
@@ -1636,91 +1361,48 @@
         }
 
         function formatProjectType(type) {
-
             const typeMap = {
                 "individual-projects": "Individual Project ",
                 "group-pbl": "Group Project",
                 "family-projects": "Family Project",
                 "sel-projects": "SEL Project"
             };
-
             return typeMap[type?.toLowerCase()] || type;
         }
 
-
         function loadEvaluatedHistory() {
-
             fetch('/api/project-evaluations/history')
                 .then(res => res.json())
                 .then(res => {
-
                     if (res.success) {
-
-                        let tbody =
-                            document.querySelector("#evaluated-table tbody");
-
+                        let tbody = document.querySelector("#evaluated-table tbody");
                         tbody.innerHTML = "";
 
                         res.data.forEach((item, index) => {
-
-                            let statusClass =
-                                item.statusColor.toLowerCase();
-
+                            let statusClass = item.statusColor.toLowerCase();
                             let statusBadge = `
-                                <span class="status-badge ${statusClass}">
-                                    <span class="status-dot"></span>
-                                    ${item.statusColor}
-                                </span>
-                            `;
+                                        <span class="status-badge ${statusClass}">
+                                            <span class="status-dot"></span>
+                                            ${item.statusColor}
+                                        </span>
+                                    `;
 
                             tbody.innerHTML += `
-                                <tr>
-
-                                    <td>${index + 1}</td>
-
-                                    <td>
-                                        <code>${item.projectID}</code>
-                                    </td>
-
-                                    <td>
-                                        <span class="badge bg-light text-dark border">
-                                            ${formatProjectType(item.projectType)}
-                                        </span>
-                                    </td>
-
-                                    <td>
-                                        ${statusBadge}
-                                    </td>
-
-                                    <td>
-                                        <span class="fw-bold">
-                                            ${item.marks}
-                                        </span>
-                                    </td>
-
-                                    <td>
-                                        ${item.description || '-'}
-                                    </td>
-
-                                    <td>
-                                        ${new Date(item.evaluatedDate)
-                                    .toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: '2-digit'
-                                    })}
-                                    </td>
-
-                                </tr>
-                            `;
+                                        <tr>
+                                            <td>${index + 1}</td>
+                                            <td><code>${item.projectID}</code></td>
+                                            <td><span class="badge bg-light text-dark border">${formatProjectType(item.projectType)}</span></td>
+                                            <td>${statusBadge}</td>
+                                            <td><span class="fw-bold">${item.marks}</span></td>
+                                            <td>${item.description || '-'}</td>
+                                            <td>${new Date(item.evaluatedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' })}</td>
+                                        </tr>
+                                    `;
                         });
                     }
                 })
                 .catch(error => {
-                    console.error(
-                        "Error loading evaluated history:",
-                        error
-                    );
+                    console.error("Error loading evaluated history:", error);
                 });
         }
     </script>

@@ -38,7 +38,6 @@ namespace HemFoundation.Controllers.Api
                 .FirstOrDefaultAsync();
         }
 
-
         [HttpGet("admin/orgs")]
         public async Task<IActionResult> GetAllOrganizations()
         {
@@ -225,8 +224,6 @@ namespace HemFoundation.Controllers.Api
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Bill status and payment details updated successfully." });
         }
-
-
 
         [HttpGet("init-data")]
         public async Task<IActionResult> GetInitData()
@@ -1620,12 +1617,10 @@ namespace HemFoundation.Controllers.Api
                     return NotFound(new { success = false, message = "Bill not found." });
                 }
 
-                // Affiliate ka naam fetch karna taaki filename mein use kar sakein
                 var affiliate = await _context.Users.FirstOrDefaultAsync(x => x.UserID == bill.AffiliateId);
                 string affiliateName = affiliate != null ? $"{affiliate.FirstName}_{affiliate.LastName}".Trim() : "Affiliate";
                 affiliateName = System.Text.RegularExpressions.Regex.Replace(affiliateName, @"[^\w\s_-]", "").Replace(" ", "_");
 
-                // Pehle Signed PDF check karenge, agar available na ho toh Generated PDF use karenge
                 string primaryPdfRelativePath = !string.IsNullOrEmpty(bill.SignedPdfUrl) ? bill.SignedPdfUrl : bill.GeneratedPdfUrl;
 
                 if (string.IsNullOrEmpty(primaryPdfRelativePath))
@@ -1646,7 +1641,6 @@ namespace HemFoundation.Controllers.Api
                 using var outputDocument = new PdfSharpCore.Pdf.PdfDocument();
                 using var httpClient = new HttpClient();
 
-                // 1. Primary PDF (Signed PDF / Generated PDF) ko central URL se download karke add karein
                 string primaryPdfUrl = GetCentralFileUrl(primaryPdfRelativePath);
                 if (!string.IsNullOrEmpty(primaryPdfUrl))
                 {
@@ -1666,7 +1660,6 @@ namespace HemFoundation.Controllers.Api
                     }
                 }
 
-                // 2. Uske baad saare individual expense receipts (.pdf, .jpg, .png, .jpeg, .webp) ko append karein
                 foreach (var exp in expenses)
                 {
                     if (!string.IsNullOrEmpty(exp.ReceiptPath))
@@ -1722,7 +1715,6 @@ namespace HemFoundation.Controllers.Api
                 string currentTimestamp = DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss");
                 string downloadableFileName = $"{affiliateName}_{bill.MonthYear}_{currentTimestamp}.pdf";
 
-                // Header mein filename set karne ke liye:
                 Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{downloadableFileName}\"");
 
                 return File(bytes, "application/pdf", downloadableFileName);
@@ -1746,7 +1738,7 @@ namespace HemFoundation.Controllers.Api
     public class AdminBillProcessDto
     {
         public int BillId { get; set; }
-        public string Status { get; set; } = string.Empty; // Approved, Paid, Rejected, Correction Requested
+        public string Status { get; set; } = string.Empty; 
         public string? AdminRemarks { get; set; }
         public string? ApprovedBy { get; set; }
         public DateTime? PaymentDate { get; set; }

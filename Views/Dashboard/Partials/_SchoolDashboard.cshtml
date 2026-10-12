@@ -17,6 +17,7 @@
     bool hasUploadedLetter = ViewBag.hasUploadedLetter;
 }
 
+
 <div class="container-fluid py-3 bg-light min-vh-100">
     <div class="row g-3 mt-1">
         <div class="card border shadow-sm rounded-4 overflow-hidden bg-white">
@@ -52,73 +53,11 @@
                         }
                     </div>
                 </div>
-
-              @*   <!-- Collapsible Toggle Button for Details -->
-                <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
-                    <span class="text-muted small fw-semibold"><i class="bi bi-info-circle me-1"></i> Institution Profile & Info</span>
-                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#instituteDetailsCollapse" aria-expanded="false" aria-controls="instituteDetailsCollapse">
-                        <i class="bi bi-chevron-down me-1"></i> View Details / Expand
-                    </button>
-                </div>
-
-                <!-- Expandable / Collapsible Details Section -->
-                <div class="collapse mt-3" id="instituteDetailsCollapse">
-                    <div class="row g-3 pt-2">
-                        <div class="col-md-6 col-xl-4">
-                            <div class="bg-light border rounded-3 p-3 h-100">
-                                <div class="text-muted small mb-1"><i class="bi bi-building me-1"></i> Institution</div>
-                                <div class="fw-semibold text-dark">@(ViewBag.InstituteName ?? "Not Available")</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-xl-4">
-                            <div class="bg-light border rounded-3 p-3 h-100">
-                                <div class="text-muted small mb-1"><i class="bi bi-diagram-3 me-1"></i> Branch</div>
-                                <div class="fw-semibold text-dark">@(string.IsNullOrWhiteSpace(institute?.BranchName) ? "Not Available" : institute.BranchName)</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-xl-4">
-                            <div class="bg-light border rounded-3 p-3 h-100">
-                                <div class="text-muted small mb-1"><i class="bi bi-mortarboard me-1"></i> Institution Type</div>
-                                <div class="fw-semibold text-dark">@(string.IsNullOrWhiteSpace(institute?.InstituteType) ? "School" : institute.InstituteType)</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-xl-4">
-                            <div class="bg-light border rounded-3 p-3 h-100">
-                                <div class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i> Location</div>
-                                <div class="fw-semibold text-dark">
-                                    @if (!string.IsNullOrWhiteSpace(institute?.City) || !string.IsNullOrWhiteSpace(institute?.State))
-                                    {
-                                        @($"{institute?.City}, {institute?.State}")
-                                    }
-                                    else
-                                    {
-                                        <span>Not Available</span>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-xl-4">
-                            <div class="bg-light border rounded-3 p-3 h-100">
-                                <div class="text-muted small mb-1"><i class="bi bi-telephone me-1"></i> Mobile Number</div>
-                                <div class="fw-semibold text-dark">@(string.IsNullOrWhiteSpace(institute?.MobileNo) ? "Not Available" : institute.MobileNo)</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-xl-4">
-                            <div class="bg-light border rounded-3 p-3 h-100">
-                                <div class="text-muted small mb-1"><i class="bi bi-envelope me-1"></i> Email</div>
-                                <div class="fw-semibold text-dark text-break">@(string.IsNullOrWhiteSpace(institute?.EmailID) ? "Not Available" : institute.EmailID)</div>
-                            </div>
-                        </div>
-                    </div>
-                </div> *@
-
             </div>
         </div>
     </div>
 
-  <!-- ================= 4 STATS CARDS METRICS WITH HOVER ANIMATION ================= -->
     <div class="row g-4 mt-2">
-        <!-- Stat 1: Total Students -->
         <div class="col-xl-3 col-md-6">
             <div class="card stat-hover-card border-0 rounded-4 bg-white position-relative overflow-hidden h-100">
                 <div class="card-body p-4">
@@ -210,8 +149,6 @@
     </div>
 
       
-
-    <!-- ================= SECTION 1: Partnership Confirmed / Upload Banner ================= -->
     @if (hasUploadedLetter)
     {
         <div class="card border shadow-sm rounded-4 bg-success text-white p-3 mt-3">
@@ -257,7 +194,6 @@
         </div>
     }
 
-    <!-- ================= SECTION 2: Value Of The Year Banner ================= -->
     <div class="card border shadow-sm rounded-4 bg-warning text-dark p-3 mt-3">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2">
@@ -269,8 +205,6 @@
             </a>
         </div>
     </div>
-
-    <!-- ================= SECTION 3: Quick Management Utilities ================= -->
     <div class="card border shadow-sm rounded-4 bg-white p-4 mt-3">
         <h5 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle-fill text-primary me-2"></i> Quick Management Utilities</h5>
 
@@ -332,8 +266,15 @@
             </div>
         </div>
     </div>
+    <div class="card border shadow-sm rounded-4 bg-white p-4 mt-3">
+        <div class="card border shadow-sm rounded-4 bg-white p-4 mt-3">
+            <script>
+                            window.evaluationApiUrl = "/api/project-evaluations/school-history";
+            </script>
+            <partial name="~/Views/Dashboard/Partials/_EvaluationCard.cshtml" />
+        </div>
+    </div>
 
-    <!-- ================= MODAL FOR UPLOADING LETTER (All file types allowed) ================= -->
     <div class="modal fade" id="uploadLetterModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow-lg p-4 bg-white">
@@ -357,7 +298,7 @@
             </div>
         </div>
     </div>
-
+</div>
 <style>
     .transition-hover {
         transition: all 0.2s ease-in-out;

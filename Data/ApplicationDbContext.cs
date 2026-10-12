@@ -846,6 +846,7 @@ namespace HemFoundation.Data
                     v => v != null && v.Count > 0 && v[0] 
                 );
             builder.Entity<VwUserRoleDetails>(entity =>
+
             {
                 entity.HasNoKey();
                 entity.ToView("vw_user_role_details", "public");

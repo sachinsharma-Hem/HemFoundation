@@ -63,5 +63,7 @@ namespace HemFoundation.Models.Entities
         public string? Title { get; set; }
         [Column("student_id")]
         public int? Student_Id { get; set; }
+        [Column("iscreatedby")]
+        public int? Iscreatedby { get; set; }
     }
 }

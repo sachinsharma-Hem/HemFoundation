@@ -200,8 +200,6 @@ namespace HemFoundation.Controllers
             return View("~/Views/Teacher/McqHub.cshtml", quizStatusList);
         }
 
-
-
         [HttpGet("Teacher/LoadCapacity/{id}")]
         public async Task<IActionResult> LoadCapacity(int id)
         {

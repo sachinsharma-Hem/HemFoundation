@@ -135,7 +135,7 @@ namespace HemFoundation.Controllers.Api
                         rawData = rawData.Where(x => x.IsCreatedDate.HasValue && x.IsCreatedDate.Value.Month == month.Value && x.IsCreatedDate.Value.Year == year.Value).ToList();
 
                     var query = rawData.Select((ind, index) => {
-                        int? studentId = ind.Student_Id;
+                        int? studentId = ind.Iscreatedby;
                         int? instId = (studentId != null && studentInstitutes.ContainsKey(studentId.Value)) ? studentInstitutes[studentId.Value] : (int?)null;
                         string schoolName = (instId != null && institutes.ContainsKey(instId.Value)) ? institutes[instId.Value] : (ind.CourseName ?? "Unknown School");
                         var eval = evaluations.ContainsKey(ind.Id) ? evaluations[ind.Id] : null;
@@ -225,11 +225,38 @@ namespace HemFoundation.Controllers.Api
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                string? userId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
                 model.EvaluatedByUserId = userId ?? string.Empty;
-                model.EvaluatedDate = DateTime.UtcNow;
+                model.EvaluatedDate = DateTime.Now;
 
-                var existing = await _context.ProjectEvaluations.FirstOrDefaultAsync(x => x.ProjectID == model.ProjectID && x.ProjectType == model.ProjectType);
+                if (model.ProjectType == "group-pbl")
+                {
+                    if (!string.IsNullOrEmpty(model.CourseName) && int.TryParse(model.CourseName, out int courseId))
+                    {
+                        var connection = _context.Database.GetDbConnection();
+                        if (connection.State != System.Data.ConnectionState.Open)
+                        {
+                            await connection.OpenAsync();
+                        }
+
+                        using var command = connection.CreateCommand();
+                        command.CommandText = "SELECT maincoursename FROM maincourses WHERE maincourseid = @courseId";
+
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = "@courseId";
+                        parameter.Value = courseId;
+                        command.Parameters.Add(parameter);
+
+                        var result = await command.ExecuteScalarAsync();
+                        if (result != null && result != DBNull.Value)
+                        {
+                            model.CourseName = result.ToString();
+                        }
+                    }
+                }
+
+                var existing = await _context.ProjectEvaluations
+                    .FirstOrDefaultAsync(x => x.ProjectID == model.ProjectID && x.ProjectType == model.ProjectType);
 
                 if (existing != null)
                 {
@@ -240,7 +267,7 @@ namespace HemFoundation.Controllers.Api
                     existing.InstituteID = model.InstituteID;
                     existing.CourseName = model.CourseName;
                     existing.EvaluatedByUserId = userId ?? string.Empty;
-                    existing.EvaluatedDate = DateTime.UtcNow;
+                    existing.EvaluatedDate = DateTime.Now;
                 }
                 else
                 {
@@ -315,6 +342,75 @@ namespace HemFoundation.Controllers.Api
             }
 
             return normalized;
+        }
+
+        [HttpGet("school-history")]
+        public async Task<IActionResult> GetSchoolEvaluatedHistory()
+        {
+            try
+            {
+                string? userId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new { success = false, message = "User not logged in." });
+                }
+
+                var currentUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.AspNetUserID == userId);
+                if (currentUser == null)
+                {
+                    return NotFound(new { success = false, message = "User profile not found." });
+                }
+
+                long instituteId = currentUser.UserID; 
+
+                var list = await _context.ProjectEvaluations
+                    .AsNoTracking()
+                    .Where(x => x.InstituteID == instituteId)
+                    .OrderByDescending(x => x.EvaluatedDate)
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = list });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("student-history")]
+        public async Task<IActionResult> GetStudentEvaluatedHistory()
+        {
+            try
+            {
+                string? userId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new { success = false, message = "User not logged in." });
+                }
+
+                var student = await _context.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.AspNetUserID == userId);
+
+                if (student == null)
+                {
+                    return NotFound(new { success = false, message = "Student profile not found." });
+                }
+
+                int studentId = student.UserID; 
+
+                var list = await _context.ProjectEvaluations
+                    .AsNoTracking()
+                    .Where(x => x.StudentID == studentId)
+                    .OrderByDescending(x => x.EvaluatedDate)
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = list });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
 
     }

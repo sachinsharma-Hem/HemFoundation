@@ -403,7 +403,6 @@
             return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
         }
 
-        // ================= AFFILIATE DROPDOWN & STATS =================
         function loadAffiliateDropdown() {
             $.ajax({
                 url: '/api/financials/admin/affiliates-list',
@@ -437,7 +436,6 @@
             });
         }
 
-        // ================= BILLS LOGIC =================
         function loadBills() {
             let status = $('#fltStatus').val();
             let affId = $('#fltAffiliate').val();
@@ -528,7 +526,6 @@
             });
         });
 
-        // ================= MONTHLY EXPENSES ADMIN LOGIC (FIXED) =================
         function loadAdminExpenseBills() {
             let affId = $('#fltExpenseAffiliate').val();
             let month = $('#fltExpenseMonth').val();
@@ -545,7 +542,6 @@
                         res.data.forEach(b => {
                             let badge = b.status == 'Paid' ? 'success' : (b.status == 'Approved' ? 'primary' : (b.status == 'Rejected' ? 'danger' : 'warning'));
 
-                            // Yahan humne saari possible variations handle kar li hain taaki undefined na aaye
                             let affiliateIdVal = b.affiliateId || b.AffiliateId || 0;
 
                             let docs = b.generatedPdfUrl
@@ -646,8 +642,6 @@
                     let pad = (n) => String(n).padStart(2, '0');
                     let timestamp = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
                     let safeAffName = currentAffiliateName.replace(/[^\w\s_-]/gi, '').replace(/\s+/g, '_');
-
-                    // Dynamic naming assignment
                     link.download = `${safeAffName}_${currentMonthYear}_${timestamp}.pdf`;
 
                     document.body.appendChild(link);
@@ -693,7 +687,6 @@
             });
         });
 
-        // ================= ORGANIZATION MASTER LOGIC =================
         function loadOrgs() {
             $('#tblOrgs').html('<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>');
             $.ajax({

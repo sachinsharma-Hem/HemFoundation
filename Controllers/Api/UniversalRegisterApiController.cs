@@ -466,10 +466,6 @@ namespace HemFoundation.Controllers.Api
             }
 
             await _userManager.AddToRoleAsync(appUser, roleName);
-
-            // =========================================================================
-            // UPDATE: Logged-in school user ki InstituteID nikalne ke liye logic
-            // =========================================================================
             int? mappedInstituteId = null;
             string? currentUserId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!string.IsNullOrEmpty(currentUserId))
