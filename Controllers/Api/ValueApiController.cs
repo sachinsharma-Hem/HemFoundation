@@ -1,9 +1,12 @@
-﻿using HemFoundation.Data;
+﻿using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Spreadsheet;
+using HemFoundation.Data;
 using HemFoundation.Models.Entities;
 using HemFoundation.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxTokenParser;
 
 namespace HemFoundation.Controllers.Api
@@ -343,12 +346,256 @@ namespace HemFoundation.Controllers.Api
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
-        [HttpPost("submit-activity")]
-        public async Task<IActionResult> SubmitActivity(
+
+
+// Configure the endpoint to accept a 100 MiB file plus multipart overhead.
+    [HttpPost("submit-activity")]
+    [RequestSizeLimit(110L * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 110L * 1024 * 1024)]
+    public async Task<IActionResult> SubmitActivity(
+    [FromForm] int ValueItemId,
+    [FromForm] string? Comment,
+    [FromForm] IFormFile? ImageFile,
+    [FromForm] IFormFile? VideoFile,
+    [FromForm] string? VideoDriveFileId,
+    [FromForm] string? VideoCloudUrl)
+    {
+        const long MaxVideoSize = 100L * 1024 * 1024;
+            if (string.IsNullOrWhiteSpace(Comment))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Please enter a comment or observation."
+                });
+            }
+
+            // 1. Authenticate the current user.
+            int? currentUserId = HttpContext.Session.GetInt32("UserID");
+
+        if (!currentUserId.HasValue || currentUserId.Value <= 0)
+        {
+            string? claimId =
+                User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (int.TryParse(claimId, out int parsed) && parsed > 0)
+                currentUserId = parsed;
+        }
+
+        if (!currentUserId.HasValue || currentUserId.Value <= 0)
+        {
+            return Unauthorized(new
+            {
+                success = false,
+                message = "Your session has expired. Please log in again."
+            });
+        }
+
+        // 2. Validate the institute.
+        var institute = await _context.view_wj_instituteslist
+            .FirstOrDefaultAsync(
+                i => i.instituteid == currentUserId.Value);
+
+        if (institute == null)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "School not found."
+            });
+        }
+
+        // 3. Validate the capacity/activity.
+        bool exists = await _context
+            .creativityActivitiesSubmission2021s
+            .AnyAsync(s =>
+                s.InstituteID == institute.instituteid &&
+                s.MainCourseID == ValueItemId);
+
+        if (exists)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Activity already submitted for this capacity."
+            });
+        }
+
+        // 4. Enforce the direct-upload video size limit.
+        if (VideoFile != null && VideoFile.Length > MaxVideoSize)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Video size cannot exceed 100 MB. Please compress " +
+                          "the video or provide a Google Drive or other cloud link."
+            });
+        }
+
+        VideoDriveFileId = VideoDriveFileId?.Trim();
+        VideoCloudUrl = VideoCloudUrl?.Trim();
+
+        bool hasDriveId = !string.IsNullOrWhiteSpace(VideoDriveFileId);
+        bool hasCloudUrl = !string.IsNullOrWhiteSpace(VideoCloudUrl);
+        bool hasVideoFile = VideoFile != null && VideoFile.Length > 0;
+
+        // Prevent choosing multiple video submission methods.
+        int videoMethods =
+            (hasDriveId ? 1 : 0) +
+            (hasCloudUrl ? 1 : 0) +
+            (hasVideoFile ? 1 : 0);
+
+            if (videoMethods == 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Video submission is mandatory. Upload a video, select one from Google Drive, or provide a cloud link."
+                });
+            }
+
+            if (videoMethods > 1)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Choose only one video option: upload a video, " +
+                          "select from Google Drive, or enter a cloud link."
+            });
+        }
+
+        var submission = new CreativityActivitiesSubmission2021
+        {
+            InstituteID = institute.instituteid,
+            MainCourseID = ValueItemId,
+            ShortDescription = Comment?.Trim(),
+            CreatedDate = DateTime.Now
+        };
+
+        // 5. Image is required.
+        if (ImageFile == null || ImageFile.Length == 0)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Please upload an activity image."
+            });
+        }
+
+        // Optional: prevent oversized image uploads as well.
+        const long MaxImageSize = 10L * 1024 * 1024;
+
+        if (ImageFile.Length > MaxImageSize)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Image size cannot exceed 10 MB."
+            });
+        }
+
+        string folderPath =
+            $"Uploads/ValueOfYear/Submissions/{institute.instituteid}";
+
+        var imageResult = await _fileStorage.UploadAsync(
+            ImageFile, folderPath);
+
+        if (imageResult == null ||
+            !imageResult.success ||
+            string.IsNullOrWhiteSpace(imageResult.filePath))
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                message = imageResult?.message ?? "Image upload failed."
+            });
+        }
+
+        submission.ImageActivity = imageResult.filePath;
+
+        // 6. Save a Google Drive Picker selection.
+        if (hasDriveId)
+        {
+            if (!Regex.IsMatch(VideoDriveFileId!, @"^[a-zA-Z0-9_-]+$"))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid Google Drive file selection."
+                });
+            }
+
+            submission.VideoActivity =
+                $"https://drive.google.com/file/d/{VideoDriveFileId}/view";
+        }
+        // 7. Save a manually entered external cloud URL.
+        else if (hasCloudUrl)
+        {
+            if (!Uri.TryCreate(
+                    VideoCloudUrl,
+                    UriKind.Absolute,
+                    out Uri? cloudUri) ||
+                (cloudUri.Scheme != Uri.UriSchemeHttps &&
+                 cloudUri.Scheme != Uri.UriSchemeHttp) ||
+                string.IsNullOrWhiteSpace(cloudUri.Host))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Please enter a valid HTTP or HTTPS video link."
+                });
+            }
+
+            submission.VideoActivity = cloudUri.AbsoluteUri;
+        }
+        // 8. Upload a video directly.
+        else if (hasVideoFile)
+        {
+            // Enforce the limit again before passing the file to storage.
+            if (VideoFile!.Length > MaxVideoSize)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Video size cannot exceed 100 MB."
+                });
+            }
+
+            var videoResult = await _fileStorage.UploadAsync(
+                VideoFile, folderPath);
+
+            if (videoResult == null ||
+                !videoResult.success ||
+                string.IsNullOrWhiteSpace(videoResult.filePath))
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = videoResult?.message ?? "Video upload failed."
+                });
+            }
+
+            submission.VideoActivity = videoResult.filePath;
+        }
+
+        _context.creativityActivitiesSubmission2021s.Add(submission);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            success = true,
+            message = "Capacity activity submitted successfully!"
+        });
+    }
+
+
+    [HttpPost("submit-activity1")]
+        public async Task<IActionResult> SubmitActivity1(
             [FromForm] int ValueItemId,
             [FromForm] string Comment,
             IFormFile? ImageFile,
-            IFormFile? VideoFile)
+            IFormFile? VideoFile,
+[FromForm] string? VideoDriveFileId)
         {
             int? currentUserId =
                 HttpContext.Session.GetInt32("UserID");
@@ -443,17 +690,54 @@ namespace HemFoundation.Controllers.Api
                 submission.ImageActivity =
                     uploadResult.filePath;
             }
+            else
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message ="Please Upload Images!!"
+                });
+            }
 
+            VideoDriveFileId = VideoDriveFileId?.Trim();
 
-            if (VideoFile != null && VideoFile.Length > 0)
+            if (!string.IsNullOrWhiteSpace(VideoDriveFileId) &&
+                VideoFile != null &&
+                VideoFile.Length > 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Choose either a local video or a Google Drive video."
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(VideoDriveFileId))
+            {
+                // Accept only a Google Drive file ID, not an arbitrary URL.
+                if (!System.Text.RegularExpressions.Regex.IsMatch(
+                    VideoDriveFileId,
+                    @"^[a-zA-Z0-9_-]+$"))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Invalid Google Drive file selection."
+                    });
+                }
+
+                // Store the Google Drive URL in the existing column.
+                submission.VideoActivity =
+                    $"https://drive.google.com/file/d/{VideoDriveFileId}/view";
+            }
+            else if (VideoFile != null && VideoFile.Length > 0)
             {
                 string folderPath =
                     $"Uploads/ValueOfYear/Submissions/{institute.instituteid}";
 
-                var uploadResult =
-                    await _fileStorage.UploadAsync(
-                        VideoFile,
-                        folderPath);
+                var uploadResult = await _fileStorage.UploadAsync(
+                    VideoFile,
+                    folderPath);
 
                 if (uploadResult == null ||
                     !uploadResult.success ||
@@ -462,14 +746,38 @@ namespace HemFoundation.Controllers.Api
                     return StatusCode(500, new
                     {
                         success = false,
-                        message = uploadResult?.message
-                            ?? "Video upload failed."
+                        message = uploadResult?.message ?? "Video upload failed."
                     });
                 }
 
-                submission.VideoActivity =
-                    uploadResult.filePath;
+                submission.VideoActivity = uploadResult.filePath;
             }
+
+            //if (VideoFile != null && VideoFile.Length > 0)
+            //{
+            //    string folderPath =
+            //        $"Uploads/ValueOfYear/Submissions/{institute.instituteid}";
+
+            //    var uploadResult =
+            //        await _fileStorage.UploadAsync(
+            //            VideoFile,
+            //            folderPath);
+
+            //    if (uploadResult == null ||
+            //        !uploadResult.success ||
+            //        string.IsNullOrWhiteSpace(uploadResult.filePath))
+            //    {
+            //        return StatusCode(500, new
+            //        {
+            //            success = false,
+            //            message = uploadResult?.message
+            //                ?? "Video upload failed."
+            //        });
+            //    }
+
+            //    submission.VideoActivity =
+            //        uploadResult.filePath;
+            //}
 
 
 
