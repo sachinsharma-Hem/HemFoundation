@@ -364,7 +364,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     }
 
                     string pblQuery = @"
-                SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Family PBL' AS ""Title"", FileName, FileExtension, 'https://hemvirtues.com/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
+                SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Family PBL' AS ""Title"", FileName, FileExtension, 'https://www.hemvirtues.in/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
                 FROM HF_UploadAnubhuti AS HFA    
                 INNER JOIN Users AS U ON U.UserID = HFA.IsCreatedBy    
                 INNER JOIN WJ_Students AS WJS ON WJS.StudentID = HFA.IsCreatedBy    
@@ -377,7 +377,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
 
                 UNION ALL    
 
-                SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Individual PBL' AS ""Title"", FileName, FileExtension, 'https://hemvirtues.com/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
+                SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Individual PBL' AS ""Title"", FileName, FileExtension, 'https://www.hemvirtues.in/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
                 FROM HF_TBL_UploadIndividualProject AS HFA    
                 INNER JOIN Users AS U ON U.UserID = HFA.IsCreatedBy    
                 INNER JOIN WJ_Students AS WJS ON WJS.StudentID = HFA.IsCreatedBy    
@@ -390,7 +390,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
 
                 UNION ALL    
 
-                SELECT SU.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", SU.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, '' AS ""CourseName"", 'Group PBL' AS ""Title"", '' AS ""FileName"", '' AS ""FileExtension"", 'https://www.hemvirtues.com' || REPLACE(SUBSTRING(C.VideoActivity, POSITION('wwwroot\\' IN C.VideoActivity) + 7, LENGTH(C.ImageActivity)), '\\', '/') AS ""FileLink"", '10' AS ""TotalMarks"", '10' AS ""MarksObtain"", C.CreatedDate AS ""SubmissionDate""    
+                SELECT SU.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", SU.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, '' AS ""CourseName"", 'Group PBL' AS ""Title"", '' AS ""FileName"", '' AS ""FileExtension"", 'https://www.hemvirtues.in' || REPLACE(SUBSTRING(C.VideoActivity, POSITION('wwwroot\\' IN C.VideoActivity) + 7, LENGTH(C.ImageActivity)), '\\', '/') AS ""FileLink"", '10' AS ""TotalMarks"", '10' AS ""MarksObtain"", C.CreatedDate AS ""SubmissionDate""    
                 FROM CreativityActivitesSubmission2021 C    
                 LEFT JOIN HF_Rel_Manage_Group_List L ON C.InstituteID = L.IsAllocatedBy AND C.MainCourseID = L.MainCourseID    
                 LEFT JOIN Users U ON L.StudentID = U.UserID    
@@ -414,8 +414,8 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) AS ""MainCourseName"", 
                     WJI.firstName || ' ' || WJI.lastName AS ""Co-Ordinator Name"", 
                     WJI.cityName, WJI.referralcode, WJI.mobileno, 
-                    'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.ImageActivity, POSITION('wwwroot\\' IN CAS.ImageActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""ImageActivity"", 
-                    'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.VideoActivity, POSITION('wwwroot\\' IN CAS.VideoActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""VideoActivity"", 
+                    'https://www.hemvirtues.in' || REPLACE(SUBSTRING(CAS.ImageActivity, POSITION('wwwroot\\' IN CAS.ImageActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""ImageActivity"", 
+                    'https://www.hemvirtues.in' || REPLACE(SUBSTRING(CAS.VideoActivity, POSITION('wwwroot\\' IN CAS.VideoActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""VideoActivity"", 
                     CAS.ShortDescription, CAS.CreatedDate AS ""Submission Date"", hfrm.GroupName, hfrm.ListStudents, hfrm.MainCourseID, CAS.TeamMembersList, CAS.ActivityType
                 FROM CreativityActivitesSubmission2021 AS CAS 
                 INNER JOIN vw_school_profile_details AS WJI ON WJI.instituteid = CAS.InstituteID 
@@ -792,8 +792,8 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) AS ""MainCourseName"", 
                     WJI.firstName || ' ' || WJI.lastName AS ""Co-Ordinator Name"", 
                     WJI.cityName, WJI.referralcode, WJI.mobileno, 
-                    'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.ImageActivity, POSITION('wwwroot\\' IN CAS.ImageActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""ImageActivity"", 
-                    'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.VideoActivity, POSITION('wwwroot\\' IN CAS.VideoActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""VideoActivity"", 
+                    'https://www.hemvirtues.in' || REPLACE(SUBSTRING(CAS.ImageActivity, POSITION('wwwroot\\' IN CAS.ImageActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""ImageActivity"", 
+                    'https://www.hemvirtues.in' || REPLACE(SUBSTRING(CAS.VideoActivity, POSITION('wwwroot\\' IN CAS.VideoActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""VideoActivity"", 
                     CAS.ShortDescription, CAS.CreatedDate AS ""Submission Date"", hfrm.GroupName, hfrm.ListStudents, hfrm.MainCourseID, CAS.TeamMembersList, CAS.ActivityType 
                 FROM CreativityActivitesSubmission2021 AS CAS 
                 INNER JOIN vw_school_profile_details AS WJI ON WJI.instituteid = CAS.InstituteID 
@@ -990,7 +990,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     }
 
                     string pblQuery = @"
-         SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Family PBL' AS ""Title"", FileName, FileExtension, 'https://hemvirtues.com/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
+         SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Family PBL' AS ""Title"", FileName, FileExtension, 'https://www.hemvirtues.in/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
          FROM HF_UploadAnubhuti AS HFA    
          INNER JOIN Users AS U ON U.UserID = HFA.IsCreatedBy    
          INNER JOIN WJ_Students AS WJS ON WJS.StudentID = HFA.IsCreatedBy    
@@ -1003,7 +1003,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
 
          UNION ALL    
 
-         SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Individual PBL' AS ""Title"", FileName, FileExtension, 'https://hemvirtues.com/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
+         SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Individual PBL' AS ""Title"", FileName, FileExtension, 'https://www.hemvirtues.in/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
          FROM HF_TBL_UploadIndividualProject AS HFA    
          INNER JOIN Users AS U ON U.UserID = HFA.IsCreatedBy    
          INNER JOIN WJ_Students AS WJS ON WJS.StudentID = HFA.IsCreatedBy    
@@ -1016,7 +1016,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
 
          UNION ALL    
 
-         SELECT SU.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", SU.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, '' AS ""CourseName"", 'Group PBL' AS ""Title"", '' AS ""FileName"", '' AS ""FileExtension"", 'https://www.hemvirtues.com' || REPLACE(SUBSTRING(C.VideoActivity, POSITION('wwwroot\\' IN C.VideoActivity) + 7, LENGTH(C.ImageActivity)), '\\', '/') AS ""FileLink"", '10' AS ""TotalMarks"", '10' AS ""MarksObtain"", C.CreatedDate AS ""SubmissionDate""    
+         SELECT SU.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", SU.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, '' AS ""CourseName"", 'Group PBL' AS ""Title"", '' AS ""FileName"", '' AS ""FileExtension"", 'https://www.hemvirtues.in' || REPLACE(SUBSTRING(C.VideoActivity, POSITION('wwwroot\\' IN C.VideoActivity) + 7, LENGTH(C.ImageActivity)), '\\', '/') AS ""FileLink"", '10' AS ""TotalMarks"", '10' AS ""MarksObtain"", C.CreatedDate AS ""SubmissionDate""    
          FROM CreativityActivitesSubmission2021 C    
          LEFT JOIN HF_Rel_Manage_Group_List L ON C.InstituteID = L.IsAllocatedBy AND C.MainCourseID = L.MainCourseID    
          LEFT JOIN Users U ON L.StudentID = U.UserID    
@@ -1039,8 +1039,8 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
              (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) AS ""MainCourseName"", 
              WJI.firstName || ' ' || WJI.lastName AS ""Co-Ordinator Name"", 
              WJI.cityName, WJI.referralcode, WJI.mobileno, 
-             'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.ImageActivity, POSITION('wwwroot\\' IN CAS.ImageActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""ImageActivity"", 
-             'https://hemvirtues.com' || REPLACE(SUBSTRING(CAS.VideoActivity, POSITION('wwwroot\\' IN CAS.VideoActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""VideoActivity"", 
+             'https://www.hemvirtues.in' || REPLACE(SUBSTRING(CAS.ImageActivity, POSITION('wwwroot\\' IN CAS.ImageActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""ImageActivity"", 
+             'https://www.hemvirtues.in' || REPLACE(SUBSTRING(CAS.VideoActivity, POSITION('wwwroot\\' IN CAS.VideoActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""VideoActivity"", 
              CAS.ShortDescription, CAS.CreatedDate AS ""Submission Date"", hfrm.GroupName, hfrm.ListStudents, hfrm.MainCourseID, CAS.TeamMembersList, CAS.ActivityType
          FROM CreativityActivitesSubmission2021 AS CAS 
          INNER JOIN vw_school_profile_details AS WJI ON WJI.instituteid = CAS.InstituteID 
