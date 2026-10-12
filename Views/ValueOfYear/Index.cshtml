@@ -202,7 +202,7 @@
             if (grade.capacities && grade.capacities.length > 0) {
                 grade.capacities.forEach(cap => {
                     let imgUrl1 = cap.valueImageUrl || '/images/default-value.jpg';
-                    let imgUrl = cap.valueImageUrl ? cap.valueImageUrl : `/Uploads/Common_Document/${cap.valueTitleEng}.jpg`;
+                    let imgUrl = cap.valueImageUrl ? cap.valueImageUrl : `https://www.hemvirtues.in/Uploads/Common_Document/${cap.valueTitleEng}.jpg`;
                     // NAYA: Dynamic Action Button (Checks isCompleted flag)
                     let actionBtn = cap.isCompleted 
                         ? `<a href="/ValueOfYear/ActivitySubmission/${cap.id}" class="btn btn-success  btn-sm"><i class="bi bi-check-circle-fill me-1"></i> Completed</a>`

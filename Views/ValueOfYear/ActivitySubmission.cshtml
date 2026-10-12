@@ -22,6 +22,15 @@
         fileBaseUrl =
             $"{fileUri.Scheme}://{fileUri.Authority}";
     }
+
+    // string googlePickerApiKey =
+    //     Configuration["GoogleDrivePicker:ApiKey"] ?? "";
+
+    // string googlePickerClientId =
+    //     Configuration["GoogleDrivePicker:ClientId"] ?? "";
+
+    // string googlePickerAppId =
+    //     Configuration["GoogleDrivePicker:AppId"] ?? "";
 }
 
 <div class="container-fluid py-4">
@@ -110,14 +119,91 @@
                         <input type="file" class="form-control shadow-none" name="ImageFile" accept="image/*">
                     </div>
                     
-                    <div class="mb-3 bg-white p-3 rounded-3 border">
+                    @* <div class="mb-3 bg-white p-3 rounded-3 border">
                         <label class="small fw-bold text-dark mb-2">Upload Video Activity (*.mp4, *.mov)</label>
                         <input type="file" class="form-control shadow-none" name="VideoFile" accept="video/mp4,video/quicktime">
-                    </div>
+                    </div> *@
 
+                    <div class="mb-3 bg-white p-3 rounded-3 border">
+                        <label class="small fw-bold text-dark mb-2">
+                            Video Activity Submission
+                        </label>
+
+                        <select id="videoSubmissionType"
+                                class="form-select mb-3">
+                            <option value="file">Upload Video(Max 100 MB)</option>
+                            <option value="drive">Choose from Google Drive</option>
+                             <option value="link">Enter Manual Cloud Link</option>
+                        </select>
+
+                        <div id="videoFileContainer">
+                            <input type="file"
+                                   class="form-control"
+                                   name="VideoFile"
+                                   id="VideoFile"
+                                   accept="video/mp4,video/quicktime" />
+                            <small class="text-muted">
+                                Upload an MP4 or MOV video directly. Maximum size: 100 MB.
+                            </small>
+                               <div id="videoSizeError"
+                                class="text-danger small mt-2 d-none"></div>
+                        </div>
+
+                        <div id="videoDriveContainer" class="d-none">
+                            <button type="button"
+                                    id="btnChooseDriveVideo"
+                                    class="btn btn-outline-primary">
+                                <i class="bi bi-google me-1"></i>
+                                Choose Video from Google Drive
+                            </button>
+
+                            <input type="hidden"
+                                   id="VideoDriveFileId"
+                                   name="VideoDriveFileId"
+                                   disabled />
+
+                            <div id="selectedDriveVideo"
+                                 class="alert alert-success mt-3 mb-0 d-none">
+                                <i class="bi bi-check-circle-fill me-1"></i>
+                                Selected: <span id="selectedDriveVideoName"></span>
+
+                                <button type="button"
+                                        id="btnRemoveDriveVideo"
+                                        class="btn btn-sm btn-outline-danger ms-2">
+                                    Remove
+                                </button>
+                            </div>
+
+                            @* <small class="d-block text-muted mt-2">
+                                Select an existing video from your Google Drive.
+                                The video itself will not be uploaded to this server.
+                            </small> *@
+                        </div>
+                         <div id="videoLinkContainer" class="d-none">
+                                <label for="VideoCloudUrl" class="form-label">
+                                    Video link
+                                </label>
+
+                                <input type="url"
+                                       class="form-control"
+                                       id="VideoCloudUrl"
+                                       name="VideoCloudUrl"
+                                       placeholder="https://drive.google.com/... or https://onedrive.live.com/..."
+                                       disabled />
+
+                                <small class="text-muted d-block mt-2">
+                                    Paste a Google Drive, OneDrive, Dropbox, or other cloud video link.
+                                    Ensure the recipient has permission to view the video.
+                                </small>
+                            </div>
+                    </div>
                     <div class="mb-4 bg-white p-3 rounded-3 border">
-                        <label class="small fw-bold text-dark mb-2">Enter Comment / Observation</label>
-                        <textarea class="form-control shadow-none" name="Comment" rows="3" placeholder="Write your overall observation for this capacity here..."></textarea>
+                        <label class="small fw-bold text-dark mb-2" for="ActivityComment">  Enter Comment / Observation</label>
+                        <textarea class="form-control shadow-none" id="ActivityComment" name="Comment" rows="3" placeholder="Write your overall observation for this capacity here..." required></textarea>
+                        <small class="text-muted">
+        Comments are mandatory.
+    </small>
+    <div id="commentError" class="text-danger small mt-2 d-none"></div>
                     </div>
 
                     <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold py-2 shadow-sm fs-5">
@@ -136,8 +222,9 @@
 </style>
 
 @section Scripts {
+    
     <script>
-        const fileBaseUrl = '@fileBaseUrl';
+        const fileBaseUrl = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(fileBaseUrl));
 
         function getCentralFileUrl(filePath) {
             if (!filePath) return "";
@@ -158,9 +245,174 @@
         let existingSubmission = null;
 
         $(document).ready(function () {
+              $('#videoSubmissionType').trigger('change');
             loadPageData();
-        });
 
+        
+
+
+        });
+ const googlePickerConfig = @Html.Raw(
+    System.Text.Json.JsonSerializer.Serialize(new
+    {
+        apiKey = Configuration["GoogleDrivePicker:ApiKey"] ?? "",
+        clientId = Configuration["GoogleDrivePicker:ClientId"] ?? "",
+        appId = Configuration["GoogleDrivePicker:AppId"] ?? ""
+    })
+);
+
+let googleTokenClient = null;
+let googleAccessToken = null;
+let pickerApiLoaded = false;
+let googleIdentityLoaded = false;
+
+function onGooglePickerApiLoaded() {
+    gapi.load('picker', function () {
+        pickerApiLoaded = true;
+    });
+}
+
+function onGoogleIdentityLoaded() {
+     if (!window.google?.accounts?.oauth2) {
+        console.error('Google Identity Services failed to load.');
+        return;
+    }
+
+    googleTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: googlePickerConfig.clientId,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: function (response) {
+            if (response.error) {
+                alert('Google authorization failed. Please try again.');
+                return;
+            }
+
+            googleAccessToken = response.access_token;
+            createGoogleDrivePicker();
+        }
+    });
+
+    googleIdentityLoaded = true;
+}
+
+function openGoogleDrivePicker() {
+    if (!googlePickerConfig.apiKey ||
+        !googlePickerConfig.clientId ||
+        !googlePickerConfig.appId) {
+        alert('Google Drive Picker is not configured.');
+        return;
+    }
+
+    if (!pickerApiLoaded || !googleIdentityLoaded) {
+        alert('Google Drive Picker is still loading. Please try again.');
+        return;
+    }
+
+    googleTokenClient.requestAccessToken({
+        prompt: googleAccessToken ? '' : 'consent'
+    });
+}
+
+function createGoogleDrivePicker() {
+    const videoView = new google.picker.DocsView(
+        google.picker.ViewId.DOCS
+    );
+
+    videoView.setMimeTypes(
+        'video/mp4,video/quicktime,video/webm,video/x-msvideo,video/*'
+    );
+
+    const picker = new google.picker.PickerBuilder()
+        .setAppId(googlePickerConfig.appId)
+        .setDeveloperKey(googlePickerConfig.apiKey)
+        .setOAuthToken(googleAccessToken)
+        .setOrigin(window.location.origin)
+        .addView(videoView)
+        .enableFeature(google.picker.Feature.NAV_HIDDEN)
+        .setCallback(function (data) {
+            if (data.action !== google.picker.Action.PICKED) {
+                return;
+            }
+
+            const selectedFiles =
+                data[google.picker.Response.DOCUMENTS];
+
+            if (!selectedFiles || selectedFiles.length === 0) {
+                return;
+            }
+
+            const selectedFile = selectedFiles[0];
+            const fileId =
+                selectedFile[google.picker.Document.ID];
+
+            const fileName =
+                selectedFile[google.picker.Document.NAME] || 'Selected video';
+
+            const mimeType =
+                selectedFile[google.picker.Document.MIME_TYPE] || '';
+
+            if (!fileId || !mimeType.startsWith('video/')) {
+                alert('Please select a video file.');
+                return;
+            }
+
+            $('#VideoDriveFileId').val(fileId);
+            $('#selectedDriveVideoName').text(fileName);
+            $('#selectedDriveVideo').removeClass('d-none');
+        })
+        .build();
+
+    picker.setVisible(true);
+}
+
+//$(document).ready(function () {
+    const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
+
+            $('#videoSubmissionType').on('change', function () {
+                const type = this.value;
+
+                $('#videoFileContainer').toggleClass('d-none', type !== 'file');
+                $('#videoDriveContainer').toggleClass('d-none', type !== 'drive');
+                $('#videoLinkContainer').toggleClass('d-none', type !== 'link');
+
+                $('#VideoFile').prop('disabled', type !== 'file');
+                $('#VideoDriveFileId').prop('disabled', type !== 'drive');
+                $('#VideoCloudUrl').prop('disabled', type !== 'link');
+
+                if (type !== 'file') {
+                    $('#VideoFile').val('');
+                    $('#videoSizeError').addClass('d-none').text('');
+                }
+
+                if (type !== 'drive') {
+                    $('#VideoDriveFileId').val('');
+                    $('#selectedDriveVideo').addClass('d-none');
+                }
+
+                if (type !== 'link') {
+                    $('#VideoCloudUrl').val('');
+                }
+            });
+            $('#VideoFile').on('change', function () {
+                    const file = this.files && this.files[0];
+
+                    if (file && file.size > MAX_VIDEO_SIZE) {
+                        $('#videoSizeError')
+                            .text('Video exceeds 100 MB. Please choose a smaller video or use a cloud link.')
+                            .removeClass('d-none');
+
+                        this.value = '';
+                    } else {
+                        $('#videoSizeError').addClass('d-none').text('');
+                    }
+                });
+
+             $('#btnChooseDriveVideo').on('click', openGoogleDrivePicker);
+
+            $('#btnRemoveDriveVideo').on('click', function () {
+                $('#VideoDriveFileId').val('');
+                $('#selectedDriveVideo').addClass('d-none');
+            });
         function loadPageData() {
             $.get('/api/value/activity-page-data/' + VID, function (res) {
                 if (res.success) {
@@ -356,22 +608,116 @@
                 `);
             }
         }
-
+        $('#ActivityComment').on('input', function () {
+    if ($(this).val().trim()) {
+        $('#commentError').addClass('d-none').text('');
+    }
+});
         $('#frmSubmitActivity').on('submit', function(e) {
             e.preventDefault();
-            let $btn = $(this).find('button[type="submit"]');
-            let originalText = $btn.html();
+            const comment = $('#ActivityComment').val().trim();
+
+if (!comment) {
+    $('#commentError')
+        .text('Please enter a comment or observation.')
+        .removeClass('d-none');
+
+    $('#ActivityComment').focus();
+    return;
+}
+
+$('#commentError').addClass('d-none').text('');
+                    const videoType = $('#videoSubmissionType').val();
+                    const file = $('#VideoFile')[0].files?.[0];
+
+                    const $btn = $(this).find('button[type="submit"]');
+                    const originalText = $btn.html();
+                    if (videoType === 'file' && !file) {
+                        alert('Please select a video file.');
+                        $('#VideoFile').focus();
+                        return;
+                    }
+                    if (videoType === 'file' && file && file.size > MAX_VIDEO_SIZE) {
+                        alert('Video size cannot exceed 100 MB.');
+                        return;
+                    }
+
+                    if (videoType === 'drive' && !$('#VideoDriveFileId').val()) {
+                        alert('Please select a video from Google Drive.');
+                        return;
+                    }
+
+                    if (videoType === 'link') {
+                        const link = $('#VideoCloudUrl').val().trim();
+
+                        if (!link) {
+                            alert('Please enter a cloud video link.');
+                            return;
+                        }
+
+                        try {
+                            const url = new URL(link);
+
+                            if (!['http:', 'https:'].includes(url.protocol)) {
+                                throw new Error('Invalid protocol');
+                            }
+                        } catch {
+                            alert('Please enter a valid HTTP or HTTPS video link.');
+                            return;
+                        }
+                    }
+
+                    const imageFile = $(this).find('[name="ImageFile"]')[0].files[0];
+
+                if (!imageFile) {
+                    alert('Please select an image for the activity.');
+                    return;
+                }
+
+                const allowedImageTypes = [
+                    'image/jpeg',
+                    'image/png'
+                ];
+
+                if (!allowedImageTypes.includes(imageFile.type)) {
+                    alert('Please upload a JPG, JPEG, or PNG image.');
+                    return;
+                }
+
+                if (imageFile.size > 10 * 1024 * 1024) {
+                    alert('Image size cannot exceed 10 MB.');
+                    return;
+                }
             $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Submitting...');
 
             $.ajax({
                 url: '/api/value/submit-activity', type: 'POST', data: new FormData(this),
                 processData: false, contentType: false,
                 success: function(res) {
-                    alert(res.message);
-                    loadPageData(); // Reloads to show success message
+                  alert(res.message || 'Activity submitted successfully.');
+            if (res.success) {
+                loadPageData();
+            }// Reloads to show success message
                 },
+                 error: function (xhr) {
+            const message =
+                xhr.responseJSON?.message ||
+                (xhr.status === 413
+                    ? 'The upload is too large. Please use a smaller video or submit a cloud link.'
+                    : 'Unable to submit the activity. Please try again.');
+
+            alert(message);
+        },
                 complete: function() { $btn.prop('disabled', false).html(originalText); }
             });
         });
     </script>
+
+    <script async defer
+            src="https://apis.google.com/js/api.js"
+            onload="onGooglePickerApiLoaded()"></script>
+
+    <script async defer
+            src="https://accounts.google.com/gsi/client"
+            onload="onGoogleIdentityLoaded()"></script>
 }

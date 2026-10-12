@@ -113,6 +113,14 @@ builder.Services.AddTransient<SMSManager>();
 builder.Services.AddScoped<IGroupProjectService, GroupProjectService>();
 builder.Services.AddScoped<IFileStorageService,
     InHouseFileStorageService>();
+
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(
+    options =>
+    {
+        options.MultipartBodyLengthLimit =
+            110L * 1024 * 1024;
+    });
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
