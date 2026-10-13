@@ -118,7 +118,8 @@
         </div>
     </div>
 
-    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <!-- 1. Top KPI Grid mein Evaluated Projects ka naya card add karein -->
+    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
         <div class="kpi-card kpi-blue">
             <div class="kpi-card-top">
                 <div class="kpi-icon"><i class="bi bi-people-fill"></i></div>
@@ -161,6 +162,18 @@
             <div class="kpi-number"><span class="counter" id="lblTotalCertificates">0</span></div>
             <div class="kpi-bottom"><span style="color: #0369a1;">Rate: ₹10 / cert</span><strong id="lblCertificateIncentive" style="color: #0369a1;">₹0</strong></div>
             <div class="kpi-progress"><span style="width:85%; background: #0284c7;"></span></div>
+        </div>
+
+        <!-- NAYA EVALUATED PROJECTS KPI CARD -->
+        <div class="kpi-card" style="background: #fdf2f8; color: #db2777;">
+            <div class="kpi-card-top">
+                <div class="kpi-icon" style="background: #fce7f3; color: #ec4899;"><i class="bi bi-journal-check"></i></div>
+                <span class="kpi-change" style="color: #db2777;"><i class="bi bi-star-fill"></i> Projects</span>
+            </div>
+            <div class="kpi-title" style="color: #db2777;">Evaluated Projects</div>
+            <div class="kpi-number"><span class="counter" id="lblTotalEvaluatedProjects">0</span></div>
+            <div class="kpi-bottom"><span style="color: #db2777;">Dynamic Rates</span><strong id="lblProjectIncentive" style="color: #db2777;">₹0</strong></div>
+            <div class="kpi-progress"><span style="width:90%; background: #ec4899;"></span></div>
         </div>
 
         <div class="kpi-card kpi-orange">
@@ -225,6 +238,7 @@
                         <strong id="calcPanelTotal">₹0</strong>
                     </div>
                 </div>
+                <!-- 2. Incentive Breakdown List mein Evaluated Projects ka row add karein -->
                 <div class="calculation-list" style="margin-top: 15px;">
                     <div class="calculation-item">
                         <div><strong>Active Students</strong><small id="subTextStudents">0 × ₹5</small></div>
@@ -235,12 +249,16 @@
                         <b id="calcSchools">₹0</b>
                     </div>
                     <div class="calculation-item">
-                        <div><strong>Active Teachers</strong><small id="subTextTeachers">0 × ₹2</small></div>
+                        <div><strong>Active Teachers</strong><small id="subTestTeachers">0 × ₹2</small></div>
                         <b id="calcTeachers">₹0</b>
                     </div>
                     <div class="calculation-item">
                         <div><strong>Value Certifications</strong><small id="subTextCertificates">0 × ₹10</small></div>
                         <b id="calcCertificates">₹0</b>
+                    </div>
+                    <div class="calculation-item">
+                        <div><strong>Evaluated Projects</strong><small id="subTextProjects">Green(5), Orange(3), Blue(2), Yellow(1)</small></div>
+                        <b id="calcProjects">₹0</b>
                     </div>
                 </div>
                 <div class="calculation-total">
@@ -265,7 +283,6 @@
         </div>
     </div>
 </div>
-
 <script>
     document.addEventListener("DOMContentLoaded", function() {
 
@@ -290,24 +307,18 @@
 
         function safeSetText(id, value) {
             const element = document.getElementById(id);
-
             if (element) {
                 element.textContent = value;
             }
         }
 
         const monthSelect = document.getElementById("reportMonth");
-
-        if (!monthSelect) {
-            return;
-        }
+        if (!monthSelect) return;
 
         const currentDate = new Date();
-
         monthSelect.innerHTML = "";
 
         for (let i = 0; i < 12; i++) {
-
             const date = new Date(
                 currentDate.getFullYear(),
                 currentDate.getMonth() - i,
@@ -325,11 +336,8 @@
                 }
             );
 
-            const value =
-                `${year}-${String(month).padStart(2, "0")}`;
-
+            const value = `${year}-${String(month).padStart(2, "0")}`;
             const option = document.createElement("option");
-
             option.value = value;
             option.textContent = monthName;
 
@@ -340,82 +348,57 @@
             monthSelect.appendChild(option);
         }
 
-        let projectChart = null;
+        let projectChart = function() {
+            let chartInstance = null;
+            return function(counts) {
+                const canvas = document.getElementById("projectCompletionChart");
+                if (!canvas || typeof Chart === "undefined") return;
 
-        function renderProjectChart(greenVal, orangeVal) {
+                const labels = ["Green", "Orange", "Blue", "Yellow", "Red"];
+                const dataValues = [
+                    safeNumber(counts.green),
+                    safeNumber(counts.orange),
+                    safeNumber(counts.blue),
+                    safeNumber(counts.yellow),
+                    safeNumber(counts.red)
+                ];
+                const backgroundColors = ["#10b981", "#f59e0b", "#3b82f6", "#eab308", "#ef4444"];
 
-            const canvas =
-                document.getElementById("projectCompletionChart");
-
-            if (!canvas || typeof Chart === "undefined") {
-                return;
-            }
-
-            if (!projectChart) {
-
-                projectChart = new Chart(canvas, {
-
-                    type: "bar",
-
-                    data: {
-                        labels: [
-                            "Green Projects",
-                            "Orange Projects"
-                        ],
-
-                        datasets: [
-                            {
-                                data: [
-                                    greenVal,
-                                    orangeVal
-                                ],
-                                backgroundColor: [
-                                    "#10b981",
-                                    "#f59e0b"
-                                ],
+                if (!chartInstance) {
+                    chartInstance = new Chart(canvas, {
+                        type: "bar",
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: dataValues,
+                                backgroundColor: backgroundColors,
                                 borderRadius: 6,
-                                barThickness: 45
-                            }
-                        ]
-                    },
-
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
+                                barThickness: 30
+                            }]
                         },
-
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { precision: 0 }
                                 }
                             }
                         }
-                    }
-                });
-
-            } else {
-
-                projectChart.data.datasets[0].data = [
-                    greenVal,
-                    orangeVal
-                ];
-
-                projectChart.update();
-            }
-        }
+                    });
+                } else {
+                    chartInstance.data.datasets[0].data = dataValues;
+                    chartInstance.update();
+                }
+            };
+        }();
 
         async function getIncentive(year, month, headers) {
-
-            const url =
-                `/api/affiliate-dashboard/incentive-dashboard?year=${year}&month=${month}`;
-
+            const url = `/api/affiliate-dashboard/incentive-dashboard?year=${year}&month=${month}`;
             const response = await fetch(url, {
                 method: "GET",
                 headers: headers,
@@ -424,453 +407,192 @@
             });
 
             if (!response.ok) {
-                throw new Error(
-                    "Incentive API failed: " + response.status
-                );
+                throw new Error("Incentive API failed: " + response.status);
             }
 
             const json = await response.json();
-
-            if (
-                !json ||
-                json.success !== true ||
-                !json.data
-            ) {
+            if (!json || json.success !== true || !json.data) {
                 return null;
             }
-
             return json.data;
+        }
+
+        async function fetchEvaluatedProjectsIncentive(year, month, headers) {
+            try {
+                const url = window.evaluationApiUrl || "/api/project-evaluations/affiliate-history";
+                const response = await fetch(url, { method: "GET", headers: headers });
+                if (!response.ok) return { total: 0, counts: { green: 0, orange: 0, blue: 0, yellow: 0, red: 0 } };
+
+                const json = await response.json();
+                if (!json || !json.success || !Array.isArray(json.data)) {
+                    return { total: 0, counts: { green: 0, orange: 0, blue: 0, yellow: 0, red: 0 } };
+                }
+
+                const filteredData = json.data.filter(item => {
+                    if (!item.evaluatedDate) return false;
+                    const evalDate = new Date(item.evaluatedDate);
+                    return evalDate.getFullYear() === year && (evalDate.getMonth() + 1) === month;
+                });
+
+                let greenCount = 0, orangeCount = 0, blueCount = 0, yellowCount = 0, redCount = 0;
+
+                filteredData.forEach(item => {
+                    const color = (item.statusColor || "").trim().toLowerCase();
+                    if (color === "green") greenCount++;
+                    else if (color === "orange") orangeCount++;
+                    else if (color === "blue") blueCount++;
+                    else if (color === "yellow") yellowCount++;
+                    else if (color === "red") redCount++;
+                });
+
+                const projectIncentiveTotal = (greenCount * 5) + (orangeCount * 3) + (blueCount * 2) + (yellowCount * 1) + (redCount * 0);
+
+                return {
+                    total: projectIncentiveTotal,
+                    counts: { green: greenCount, orange: orangeCount, blue: blueCount, yellow: yellowCount, red: redCount }
+                };
+            } catch (e) {
+                console.error("Error fetching evaluated project history:", e);
+                return { total: 0, counts: { green: 0, orange: 0, blue: 0, yellow: 0, red: 0 } };
+            }
         }
 
         let latestRequest = 0;
 
         async function fetchIncentiveData(year, month) {
-
             const requestId = ++latestRequest;
 
             try {
-
                 const token = getAuthToken();
-
-                const headers = {
-                    "Accept": "application/json"
-                };
-
+                const headers = { "Accept": "application/json" };
                 if (token) {
-                    headers["Authorization"] =
-                        "Bearer " + token;
+                    headers["Authorization"] = "Bearer " + token;
                 }
 
-                const data =
-                    await getIncentive(
-                        year,
-                        month,
-                        headers
-                    );
+                const [data, projectEvalResult] = await Promise.all([
+                    getIncentive(year, month, headers),
+                    fetchEvaluatedProjectsIncentive(year, month, headers)
+                ]);
 
-                if (requestId !== latestRequest) {
-                    return;
-                }
+                if (requestId !== latestRequest) return;
+                if (!data) return;
 
-                if (!data) {
-                    return;
-                }
+                const activeStudents = safeNumber(data.activeStudents);
+                const studentIncentive = safeNumber(data.studentIncentive);
+                const activeTeachers = safeNumber(data.activeTeachers);
+                const teacherIncentive = safeNumber(data.teacherIncentive);
+                const activeSchools = safeNumber(data.activeSchools);
+                const schoolIncentive = safeNumber(data.schoolIncentive);
+                const totalCertificates = safeNumber(data.totalCertificates);
+                const certificateIncentive = safeNumber(data.certificateIncentive);
 
-                const activeStudents =
-                    safeNumber(data.activeStudents);
+                const projectIncentive = projectEvalResult.total;
+                const projectCounts = projectEvalResult.counts;
+                const totalEvaluatedProjects = projectCounts.green + projectCounts.orange + projectCounts.blue + projectCounts.yellow + projectCounts.red;
+                const baseTotalIncentive = studentIncentive + schoolIncentive + teacherIncentive + certificateIncentive + projectIncentive;
 
-                const studentIncentive =
-                    safeNumber(data.studentIncentive);
-
-                const activeTeachers =
-                    safeNumber(data.activeTeachers);
-
-                const teacherIncentive =
-                    safeNumber(data.teacherIncentive);
-
-                const activeSchools =
-                    safeNumber(data.activeSchools);
-
-                const schoolIncentive =
-                    safeNumber(data.schoolIncentive);
-
-                const totalCertificates =
-                    safeNumber(data.totalCertificates);
-
-                const certificateIncentive =
-                    safeNumber(data.certificateIncentive);
-
-                const greenProjects =
-                    safeNumber(data.greenProjects);
-
-                const orangeProjects =
-                    safeNumber(data.orangeProjects);
-
-                const totalIncentive =
-                    safeNumber(data.totalIncentive);
-
-                const history =
-                    Array.isArray(data.history)
-                        ? data.history
-                        : [];
-
+                const history = Array.isArray(data.history) ? data.history : [];
                 let currentHistory = null;
                 let previousHistory = null;
 
-                if (history.length > 0) {
+                if (history.length > 0) currentHistory = history[history.length - 1];
+                if (history.length > 1) previousHistory = history[history.length - 2];
 
-                    currentHistory =
-                        history[history.length - 1];
-                }
+                const currentTotal = currentHistory ? safeNumber(currentHistory.totalIncentive) + projectIncentive : baseTotalIncentive;
+                const previousTotal = previousHistory ? safeNumber(previousHistory.totalIncentive) : 0;
+                safeSetText("lblTotalEvaluatedProjects", formatNumber(totalEvaluatedProjects));
+                safeSetText("lblProjectIncentive", formatCurrency(projectIncentive));
+                safeSetText("subTextProjects", `G:${projectCounts.green}, O:${projectCounts.orange}, B:${projectCounts.blue}, Y:${projectCounts.yellow}`);
+                safeSetText("calcProjects", formatCurrency(projectIncentive));
 
-                if (history.length > 1) {
+                safeSetText("headerTotalIncentive", formatCurrency(currentTotal));
+                safeSetText("lblActiveStudents", formatNumber(activeStudents));
+                safeSetText("lblStudentIncentive", formatCurrency(studentIncentive));
+                safeSetText("subTextStudents", `${activeStudents} × ₹5`);
+                safeSetText("calcStudents", formatCurrency(studentIncentive));
 
-                    previousHistory =
-                        history[history.length - 2];
-                }
+                safeSetText("lblActiveSchools", formatNumber(activeSchools));
+                safeSetText("lblSchoolIncentive", formatCurrency(schoolIncentive));
+                safeSetText("subTextSchools", `${activeSchools} × ₹100`);
+                safeSetText("calcSchools", formatCurrency(schoolIncentive));
 
-                const currentTotal =
-                    currentHistory
-                        ? safeNumber(
-                            currentHistory.totalIncentive
-                        )
-                        : totalIncentive;
+                safeSetText("lblActiveTeachers", formatNumber(activeTeachers));
+                safeSetText("lblTeacherIncentive", formatCurrency(teacherIncentive));
+                safeSetText("subTextTeachers", `${activeTeachers} × ₹2`);
+                safeSetText("calcTeachers", formatCurrency(teacherIncentive));
 
-                const previousTotal =
-                    previousHistory
-                        ? safeNumber(
-                            previousHistory.totalIncentive
-                        )
-                        : 0;
+                safeSetText("lblTotalCertificates", formatNumber(totalCertificates));
+                safeSetText("lblCertificateIncentive", formatCurrency(certificateIncentive));
+                safeSetText("subTextCertificates", `${totalCertificates} × ₹10`);
+                safeSetText("calcCertificates", formatCurrency(certificateIncentive));
 
-                safeSetText(
-                    "headerTotalIncentive",
-                    formatCurrency(currentTotal)
-                );
+                safeSetText("lblSummaryTotal", formatCurrency(currentTotal));
+                safeSetText("currentIncentive", formatCurrency(currentTotal));
+                safeSetText("calculationTotal", formatCurrency(currentTotal));
+                safeSetText("calcPanelTotal", formatCurrency(currentTotal));
+                safeSetText("previousIncentive", formatCurrency(previousTotal));
 
-                safeSetText(
-                    "lblActiveStudents",
-                    formatNumber(activeStudents)
-                );
+                projectChart(projectCounts);
 
-                safeSetText(
-                    "lblStudentIncentive",
-                    formatCurrency(studentIncentive)
-                );
-
-                safeSetText(
-                    "subTextStudents",
-                    `${activeStudents} × ₹5`
-                );
-
-                safeSetText(
-                    "calcStudents",
-                    formatCurrency(studentIncentive)
-                );
-
-                safeSetText(
-                    "lblActiveSchools",
-                    formatNumber(activeSchools)
-                );
-
-                safeSetText(
-                    "lblSchoolIncentive",
-                    formatCurrency(schoolIncentive)
-                );
-
-                safeSetText(
-                    "subTextSchools",
-                    `${activeSchools} × ₹100`
-                );
-
-                safeSetText(
-                    "calcSchools",
-                    formatCurrency(schoolIncentive)
-                );
-
-                safeSetText(
-                    "lblActiveTeachers",
-                    formatNumber(activeTeachers)
-                );
-
-                safeSetText(
-                    "lblTeacherIncentive",
-                    formatCurrency(teacherIncentive)
-                );
-
-                safeSetText(
-                    "subTextTeachers",
-                    `${activeTeachers} × ₹2`
-                );
-
-                safeSetText(
-                    "calcTeachers",
-                    formatCurrency(teacherIncentive)
-                );
-
-                safeSetText(
-                    "lblTotalCertificates",
-                    formatNumber(totalCertificates)
-                );
-
-                safeSetText(
-                    "lblCertificateIncentive",
-                    formatCurrency(certificateIncentive)
-                );
-
-                safeSetText(
-                    "subTextCertificates",
-                    `${totalCertificates} × ₹10`
-                );
-
-                safeSetText(
-                    "calcCertificates",
-                    formatCurrency(certificateIncentive)
-                );
-
-                safeSetText(
-                    "lblSummaryTotal",
-                    formatCurrency(currentTotal)
-                );
-
-                safeSetText(
-                    "currentIncentive",
-                    formatCurrency(currentTotal)
-                );
-
-                safeSetText(
-                    "calculationTotal",
-                    formatCurrency(currentTotal)
-                );
-
-                safeSetText(
-                    "calcPanelTotal",
-                    formatCurrency(currentTotal)
-                );
-
-                safeSetText(
-                    "previousIncentive",
-                    formatCurrency(previousTotal)
-                );
-
-                renderProjectChart(
-                    greenProjects,
-                    orangeProjects
-                );
-
-                const difference =
-                    currentTotal - previousTotal;
-
+                const difference = currentTotal - previousTotal;
                 let percentage = 0;
-
                 if (previousTotal > 0) {
-
-                    percentage =
-                        (
-                            Math.abs(difference) /
-                            previousTotal *
-                            100
-                        ).toFixed(1);
-
+                    percentage = (Math.abs(difference) / previousTotal * 100).toFixed(1);
                 } else if (currentTotal > 0) {
-
                     percentage = "100";
                 }
 
-                const differenceElement =
-                    document.getElementById(
-                        "incentiveDifference"
-                    );
+                const differenceElement = document.getElementById("incentiveDifference");
+                const percentageElement = document.getElementById("incentivePercentage");
+                const growthElement = document.getElementById("headerGrowthPercentage");
+                const comparisonIcon = document.getElementById("comparisonIcon");
 
-                const percentageElement =
-                    document.getElementById(
-                        "incentivePercentage"
-                    );
-
-                const growthElement =
-                    document.getElementById(
-                        "headerGrowthPercentage"
-                    );
-
-                const comparisonIcon =
-                    document.getElementById(
-                        "comparisonIcon"
-                    );
-
-                if (
-                    differenceElement &&
-                    percentageElement
-                ) {
-
+                if (differenceElement && percentageElement) {
                     if (difference > 0) {
-
-                        differenceElement.textContent =
-                            "+" +
-                            formatCurrency(difference);
-
-                        percentageElement.textContent =
-                            `${percentage}% increase`;
-
-                        if (growthElement) {
-                            growthElement.textContent =
-                                `${percentage}%`;
-                        }
-
-                        if (comparisonIcon) {
-                            comparisonIcon.innerHTML =
-                                '<i class="bi bi-arrow-up"></i>';
-                        }
-
+                        differenceElement.textContent = "+" + formatCurrency(difference);
+                        percentageElement.textContent = `${percentage}% increase`;
+                        if (growthElement) growthElement.textContent = `${percentage}%`;
+                        if (comparisonIcon) comparisonIcon.innerHTML = '<i class="bi bi-arrow-up"></i>';
                     } else if (difference < 0) {
-
-                        differenceElement.textContent =
-                            "-" +
-                            formatCurrency(
-                                Math.abs(difference)
-                            );
-
-                        percentageElement.textContent =
-                            `${percentage}% decrease`;
-
-                        if (growthElement) {
-                            growthElement.textContent =
-                                `-${percentage}%`;
-                        }
-
-                        if (comparisonIcon) {
-                            comparisonIcon.innerHTML =
-                                '<i class="bi bi-arrow-down"></i>';
-                        }
-
+                        differenceElement.textContent = "-" + formatCurrency(Math.abs(difference));
+                        percentageElement.textContent = `${percentage}% decrease`;
+                        if (growthElement) growthElement.textContent = `-${percentage}%`;
+                        if (comparisonIcon) comparisonIcon.innerHTML = '<i class="bi bi-arrow-down"></i>';
                     } else {
-
-                        differenceElement.textContent =
-                            "₹0";
-
-                        percentageElement.textContent =
-                            "0% change";
-
-                        if (growthElement) {
-                            growthElement.textContent =
-                                "0%";
-                        }
-
-                        if (comparisonIcon) {
-                            comparisonIcon.innerHTML =
-                                '<i class="bi bi-dash"></i>';
-                        }
+                        differenceElement.textContent = "₹0";
+                        percentageElement.textContent = "0% change";
+                        if (growthElement) growthElement.textContent = "0%";
+                        if (comparisonIcon) comparisonIcon.innerHTML = '<i class="bi bi-dash"></i>';
                     }
                 }
 
-                if (currentHistory) {
-
-                    safeSetText(
-                        "currentIncentive",
-                        formatCurrency(
-                            currentHistory.totalIncentive
-                        )
-                    );
-                }
-
-                if (previousHistory) {
-
-                    safeSetText(
-                        "previousIncentive",
-                        formatCurrency(
-                            previousHistory.totalIncentive
-                        )
-                    );
-                }
-
             } catch (error) {
-
-                console.error(
-                    "Failed to load incentive dashboard:",
-                    error
-                );
+                console.error("Failed to load incentive dashboard:", error);
             }
         }
 
         function triggerDataLoad() {
-
             const value = monthSelect.value;
+            if (!value) return;
 
-            if (!value) {
-                return;
-            }
+            const parts = value.split("-");
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10);
 
-            const parts =
-                value.split("-");
+            const selectedDate = new Date(year, month - 1, 1);
+            const previousDate = new Date(year, month - 2, 1);
 
-            const year =
-                parseInt(parts[0], 10);
+            const selectedMonthName = selectedDate.toLocaleString("default", { month: "long", year: "numeric" });
+            const previousMonthName = previousDate.toLocaleString("default", { month: "long", year: "numeric" });
 
-            const month =
-                parseInt(parts[1], 10);
+            safeSetText("headerMonthLabel", selectedMonthName);
+            safeSetText("selectedMonthLabel", selectedMonthName);
+            safeSetText("previousMonthLabel", previousMonthName);
 
-            const selectedDate =
-                new Date(
-                    year,
-                    month - 1,
-                    1
-                );
-
-            const previousDate =
-                new Date(
-                    year,
-                    month - 2,
-                    1
-                );
-
-            const selectedMonthName =
-                selectedDate.toLocaleString(
-                    "default",
-                    {
-                        month: "long",
-                        year: "numeric"
-                    }
-                );
-
-            const previousMonthName =
-                previousDate.toLocaleString(
-                    "default",
-                    {
-                        month: "long",
-                        year: "numeric"
-                    }
-                );
-
-            safeSetText(
-                "headerMonthLabel",
-                selectedMonthName
-            );
-
-            safeSetText(
-                "selectedMonthLabel",
-                selectedMonthName
-            );
-
-            safeSetText(
-                "previousMonthLabel",
-                previousMonthName
-            );
-
-            safeSetText(
-                "calculationMonth",
-                selectedMonthName
-            );
-
-            fetchIncentiveData(
-                year,
-                month
-            );
+            fetchIncentiveData(year, month);
         }
 
-        monthSelect.addEventListener(
-            "change",
-            triggerDataLoad
-        );
-
+        monthSelect.addEventListener("change", triggerDataLoad);
         triggerDataLoad();
     });
 </script>

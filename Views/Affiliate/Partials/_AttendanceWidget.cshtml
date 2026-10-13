@@ -1,14 +1,8 @@
-﻿<!-- Flatpickr CSS -->
-<link rel="stylesheet"
+﻿<link rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-<!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-
-<!-- ========================================================= -->
-<!-- ATTENDANCE STATUS CARD -->
-<!-- ========================================================= -->
 
 <div class="card shadow-sm rounded-4 bg-white p-4 mb-4 animate-fade-in"
      style="border: 1px solid #d9dfe5 !important;">
@@ -796,216 +790,67 @@
     let currentPunchState = false;
 
 
-    async function fetchAttendanceStatus() {
+        async function fetchAttendanceStatus() {
+            try {
+                const res = await apiRequest("/api/affiliate-attendance/status");
+                const btn = document.getElementById("btnPunchAction");
+                if (!btn) return;
 
-        try {
+                btn.classList.remove("d-none");
 
-            const res = await apiRequest(
-                "/api/affiliate-attendance/status"
-            );
+                if (res.isCheckedIn) {
+                    currentPunchState = true;
+                    btn.disabled = false;
+                    btn.classList.remove("btn-success", "btn-secondary");
+                    btn.classList.add("btn-danger");
+                    btn.innerHTML = `<i class="bi bi-stop-circle me-1"></i> Punch Out`;
 
-
-            if (!res.success) {
-
-                return;
-
-            }
-
-
-            const btn = document.getElementById("btnPunchAction");
-
-            if (!btn) return;
-
-
-            btn.classList.remove("d-none");
-
-
-            if (res.isCheckedIn) {
-
-                currentPunchState = true;
-
-
-                btn.disabled = false;
-
-                btn.classList.remove(
-                    "btn-success",
-                    "btn-secondary"
-                );
-
-                btn.classList.add("btn-danger");
-
-
-                btn.innerHTML = `
-                    <i class="bi bi-stop-circle me-1"></i>
-                    Punch Out
-                `;
-
-
-                const inTime =
-                    formatTime(res.todayRecord?.punchInTime);
-
-
-                const mapBadge =
-                    renderLocationBadge(
-                        res.todayRecord?.punchInLocation
-                    );
-
-
-                document.getElementById("attStatusText").innerHTML = `
-                    <span class="text-success">
-
-                        <i class="bi bi-dot fs-3 align-middle"></i>
-
-                        Status: Punched In
-
-                    </span>
-                `;
-
-
-                document.getElementById("attSubText").innerHTML = `
-                    Punched in today at
-                    <b>${inTime}</b>
-                    |
-                    In Location: ${mapBadge}
-                `;
-
-            }
-
-            else {
-
-                currentPunchState = false;
-
-
-                if (
-                    res.todayRecord &&
-                    res.todayRecord.punchOutTime
-                ) {
-
-                    const outTime =
-                        formatTime(res.todayRecord.punchOutTime);
-
-
-                    const modeText =
-                        res.todayRecord.punchOutMode === "System"
-                            ? `<span class="text-warning small">
-                                  (Auto closed by System)
-                               </span>`
-                            : "";
-
+                    const inTime = formatTime(res.todayRecord?.punchInTime);
+                    const mapBadge = renderLocationBadge(res.todayRecord?.punchInLocation);
 
                     document.getElementById("attStatusText").innerHTML = `
-                        <span class="text-secondary">
-                            Status: Shift Completed Today
+                        <span class="text-success">
+                            <i class="bi bi-dot fs-3 align-middle"></i> Status: Punched In
                         </span>
-
-                        ${modeText}
                     `;
-
-
                     document.getElementById("attSubText").innerHTML = `
-                        Punched out today at
-                        <b>${outTime}</b>
-                        |
-                        Total logged:
-                        <b>${res.todayRecord.totalHoursWorked || 0} hrs</b>
+                        Punched in today at <b>${inTime}</b> | In Location: ${mapBadge}
                     `;
-
-
-                    btn.disabled = true;
-
-                    btn.classList.remove(
-                        "btn-success",
-                        "btn-danger"
-                    );
-
-                    btn.classList.add("btn-secondary");
-
-
-                    btn.innerHTML = `
-                        <i class="bi bi-check-all me-1"></i>
-                        Completed Today
-                    `;
-
-                }
-
-                else {
-
+                } else {
+                    currentPunchState = false;
                     btn.disabled = false;
-
-                    btn.classList.remove(
-                        "btn-danger",
-                        "btn-secondary"
-                    );
-
+                    btn.classList.remove("btn-danger", "btn-secondary");
                     btn.classList.add("btn-success");
 
-
                     btn.innerHTML = `
-                        <i class="bi bi-fingerprint me-1"></i>
-                        Punch In
+                        <i class="bi bi-fingerprint me-1"></i> Punch In
                     `;
 
-
-                    document.getElementById("attStatusText").innerHTML = `
-                        <span class="text-dark">
-                            Status: Ready to Punch In
-                        </span>
-                    `;
-
-
-                    if (res.lastRecord) {
-
-                        const lastDate =
-                            formatDateDDMMYYYY(
-                                res.lastRecord.attendanceDate
-                            );
-
-
-                        const lastOut =
-                            formatTime(
-                                res.lastRecord.punchOutTime
-                            );
-
-
-                        document.getElementById("attSubText").innerHTML = `
-                            Last shift on
-                            <b>${lastDate}</b>
-                            |
-                            Last Punch Out:
-                            ${lastOut}
+                    if (res.todayRecord && res.todayRecord.punchOutTime) {
+                        const outTime = formatTime(res.todayRecord.punchOutTime);
+                        document.getElementById("attStatusText").innerHTML = `
+                            <span class="text-dark">Status: Ready to Punch In Again</span>
                         `;
-
+                        document.getElementById("attSubText").innerHTML = `
+                            Last punch out today at <b>${outTime}</b> | Total logged today: <b>${res.todayRecord.totalHoursWorked || 0} hrs</b>
+                        `;
+                    } else {
+                        document.getElementById("attStatusText").innerHTML = `
+                            <span class="text-dark">Status: Ready to Punch In</span>
+                        `;
+                        document.getElementById("attSubText").innerHTML = `
+                            Click Punch In to start your shift. You can punch multiple times today.
+                        `;
                     }
-
-                    else {
-
-                        document.getElementById("attSubText").innerHTML =
-                            "No previous attendance found. Click Punch In to start.";
-
-                    }
-
                 }
 
+                if (typeof window.checkHubVisibility === 'function') {
+                    window.checkHubVisibility();
+                }
+            } catch (error) {
+                console.error("Attendance status error:", error);
             }
-
         }
-
-        catch (error) {
-
-            console.error(
-                "Attendance status error:",
-                error
-            );
-
-        }
-
-    }
-
-
-
-    /* =========================================================
-       PUNCH
-    ========================================================= */
 
     async function togglePunch() {
 

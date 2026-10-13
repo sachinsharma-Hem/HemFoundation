@@ -46,6 +46,13 @@
         </div>
     </div>
 
+    <!-- WARNING MESSAGE BOX (Agar Punch In nahi hai) -->
+    <div id="activityWarningBox" class="alert alert-warning border-0 rounded-4 shadow-sm p-4 text-center mb-4" style="display: none;">
+        <i class="bi bi-exclamation-triangle-fill text-warning fs-3 d-block mb-2"></i>
+        <h6 class="fw-bold text-dark mb-1">Management Hub Locked</h6>
+        <p class="text-muted small mb-0">Kindly punch in first today to access the management hub and process operations.</p>
+    </div>
+
     <!-- TABS -->
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-4">
@@ -433,7 +440,557 @@
     }
 </style>
 
+
 <script>
+    (function() {
+        "use strict";
+
+        function getAuthToken() {
+            return localStorage.getItem("jwt_token") || sessionStorage.getItem("jwt_token") || "";
+        }
+
+        async function apiRequest(url, options = {}) {
+            const token = getAuthToken();
+            const headers = { "Authorization": "Bearer " + token };
+
+            if (!(options.body instanceof FormData)) {
+                headers["Content-Type"] = "application/json";
+            }
+
+            const response = await fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } });
+            let data = null;
+            try { data = await response.json(); } catch { data = null; }
+            if (!response.ok) { throw { status: response.status, data: data }; }
+            return data;
+        }
+
+        /* =========================================================
+           PUNCH STATUS CHECK FOR ACTIONS & WARNING BOX
+        ========================================================= */
+        async function verifyPunchStatusForActions() {
+            try {
+                const res = await apiRequest("/api/affiliate-attendance/status");
+                const btnAct = document.getElementById("btnNewActivity");
+                const btnExp = document.getElementById("btnNewExpense");
+                const btnGenBill = document.getElementById("btnGenerateMonthlyBill");
+                const warningBox = document.getElementById("activityWarningBox");
+
+                if (!res.success || !res.isCheckedIn) {
+                    if (btnAct) { btnAct.disabled = true; btnAct.style.opacity = "0.5"; }
+                    if (btnExp) { btnExp.disabled = true; btnExp.style.opacity = "0.5"; }
+                    if (btnGenBill) { btnGenBill.disabled = true; btnGenBill.style.opacity = "0.5"; }
+                    if (warningBox) warningBox.style.display = "block";
+                } else {
+                    if (btnAct) { btnAct.disabled = false; btnAct.style.opacity = "1"; }
+                    if (btnExp) { btnExp.disabled = false; btnExp.style.opacity = "1"; }
+                    if (btnGenBill) { btnGenBill.disabled = false; btnGenBill.style.opacity = "1"; }
+                    if (warningBox) warningBox.style.display = "none";
+                }
+            } catch (e) {
+                console.error("Punch status verification error:", e);
+                const warningBox = document.getElementById("activityWarningBox");
+                if (warningBox) warningBox.style.display = "block";
+            }
+        }
+
+        function showModal(id) {
+            const element = document.getElementById(id);
+            if (!element) return;
+            bootstrap.Modal.getOrCreateInstance(element).show();
+        }
+
+        function hideModal(id) {
+            const element = document.getElementById(id);
+            if (!element) return;
+            bootstrap.Modal.getOrCreateInstance(element).hide();
+        }
+
+        function formatDate(value) {
+            if (!value) return "-";
+            const date = new Date(value);
+            if (isNaN(date.getTime())) return "-";
+            return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+        }
+
+        function escapeHtml(value) {
+            if (value === null || value === undefined) return "";
+            return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+        }
+
+        function getStatusBadge(status) {
+            const value = (status || "Pending").toLowerCase();
+            if (value === "completed" || value === "approved") {
+                return `<span class="badge bg-success-subtle text-success border border-success-subtle status-badge">Completed</span>`;
+            }
+            if (value === "inprogress") {
+                return `<span class="badge bg-primary-subtle text-primary border border-primary-subtle status-badge">In Progress</span>`;
+            }
+            if (value === "rejected") {
+                return `<span class="badge bg-danger-subtle text-danger border border-danger-subtle status-badge">Rejected</span>`;
+            }
+            return `<span class="badge bg-warning-subtle text-dark border border-warning-subtle status-badge">Pending</span>`;
+        }
+
+        async function setupPincodeLookup() {
+            const pincodeInput = document.getElementById("activityPincode");
+            if (!pincodeInput) return;
+
+            pincodeInput.addEventListener("blur", async function() {
+                const pin = this.value.trim();
+                if (pin.length === 6 && /^\d+$/.test(pin)) {
+                    try {
+                        const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+                        const data = await res.json();
+                        if (data && data[0].Status === "Success") {
+                            const postOffice = data[0].PostOffice[0];
+                            document.getElementById("activityCity").value = postOffice.District || postOffice.Region || "";
+                            document.getElementById("activityState").value = postOffice.State || "";
+                        }
+                    } catch (e) {
+                        console.error("Pincode fetch error:", e);
+                    }
+                }
+            });
+        }
+
+        function setMinDateTime() {
+            const dateInput = document.getElementById("expenseDate");
+            if (!dateInput) return;
+
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+
+            const firstDay = new Date(year, month, 1);
+            const minDate = firstDay.toISOString().split("T")[0];
+
+            const lastDay = new Date(year, month + 1, 0);
+            const maxDate = lastDay.toISOString().split("T")[0];
+
+            dateInput.setAttribute("min", minDate);
+            dateInput.setAttribute("max", maxDate);
+        }
+
+        const fileBaseUrl = '@fileBaseUrl';
+
+        function getCentralFileUrl(filePath) {
+            if (!filePath) return "";
+            if (/^https?:\/\//i.test(filePath)) {
+                return filePath;
+            }
+            return fileBaseUrl.replace(/\/+$/, "") + "/" + filePath.replace(/^\/+/, "");
+        }
+
+        async function loadActivities() {
+            const tbody = document.getElementById("activityTableBody");
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading activities...</td></tr>`;
+
+            try {
+                const res = await apiRequest("/api/other-activity/list");
+                if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-5">No activities found.</td></tr>`;
+                    return;
+                }
+
+                let html = "";
+                res.data.forEach(item => {
+                    const location = [item.address, item.city, item.state, item.pincode].filter(Boolean).join(", ");
+                    let imageHtml = item.imagePath
+                        ? `<a href="${escapeHtml(getCentralFileUrl(item.imagePath))}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>`
+                        : "-";
+                    let isCompleted = (item.status || "").toLowerCase() === "completed";
+                    let actionBtn = isCompleted
+                        ? `<span class="badge bg-success-subtle text-success">Locked (Completed)</span>`
+                        : `<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 btn-update-activity" data-id="${item.id}" data-status="${escapeHtml(item.status || "Pending")}" data-remark="${escapeHtml(item.updateRemark || "")}"><i class="bi bi-pencil-square me-1"></i> Update</button>`;
+
+                    html += `
+                            <tr>
+                                <td class="px-3"><div class="fw-semibold text-dark">${escapeHtml(item.activityName)}</div></td>
+                                <td>${escapeHtml(item.schoolName)}</td>
+                                <td><span class="small text-muted">${escapeHtml(location || "-")}</span></td>
+                                <td>${escapeHtml(item.visitReason || "-")}</td>
+                                <td>${escapeHtml(item.initialRemark || "-")}</td>
+                                <td>${escapeHtml(item.updateRemark || "-")}</td>
+                                <td>${getStatusBadge(item.status)}</td>
+                                <td>${imageHtml}</td>
+                                <td class="text-end px-3">${actionBtn}</td>
+                            </tr>
+                        `;
+                });
+                tbody.innerHTML = html;
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger py-5">Failed to load activities.</td></tr>`;
+            }
+        }
+
+        async function createActivity(event) {
+            event.preventDefault();
+            const button = document.getElementById("btnCreateActivity");
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Creating...`;
+
+            const payload = {
+                ActivityName: document.getElementById("activityName").value.trim(),
+                SchoolName: document.getElementById("schoolName").value.trim(),
+                Address: document.getElementById("activityAddress").value.trim(),
+                Pincode: document.getElementById("activityPincode").value.trim(),
+                City: document.getElementById("activityCity").value.trim(),
+                State: document.getElementById("activityState").value.trim(),
+                VisitReason: document.getElementById("visitReason").value.trim(),
+                InitialRemark: document.getElementById("initialRemark").value.trim()
+            };
+
+            try {
+                const res = await apiRequest("/api/other-activity/create", { method: "POST", body: JSON.stringify(payload) });
+                if (res.success) {
+                    alert(res.message || "Activity created successfully.");
+                    document.getElementById("activityForm").reset();
+                    hideModal("activityModal");
+                    await loadActivities();
+                } else {
+                    alert(res.message || "Unable to create activity.");
+                }
+            } catch (error) {
+                alert(error.data?.message || "Error creating activity.");
+            } finally {
+                button.disabled = false;
+                button.innerHTML = `<i class="bi bi-check-lg me-1"></i> Create Activity`;
+            }
+        }
+
+        function openUpdateModal(button) {
+            const id = button.getAttribute("data-id");
+            const status = button.getAttribute("data-status") || "Pending";
+            const remark = button.getAttribute("data-remark") || "";
+
+            document.getElementById("updateActivityId").value = id;
+            document.getElementById("updateStatus").value = status;
+            document.getElementById("updateRemark").value = remark;
+            document.getElementById("activityImage").value = "";
+
+            showModal("updateActivityModal");
+        }
+
+        async function updateActivity(event) {
+            event.preventDefault();
+            const id = document.getElementById("updateActivityId").value;
+            const updateRemark = document.getElementById("updateRemark").value.trim();
+            const status = document.getElementById("updateStatus").value;
+            const imageInput = document.getElementById("activityImage");
+
+            const button = document.getElementById("btnUpdateActivity");
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Saving...`;
+
+            const formData = new FormData();
+            formData.append("id", String(id));
+            formData.append("updateRemark", updateRemark);
+            formData.append("status", status);
+            if (imageInput.files && imageInput.files.length > 0) {
+                formData.append("activityImage", imageInput.files[0]);
+            }
+
+            try {
+                const res = await apiRequest("/api/other-activity/update-progress", { method: "POST", body: formData });
+                if (res.success) {
+                    alert(res.message || "Activity updated successfully.");
+                    hideModal("updateActivityModal");
+                    document.getElementById("updateActivityForm").reset();
+                    await loadActivities();
+                } else {
+                    alert(res.message || "Unable to update activity.");
+                }
+            } catch (error) {
+                alert(error.data?.message || "Error updating activity.");
+            } finally {
+                button.disabled = false;
+                button.innerHTML = `<i class="bi bi-save me-1"></i> Save Update`;
+            }
+        }
+
+        window.toggleExpenseRelation = async function() {
+            const type = document.querySelector('input[name="expenseRelation"]:checked').value;
+            const lbl = document.getElementById("lblExpenseDropdown");
+            const select = document.getElementById("ddlRelatedItem");
+
+            select.innerHTML = `<option value="">Loading...</option>`;
+            if (type === "SchoolVisit") {
+                lbl.innerHTML = `Select School Visit <span class="text-danger">*</span>`;
+                try {
+                    const res = await apiRequest("/api/other-activity/expense/school-visits");
+                    let opts = `<option value="">-- Choose School Visit --</option>`;
+                    if (res.success && res.data) {
+                        res.data.forEach(v => opts += `<option value="${v.id}">${v.name}</option>`);
+                    }
+                    select.innerHTML = opts;
+                } catch { select.innerHTML = `<option value="">Failed to load</option>`; }
+            } else {
+                lbl.innerHTML = `Select Other Activity <span class="text-danger">*</span>`;
+                try {
+                    const res = await apiRequest("/api/other-activity/expense/activities-list");
+                    let opts = `<option value="">-- Choose Activity --</option>`;
+                    if (res.success && res.data) {
+                        res.data.forEach(a => opts += `<option value="${a.id}">${a.name}</option>`);
+                    }
+                    select.innerHTML = opts;
+                } catch { select.innerHTML = `<option value="">Failed to load</option>`; }
+            }
+        };
+
+        function initExpenseMonthFilter() {
+            const monthInput = document.getElementById("filterExpenseMonth");
+            if (monthInput && !monthInput.value) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, "0");
+                monthInput.value = `${year}-${month}`;
+            }
+        }
+
+        async function loadExpenses() {
+            initExpenseMonthFilter();
+            const selectedMonthYear = document.getElementById("filterExpenseMonth").value;
+            const tbody = document.getElementById("expenseTableBody");
+
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-success me-2"></div> Loading expenses...</td></tr>`;
+
+            try {
+                const url = selectedMonthYear
+                    ? `/api/other-activity/expense/list?month=${selectedMonthYear}`
+                    : "/api/other-activity/expense/list";
+
+                const res = await apiRequest(url);
+                if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-5">No expenses found for this month.</td></tr>`;
+                    return;
+                }
+
+                let html = "";
+                res.data.forEach(item => {
+                    let receiptHtml = item.receiptPath
+                        ? `<a href="${escapeHtml(getCentralFileUrl(item.receiptPath))}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>`
+                        : "-";
+
+                    html += `
+                            <tr>
+                                <td class="px-3 fw-semibold">${formatDate(item.expenseDate)}</td>
+                                <td>${escapeHtml(item.expenseDetail || "-")}</td>
+                                <td class="fw-bold text-success">₹ ${Number(item.amount || 0).toFixed(2)}</td>
+                                <td>${receiptHtml}</td>
+                                <td>${getStatusBadge(item.status)}</td>
+                            </tr>
+                        `;
+                });
+                tbody.innerHTML = html;
+            } catch {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-5">Failed to load expenses.</td></tr>`;
+            }
+        }
+
+        async function createExpense(event) {
+            event.preventDefault();
+            const button = document.getElementById("btnCreateExpense");
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Submitting...`;
+
+            const relationType = document.querySelector('input[name="expenseRelation"]:checked').value;
+            const selectedId = document.getElementById("ddlRelatedItem").value;
+            const receiptFile = document.getElementById("expenseReceipt").files[0];
+
+            const formData = new FormData();
+            formData.append("expenseDate", document.getElementById("expenseDate").value);
+            formData.append("expenseDetail", document.getElementById("expenseDetail").value.trim());
+            formData.append("amount", document.getElementById("expenseAmount").value);
+            formData.append("relatedType", relationType);
+            if (selectedId) formData.append("relatedId", selectedId);
+            if (receiptFile) formData.append("expenseImage", receiptFile);
+
+            try {
+                const res = await apiRequest("/api/other-activity/expense/create", { method: "POST", body: formData });
+                if (res.success) {
+                    alert(res.message || "Expense submitted successfully.");
+                    document.getElementById("expenseForm").reset();
+                    hideModal("expenseModal");
+                    await loadExpenses();
+                } else {
+                    alert(res.message || "Unable to submit expense.");
+                }
+            } catch (error) {
+                alert(error.data?.message || "Error submitting expense.");
+            } finally {
+                button.disabled = false;
+                button.innerHTML = `<i class="bi bi-check-lg me-1"></i> Submit Expense`;
+            }
+        }
+
+        async function loadMonthlyExpenseBills() {
+            const tbody = document.getElementById("monthlyExpenseBillTableBody");
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3"><div class="spinner-border spinner-border-sm text-success me-2"></div> Loading monthly bills...</td></tr>`;
+
+            try {
+                const res = await apiRequest("/api/other-activity/expense/monthly-bills");
+                if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No monthly expense bills generated yet.</td></tr>`;
+                    return;
+                }
+
+                let html = "";
+                res.data.forEach(b => {
+                    let badge = b.status === 'Paid' ? 'success' : (b.status === 'Approved' ? 'primary' : (b.status === 'Rejected' ? 'danger' : 'warning'));
+                    let docs = b.generatedPdfUrl
+                        ? `<a href="${escapeHtml(getCentralFileUrl(b.generatedPdfUrl))}" target="_blank" class="btn btn-sm btn-outline-primary">Generated PDF</a>`
+                        : "-";
+
+                    if (b.signedPdfUrl) {
+                        docs += `<br><a href="${escapeHtml(getCentralFileUrl(b.signedPdfUrl))}" target="_blank" class="btn btn-sm btn-outline-success mt-1">Signed PDF</a>`;
+                    }
+
+                    let actionBtn = b.status === 'Generated'
+                        ? `<button class="btn btn-sm btn-success rounded-pill px-3 py-1 shadow-none" onclick="openExpenseUploadModal(${b.id})"><i class="bi bi-cloud-upload me-1"></i> Upload Signed</button>`
+                        : `<span class="badge bg-secondary-subtle text-secondary">Locked / Submitted</span>`;
+
+                    html += `
+                            <tr>
+                                <td class="px-3 fw-semibold">${escapeHtml(b.monthYear)}</td>
+                                <td><b class="text-success">₹ ${Number(b.totalAmount || 0).toFixed(2)}</b></td>
+                                <td><span class="badge bg-${badge}-subtle text-${badge} px-2 py-1 rounded-pill">${escapeHtml(b.status)}</span></td>
+                                <td class="text-center">${docs}</td>
+                                <td class="text-end px-3">${actionBtn}</td>
+                            </tr>
+                        `;
+                });
+                tbody.innerHTML = html;
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Failed to load monthly bills.</td></tr>`;
+            }
+        }
+
+        window.generateMonthlyExpenseBillFromUI = async function generateMonthlyExpenseBillFromUI() {
+            const monthInput = document.getElementById("txtExpenseMonth").value;
+            const button = document.getElementById("btnGenerateMonthlyBill");
+
+            if (!monthInput) {
+                alert("Please select a month and year.");
+                return;
+            }
+
+            const originalButtonHtml = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Generating Bill...`;
+
+            try {
+                const res = await apiRequest("/api/other-activity/expense/generate-monthly-bill", {
+                    method: "POST",
+                    body: JSON.stringify({ MonthYear: monthInput })
+                });
+
+                if (res.success) {
+                    await loadMonthlyExpenseBills();
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById("monthlyBillSuccessModal")).show();
+                } else {
+                    alert(res.message || "Unable to generate bill.");
+                }
+            } catch (error) {
+                alert(error.data?.message || "Error generating expense bill.");
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalButtonHtml;
+            }
+        };
+
+        window.openExpenseUploadModal = function(id) {
+            document.getElementById("hdnUploadExpenseBillId").value = id;
+            document.getElementById("fileSignedExpense").value = "";
+            showModal("expenseUploadModal");
+        };
+
+        document.getElementById("frmUploadSignedExpense").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById("btnUploadSignedExpense");
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Uploading...`;
+
+            const formData = new FormData();
+            formData.append("billId", document.getElementById("hdnUploadExpenseBillId").value);
+            formData.append("signedFile", document.getElementById("fileSignedExpense").files[0]);
+
+            try {
+                const res = await fetch("/api/other-activity/expense/upload-signed-bill", {
+                    method: "POST",
+                    headers: { "Authorization": "Bearer " + getAuthToken() },
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message || "Signed expense bill uploaded successfully!");
+                    hideModal("expenseUploadModal");
+                    loadMonthlyExpenseBills();
+                } else {
+                    alert(data.message || "Upload failed.");
+                }
+            } catch (err) {
+                alert("Error uploading signed file.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "Submit & Lock Bill";
+            }
+        });
+
+        function showActivities() {
+            document.getElementById("activitiesSection").classList.remove("d-none");
+            document.getElementById("expensesSection").classList.add("d-none");
+            document.getElementById("activitiesTabBtn").classList.add("active");
+            document.getElementById("expensesTabBtn").classList.remove("active");
+        }
+
+        function showExpenses() {
+            document.getElementById("activitiesSection").classList.add("d-none");
+            document.getElementById("expensesSection").classList.remove("d-none");
+            document.getElementById("activitiesTabBtn").classList.remove("active");
+            document.getElementById("expensesTabBtn").classList.add("active");
+            loadExpenses();
+            loadMonthlyExpenseBills();
+        }
+
+        function bindEvents() {
+            document.getElementById("btnNewActivity").addEventListener("click", () => showModal("activityModal"));
+            document.getElementById("btnNewExpense").addEventListener("click", () => {
+                showModal("expenseModal");
+                setMinDateTime();
+                toggleExpenseRelation();
+            });
+            document.getElementById("btnRefreshActivities").addEventListener("click", loadActivities);
+            document.getElementById("btnRefreshExpenses").addEventListener("click", loadExpenses);
+            document.getElementById("filterExpenseMonth").addEventListener("change", loadExpenses);
+            document.getElementById("activitiesTabBtn").addEventListener("click", showActivities);
+            document.getElementById("expensesTabBtn").addEventListener("click", showExpenses);
+            document.getElementById("activityForm").addEventListener("submit", createActivity);
+            document.getElementById("updateActivityForm").addEventListener("submit", updateActivity);
+            document.getElementById("expenseForm").addEventListener("submit", createExpense);
+
+            document.getElementById("activityTableBody").addEventListener("click", function(event) {
+                const button = event.target.closest(".btn-update-activity");
+                if (!button) return;
+                openUpdateModal(button);
+            });
+        }
+
+        function initializePage() {
+            bindEvents();
+            loadActivities();
+            setupPincodeLookup();
+            verifyPunchStatusForActions(); 
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initializePage);
+        } else {
+            initializePage();
+        }
+    })();
+</script>
+
+@* <script>
     (function() {
         "use strict";
 
@@ -982,4 +1539,4 @@ if (b.signedPdfUrl) {
             initializePage();
         }
     })();
-</script>
+</script> *@

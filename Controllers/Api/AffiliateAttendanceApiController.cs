@@ -36,7 +36,6 @@ namespace HemFoundation.Controllers.Api
             var affiliate = await _context.Users.FirstOrDefaultAsync(a => a.AspNetUserID == userId);
             return affiliate?.UserID ?? 0;
         }
-
         [HttpGet("status")]
         public async Task<IActionResult> GetStatus()
         {
@@ -54,10 +53,12 @@ namespace HemFoundation.Controllers.Api
                 .OrderByDescending(x => x.Id)
                 .FirstOrDefaultAsync();
 
+            bool isCheckedIn = attendance != null && attendance.Status == "CheckedIn";
+
             return Ok(new
             {
                 success = true,
-                isCheckedIn = attendance != null && attendance.Status == "CheckedIn",
+                isCheckedIn = isCheckedIn,
                 todayRecord = attendance,
                 lastRecord = lastRecord
             });
@@ -75,57 +76,174 @@ namespace HemFoundation.Controllers.Api
             var attendance = await _context.AffiliateAttendances
                 .FirstOrDefaultAsync(x => x.AffiliateId == affId && x.AttendanceDate == todayIST && !x.IsDeleted);
 
-            // Strict Rule: Ek din me ek hi attendance cycle (In + Out) allow hogi
-            if (attendance != null && attendance.Status == "CheckedOut" && attendance.PunchOutTime != null)
+            try
             {
-                return BadRequest(new { success = false, message = "Aapki aaj ki attendance pehle hi complete ho chuki hai. Ab aap dobara punch in nahi kar sakte." });
-            }
-
-            if (model.Action == "In")
-            {
-                if (attendance != null && attendance.Status == "CheckedIn")
+                if (model.Action == "In")
                 {
-                    return BadRequest(new { success = false, message = "Aap pehle se hi punched in hain." });
-                }
+                    if (attendance == null)
+                    {
+                        attendance = new AffiliateAttendance
+                        {
+                            AffiliateId = affId,
+                            AttendanceDate = todayIST,
+                            PunchInTime = istNow, 
+                            PunchInLocation = model.Location ?? "Current Location",
+                            Status = "CheckedIn",
+                            PunchOutMode = "User",
+                            TotalHoursWorked = 0,
+                            CreatedDate = istNow
+                        };
+                        _context.AffiliateAttendances.Add(attendance);
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        attendance.Status = "CheckedIn";
+                        attendance.ModifiedDate = istNow;
+                        await _context.SaveChangesAsync();
+                    }
 
-                if (attendance == null)
-                {
-                    attendance = new AffiliateAttendance
+                    var punchLog = new AffiliatePunchLog
                     {
                         AffiliateId = affId,
-                        AttendanceDate = todayIST,
+                        AttendanceId = attendance.Id,
                         PunchInTime = istNow,
                         PunchInLocation = model.Location ?? "Current Location",
-                        Status = "CheckedIn",
-                        PunchOutMode = "User",
                         CreatedDate = istNow
                     };
-                    _context.AffiliateAttendances.Add(attendance);
+                    _context.AffiliatePunchLogs.Add(punchLog);
                 }
+                else if (model.Action == "Out")
+                {
+                    if (attendance == null || attendance.Status == "CheckedOut")
+                    {
+                        return BadRequest(new { success = false, message = "Aap abhi punched in nahi hain." });
+                    }
+
+                    var activeLog = await _context.AffiliatePunchLogs
+                        .Where(x => x.AffiliateId == affId && x.AttendanceId == attendance.Id && x.PunchOutTime == null && !x.IsDeleted)
+                        .OrderByDescending(x => x.Id)
+                        .FirstOrDefaultAsync();
+
+                    if (activeLog != null)
+                    {
+                        activeLog.PunchOutTime = istNow;
+                        activeLog.PunchOutLocation = model.Location ?? "Current Location";
+                        var sessionDiff = activeLog.PunchOutTime.Value - activeLog.PunchInTime;
+                        activeLog.SessionHours = Math.Round(sessionDiff.TotalHours, 2);
+                        activeLog.ModifiedDate = istNow;
+                    }
+
+                    attendance.PunchOutTime = istNow; 
+                    attendance.PunchOutLocation = model.Location ?? "Current Location";
+                    attendance.Status = "CheckedOut";
+                    attendance.PunchOutMode = "User";
+                    attendance.ModifiedDate = istNow;
+
+                    var allSessions = await _context.AffiliatePunchLogs
+                        .Where(x => x.AttendanceId == attendance.Id && !x.IsDeleted)
+                        .ToListAsync();
+
+                    attendance.TotalHoursWorked = Math.Round(allSessions.Sum(s => s.SessionHours), 2);
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, record = attendance });
             }
-            else if (model.Action == "Out")
+            catch (Exception ex)
             {
-                if (attendance == null || attendance.Status == "CheckedOut")
-                {
-                    return BadRequest(new { success = false, message = "Aap abhi punched in nahi hain." });
-                }
-
-                attendance.PunchOutTime = istNow;
-                attendance.PunchOutLocation = model.Location ?? "Current Location";
-                attendance.Status = "CheckedOut";
-                attendance.PunchOutMode = "User";
-                attendance.ModifiedDate = istNow;
-
-                if (attendance.PunchInTime.HasValue)
-                {
-                    var diff = attendance.PunchOutTime.Value - attendance.PunchInTime.Value;
-                    attendance.TotalHoursWorked = Math.Round(diff.TotalHours, 2);
-                }
+                return StatusCode(500, new { success = false, message = "Database error: " + ex.Message });
             }
-
-            await _context.SaveChangesAsync();
-            return Ok(new { success = true, record = attendance });
         }
+        //[HttpGet("status")]
+        //public async Task<IActionResult> GetStatus()
+        //{
+        //    long affId = await GetCurrentAffiliateIdAsync();
+        //    if (affId == 0) return Unauthorized(new { success = false, message = "Affiliate not found." });
+
+        //    var istNow = GetIstTime();
+        //    var todayIST = istNow.Date;
+
+        //    var attendance = await _context.AffiliateAttendances
+        //        .FirstOrDefaultAsync(x => x.AffiliateId == affId && x.AttendanceDate == todayIST && !x.IsDeleted);
+
+        //    var lastRecord = await _context.AffiliateAttendances
+        //        .Where(x => x.AffiliateId == affId && !x.IsDeleted)
+        //        .OrderByDescending(x => x.Id)
+        //        .FirstOrDefaultAsync();
+
+        //    return Ok(new
+        //    {
+        //        success = true,
+        //        isCheckedIn = attendance != null && attendance.Status == "CheckedIn",
+        //        todayRecord = attendance,
+        //        lastRecord = lastRecord
+        //    });
+        //}
+
+        //[HttpPost("punch")]
+        //public async Task<IActionResult> Punch([FromBody] PunchModel model)
+        //{
+        //    long affId = await GetCurrentAffiliateIdAsync();
+        //    if (affId == 0) return Unauthorized(new { success = false, message = "Affiliate not found." });
+
+        //    var istNow = GetIstTime();
+        //    var todayIST = istNow.Date;
+
+        //    var attendance = await _context.AffiliateAttendances
+        //        .FirstOrDefaultAsync(x => x.AffiliateId == affId && x.AttendanceDate == todayIST && !x.IsDeleted);
+
+        //    // Strict Rule: Ek din me ek hi attendance cycle (In + Out) allow hogi
+        //    if (attendance != null && attendance.Status == "CheckedOut" && attendance.PunchOutTime != null)
+        //    {
+        //        return BadRequest(new { success = false, message = "Aapki aaj ki attendance pehle hi complete ho chuki hai. Ab aap dobara punch in nahi kar sakte." });
+        //    }
+
+        //    if (model.Action == "In")
+        //    {
+        //        if (attendance != null && attendance.Status == "CheckedIn")
+        //        {
+        //            return BadRequest(new { success = false, message = "Aap pehle se hi punched in hain." });
+        //        }
+
+        //        if (attendance == null)
+        //        {
+        //            attendance = new AffiliateAttendance
+        //            {
+        //                AffiliateId = affId,
+        //                AttendanceDate = todayIST,
+        //                PunchInTime = istNow,
+        //                PunchInLocation = model.Location ?? "Current Location",
+        //                Status = "CheckedIn",
+        //                PunchOutMode = "User",
+        //                CreatedDate = istNow
+        //            };
+        //            _context.AffiliateAttendances.Add(attendance);
+        //        }
+        //    }
+        //    else if (model.Action == "Out")
+        //    {
+        //        if (attendance == null || attendance.Status == "CheckedOut")
+        //        {
+        //            return BadRequest(new { success = false, message = "Aap abhi punched in nahi hain." });
+        //        }
+
+        //        attendance.PunchOutTime = istNow;
+        //        attendance.PunchOutLocation = model.Location ?? "Current Location";
+        //        attendance.Status = "CheckedOut";
+        //        attendance.PunchOutMode = "User";
+        //        attendance.ModifiedDate = istNow;
+
+        //        if (attendance.PunchInTime.HasValue)
+        //        {
+        //            var diff = attendance.PunchOutTime.Value - attendance.PunchInTime.Value;
+        //            attendance.TotalHoursWorked = Math.Round(diff.TotalHours, 2);
+        //        }
+        //    }
+
+        //    await _context.SaveChangesAsync();
+        //    return Ok(new { success = true, record = attendance });
+        //}
 
         [HttpGet("history")]
         public async Task<IActionResult> GetHistory([FromQuery] int? month, [FromQuery] int? year, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
