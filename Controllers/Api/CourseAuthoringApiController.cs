@@ -811,7 +811,12 @@ namespace HemFoundation.Controllers
                         CourseID = model.CourseId,
                         CreatedDate = DateTime.UtcNow,
                         CreatedBy = 1,
-                        isDeleted = false
+                        isDeleted = false,
+                        Status=true,
+                        Type="HTML",
+                        isAdminStatus=true,
+                        QuestionLevel=1
+
                     };
 
                     _context.Questions.Add(question);
@@ -824,6 +829,7 @@ namespace HemFoundation.Controllers
                 question.languageID = model.LanguageId;
                 question.AnswerDescription = model.AnswerDescription;
                 question.isDeleted = false;
+
 
                 foreach (var option in options)
                 {

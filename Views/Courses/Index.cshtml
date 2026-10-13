@@ -745,7 +745,7 @@
 
                                         <div class="col-md-12">
                                             <label class="form-label small fw-semibold">Question</label>
-                                            <textarea id="mq_question" class="form-control" rows="5" required></textarea>
+                                            <textarea id="mq_question" class="form-control" rows="5" ></textarea>
                                         </div>
 
                                         <div class="col-md-6">
@@ -1533,10 +1533,34 @@
                     ].filter(x => x.optionText.trim() !== '')
                 };
 
-                if (!payload.topicId || !payload.subTopicId ||
-                    !payload.languageId || !payload.complexityLevel ||
-                    !payload.questionName.trim()) {
-                    showToast('Complete all required fields.', 'warning');
+                if (!payload.topicId) {
+                    showToast('Please select a topic.', 'warning');
+                    return;
+                }
+
+                if (!payload.subTopicId) {
+                    showToast('Please select a sub-topic.', 'warning');
+                    return;
+                }
+
+                if (!payload.languageId) {
+                    showToast('Please select a language.', 'warning');
+                    return;
+                }
+
+                if (!payload.complexityLevel) {
+                    showToast('Please select the complexity.', 'warning');
+                    return;
+                }
+
+                if (isEditorContentEmpty(payload.questionName)) {
+                    showToast('Please enter the MCQ question.', 'warning');
+
+                    const editor = tinymce.get('mq_question');
+                    if (editor) {
+                        editor.focus();
+                    }
+
                     return;
                 }
 
@@ -3794,11 +3818,19 @@ function initializeMcqEditors() {
     });
 }
 
-function getMcqEditorValue(id) {
+function getMcqEditorValue1(id) {
     const editor = typeof tinymce !== 'undefined' ? tinymce.get(id) : null;
     return editor ? editor.getContent() : $(`#${id}`).val();
 }
+        function getMcqEditorValue(id) {
+            const editor = typeof tinymce !== 'undefined' ? tinymce.get(id) : null;
 
+            if (editor) {
+                return editor.getContent({ format: 'text' }).trim();
+            }
+
+            return $(`#${id}`).val().trim();
+        }
 function setMcqEditorValue(id, value) {
     const editor = typeof tinymce !== 'undefined' ? tinymce.get(id) : null;
 
@@ -3808,6 +3840,15 @@ function setMcqEditorValue(id, value) {
         $(`#${id}`).val(value || '');
     }
 }
+        function isEditorContentEmpty(html) {
+            const text = $('<div>')
+                .html(html || '')
+                .text()
+                .replace(/\u00a0/g, ' ')
+                .trim();
+
+            return text.length === 0;
+        }
 function renderMcqs() {
     const tbody = $('#mcqTableBody');
     const mcqs = dataCache.mcqs || [];

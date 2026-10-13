@@ -758,7 +758,7 @@
         var activeCourseDataCache = null;
         var activeWeekGlobalIndex = 1;
         var isStudent = @isStudentBool.ToString().ToLower();
-
+        var allMainCoursesData = {};
         // Capture server-side metrics globally for client-side workspace reset
         var globalAssignedCount = @assignedCount;
         var globalCompletedCount = @completedCount;
@@ -799,6 +799,7 @@
                 data: { mainCourseId: mcId },
                 success: function(courses) {
                     var html = '';
+                    allMainCoursesData[mcId] = courses || [];
                     var savedCourseId = localStorage.getItem('last_active_course_id');
                     var savedCourseJson = null;
                     if (courses && courses.length > 0) {
@@ -852,7 +853,110 @@
                 }
             });
         }
+        function checkCertificateEligibility(mcId) {
+    var rawRows = getAllMainCourseRows(mcId);
 
+    // Keep your existing eligibility validation here.
+
+
+            var postSurveyCompleted = false;
+            var gamesIncomplete = false;
+            var lowMcqScores = false;
+            var quizId = 0;
+
+            $.each(rawRows, function (i, row) {
+                if (!row) return;
+
+                var subName = (
+                    row.subTopicName ||
+                    row.SubTopicName ||
+                    ''
+                ).toString().toLowerCase().trim();
+
+                var pracCode = (
+                    row.practicalCode ||
+                    row.PracticalCode ||
+                    ''
+                ).toString().trim().toUpperCase();
+
+                var isGame =
+                    pracCode !== '' &&
+                    pracCode !== '0' &&
+                    pracCode !== 'NULL';
+
+                var attemptedValue =
+                    row.isAttempted !== undefined
+                        ? row.isAttempted
+                        : row.IsAttempted;
+
+                var isAttempted =
+                    attemptedValue === true ||
+                    attemptedValue === 1 ||
+                    String(attemptedValue).toLowerCase() === 'true';
+
+                var rawScore =
+                    row.itemScore !== undefined
+                        ? row.itemScore
+                        : row.ItemScore;
+
+                var itemScore = parseFloat(rawScore);
+                if (isNaN(itemScore)) itemScore = 0;
+
+                // Post Value Survey completion
+                if (
+                    subName.includes('post value survey') ||
+                    subName.includes('post-survey') ||
+                    subName.includes('post - value')
+                ) {
+                    if (isAttempted) {
+                        postSurveyCompleted = true;
+                        quizId = row.quizID || row.QuizID || quizId;
+                    }
+                }
+
+                // Practical labs/games across the main course
+                if (isGame && !isAttempted) {
+                    gamesIncomplete = true;
+                }
+
+                // MCQs across ALL courses in the main course
+                if (
+                    !isGame &&
+                    subName.includes('mcq') &&
+                    !subName.includes('survey') &&
+                    itemScore < 3
+                ) {
+                    lowMcqScores = true;
+                }
+            });
+
+            return {
+                eligible:
+                    postSurveyCompleted &&
+                    !gamesIncomplete &&
+                    !lowMcqScores,
+                postSurveyCompleted: postSurveyCompleted,
+                gamesIncomplete: gamesIncomplete,
+                lowMcqScores: lowMcqScores,
+                quizId: quizId
+            };
+        }
+        function getAllMainCourseRows(mcId) {
+                var courses = allMainCoursesData[mcId] || [];
+                var allRows = [];
+
+                $.each(courses, function (i, course) {
+                    if (!course) return;
+
+                    var rows = course.sqlRawRows || course.SqlRawRows || [];
+
+                    if (Array.isArray(rows)) {
+                        allRows = allRows.concat(rows);
+                    }
+                });
+
+                return allRows;
+            }
         function activateWorkspaceStage(courseId, mcId, weekIndex, escapedCourseObj) {
             debugger
             var courseData = JSON.parse(unescape(escapedCourseObj));
@@ -871,7 +975,7 @@
                 });
                 return;
             }
-
+            console.log(courseData);
             activeCourseDataCache = courseData;
             activeWeekGlobalIndex = weekIndex;
 
@@ -879,30 +983,53 @@
             $('.week-trigger-' + courseId).addClass('active-track');
 
             var showCertificateBannerHtml = '';
-            var postSurveyCompleted = false;
-            var quizid = 0;
+            // var postSurveyCompleted = false;
+            // var quizid = 0;
             var rawRows = courseData.sqlRawRows || courseData.SqlRawRows;
+            var eligibility = checkCertificateEligibility(mcId);
+                //var showCertificateBannerHtml = '';
 
-            if (rawRows && rawRows.length > 0) {
-                $.each(rawRows, function(idx, r) {
-                    var subName = r.subTopicName || r.SubTopicName || '';
-                    var isAtt = r.isAttempted !== undefined ? r.isAttempted : r.IsAttempted;
-                    if (subName.toLowerCase().includes('post value survey') && isAtt) {
-                        postSurveyCompleted = true;
-                        quizid = r.quizID || r.QuizID;
-                    }
-                });
-            }
+                if (eligibility.eligible) {
+                    showCertificateBannerHtml =
+                        '<div class="certificate-unlocked-ribbon animate__animated animate__pulse">' +
+                            '<div>' +
+                                '<h4 style="font-weight:800; margin:0 0 2px 0; font-size:16px;">' +
+                                    '<i class="fa fa-certificate"></i> Congratulations! Certificate Unlocked' +
+                                '</h4>' +
+                                '<p style="margin:0; font-size:13px; opacity:0.9;">' +
+                                    'You completed the Post Value Survey, scored at least 3 marks in every MCQ, and completed all practical labs and games.' +
+                                '</p>' +
+                            '</div>' +
+                            '<a href="/Learn/DownloadCertificate?CourseID=' +
+                                encodeURIComponent(courseId) +
+                                '&Quizid=' +
+                                encodeURIComponent(eligibility.quizId) +
+                                '" class="btn btn-light btn-action-pill" ' +
+                                'style="color:#047857 !important; font-weight:bold; background:#fff !important;">' +
+                                '<i class="fa fa-download"></i> Get Certificate' +
+                            '</a>' +
+                        '</div>';
+                }
+            // if (rawRows && rawRows.length > 0) {
+            //     $.each(rawRows, function(idx, r) {
+            //         var subName = r.subTopicName || r.SubTopicName || '';
+            //         var isAtt = r.isAttempted !== undefined ? r.isAttempted : r.IsAttempted;
+            //         if (subName.toLowerCase().includes('post value survey') && isAtt) {
+            //             postSurveyCompleted = true;
+            //             quizid = r.quizID || r.QuizID;
+            //         }
+            //     });
+            // }
 
-            if (postSurveyCompleted) {
-                showCertificateBannerHtml = '<div class="certificate-unlocked-ribbon animate__animated animate__pulse">' +
-                    '<div>' +
-                    '<h4 style="font-weight:800; margin:0 0 2px 0; font-size:16px;"><i class="fa fa-certificate"></i> Congratulations! Course Completed Unlocked</h4>' +
-                    '<p style="margin:0; font-size:13px; opacity:0.9;">You have cleared all virtue assignments, labs, and evaluations mapped to this tract stream.</p>' +
-                    '</div>' +
-                    '<a href="/Learn/DownloadCertificate?CourseID=' + courseId + '&Quizid=' + quizid + '" class="btn btn-light btn-action-pill" style="color:#047857 !important; font-weight:bold; background:#fff !important;"><i class="fa fa-download"></i> Get Certificate</a>' +
-                    '</div>';
-            }
+            // if (postSurveyCompleted) {
+            //     showCertificateBannerHtml = '<div class="certificate-unlocked-ribbon animate__animated animate__pulse">' +
+            //         '<div>' +
+            //         '<h4 style="font-weight:800; margin:0 0 2px 0; font-size:16px;"><i class="fa fa-certificate"></i> Congratulations! Course Completed Unlocked</h4>' +
+            //         '<p style="margin:0; font-size:13px; opacity:0.9;">You have cleared all virtue assignments, labs, and evaluations mapped to this tract stream.</p>' +
+            //         '</div>' +
+            //         '<a href="/Learn/DownloadCertificate?CourseID=' + courseId + '&Quizid=' + quizid + '" class="btn btn-light btn-action-pill" style="color:#047857 !important; font-weight:bold; background:#fff !important;"><i class="fa fa-download"></i> Get Certificate</a>' +
+            //         '</div>';
+            // }
 
             var courseNameVal = courseData.courseName || courseData.CourseName;
             var courseMarksVal = courseData.courseMarks || courseData.CourseMarks || 0;
@@ -1206,7 +1333,8 @@
                 var gamesIncomplete = false;
                 var lowMcqScores = false;
                 var rawRows = activeCourseDataCache.sqlRawRows || activeCourseDataCache.SqlRawRows;
-
+                console.log('post data');
+              
                 if (rawRows) {
                     $.each(rawRows, function(i, r) {
                         var subName = r.subTopicName || r.SubTopicName || '';
