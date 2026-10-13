@@ -30,7 +30,7 @@
             </div>
             <div class="col-4">
                 <div class="bg-secondary-subtle rounded-3 px-3 py-2 h-100">
-                    <div class="fs-5 fw-bold text-secondary-emphasis lh-1" id="ehStatAvg">0</div>
+                   @*  <div class="fs-5 fw-bold text-secondary-emphasis lh-1" id="ehStatAvg">0</div> *@
                     <small class="text-secondary-emphasis opacity-75"><i class="bi bi-graph-up-arrow me-1"></i>Avg marks</small>
                 </div>
             </div>
@@ -42,11 +42,9 @@
             </div>
         </div>
 
-        <!-- Graph Section (hidden by default) -->
         <div id="chartSection" class="d-none mb-3">
             <div class="row g-3">
 
-                <!-- Left: status summary (progress bars) -->
                 <div class="col-12 col-lg-4">
                     <div class="border rounded-3 p-3 h-100 bg-light">
                         <h6 class="fw-bold small mb-1"><i class="bi bi-pie-chart me-1 text-primary"></i>Status Summary</h6>
@@ -54,7 +52,6 @@
                     </div>
                 </div>
 
-                <!-- Right: marks per project -->
                 <div class="col-12 col-lg-8">
                     <div class="border rounded-3 p-3 h-100 bg-light">
                         <h6 class="fw-bold small mb-1"><i class="bi bi-bar-chart-line me-1 text-primary"></i>Marks per Project</h6>
@@ -65,7 +62,6 @@
             </div>
         </div>
 
-        <!-- Table -->
         <div class="table-responsive rounded-3 border">
             <table class="table table-hover table-sm align-middle mb-0 small" id="schoolEvaluatedTable">
                 <thead class="table-light">
@@ -76,7 +72,7 @@
                         <th>Student Name</th>
                         <th>School Name</th>
                         <th>Status</th>
-                        <th class="text-center">Marks</th>
+                       @*  <th class="text-center">Marks</th> *@
                         <th>Evaluate Remarks</th>
                         <th class="d-none d-lg-table-cell pe-3">Evaluated On</th>
                     </tr>
@@ -144,7 +140,7 @@
         const total = marks.length;
         const avg = total ? marks.reduce((a, b) => a + b, 0) / total : 0;
         document.getElementById("ehStatTotal").textContent = total;
-        document.getElementById("ehStatAvg").textContent = avg.toFixed(Number.isInteger(avg) ? 0 : 1);
+        // document.getElementById("ehStatAvg").textContent = avg.toFixed(Number.isInteger(avg) ? 0 : 1);
         document.getElementById("ehStatMax").textContent = total ? Math.max(...marks) : 0;
     }
 
@@ -301,7 +297,6 @@
         });
     }
 
-    /* ---------------- Table ---------------- */
     function renderTable() {
         const tbody = document.querySelector("#schoolEvaluatedTable tbody");
         if (!tbody) return;
@@ -345,9 +340,7 @@
                             <td class="fw-semibold text-dark">${escapeHtml(studentName)}</td>
                             <td><span class="text-muted">${escapeHtml(schoolName)}</span></td>
                             <td>${statusBadge(item.statusColor)}</td>
-                            <td class="text-center">
-                                <span class="badge text-bg-dark rounded-pill"><i class="bi bi-star-fill text-warning me-1"></i>${escapeHtml(item.marks ?? 0)}</span>
-                            </td>
+                           
                             <td>
                                 <span class="text-muted text-truncate d-block" style="max-width:170px; cursor:pointer;" title="${escapeHtml(desc)}">${escapeHtml(desc)}</span>
                             </td>
