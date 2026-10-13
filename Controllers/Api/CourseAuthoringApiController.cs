@@ -1,7 +1,9 @@
-﻿using DocumentFormat.OpenXml.InkML;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Wordprocessing;
+﻿//using DocumentFormat.OpenXml.InkML;
+//using DocumentFormat.OpenXml.Office.SpreadSheetML.Y2023.MsForms;
+//using DocumentFormat.OpenXml.Spreadsheet;
+//using DocumentFormat.OpenXml.Wordprocessing;
 using HemFoundation.Data;
+using HemFoundation.DTOs;
 using HemFoundation.Models.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -536,5 +538,362 @@ namespace HemFoundation.Controllers
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+
+        [HttpPost("subtopic/save")]
+        [RequestSizeLimit(100 * 1024 * 1024)]
+        public async Task<IActionResult> SaveSubTopic(
+      [FromForm] SaveSubTopicRequest model)
+        {
+            try
+            {
+                if (model.CourseRegistrationId <= 0)
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Invalid Course ID."
+                    });
+
+                if (model.CourseTopicId <= 0)
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Please select a topic."
+                    });
+
+                if (string.IsNullOrWhiteSpace(model.SubTopicName))
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Sub-topic name is required."
+                    });
+
+                if (model.DisplayOrderId <= 0)
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Order number must be greater than 0."
+                    });
+
+                var parentTopic = await _context.Topics.FirstOrDefaultAsync(
+                    x => x.TopicID == model.CourseTopicId
+                      && x.CourseID == model.CourseRegistrationId
+                      && x.ParentTopicID == null
+                      && x.IsActive == "1");
+
+                if (parentTopic == null)
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Selected topic is invalid."
+                    });
+
+                Topics subTopic;
+
+                if (model.Id > 0)
+                {
+                    subTopic = await _context.Topics.FirstOrDefaultAsync(
+                        x => x.TopicID == model.Id
+                          && x.CourseID == model.CourseRegistrationId
+                          && x.ParentTopicID != null);
+
+                    if (subTopic == null)
+                        return NotFound(new
+                        {
+                            success = false,
+                            message = "Sub-topic not found."
+                        });
+
+                    subTopic.ModifiedDate = DateTime.UtcNow;
+                }
+                else
+                {
+                    subTopic = new Topics
+                    {
+                        CourseID = model.CourseRegistrationId,
+                        ParentTopicID = model.CourseTopicId,
+                        IsActive = "1",
+                        CreatedDate = DateTime.UtcNow
+                    };
+
+                    _context.Topics.Add(subTopic);
+                }
+
+                subTopic.ParentTopicID = model.CourseTopicId;
+                subTopic.TopicName = model.SubTopicName.Trim();
+                subTopic.Order = model.DisplayOrderId;
+                subTopic.TrainerVideo = model.VideoLink;
+                subTopic.languageID = model.LanguageID;
+                subTopic.NoOfQuestion = model.NumberOfQuestions;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = model.Id > 0
+                        ? "Sub-topic updated successfully."
+                        : "Sub-topic created successfully.",
+                    id = subTopic.TopicID
+                });
+            }
+            catch (Exception ex)
+            {
+                // Replace with your existing exception logging mechanism if available.
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Unable to save sub-topic."
+                });
+            }
+        }
+
+        [HttpDelete("subtopic/delete/{id}")]
+        public async Task<IActionResult> DeleteSubTopic(int id)
+        {
+            try
+            {
+                var subTopic = await _context.Topics.FirstOrDefaultAsync(
+                    x => x.TopicID == id && x.ParentTopicID != null);
+
+                if (subTopic == null)
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Sub-topic not found."
+                    });
+
+                // Do not remove a sub-topic that is referenced by questions.
+                var hasQuestions = await _context.Questions.AnyAsync(
+                    q => q.SubTopicID == id
+                      && (q.isDeleted == false || q.isDeleted == null));
+
+                if (hasQuestions)
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "This sub-topic has MCQs. Delete or reassign those MCQs first."
+                    });
+
+                subTopic.IsActive = "0";
+                subTopic.ModifiedDate = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Sub-topic deleted successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Unable to delete sub-topic."
+                });
+            }
+        }
+
+        [HttpPost("mcq/save")]
+        public async Task<IActionResult> SaveMcq([FromBody] SaveMcqRequest model)
+        {
+            try
+            {
+                if (model.CourseId <= 0 ||
+                    model.TopicId <= 0 ||
+                    model.SubTopicId <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Select a valid course, topic and sub-topic."
+                    });
+                }
+
+                if (string.IsNullOrWhiteSpace(model.QuestionName))
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Question is required."
+                    });
+
+                if (string.IsNullOrWhiteSpace(model.ComplexityLevel))
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Select question complexity."
+                    });
+
+                if (model.LanguageId == null)
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Select a language."
+                    });
+
+                var topic = await _context.Topics.AnyAsync(
+                    t => t.TopicID == model.TopicId
+                      && t.CourseID == model.CourseId
+                      && t.ParentTopicID == null
+                      && t.IsActive == "1");
+
+                var subTopic = await _context.Topics.AnyAsync(
+                    t => t.TopicID == model.SubTopicId
+                      && t.CourseID == model.CourseId
+                      && t.ParentTopicID == model.TopicId
+                      && t.IsActive == "1");
+
+                if (!topic || !subTopic)
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Invalid topic or sub-topic selection."
+                    });
+
+                if (!await _context.Languages.AnyAsync(
+                    l => l.LanguageID == model.LanguageId.Value))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Invalid language."
+                    });
+                }
+
+                var options = model.Options
+                    .Where(o => !string.IsNullOrWhiteSpace(o.OptionText))
+                    .ToList();
+
+                if (options.Count < 2)
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Enter at least two options."
+                    });
+
+                if (options.Count(o => o.IsAnswer) != 1)
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Select exactly one correct answer."
+                    });
+
+                Questions question;
+
+                if (model.QuestionId > 0)
+                {
+                    question = await _context.Questions
+                        .Include(q => q.QuestionOption)
+                        .FirstOrDefaultAsync(q =>
+                            q.QuestionID == model.QuestionId &&
+                            q.CourseID == model.CourseId &&
+                            (q.isDeleted == false || q.isDeleted == null));
+
+                    if (question == null)
+                        return NotFound(new
+                        {
+                            success = false,
+                            message = "MCQ not found."
+                        });
+
+                    question.ModifiedDate = DateTime.UtcNow;
+                    question.ModifiedBy = 1;
+
+                    // Replace existing options with the submitted options.
+                    _context.RemoveRange(question.QuestionOption.ToList());
+                    question.QuestionOption.Clear();
+                }
+                else
+                {
+                    question = new Questions
+                    {
+                        CourseID = model.CourseId,
+                        CreatedDate = DateTime.UtcNow,
+                        CreatedBy = 1,
+                        isDeleted = false
+                    };
+
+                    _context.Questions.Add(question);
+                }
+
+                question.TopicID = model.TopicId;
+                question.SubTopicID = model.SubTopicId;
+                question.QuestionName = model.QuestionName.Trim();
+                question.ComplexityLevel = model.ComplexityLevel;
+                question.languageID = model.LanguageId;
+                question.AnswerDescription = model.AnswerDescription;
+                question.isDeleted = false;
+
+                foreach (var option in options)
+                {
+                    question.QuestionOption.Add(new()
+                    {
+                        Options = option.OptionText.Trim(),
+                        IsAnswer = option.IsAnswer
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    id = question.QuestionID,
+                    message = model.QuestionId > 0
+                        ? "MCQ updated successfully."
+                        : "MCQ created successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Unable to save MCQ."
+                });
+            }
+        }
+
+        [HttpDelete("mcq/delete/{id}")]
+        public async Task<IActionResult> DeleteMcq(int id)
+        {
+            try
+            {
+                var question = await _context.Questions.FirstOrDefaultAsync(
+                    q => q.QuestionID == id &&
+                         (q.isDeleted == false || q.isDeleted == null));
+
+                if (question == null)
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "MCQ not found."
+                    });
+
+                // Soft delete to preserve historical references.
+                question.isDeleted = true;
+                question.ModifiedDate = DateTime.UtcNow;
+                question.ModifiedBy = 1;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "MCQ deleted successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Unable to delete MCQ."
+                });
+            }
+        }
+
+
     }
 }
