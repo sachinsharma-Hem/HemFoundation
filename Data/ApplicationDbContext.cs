@@ -156,7 +156,7 @@ namespace HemFoundation.Data
         public DbSet<HfTblUploadIndividualProject> HfTblUploadIndividualProject { get; set; }
         public DbSet<VwUserRoleDetails> VwUserRoleDetails { get; set; }
         public DbSet<MonthlyExpenseBill> MonthlyExpenseBills { get; set; }
-
+        public DbSet<AffiliatePunchLog> AffiliatePunchLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

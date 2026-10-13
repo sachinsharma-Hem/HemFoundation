@@ -71,8 +71,10 @@
                 <thead class="table-light">
                     <tr>
                         <th class="ps-3 d-none d-md-table-cell" style="width:50px">#</th>
-                        <th class="ps-3 ps-md-0">ProjectNumber</th>
+                        <th class="ps-3 ps-md-0">Project Number</th>
                         <th class="d-none d-md-table-cell">Project Type</th>
+                        <th>Student Name</th>
+                        <th>School Name</th>
                         <th>Status</th>
                         <th class="text-center">Marks</th>
                         <th>Evaluate Remarks</th>
@@ -305,7 +307,7 @@
         if (!tbody) return;
 
         if (schoolAllData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-5">
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-5">
                         <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                         <div class="fw-semibold">No evaluation history found</div>
                         <small>Evaluated projects will appear here.</small></td></tr>`;
@@ -327,32 +329,35 @@
                 ? new Date(item.evaluatedDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit" })
                 : "-";
             const desc = item.description || "-";
+            const studentName = item.studentName || "Group / Team Project";
+            const schoolName = item.schoolName || "-";
 
             return `<tr>
-                        <td class="ps-3 text-muted fw-semibold d-none d-md-table-cell">${start + i + 1}</td>
-                        <td class="ps-3 ps-md-0">
-                            <span class="badge bg-light text-dark border">#${escapeHtml(item.projectID)}</span>
-                            <div class="text-muted d-md-none mt-1">${escapeHtml(type)}</div>
-                            <div class="text-muted d-lg-none"><i class="bi bi-calendar3 me-1"></i>${date}</div>
-                        </td>
-                        <td class="d-none d-md-table-cell">
-                            <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis border border-primary-subtle">${escapeHtml(type)}</span>
-                        </td>
-                        <td>${statusBadge(item.statusColor)}</td>
-                        <td class="text-center">
-                            <span class="badge text-bg-dark rounded-pill"><i class="bi bi-star-fill text-warning me-1"></i>${escapeHtml(item.marks ?? 0)}</span>
-                        </td>
-                        <td>
-                            <span class="text-muted text-truncate d-block" style="max-width:170px; cursor:pointer;" title="${escapeHtml(desc)}">${escapeHtml(desc)}</span>
-                        </td>
-                        <td class="d-none d-lg-table-cell pe-3 text-muted text-nowrap"><i class="bi bi-calendar3 me-1"></i>${date}</td>
-                    </tr>`;
+                            <td class="ps-3 text-muted fw-semibold d-none d-md-table-cell">${start + i + 1}</td>
+                            <td class="ps-3 ps-md-0">
+                                <span class="badge bg-light text-dark border">#${escapeHtml(item.projectID)}</span>
+                                <div class="text-muted d-md-none mt-1">${escapeHtml(type)}</div>
+                                <div class="text-muted d-lg-none"><i class="bi bi-calendar3 me-1"></i>${date}</div>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis border border-primary-subtle">${escapeHtml(type)}</span>
+                            </td>
+                            <td class="fw-semibold text-dark">${escapeHtml(studentName)}</td>
+                            <td><span class="text-muted">${escapeHtml(schoolName)}</span></td>
+                            <td>${statusBadge(item.statusColor)}</td>
+                            <td class="text-center">
+                                <span class="badge text-bg-dark rounded-pill"><i class="bi bi-star-fill text-warning me-1"></i>${escapeHtml(item.marks ?? 0)}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted text-truncate d-block" style="max-width:170px; cursor:pointer;" title="${escapeHtml(desc)}">${escapeHtml(desc)}</span>
+                            </td>
+                            <td class="d-none d-lg-table-cell pe-3 text-muted text-nowrap"><i class="bi bi-calendar3 me-1"></i>${date}</td>
+                        </tr>`;
         }).join("");
 
         document.getElementById("schoolPaginationInfo").textContent = `Showing ${start + 1} to ${end} of ${total} entries`;
         renderPagination(totalPages);
     }
-
     function renderPagination(totalPages) {
         const cur = schoolCurrentPage;
         const pages = [];

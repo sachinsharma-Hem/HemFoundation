@@ -1,4 +1,5 @@
 ﻿using HemFoundation.Data;
+using HemFoundation.Models;
 using HemFoundation.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -361,15 +362,57 @@ namespace HemFoundation.Controllers.Api
                     return NotFound(new { success = false, message = "User profile not found." });
                 }
 
-                long instituteId = currentUser.UserID; 
+                long instituteId = currentUser.UserID;
 
-                var list = await _context.ProjectEvaluations
+                var evaluations = await _context.ProjectEvaluations
                     .AsNoTracking()
                     .Where(x => x.InstituteID == instituteId)
                     .OrderByDescending(x => x.EvaluatedDate)
                     .ToListAsync();
 
-                return Ok(new { success = true, data = list });
+                var studentIds = evaluations
+                    .Where(x => x.StudentID.HasValue)
+                    .Select(x => x.StudentID.Value)
+                    .Distinct()
+                    .ToList();
+
+                var studentDict = await _context.Users
+                    .AsNoTracking()
+                    .Where(u => studentIds.Contains(u.UserID))
+                    .ToDictionaryAsync(
+                        u => u.UserID,
+                        u => $"{u.FirstName ?? ""} {u.LastName ?? ""}".Trim()
+                    );
+
+                string schoolName = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
+
+                var resultList = evaluations.Select(x => {
+                    string studentName = "Group / Team Project";
+                    if (x.StudentID.HasValue && studentDict.ContainsKey(x.StudentID.Value))
+                    {
+                        studentName = studentDict[x.StudentID.Value];
+                        if (string.IsNullOrEmpty(studentName)) studentName = "Unknown Student";
+                    }
+
+                    return new
+                    {
+                        x.EvaluationID,
+                        x.ProjectID,
+                        x.ProjectType,
+                        x.StudentID,
+                        x.InstituteID,
+                        StudentName = studentName,
+                        SchoolName = schoolName,
+                        x.CourseName,
+                        x.StatusColor,
+                        x.Marks,
+                        x.Description,
+                        x.EvaluatedByUserId,
+                        x.EvaluatedDate
+                    };
+                }).ToList();
+
+                return Ok(new { success = true, data = resultList });
             }
             catch (Exception ex)
             {
@@ -377,7 +420,7 @@ namespace HemFoundation.Controllers.Api
             }
         }
 
-        [HttpGet("student-history")]
+        [HttpGet("affiliate-history")]
         public async Task<IActionResult> GetStudentEvaluatedHistory()
         {
             try
@@ -388,24 +431,196 @@ namespace HemFoundation.Controllers.Api
                     return Unauthorized(new { success = false, message = "User not logged in." });
                 }
 
-                var student = await _context.Users
+                var affiliateUser = await _context.Users
                     .AsNoTracking()
                     .FirstOrDefaultAsync(s => s.AspNetUserID == userId);
 
-                if (student == null)
+                if (affiliateUser == null)
                 {
-                    return NotFound(new { success = false, message = "Student profile not found." });
+                    return NotFound(new { success = false, message = "Affiliate profile not found." });
                 }
 
-                int studentId = student.UserID; 
+                int affiliateUserId = affiliateUser.UserID;
 
-                var list = await _context.ProjectEvaluations
+                var referralCodeRecord = await _context.Set<WJ_ReferralCodes>()
                     .AsNoTracking()
-                    .Where(x => x.StudentID == studentId)
+                    .FirstOrDefaultAsync(r => r.UserID == affiliateUserId);
+
+                if (referralCodeRecord == null || string.IsNullOrEmpty(referralCodeRecord.ReferralCode))
+                {
+                    return Ok(new { success = true, data = new List<object>() });
+                }
+
+                string referralCode = referralCodeRecord.ReferralCode;
+
+                var instituteDict = await _context.Set<WJ_Institutes>()
+                    .AsNoTracking()
+                    .Where(i => i.ReferralCode == referralCode)
+                    .ToDictionaryAsync(i => (int)i.InstituteID, i => i.Name ?? "Unknown School");
+
+                var instituteIds = instituteDict.Keys.ToList();
+
+                if (!instituteIds.Any())
+                {
+                    return Ok(new { success = true, data = new List<object>() });
+                }
+
+                var studentIds = await _context.Set<WJ_StudentAssociates>()
+                    .AsNoTracking()
+                    .Where(s => instituteIds.Contains(s.InstituteID))
+                    .Select(s => s.StudentID)
+                    .Distinct()
+                    .ToListAsync();
+
+                var studentDict = await _context.Users
+                    .AsNoTracking()
+                    .Where(u => studentIds.Contains(u.UserID))
+                    .ToDictionaryAsync(
+                        u => u.UserID,
+                        u => $"{u.FirstName ?? ""} {u.LastName ?? ""}".Trim()
+                    );
+
+                var evaluations = await _context.ProjectEvaluations
+                    .AsNoTracking()
+                    .Where(x => (x.InstituteID != null && instituteIds.Contains(x.InstituteID.Value)) ||
+                                (x.StudentID != null && studentIds.Contains(x.StudentID.Value)))
                     .OrderByDescending(x => x.EvaluatedDate)
                     .ToListAsync();
 
-                return Ok(new { success = true, data = list });
+                var resultList = evaluations.Select(x => {
+                    string schoolName = "N/A";
+                    if (x.InstituteID.HasValue && instituteDict.ContainsKey(x.InstituteID.Value))
+                    {
+                        schoolName = instituteDict[x.InstituteID.Value];
+                    }
+
+                    string studentName = "Group / Team Project";
+                    if (x.StudentID.HasValue && studentDict.ContainsKey(x.StudentID.Value))
+                    {
+                        studentName = studentDict[x.StudentID.Value];
+                        if (string.IsNullOrEmpty(studentName)) studentName = "Unknown Student";
+                    }
+
+                    return new
+                    {
+                        x.EvaluationID,
+                        x.ProjectID,
+                        x.ProjectType,
+                        x.StudentID,
+                        x.InstituteID,
+                        StudentName = studentName,
+                        SchoolName = schoolName,
+                        x.CourseName,
+                        x.StatusColor,
+                        x.Marks,
+                        x.Description,
+                        x.EvaluatedByUserId,
+                        x.EvaluatedDate
+                    };
+                }).ToList();
+
+                return Ok(new { success = true, data = resultList });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("teacher-history")]
+        public async Task<IActionResult> GetTeacherEvaluatedHistory()
+        {
+            try
+            {
+                int? teacherId = HttpContext.Session.GetInt32("UserID");
+                if (teacherId == null)
+                {
+                    string? userId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (!string.IsNullOrEmpty(userId))
+                    {
+                        var userRecord = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.AspNetUserID == userId);
+                        if (userRecord != null) teacherId = userRecord.UserID;
+                    }
+                }
+
+                if (teacherId == null || teacherId <= 0)
+                {
+                    return Unauthorized(new { success = false, message = "Teacher not logged in." });
+                }
+
+                var teacherDetails = await _context.Set<ViewHfTeacherDetails>()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.TeacherID == teacherId);
+
+                if (teacherDetails == null || !teacherDetails.InstituteID.HasValue)
+                {
+                    return NotFound(new { success = false, message = "Teacher profile or institute not found." });
+                }
+
+                long instituteId = teacherDetails.InstituteID.Value;
+                string schoolName = teacherDetails.InstituteName ?? "Unknown School";
+
+                var assignedStandards = !string.IsNullOrEmpty(teacherDetails.Standard)
+                    ? teacherDetails.Standard.Split(',').Select(s => s.Trim()).ToList()
+                    : new List<string>();
+
+                var allStudents = await _context.Set<hf_view_studentsdetails>()
+                    .AsNoTracking()
+                    .Where(s => s.InstituteID == instituteId)
+                    .ToListAsync();
+
+                var filteredStudentUserIds = allStudents
+                    .Where(s => assignedStandards.Contains(s.Standard) || assignedStandards.Contains(s.Standard + "-" + s.Division))
+                    .Select(s => (int)s.StudentId)
+                    .Distinct()
+                    .ToList();
+
+                // 4. Students ka naam map karne ke liye dictionary
+                var studentDict = await _context.Users
+                    .AsNoTracking()
+                    .Where(u => filteredStudentUserIds.Contains(u.UserID))
+                    .ToDictionaryAsync(
+                        u => u.UserID,
+                        u => $"{u.FirstName ?? ""} {u.LastName ?? ""}".Trim()
+                    );
+
+                var evaluations = await _context.ProjectEvaluations
+                    .AsNoTracking()
+                    .Where(x =>
+                        (x.StudentID != null && filteredStudentUserIds.Contains(x.StudentID.Value)) ||
+                        (x.InstituteID == instituteId) 
+                    )
+                    .OrderByDescending(x => x.EvaluatedDate)
+                    .ToListAsync();
+
+                // 6. Map to Result List
+                var resultList = evaluations.Select(x => {
+                    string studentName = "Group / Team Project";
+                    if (x.StudentID.HasValue && studentDict.ContainsKey(x.StudentID.Value))
+                    {
+                        studentName = studentDict[x.StudentID.Value];
+                        if (string.IsNullOrEmpty(studentName)) studentName = "Unknown Student";
+                    }
+
+                    return new
+                    {
+                        x.EvaluationID,
+                        x.ProjectID,
+                        x.ProjectType,
+                        x.StudentID,
+                        x.InstituteID,
+                        StudentName = studentName,
+                        SchoolName = schoolName,
+                        x.CourseName,
+                        x.StatusColor,
+                        x.Marks,
+                        x.Description,
+                        x.EvaluatedByUserId,
+                        x.EvaluatedDate
+                    };
+                }).ToList();
+
+                return Ok(new { success = true, data = resultList });
             }
             catch (Exception ex)
             {
