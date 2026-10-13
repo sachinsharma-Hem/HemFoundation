@@ -801,6 +801,85 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
+
+        // ============================================================
+        // ADMIN - DAY-WISE & MULTIPLE PUNCH LOGS DETAIL
+        // ============================================================
+        [HttpGet("admin/daywise-logs")]
+        public async Task<IActionResult> GetAdminDayWiseLogs(
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate,
+            [FromQuery] long? affiliateId)
+        {
+            var query = from p in _context.AffiliatePunchLogs.AsNoTracking()
+                        join a in _context.AffiliateAttendances.AsNoTracking() on p.AttendanceId equals a.Id
+                        where !p.IsDeleted && !a.IsDeleted
+                        select new
+                        {
+                            p.Id,
+                            p.AffiliateId,
+                            AttendanceDate = a.AttendanceDate,
+                            p.PunchInTime,
+                            p.PunchOutTime,
+                            p.PunchInLocation,
+                            p.PunchOutLocation,
+                            p.SessionHours
+                        };
+
+            if (fromDate.HasValue)
+            {
+                query = query.Where(x => x.AttendanceDate >= fromDate.Value.Date);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(x => x.AttendanceDate <= toDate.Value.Date);
+            }
+
+            if (affiliateId.HasValue && affiliateId.Value > 0)
+            {
+                query = query.Where(x => x.AffiliateId == affiliateId.Value);
+            }
+
+            var punchLogs = await query
+                .OrderByDescending(x => x.AttendanceDate)
+                .ThenByDescending(x => x.Id)
+                .ToListAsync();
+
+            // Affiliate names map karne ke liye
+            var userIds = punchLogs.Select(x => x.AffiliateId).Distinct().Select(x => (int)x).ToList();
+            var users = await _context.Users
+                .AsNoTracking()
+                .Where(u => userIds.Contains(u.UserID))
+                .Select(u => new { u.UserID, u.FirstName, u.LastName, u.UserCode })
+                .ToListAsync();
+
+            var userDict = users.ToDictionary(
+                u => (long)u.UserID,
+                u => new { Name = $"{u.FirstName} {u.LastName}".Trim(), Code = u.UserCode ?? "N/A" }
+            );
+
+            var result = punchLogs.Select(p =>
+            {
+                userDict.TryGetValue(p.AffiliateId, out var user);
+                return new
+                {
+                    p.Id,
+                    p.AffiliateId,
+                    AffiliateName = user?.Name ?? "Unknown",
+                    UserCode = user?.Code ?? "N/A",
+                    p.AttendanceDate,
+                    p.PunchInTime,
+                    p.PunchOutTime,
+                    p.PunchInLocation,
+                    p.PunchOutLocation,
+                    p.SessionHours
+                };
+            }).ToList();
+
+            return Ok(new { success = true, data = result });
+        }
+
         #region ADMIN LEAVE MANAGEMENT ENDPOINTS
 
         [HttpGet("admin/leave/list")]

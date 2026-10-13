@@ -93,6 +93,11 @@
                         <i class="bi bi-list-columns-reverse text-secondary me-1"></i> Detailed Logs
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-semibold text-muted border-0 bg-transparent" id="daywise-tab" data-bs-toggle="tab" data-bs-target="#daywisePane" type="button" role="tab">
+                        <i class="bi bi-calendar2-check-fill text-success me-1"></i> Day-Wise Multiple Punches
+                    </button>
+                </li>
             </ul>
         </div>
         
@@ -157,16 +162,39 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
 
+                </div>
+                <!-- NAYA DAY-WISE MULTIPLE PUNCH PANE -->
+                <div class="tab-pane fade p-4" id="daywisePane" role="tabpanel">
+                    <div class="mb-3">
+                        <h5 class="fw-bold text-dark m-0">Day-Wise Multiple Punch Sessions</h5>
+                        <p class="text-muted small">View all individual check-in and check-out sessions performed throughout each day.</p>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle small">
+                            <thead class="table-light text-muted">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Affiliate Name</th>
+                                    <th>Session In Time</th>
+                                    <th>Session Out Time</th>
+                                    <th class="text-center">Session Hours</th>
+                                    <th>Locations (Map)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="daywiseTableBody">
+                                <tr><td colspan="6" class="text-center py-4 text-muted">Loading day-wise logs...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Tab UI logic
+    document.addEventListener("DOMContentLoaded", function() {
         const tabs = document.querySelectorAll('#attendanceTabs .nav-link');
         tabs.forEach(tab => {
             tab.addEventListener('click', function() {
@@ -179,11 +207,10 @@
             });
         });
 
-        // Set default filter dates to start of current month and today
         let today = new Date();
         let firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
         let todayStr = today.toISOString().split('T')[0];
-        
+
         $('#filterFromDate').val(firstDay);
         $('#filterToDate').val(todayStr);
 
@@ -205,69 +232,27 @@
     }
 
     function loadAffiliateDropdown() {
-
         $.ajax({
             url: `/api/affiliate-attendance/admin/affiliates-list`,
             type: 'GET',
-
-            headers: {
-                'Authorization': 'Bearer ' + getAuthToken()
-            },
-
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() },
             success: function(res) {
-
-                console.log("Affiliate Dropdown API Response:", res);
-
                 if (res.success && Array.isArray(res.data)) {
-
-                    let html =
-                        '<option value="">All Affiliates (Overall)</option>';
-
+                    let html = '<option value="">All Affiliates (Overall)</option>';
                     res.data.forEach(a => {
-
-                        html += `
-                            <option value="${a.affiliateId}">
-                                ${escapeHtml(a.affiliateName)}
-                            </option>
-                        `;
+                        html += `<option value="${a.affiliateId}">${escapeHtml(a.affiliateName)}</option>`;
                     });
-
                     $('#filterAffiliate').html(html);
-
                 } else {
-
-                    $('#filterAffiliate').html(
-                        '<option value="">No affiliates found</option>'
-                    );
+                    $('#filterAffiliate').html('<option value="">No affiliates found</option>');
                 }
-            },
-
-            error: function(xhr) {
-
-                console.error(
-                    "Affiliate dropdown error:",
-                    xhr.status,
-                    xhr.responseText
-                );
-
-                $('#filterAffiliate').html(
-                    '<option value="">Failed to load affiliates</option>'
-                );
             }
         });
     }
+
     function escapeHtml(value) {
-
-        if (value === null || value === undefined) {
-            return '';
-        }
-
-        return String(value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        if (value === null || value === undefined) return '';
+        return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
     function resetFilters() {
@@ -282,15 +267,16 @@
     function loadAllData() {
         loadTodayStats();
         loadTableData();
+        loadDayWiseLogs();
     }
 
     function loadTodayStats() {
-        let toDate = $('#filterToDate').val(); 
+        let toDate = $('#filterToDate').val();
         $.ajax({
             url: `/api/affiliate-attendance/admin/dashboard-stats?filterDate=${toDate}`,
             type: 'GET',
             headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-            success: function (res) {
+            success: function(res) {
                 if (res.success) {
                     $('#statTotal').text(res.totalAffiliates);
                     $('#statPresent').text(res.present);
@@ -318,38 +304,21 @@
             url: url,
             type: 'GET',
             headers: { 'Authorization': 'Bearer ' + getAuthToken() },
-            success: function (res) {
+            success: function(res) {
                 if (res.success) {
-                    
                     if (res.summary && res.summary.length > 0) {
                         let sumRows = res.summary.map(s => `
-        <tr>
-            <td class="fw-bold text-dark">${s.affiliateName}</td>
-            <td>
-                <span class="badge bg-light text-dark border">
-                    ${s.userCode || 'N/A'}
-                </span>
-            </td>
-            <td class="text-center">
-                <span class="badge bg-success-subtle text-success px-3">
-                    ${s.totalDaysPresent}
-                </span>
-            </td>
-            <td class="text-center">
-                <span class="badge bg-danger-subtle text-danger px-3">
-                    ${s.totalDaysAbsent}
-                </span>
-            </td>
-            <td class="text-center fw-bold text-primary">
-                ${s.totalHours} Hrs
-            </td>
-        </tr>
-    `).join('');
+                                <tr>
+                                    <td class="fw-bold text-dark">${s.affiliateName}</td>
+                                    <td><span class="badge bg-light text-dark border">${s.userCode || 'N/A'}</span></td>
+                                    <td class="text-center"><span class="badge bg-success-subtle text-success px-3">${s.totalDaysPresent}</span></td>
+                                    <td class="text-center"><span class="badge bg-danger-subtle text-danger px-3">${s.totalDaysAbsent}</span></td>
+                                    <td class="text-center fw-bold text-primary">${s.totalHours} Hrs</td>
+                                </tr>
+                            `).join('');
 
                         $('#summaryTableBody').html(sumRows);
-                        $('#summaryTableBody').html(sumRows);
 
-                        // If exactly 1 affiliate is selected, show Individual Banner
                         if (affId && res.summary.length === 1) {
                             let s = res.summary[0];
                             $('#indAffiliateName').text(s.affiliateName);
@@ -358,97 +327,68 @@
                             $('#indAbsent').text(s.totalDaysAbsent);
                             $('#indHours').text(s.totalHours);
                             $('#individualSummaryBanner').removeClass('d-none');
-                            
-                            // Auto-switch to logs tab to view this user's details
-                            $('#logs-tab').tab('show');
                         }
-
                     } else {
-                        $('#summaryTableBody').html('<tr><td colspan="5" class="text-center py-4 text-muted">No data found. Note: If an affiliate never punched in, they won\'t appear here.</td></tr>');
+                        $('#summaryTableBody').html('<tr><td colspan="5" class="text-center py-4 text-muted">No data found.</td></tr>');
                     }
 
-                    // --- 2. Populate Detailed Logs Table ---
                     if (res.detailedLogs && res.detailedLogs.length > 0) {
-
                         let logRows = res.detailedLogs.map(l => {
-
-                            // Punch In Location
-                            let inMap = l.punchInLocation
-                                ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.punchInLocation)}"
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     class="text-decoration-none small text-danger">
-                        <i class="bi bi-geo-alt-fill"></i> Map
-                   </a>`
-                                : '-';
-
-                            // Punch Out Location
-                            let outMap = l.punchOutLocation
-                                ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.punchOutLocation)}"
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     class="text-decoration-none small text-danger">
-                        <i class="bi bi-geo-alt-fill"></i> Map
-                   </a>`
-                                : '-';
-
-                            // Status Badge
-                            let badge = l.status === 'CheckedIn'
-                                ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>'
-                                : `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
-                        Out (${l.punchOutMode || '-'})
-                   </span>`;
+                            let inMap = l.punchInLocation ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.punchInLocation)}" target="_blank" class="text-danger small"><i class="bi bi-geo-alt-fill"></i> Map</a>` : '-';
+                            let outMap = l.punchOutLocation ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.punchOutLocation)}" target="_blank" class="text-danger small"><i class="bi bi-geo-alt-fill"></i> Map</a>` : '-';
+                            let badge = l.status === 'CheckedIn' ? '<span class="badge bg-success-subtle text-success border">Active</span>' : `<span class="badge bg-secondary-subtle text-secondary border">Out</span>`;
 
                             return `<tr>
-                <td class="fw-semibold text-dark">
-                    ${formatDateDDMMYYYY(l.attendanceDate)}
-                </td>
-
-                <td>
-                    <b>${l.affiliateName || ''}</b>
-                    <br/>
-                    <small class="text-muted">
-                        ${l.userCode || ''}
-                    </small>
-                </td>
-
-                <td>
-                    ${formatTime(l.punchInTime)}
-                    <div class="mt-1">
-                        ${inMap}
-                    </div>
-                </td>
-
-                <td>
-                    ${formatTime(l.punchOutTime)}
-                    <div class="mt-1">
-                        ${outMap}
-                    </div>
-                </td>
-
-                <td>
-                    ${badge}
-                    <br/>
-                    <small class="text-muted">
-                        ${l.totalHoursWorked || 0} hrs
-                    </small>
-                </td>
-            </tr>`;
-
+                                    <td class="fw-semibold text-dark">${formatDateDDMMYYYY(l.attendanceDate)}</td>
+                                    <td><b>${l.affiliateName || ''}</b><br/><small class="text-muted">${l.userCode || ''}</small></td>
+                                    <td>${formatTime(l.punchInTime)}<div class="mt-1">${inMap}</div></td>
+                                    <td>${formatTime(l.punchOutTime)}<div class="mt-1">${outMap}</div></td>
+                                    <td>${badge}<br/><small class="text-muted">${l.totalHoursWorked || 0} hrs</small></td>
+                                </tr>`;
                         }).join('');
-
                         $('#logsTableBody').html(logRows);
-
                     } else {
-
-                        $('#logsTableBody').html(`
-            <tr>
-                <td colspan="5" class="text-center py-4 text-muted">
-                    No detailed logs found.
-                </td>
-            </tr>
-        `);
+                        $('#logsTableBody').html('<tr><td colspan="5" class="text-center py-4 text-muted">No detailed logs found.</td></tr>');
                     }
+                }
+            }
+        });
+    }
+
+    function loadDayWiseLogs() {
+        let fromDate = $('#filterFromDate').val();
+        let toDate = $('#filterToDate').val();
+        let affId = $('#filterAffiliate').val();
+
+        let url = `/api/affiliate-attendance/admin/daywise-logs?`;
+        if (fromDate) url += `fromDate=${fromDate}&`;
+        if (toDate) url += `toDate=${toDate}&`;
+        if (affId) url += `affiliateId=${affId}`;
+
+        $('#daywiseTableBody').html('<tr><td colspan="6" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm"></div> Loading day-wise sessions...</td></tr>');
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+            success: function(res) {
+                if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+                    let rows = res.data.map(d => {
+                        let inMap = d.punchInLocation ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.punchInLocation)}" target="_blank" class="text-danger small"><i class="bi bi-geo-alt-fill"></i> In Map</a>` : '';
+                        let outMap = d.punchOutLocation ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.punchOutLocation)}" target="_blank" class="text-danger small ms-2"><i class="bi bi-geo-alt-fill"></i> Out Map</a>` : '';
+
+                        return `<tr>
+                                <td class="fw-semibold text-dark">${formatDateDDMMYYYY(d.attendanceDate)}</td>
+                                <td><b>${escapeHtml(d.affiliateName)}</b><br/><small class="text-muted">${escapeHtml(d.userCode)}</small></td>
+                                <td>${formatTime(d.punchInTime)}</td>
+                                <td>${formatTime(d.punchOutTime)}</td>
+                                <td class="text-center fw-bold text-success">${d.sessionHours} Hrs</td>
+                                <td>${inMap} ${outMap}</td>
+                            </tr>`;
+                    }).join('');
+                    $('#daywiseTableBody').html(rows);
+                } else {
+                    $('#daywiseTableBody').html('<tr><td colspan="6" class="text-center py-4 text-muted">No multiple punch session logs found.</td></tr>');
                 }
             }
         });

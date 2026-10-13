@@ -358,7 +358,6 @@
             return data;
         };
 
-        // Strict Hub Visibility Check
         window.checkHubVisibility = async function() {
             try {
                 const res = await apiRequest("/api/affiliate-attendance/status");
@@ -366,7 +365,6 @@
                 const hubWarning = document.getElementById("affiliate-hub-warning");
                 const backBtn = document.getElementById('btnBackToAffDashboard');
 
-                // Sirf tabhi open hoga jab user explicitly 'CheckedIn' state mein ho
                 if (res.success && res.isCheckedIn === true) {
                     if (hubGrid) hubGrid.style.display = "flex";
                     if (hubWarning) hubWarning.style.display = "none";
@@ -386,10 +384,8 @@
 
         checkHubVisibility();
 
-        // Har 10 seconds mein status check karega taaki Punch-In/Out hote hi hub auto-refresh ho jaye
         setInterval(checkHubVisibility, 10000);
 
-        // 1. Management Hub Module Loader
         const cards = document.querySelectorAll('.affiliate-card, .load-module-btn');
         const grid = document.getElementById('affiliate-hub-grid');
         const container = document.getElementById('affiliate-dynamic-container');
@@ -419,7 +415,6 @@
             });
         }
 
-        // 2. Single View Site Module Loader
         const svCards = document.querySelectorAll('.single-view-card');
         const svGrid = document.getElementById('single-view-grid');
         const svContainer = document.getElementById('single-view-dynamic-container');
