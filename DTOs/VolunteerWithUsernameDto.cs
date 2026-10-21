@@ -24,5 +24,6 @@ namespace HemFoundation.DTOs
 
         public string Password_ { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
+        public string CityName { get; set; } = string.Empty;
     }
 }

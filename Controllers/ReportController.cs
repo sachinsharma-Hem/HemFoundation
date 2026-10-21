@@ -364,7 +364,10 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     }
 
                     string pblQuery = @"
-                SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Family PBL' AS ""Title"", FileName, FileExtension, 'https://www.hemvirtues.in/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
+                SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Family PBL' AS ""Title"", FileName, FileExtension,
+                 CASE WHEN HFA.filelink IS NULL OR TRIM(HFA.filelink) = '' THEN NULL WHEN POSITION('wwwroot\' IN HFA.filelink) > 0 THEN 'https://www.hemvirtues.in/' || REPLACE( SUBSTRING( HFA.filelink FROM POSITION('wwwroot\' IN HFA.filelink) + LENGTH('wwwroot\') ), '\', '/' ) WHEN HFA.filelink LIKE '\\rrwstorage%' THEN NULL WHEN HFA.filelink LIKE 'http://%' OR HFA.filelink LIKE 'https://%' THEN REPLACE( HFA.filelink, 'https://hemvirtues.in', 'https://www.hemvirtues.in' ) WHEN HFA.filelink LIKE '/%' THEN 'https://www.hemvirtues.in' || HFA.filelink ELSE 'https://www.hemvirtues.in/' || HFA.filelink END AS ""FileLink"",
+			       
+                '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
                 FROM HF_UploadAnubhuti AS HFA    
                 INNER JOIN Users AS U ON U.UserID = HFA.IsCreatedBy    
                 INNER JOIN WJ_Students AS WJS ON WJS.StudentID = HFA.IsCreatedBy    
@@ -373,11 +376,14 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 INNER JOIN WJ_Practicals AS p ON p.CourseID = HFA.CourseID    
                 INNER JOIN View_WJ_Syllabus AS v ON v.CourseID = p.CourseID    
                 WHERE (@InstituteID IS NULL OR WJI.InstituteID = @InstituteID)    
-                GROUP BY WJS.StudentID, U.FirstName, U.LastName, WJS.Standard, WJI.""Name"", v.MainCourseName, HFA.CourseName, FileName, FileExtension, IsCreatedDate, WJI.InstituteID    
+                GROUP BY WJS.StudentID, U.FirstName, U.LastName, WJS.Standard, WJI.""Name"", v.MainCourseName, HFA.CourseName, FileName, FileExtension,hfa.filelink, IsCreatedDate, WJI.InstituteID    
 
                 UNION ALL    
 
-                SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Individual PBL' AS ""Title"", FileName, FileExtension, 'https://www.hemvirtues.in/Uploads/Anubhuti/' || CAST(WJI.InstituteID AS VARCHAR(10)) || '/' || CAST(WJS.StudentID AS VARCHAR(10)) || '/' || FileName || FileExtension AS ""FileLink"", '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
+                SELECT WJS.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", WJS.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, HFA.CourseName, 'Individual PBL' AS ""Title"", FileName, FileExtension, 
+                 CASE WHEN HFA.filelink IS NULL OR TRIM(HFA.filelink) = '' THEN NULL WHEN POSITION('wwwroot\' IN HFA.filelink) > 0 THEN 'https://www.hemvirtues.in/' || REPLACE( SUBSTRING( HFA.filelink FROM POSITION('wwwroot\' IN HFA.filelink) + LENGTH('wwwroot\') ), '\', '/' ) WHEN HFA.filelink LIKE '\\rrwstorage%' THEN NULL WHEN HFA.filelink LIKE 'http://%' OR HFA.filelink LIKE 'https://%' THEN REPLACE( HFA.filelink, 'https://hemvirtues.in', 'https://www.hemvirtues.in' ) WHEN HFA.filelink LIKE '/%' THEN 'https://www.hemvirtues.in' || HFA.filelink ELSE 'https://www.hemvirtues.in/' || HFA.filelink END AS ""FileLink"",
+			                     
+                '5' AS ""TotalMarks"", '5' AS ""MarksObtain"", IsCreatedDate AS ""SubmissionDate""    
                 FROM HF_TBL_UploadIndividualProject AS HFA    
                 INNER JOIN Users AS U ON U.UserID = HFA.IsCreatedBy    
                 INNER JOIN WJ_Students AS WJS ON WJS.StudentID = HFA.IsCreatedBy    
@@ -386,11 +392,14 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 INNER JOIN WJ_Practicals AS p ON p.CourseID = HFA.MainCourseID    
                 INNER JOIN View_WJ_Syllabus AS v ON v.CourseID = p.CourseID    
                 WHERE (@InstituteID IS NULL OR WJI.InstituteID = @InstituteID)    
-                GROUP BY WJS.StudentID, U.FirstName, U.LastName, WJS.Standard, WJI.""Name"", v.MainCourseName, HFA.CourseName, FileName, FileExtension, IsCreatedDate, WJI.InstituteID    
+                GROUP BY WJS.StudentID, U.FirstName, U.LastName, WJS.Standard, WJI.""Name"", v.MainCourseName, HFA.CourseName, FileName, FileExtension,hfa.filelink, IsCreatedDate, WJI.InstituteID    
 
                 UNION ALL    
 
-                SELECT SU.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", SU.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, '' AS ""CourseName"", 'Group PBL' AS ""Title"", '' AS ""FileName"", '' AS ""FileExtension"", 'https://www.hemvirtues.in' || REPLACE(SUBSTRING(C.VideoActivity, POSITION('wwwroot\\' IN C.VideoActivity) + 7, LENGTH(C.ImageActivity)), '\\', '/') AS ""FileLink"", '10' AS ""TotalMarks"", '10' AS ""MarksObtain"", C.CreatedDate AS ""SubmissionDate""    
+                SELECT SU.StudentID, CONCAT(U.FirstName, ' ', U.LastName) AS ""Student_Name"", SU.Standard, WJI.""Name"" AS ""InstituteName"", v.MainCourseName, '' AS ""CourseName"", 'Group PBL' AS ""Title"", '' AS ""FileName"", '' AS ""FileExtension"", 
+                CASE WHEN C.VideoActivity IS NULL OR TRIM(C.VideoActivity) = '' THEN NULL WHEN POSITION('wwwroot\' IN C.VideoActivity) > 0 THEN 'https://www.hemvirtues.in/' || REPLACE( SUBSTRING( C.VideoActivity FROM POSITION('wwwroot\' IN C.VideoActivity) + LENGTH('wwwroot\') ), '\', '/' ) WHEN C.VideoActivity LIKE '\\rrwstorage%' THEN NULL WHEN C.VideoActivity LIKE 'http://%' OR C.VideoActivity LIKE 'https://%' THEN REPLACE( C.VideoActivity, 'https://hemvirtues.in', 'https://www.hemvirtues.in' ) WHEN C.VideoActivity LIKE '/%' THEN 'https://www.hemvirtues.in' || C.VideoActivity ELSE 'https://www.hemvirtues.in/' || C.VideoActivity END AS ""FileLink"",
+			    
+                '10' AS ""TotalMarks"", '10' AS ""MarksObtain"", C.CreatedDate AS ""SubmissionDate""    
                 FROM CreativityActivitesSubmission2021 C    
                 LEFT JOIN HF_Rel_Manage_Group_List L ON C.InstituteID = L.IsAllocatedBy AND C.MainCourseID = L.MainCourseID    
                 LEFT JOIN Users U ON L.StudentID = U.UserID    
@@ -414,17 +423,16 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) AS ""MainCourseName"", 
                     WJI.firstName || ' ' || WJI.lastName AS ""Co-Ordinator Name"", 
                     WJI.cityName, WJI.referralcode, WJI.mobileno, 
-                    'https://www.hemvirtues.in' || REPLACE(SUBSTRING(CAS.ImageActivity, POSITION('wwwroot\\' IN CAS.ImageActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""ImageActivity"", 
-                    'https://www.hemvirtues.in' || REPLACE(SUBSTRING(CAS.VideoActivity, POSITION('wwwroot\\' IN CAS.VideoActivity) + 7, LENGTH(CAS.ImageActivity)), '\\', '/') AS ""VideoActivity"", 
-                    CAS.ShortDescription, CAS.CreatedDate AS ""Submission Date"", hfrm.GroupName, hfrm.ListStudents, hfrm.MainCourseID, CAS.TeamMembersList, CAS.ActivityType
+                    CASE WHEN cas.imageactivity IS NULL OR TRIM(cas.imageactivity) = '' THEN NULL WHEN POSITION('wwwroot\' IN cas.imageactivity) > 0 THEN 'https://www.hemvirtues.in/' || REPLACE( SUBSTRING( cas.imageactivity FROM POSITION('wwwroot\' IN cas.imageactivity) + LENGTH('wwwroot\') ), '\', '/' ) WHEN cas.imageactivity LIKE '\\rrwstorage%' THEN NULL WHEN cas.imageactivity LIKE 'http://%' OR cas.imageactivity LIKE 'https://%' THEN REPLACE( cas.imageactivity, 'https://hemvirtues.in', 'https://www.hemvirtues.in' ) WHEN cas.imageactivity LIKE '/%' THEN 'https://www.hemvirtues.in' || cas.imageactivity ELSE 'https://www.hemvirtues.in/' || cas.imageactivity END AS ""Image Activity"",
+			        CASE WHEN cas.videoactivity IS NULL OR TRIM(cas.videoactivity) = '' THEN NULL WHEN POSITION('wwwroot\' IN cas.videoactivity) > 0 THEN 'https://www.hemvirtues.in/' || REPLACE( SUBSTRING( cas.videoactivity FROM POSITION('wwwroot\' IN cas.videoactivity) + LENGTH('wwwroot\') ), '\', '/' ) WHEN cas.videoactivity LIKE '\\rrwstorage%' THEN NULL WHEN cas.videoactivity LIKE 'http://%' OR cas.videoactivity LIKE 'https://%' THEN REPLACE( cas.videoactivity, 'https://hemvirtues.in', 'https://www.hemvirtues.in' ) WHEN cas.videoactivity LIKE '/%' THEN 'https://www.hemvirtues.in' || cas.videoactivity ELSE 'https://www.hemvirtues.in/' || cas.videoactivity END AS ""Video Activity"",
+			     CAS.ShortDescription, CAS.CreatedDate AS ""Submission Date"", hfrm.GroupName, hfrm.ListStudents, hfrm.MainCourseID, CAS.TeamMembersList, CAS.ActivityType
                 FROM CreativityActivitesSubmission2021 AS CAS 
                 INNER JOIN vw_school_profile_details AS WJI ON WJI.instituteid = CAS.InstituteID 
                 LEFT JOIN ( 
-                    SELECT DISTINCT MT.GroupName, sq.IsAllocatedBy, sq.MainCourseID, 
+                    SELECT DISTINCT sq.GroupName, sq.IsAllocatedBy, sq.MainCourseID, 
                         STRING_AGG(CAST(sq.StudentID AS varchar), ',') AS ListStudents 
-                    FROM HF_Rel_Manage_Group_List sq 
-                    INNER JOIN HF_Rel_Manage_Group_List MT ON sq.GroupName = MT.GroupName AND sq.MainCourseID = MT.MainCourseID AND sq.IsAllocatedBy = MT.IsAllocatedBy
-                    GROUP BY MT.GroupName, sq.IsAllocatedBy, sq.MainCourseID 
+                    FROM HF_Rel_Manage_Group_List sq                    
+                    GROUP BY sq.GroupName, sq.IsAllocatedBy, sq.MainCourseID 
                 ) AS hfrm ON hfrm.IsAllocatedBy = CAS.InstituteID AND hfrm.MainCourseID = CAS.MainCourseID 
                 WHERE (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) IS NOT NULL 
                   AND (CAS.TeamMembersList IS NULL OR CAS.TeamMembersList = '') 
@@ -702,6 +710,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 -- Table 1: MCQ Marks
                 SELECT DISTINCT 
                     E.UserID AS ""UserID"", 
+                    U.FirstName || ' ' || U.LastName AS ""TeacherName"", 
                     Q.""Name"" AS ""Course Name"", 
                     T.TopicName AS ""TopicName"", 
                     T.NoOfQuestion AS ""TotalMarks"", 
@@ -715,7 +724,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                   AND E.MarksObtain IS NOT NULL 
                   AND (Q.""Name"" NOT LIKE '%Week%' AND Q.""Name"" NOT LIKE '%Beliefs Survey%' AND Q.""Name"" NOT LIKE '%HEM-Sampark Mega Quiz%') 
                   AND (@InstituteID = 0 OR WJTA.InstituteID = @InstituteID) 
-                GROUP BY E.UserID, Q.""Name"", T.TopicName, T.NoOfQuestion 
+                GROUP BY E.UserID,U.FirstName,U.LastName, Q.""Name"", T.TopicName, T.NoOfQuestion 
                 ORDER BY ""Course Name"", ""TopicName"", ""UserID"";
             ";
 
@@ -798,11 +807,11 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 FROM CreativityActivitesSubmission2021 AS CAS 
                 INNER JOIN vw_school_profile_details AS WJI ON WJI.instituteid = CAS.InstituteID 
                 LEFT JOIN ( 
-                    SELECT DISTINCT MT.GroupName, sq.IsAllocatedBy, sq.MainCourseID, 
+                    SELECT DISTINCT sq.GroupName, sq.IsAllocatedBy, sq.MainCourseID, 
                         STRING_AGG(CAST(sq.StudentID AS varchar), ',') AS ListStudents 
                     FROM HF_Rel_Manage_Group_List sq 
-                    INNER JOIN HF_Rel_Manage_Group_List MT ON sq.GroupName = MT.GroupName AND sq.MainCourseID = MT.MainCourseID AND sq.IsAllocatedBy = MT.IsAllocatedBy 
-                    GROUP BY MT.GroupName, sq.IsAllocatedBy, sq.MainCourseID 
+                   
+                    GROUP BY sq.GroupName, sq.IsAllocatedBy, sq.MainCourseID 
                 ) AS hfrm ON hfrm.IsAllocatedBy = CAS.InstituteID AND hfrm.MainCourseID = CAS.MainCourseID 
                 WHERE (SELECT MainCourseName FROM MainCourses WHERE MainCourseID = CAS.MainCourseID) IS NOT NULL 
                   AND (CAS.TeamMembersList IS NULL OR CAS.TeamMembersList = '') 
@@ -1420,7 +1429,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                         DataTable dt = essr1.Tables[i];
                         if (dt.Rows.Count > 0)
                         {
-                            wb.Worksheets.Add(dt, "IndividualProject " + (i + 1));
+                            wb.Worksheets.Add(dt, "FamilyProject " + (i + 1));
                             dataFound = true;
                         }
                     }

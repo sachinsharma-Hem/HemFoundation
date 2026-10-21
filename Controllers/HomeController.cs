@@ -60,6 +60,7 @@ namespace HemFoundation.Controllers
         }
 
         public IActionResult FAQ() => View();
+        public IActionResult PrivacyAndTerms() => View();
         public IActionResult RulesRegulations() => View();
         public IActionResult Unsubscriber() => View();
 

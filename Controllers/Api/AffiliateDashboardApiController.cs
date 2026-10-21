@@ -331,7 +331,7 @@ namespace HemFoundation.Controllers.Api
                 {
                     await conn.OpenAsync();
 
-                    string summarySql = "SELECT schoolcount, totalstudents, activestudents, totalteachers, activeteachers, totalselprojects, familyprojects, individualprojects, grouppbl FROM public.get_affiliate_dashboard_summary(@AffiliateId)";
+                    string summarySql = "SELECT schoolcount, totalstudents, activestudents, totalteachers, activeteachers, totalselprojects, familyprojects, individualprojects, grouppbl FROM public.get_affiliate_dashboardupdated_summary(@AffiliateId)";
 
                     using (var cmd = new Npgsql.NpgsqlCommand(summarySql, conn))
                     {
@@ -664,7 +664,7 @@ namespace HemFoundation.Controllers.Api
                     await conn.OpenAsync();
 
                     // Call the optimized PostgreSQL stored procedure
-                    string summarySql = "SELECT schoolcount, totalstudents, activestudents, totalteachers, activeteachers, totalselprojects, familyprojects, individualprojects, grouppbl FROM public.get_affiliate_Foccuseddashboard_summary(@AffiliateId)";
+                    string summarySql = "SELECT schoolcount, totalstudents, activestudents, totalteachers, activeteachers, totalselprojects, familyprojects, individualprojects, grouppbl FROM public.get_affiliate_foccuseddashboardupdated_summary(@AffiliateId)";
 
                     using (var cmd = new Npgsql.NpgsqlCommand(summarySql, conn))
                     {

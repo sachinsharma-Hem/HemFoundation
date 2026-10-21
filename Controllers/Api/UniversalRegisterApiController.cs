@@ -299,6 +299,16 @@ namespace HemFoundation.Controllers.Api
                 };
 
                 _context.WJ_Institutes.Add(affiliate);
+
+                var affrefcode = new WJ_ReferralCodes
+                {
+                    ReferralCode = "A" + generatedUserId,
+                    UserID = generatedUserId,
+                    IsActive=true
+
+                };
+                _context.WJ_ReferralCodes.Add(affrefcode);
+
             }
             else if (roleName == "HF_Volunteers")
             {
@@ -868,8 +878,9 @@ namespace HemFoundation.Controllers.Api
             using (var command = _context.Database.GetDbConnection().CreateCommand())
             {
                 command.CommandText = @"
-                    SELECT v.*, a.username 
+                    SELECT v.*, a.username,u.cityname 
                         FROM public.""Volunteers"" v
+                         JOIN public.users u ON v.""Id"" = u.userid
                         JOIN public.aspnetusers a ON v.""AspNetUserId"" = a.id
                         WHERE v.""IsDeleted"" = false and v.""InstituteId""=@instituteId";
 
@@ -896,6 +907,7 @@ namespace HemFoundation.Controllers.Api
                             Email= reader["email"]?.ToString(),
                             MobileNo= reader["mobileNo"]?.ToString(),
                             ID= Convert.ToInt32(reader["Id"]?.ToString()),
+                            CityName= reader["cityname"]?.ToString(),
 
 
                         });

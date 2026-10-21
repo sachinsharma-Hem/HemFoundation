@@ -252,11 +252,27 @@ namespace HemFoundation.Controllers.Api
             var standard = await _context.StandardMasters.FirstOrDefaultAsync(s => s.StandardName == grade.StandardName);
 
             // 1. Students of that standard
-            var students = await _context.hf_view_studentsdetails
+            var students1 = await _context.hf_view_studentsdetails
                 .Where(s => s.InstituteID == institute.instituteid && s.Standard == standard.StandardName)
                 .Select(s => new { Id = s.StudentId, Name = s.FirstName + " " + s.LastName })
                 .ToListAsync();
 
+            //var students = await _context.StudentActivityLogs
+            //   .Where(s => s.InstituteID == institute.instituteid && s.Standard == standard.StandardName && s.MainCourseName == valueItem.ValueTitleEng)
+            //   .Select(s => new { Id = s.StudentID, Name = s.StudentName })
+            //   .ToListAsync();
+            var students = await _context.StudentActivityLogs
+                .Where(s =>
+                    s.InstituteID == institute.instituteid &&
+                    s.Standard == standard.StandardName &&
+                    s.MainCourseName == valueItem.ValueTitleEng && s.ActivityType!="Survey")
+                .Select(s => new
+                {
+                    Id = s.StudentID,
+                    Name = s.StudentName
+                })
+                .Distinct()
+                .ToListAsync();
             var submissions = await _context.creativityActivitiesSubmission2021s
               .Where(s => s.InstituteID == institute.instituteid && s.MainCourseID == valueItemId)
               .ToListAsync();

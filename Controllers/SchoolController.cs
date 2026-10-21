@@ -1,9 +1,11 @@
 ﻿using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Drawing;
 using HemFoundation.Common; // Required for DBManager
+using HemFoundation.Data;
 using HemFoundation.DTOs;
 using HemFoundation.Models; 
 using HemFoundation.Models.Entities; // Required for View_WJ_Teachercertificate (adjust namespace if needed)
+using HemFoundation.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration; // Required for IConfiguration
@@ -19,11 +21,15 @@ namespace HemFoundation.Controllers
     public class SchoolController : Controller
     {
         private readonly IConfiguration _configuration;
+        private readonly ApplicationDbContext _context;
+        private readonly ExceptionLoggerService _exceptionLogger;
 
         // Constructor injection for configuration
-        public SchoolController(IConfiguration configuration)
+        public SchoolController(IConfiguration configuration, ApplicationDbContext context, ExceptionLoggerService exceptionLogger)
         {
             _configuration = configuration;
+            _context = context;
+            _exceptionLogger = exceptionLogger;
         }
 
         public IActionResult Index()
@@ -528,6 +534,7 @@ namespace HemFoundation.Controllers
                         "--load-error-handling ignore " +
                         "--load-media-error-handling ignore " +
                         "--enable-javascript"
+                       
                 };
 
                 pdf.ViewData["IsPdf"] = true;
@@ -537,6 +544,7 @@ namespace HemFoundation.Controllers
             }
             catch (Exception ex)
             {
+                await _exceptionLogger.LogExceptionAsync(ex);
                 // your existing exception logger can be used here
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,

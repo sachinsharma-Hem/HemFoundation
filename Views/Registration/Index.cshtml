@@ -225,7 +225,7 @@
     /* Ensure modal body does not clip absolute dropdown items */
     .modal-body {
         overflow: visible !important;
-
+    }
 
     .glass-nav-pills .nav-link.active {
         /* Soft semi-transparent theme color (Purple/Blue mix) */
@@ -289,12 +289,12 @@
                             <i class="bi bi-person-plus-fill me-1"></i> Add New Student
                         </button>
                     </div>
-                </div><div id="studentTableContainer">
+                </div><div id="directory-table-wrapper">
                 <div id="studentTableContainer"></div></div>
             </div>
 
             <!-- REASSIGN GRADE MODAL (STUDENT) -->
-            <div class="modal fade" id="Dv_StandardModal" tabindex="-1" role="dialog" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal fade" id="Dv_StandardModal" tabindex="-1" role="dialog" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered modal-sm">
                     <div class="modal-content border-0 shadow" style="border-radius:14px;">
                         <div class="modal-header border-0 pb-0">
@@ -410,7 +410,7 @@
 <!-- ================= MODALS ================= -->
 
 <!-- ASSIGN STANDARD MODAL (TEACHER) -->
-<div class="modal fade" id="assignStandardList" tabindex="-1" aria-hidden="true" data-bs-backdrop="true">
+<div class="modal fade" id="assignStandardList" tabindex="-1" aria-hidden="true" data-bs-backdrop="true"  data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; background-color: #ffffff;">
             <div class="modal-header border-0 pb-0">
@@ -448,7 +448,7 @@
     </div>
 </div>
 <!-- ADD STUDENT MODAL -->
-<div class="modal fade" id="modalAddStudent" tabindex="-1">
+<div class="modal fade" id="modalAddStudent" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg p-3">
             <div class="modal-header border-bottom-0 pb-0">
@@ -462,7 +462,7 @@
                     <div class="row g-3">
                         <div class="col-md-6"><label class="small fw-bold">First Name</label><input type="text" name="firstName" class="form-control" required></div>
                         <div class="col-md-6"><label class="small fw-bold">Last Name</label><input type="text" name="lastName" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Guardian Mobile (Username)</label><input type="text" name="mobileNo" class="form-control" maxlength="10" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Guardian Mobile (Username)</label><input type="tel" name="mobileNo" class="form-control" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required></div>
                         <div class="col-md-6"><label class="small fw-bold">Guardian Email</label><input type="email" name="emailID" class="form-control" required></div>
                         <div class="col-md-6"><label class="small fw-bold">Standard</label><select name="standard" id="ddlInternalStandard" class="form-select" required></select></div>
                         <div class="col-md-6"><label class="small fw-bold">Division</label><input type="text" name="division" class="form-control" required></div>
@@ -476,7 +476,7 @@
 </div>
 
 <!-- ADD TEACHER MODAL -->
-<div class="modal fade" id="modalAddTeacher" tabindex="-1">
+<div class="modal fade" id="modalAddTeacher" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg p-3">
             <div class="modal-header border-bottom-0 pb-0">
@@ -490,9 +490,9 @@
                     <div class="row g-3">
                         <div class="col-md-6"><label class="small fw-bold">First Name</label><input type="text" name="firstName" class="form-control" required></div>
                         <div class="col-md-6"><label class="small fw-bold">Last Name</label><input type="text" name="lastName" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Mobile No (Username)</label><input type="text" name="mobileNo" class="form-control" maxlength="10" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Mobile No (Username)</label><input type="tel" name="mobileNo" class="form-control" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required></div>
                         <div class="col-md-6"><label class="small fw-bold">Email ID</label><input type="email" name="emailID" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Qualification</label><input type="text" name="qualification" class="form-control" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Qualification</label><input type="text" name="qualification" class="form-control"></div>
                         <div class="col-md-6"><label class="small fw-bold">City</label><input type="text" name="city" class="form-control" required></div>
                     </div>
                     <button type="submit" class="btn btn-success w-100 rounded-pill mt-4 fw-bold">Submit Teacher</button>
@@ -504,7 +504,7 @@
 
 
 <!--Add Volunteer Model-->
-<div class="modal fade" id="modalAddVolunteer" tabindex="-1">
+<div class="modal fade" id="modalAddVolunteer" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg p-3">
             <div class="modal-header border-bottom-0 pb-0">
@@ -518,7 +518,7 @@
                     <div class="row g-3">
                         <div class="col-md-6"><label class="small fw-bold">First Name</label><input type="text" name="firstName" class="form-control" required></div>
                         <div class="col-md-6"><label class="small fw-bold">Last Name</label><input type="text" name="lastName" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Mobile No (Username)</label><input type="text" name="mobileNo" class="form-control" maxlength="10" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Mobile No (Username)</label><input type="tel" name="mobileNo" class="form-control" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required></div>
                         <div class="col-md-6"><label class="small fw-bold">Email ID</label><input type="email" name="emailID" class="form-control" required></div>                    
                         <div class="col-md-6"><label class="small fw-bold">City</label><input type="text" name="city" class="form-control" required></div>
                     </div>
@@ -760,11 +760,24 @@ function getDownloadUrl(filePath) {
                 window.location.href = `/api/universal/download-sample/${type}`;
             });
 
-            $('#bulkUploadForm').on('submit', function(e) {
+           $('#bulkUploadForm').on('submit', function(e) {
                 e.preventDefault();
+                let $form = $(this);
+                let $submitBtn = $form.find('button[type="submit"]');
+
+                // Prevent double submission if already processing
+                if ($submitBtn.prop('disabled')) {
+                    return;
+                }
+
                 let file = $('#bulkExcelFile')[0].files[0];
                 let type = $('#bulkUploadType').val();
                 if (!file) { alert("Select Excel file."); return; }
+
+                // Disable submit button and show loading spinner
+                $submitBtn.prop('disabled', true);
+                let originalBtnText = $submitBtn.html();
+                $submitBtn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Uploading...');
 
                 let formData = new FormData();
                 formData.append('excelFile', file);
@@ -777,6 +790,10 @@ function getDownloadUrl(filePath) {
                     contentType: false,
                     processData: false,
                     success: function(res) {
+                        // Re-enable button and restore text
+                        $submitBtn.prop('disabled', false);
+                        $submitBtn.html(originalBtnText);
+
                         if (res.success) {
                             alert(res.message);
                             $('#bulkUploadForm')[0].reset();
@@ -784,11 +801,14 @@ function getDownloadUrl(filePath) {
                         }
                     },
                     error: function(xhr) {
+                        // Re-enable button and restore text on error
+                        $submitBtn.prop('disabled', false);
+                        $submitBtn.html(originalBtnText);
+
                         alert(xhr.responseJSON?.message || "Upload failed.");
                     }
                 });
             });
-        });
         const directoryTableDefaults = {
             layout: "fitData",
             responsiveLayout: false,
@@ -1408,7 +1428,13 @@ function getDownloadUrl(filePath) {
                         sorter: "string",
                         headerFilter: "input"
                     },
-
+                     {
+                        title: "City",
+                        field: "cityName",
+                        width: 230,
+                        sorter: "string",
+                        headerFilter: "input"
+                    },
                     {
                         title: "Username",
                         field: "_username",
@@ -1427,7 +1453,7 @@ function getDownloadUrl(filePath) {
                 ]
             });
         }
-
+          });
         function filterTabulator(type, query) {
 
             let table =
@@ -1679,6 +1705,26 @@ function getDownloadUrl(filePath) {
                     }
                 });
             }
-       
+       // Reset forms and selections whenever any modal is hidden/closed
+        $('.modal').on('hidden.bs.modal', function () {
+            // Find any form inside the closed modal and reset it
+            $(this).find('form').each(function () {
+                this.reset();
+            });
+
+            // Specific reset for bootstrap-multiselect elements if present
+            $(this).find('select[multiple]').each(function () {
+                if (typeof $(this).multiselect === 'function') {
+                    $(this).multiselect('clearSelection');
+                    $(this).multiselect('refresh');
+                }
+            });
+
+            // Reset any specific hidden IDs or text labels if needed
+            $(this).find('#hd_StudentID').val('0');
+            $(this).find('#teacherId').val('0');
+            $(this).find('#teacherName').text('Teacher Name');
+            $(this).find('#lbl_Student_Name').text('Student Name');
+        });
     </script>
 }

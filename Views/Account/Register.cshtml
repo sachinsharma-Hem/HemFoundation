@@ -67,10 +67,10 @@
 
                             <!-- Gender Dropdown (Male, Female, Other with single-letter values M, F, O) -->
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1">Gender <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-bold text-secondary mb-1">Gender </label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-gender-ambiguous"></i></span>
-                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="ddlGender" required>
+                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="ddlGender" required>
                                         <option value="">-- Select Gender --</option>
                                         <option value="M">Male</option>
                                         <option value="F">Female</option>
@@ -81,7 +81,7 @@
 
                             <!-- Student Specific: Guardian Name -->
                             <div class="col-md-6 student-field d-none">
-                                <label class="form-label small fw-bold text-secondary mb-1">Guardian / Parent Name <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-bold text-secondary mb-1">Guardian / Parent Name </label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-primary"><i class="bi bi-people"></i></span>
                                     <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtGuardianName" placeholder="Guardian Full Name" />
@@ -90,7 +90,7 @@
 
                             <!-- Teacher Specific: Qualification -->
                             <div class="col-md-6 teacher-field d-none">
-                                <label class="form-label small fw-bold text-secondary mb-1">Qualification <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-bold text-secondary mb-1">Qualification </label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-info"><i class="bi bi-award"></i></span>
                                     <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtQualification" placeholder="e.g. B.Ed, M.Sc" />
@@ -146,10 +146,10 @@
 
                             <!-- Email ID -->
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1" id="lblEmail">Email ID <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-bold text-secondary mb-1" id="lblEmail">Email ID <span class="text-danger"></span></label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-envelope"></i></span>
-                                    <input type="email" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtEmailID" placeholder="name@example.com" required />
+                                    <input type="email" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none  fs-6 py-2" id="txtEmailID" placeholder="name@example.com"  />
                                 </div>
                                 <small id="emailError" class="text-danger d-none ms-1" style="font-size: 11px;">Please enter a valid email address.</small>
                             </div>
@@ -179,8 +179,8 @@
 
                             <!-- Address -->
                             <div class="col-12">
-                                <label class="form-label small fw-bold text-secondary mb-1">Address <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtAddress" placeholder="Street Address" required />
+                                <label class="form-label small fw-bold text-secondary mb-1">Address </label>
+                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-light shadow-none  fs-6 py-2" id="txtAddress" placeholder="Street Address" />
                             </div>
 
                             <!-- Pincode -->
@@ -244,16 +244,18 @@
             if (portalId == "3") { // Student
                 $('#formHeader').text("Student Registration");
                 $('#badgeRole').html(`<i class="bi bi-mortarboard-fill text-primary me-1"></i> Student Portal`);
-                $('#lblFirstName').text("Student First Name");
-                $('#lblLastName').text("Student Last Name");
-                $('#lblMobile').text("Guardian Mobile No (Username & Password)");
+              ///  $('#lblFirstName').text("Student First Name<span class="text-danger">*</span>");
+                
+                $('#lblFirstName').html('Student First Name <span class="text-danger">*</span>');
+                $('#lblLastName').html('Student Last Name <span class="text-danger">*</span>');
+                $('#lblMobile').html('Mobile No (Username & Password) <span class="text-danger">*</span>');
                 $('#lblEmail').text("Guardian Email ID");
 
                 $('.student-field').removeClass('d-none');
                 $('.org-field').hide();
                 $('#referredByContainer').hide();
 
-                $('#ddlStandard, #txtGuardianName').addClass('req-field');
+                $('#ddlStandard,#txtMobile').addClass('req-field');
                 $('#txtOrgName, #ddlOrgType').removeClass('req-field');
                 loadStandardsDropdown();
             }
@@ -269,7 +271,7 @@
                 $('.teacher-field').removeClass('d-none');
                 $('.org-field').hide();
                 $('#referredByContainer').hide();
-                $('#txtQualification').addClass('req-field');
+              //  $('#txtQualification').addClass('req-field');
                 $('#txtOrgName, #ddlOrgType').removeClass('req-field');
             }
             else if (portalId == "5") { // Parent
@@ -310,8 +312,17 @@
                 if (!$(this).val() || $(this).val().trim() === "") isValid = false;
             });
             if ($('#txtMobileNo').val().trim().length !== 10) isValid = false;
-            let emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
-            if (!emailRegex.test($('#txtEmailID').val().trim())) isValid = false;
+              const email = $('#txtEmailID').val().trim();
+
+            const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+
+            if (email !== "" && !emailRegex.test(email)) {
+                isValid = false;
+                $('#emailError').removeClass('d-none');
+            } else {
+                $('#emailError').addClass('d-none');
+            }
+
 
             $('#btnRegister').prop('disabled', !isValid);
         }

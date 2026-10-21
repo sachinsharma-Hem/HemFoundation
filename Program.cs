@@ -113,7 +113,8 @@ builder.Services.AddTransient<SMSManager>();
 builder.Services.AddScoped<IGroupProjectService, GroupProjectService>();
 builder.Services.AddScoped<IFileStorageService,
     InHouseFileStorageService>();
-
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ExceptionLoggerService>();
 
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(
     options =>
