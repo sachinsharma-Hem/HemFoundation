@@ -95,8 +95,6 @@ namespace HemFoundation.Controllers
 
             return View(new ErrorViewModel { RequestId = requestId });
         }
-
-
         public async Task<IActionResult> ErrorLogs(string? search)
         {
             var query = _context.ErrorLogs.AsNoTracking().OrderByDescending(e => e.CreatedAtUtc).AsQueryable();

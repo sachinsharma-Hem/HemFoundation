@@ -1,9 +1,9 @@
 ﻿@{
-    ViewData["Title"] = "Frequently Asked Questions";
+    ViewData["Title"] = "Frequently Asked Questions & Guidelines";
 }
 
 <!-- =========================================================
-     HEM VIRTUES - FAQ & HELP CENTER PAGE
+     HEM VIRTUES - FAQ, ABOUT & HELP CENTER PAGE (UAT)
 ========================================================== -->
 <div class="faq-page-wrapper bg-soft-light min-vh-100 pb-5" style="background-color: #f8fafc;">
 
@@ -16,12 +16,12 @@
                     <span class="badge bg-white bg-opacity-15 text-warning px-3 py-2 rounded-pill fw-semibold mb-3 border border-white border-opacity-10">
                         <i class="bi bi-question-circle-fill me-1"></i> Help & Support Center
                     </span>
-                    <h1 class="fw-bold text-white mb-3 display-6">Have Questions? We Have Answers</h1>
+                    <h1 class="fw-bold text-white mb-3 display-6">Frequently Asked Questions & Guidelines</h1>
                     <p class="text-white-50 mb-4 mx-auto small" style="max-width: 600px; line-height: 1.6;">
-                        Find quick help, operational guides, and structural parameters for the HemVirtues value learning model.
+                        Find detailed insights about HEMA Foundation, the HEM Virtues value learning model, NEP evaluation frameworks, and general guidelines.
                     </p>
 
-                    <!-- Search Input Filter (Optional UI Enhancement) -->
+                    <!-- Search Input Filter -->
                     <div class="input-group input-group-lg bg-white rounded-pill p-1 shadow-sm mx-auto" style="max-width: 500px;">
                         <span class="input-group-text bg-transparent border-0 ps-3 text-muted"><i class="bi bi-search"></i></span>
                         <input type="text" id="faqSearch" class="form-control border-0 shadow-none bg-transparent" placeholder="Search questions, values, or guides..." style="font-size: 14px;">
@@ -37,87 +37,191 @@
         <div class="row justify-content-center">
             <div class="col-lg-10">
 
-                <!-- Section Header -->
-                <div class="d-flex align-items-center justify-content-between mb-4">
-                    <h4 class="fw-bold text-dark m-0 fs-5">Frequently Asked Questions</h4>
-                    <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill">All Categories</span>
+                <!-- Section Header: About HEMA Foundation -->
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h4 class="fw-bold text-dark m-0 fs-5">About HEMA Foundation</h4>
+                    <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill">Foundation</span>
                 </div>
 
-                <!-- Accordions Container -->
-                <div class="accordion custom-accordion" id="hemFaqAccordion">
+                <div class="accordion custom-accordion mb-5" id="hemFoundationAccordion">
 
-                    <!-- Item 1 -->
+                    <!-- Hema Foundation Intro -->
                     <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
-                        <h2 class="accordion-header" id="faqHeadingOne">
-                            <button class="accordion-button fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseOne" aria-expanded="true" aria-controls="faqCollapseOne">
+                        <h2 class="accordion-header" id="headingFoundOne">
+                            <button class="accordion-button fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFoundOne" aria-expanded="true" aria-controls="collapseFoundOne">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                                        <i class="bi bi-mortarboard-fill"></i>
+                                        <i class="bi bi-building-fill"></i>
                                     </div>
-                                    <span>Who can register and participate in the HEM Virtues program?</span>
+                                    <span>What is HEMA Foundation?</span>
                                 </div>
                             </button>
                         </h2>
-                        <div id="faqCollapseOne" class="accordion-collapse collapse show" aria-labelledby="faqHeadingOne" data-bs-parent="#hemFaqAccordion">
+                        <div id="collapseFoundOne" class="accordion-collapse collapse show" aria-labelledby="headingFoundOne" data-bs-parent="#hemFoundationAccordion">
                             <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
-                                Teachers, students, and institutional authorities from any authorized school can seamlessly register and participate in the <strong>HEM Virtues</strong> program via our dedicated portal onboarding flows.
+                                HEMA Foundation is the philanthropic arm of <strong>RR Global</strong>. Founded on 25th June 2016 in the memory of late Smt. Hema Mahendra Kabra, HEMA is beautifully expressed as <strong>'Humane Endeavour for Moral Awakening'</strong>.
                             </div>
                         </div>
                     </div>
 
-                    <!-- Item 2 -->
+                    <!-- What We Do -->
                     <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
-                        <h2 class="accordion-header" id="faqHeadingTwo">
-                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseTwo" aria-expanded="false" aria-controls="faqCollapseTwo">
+                        <h2 class="accordion-header" id="headingFoundTwo">
+                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFoundTwo" aria-expanded="false" aria-controls="collapseFoundTwo">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="bg-success-subtle text-success rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                                        <i class="bi bi-award-fill"></i>
+                                        <i class="bi bi-bullseye"></i>
                                     </div>
-                                    <span>How are marks and values structured under the NEP framework?</span>
+                                    <span>What we do & What is our Vision/Mission?</span>
                                 </div>
                             </button>
                         </h2>
-                        <div id="faqCollapseTwo" class="accordion-collapse collapse" aria-labelledby="faqHeadingTwo" data-bs-parent="#hemFaqAccordion">
+                        <div id="collapseFoundTwo" class="accordion-collapse collapse" aria-labelledby="headingFoundTwo" data-bs-parent="#hemFoundationAccordion">
                             <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
-                                The portal covers <strong>50 foundational human values</strong> aligned with NEP 2020. Each value carries 80 marks, culminating in a maximum score of 4,000 marks, plus additional bonus marks for milestone completions.
+                                <p class="mb-2"><strong>What we do:</strong> We work relentlessly towards cultivating a conscious understanding of human values in individuals to help them coexist peacefully and harmonious. We envisage creating a learning environment that fosters a compassionate understanding in children of their responsibilities towards Self, Family, Society, and the Nation at large.</p>
+                                <p class="mb-2"><strong>Vision:</strong> To cultivate a conscious understanding of human values in individuals in order to help them coexist peacefully and harmoniously, helping them become better human beings.</p>
+                                <p class="mb-0"><strong>Mission:</strong> To awaken the spirit of value-based living in all individuals at school, organizational, and community levels through well-researched and structured programs resulting in a responsible, effective, and harmonious existence for all.</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Item 3 -->
+                    <!-- How we achieve & activities -->
                     <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
-                        <h2 class="accordion-header" id="headingThree">
-                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        <h2 class="accordion-header" id="headingFoundThree">
+                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFoundThree" aria-expanded="false" aria-controls="collapseFoundThree">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="bg-warning-subtle text-warning-emphasis rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                                        <i class="bi bi-file-earmark-text-fill"></i>
+                                        <i class="bi bi-film"></i>
                                     </div>
-                                    <span>What learning resources are provided for each value module?</span>
+                                    <span>How does HEMA Foundation achieve its mission, and what activities are included?</span>
                                 </div>
                             </button>
                         </h2>
-                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#hemFaqAccordion">
+                        <div id="collapseFoundThree" class="accordion-collapse collapse" aria-labelledby="headingFoundThree" data-bs-parent="#hemFoundationAccordion">
                             <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
-                                Every value module includes engaging instructional video lessons, downloadable PDF learning documents, interactive practical tasks, and a 5-question MCQ assessment test.
+                                <p class="mb-2">HEMA Foundation has created <strong>48 short moral value films</strong>. Each film depicts one value and offers specific lessons. After screening, students engage in reinforcing activities.</p>
+                                <p class="mb-0"><strong>Value Activities include:</strong> Dedicated short stories, inspirational plays, role plays, Sanskrit shlokas, examples of personalities who personify the value, puzzles, crosswords, games, resolutions, and gratitude practices.</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Item 4 -->
+                    <!-- Who conducts & Experts -->
                     <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
-                        <h2 class="accordion-header" id="headingFour">
-                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                        <h2 class="accordion-header" id="headingFoundFour">
+                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFoundFour" aria-expanded="false" aria-controls="collapseFoundFour">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-info-subtle text-info-emphasis rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-people-fill"></i>
+                                    </div>
+                                    <span>Who conducts activities and who are the associated experts?</span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseFoundFour" class="accordion-collapse collapse" aria-labelledby="headingFoundFour" data-bs-parent="#hemFoundationAccordion">
+                            <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
+                                <p class="mb-2"><strong>Conducting Activities:</strong> Teachers conduct the activities after being trained by HEMA Foundation, using the teacher's guide book <strong>HEM Disha</strong> built by industry experts.</p>
+                                <p class="mb-0"><strong>Advisory Board & Pillars:</strong> Swami Govind Dev Giri ji, Shri Rameshwarlal ji Kabra (Founder Chairman – RR Global), Dr. Anantan Ramakrishna Pillai (Founder President - IDF), Shri Shiv Khera (Author & Speaker), Shri Manoj Joshi (Actor), Shri Mukesh Khanna (Actor), Smt. Anita Maheshwari (Trustee & Creative Director), Shri Mahendra Kabra (Managing Trustee), Dr. Chinu Agrawal (Trustee, Psychologist & Psychotherapist), Dr. Vijayam Ravi (Associate Director), Smt. Hetal Desai (Associate Director), Shri Rajeev Bhargava (HR Expert & Creative Writer), and Dr. Narayan B Iyer (IDF).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Section Header: HEM Virtues & Portal Rules -->
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h4 class="fw-bold text-dark m-0 fs-5">HEM Virtues Portal & Guidelines</h4>
+                    <span class="badge bg-success-subtle text-success fw-semibold px-3 py-1 rounded-pill">Rules & Regulations</span>
+                </div>
+
+                <div class="accordion custom-accordion mb-5" id="hemPortalAccordion">
+
+                    <!-- What is HEM Virtues -->
+                    <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
+                        <h2 class="accordion-header" id="headingPortalOne">
+                            <button class="accordion-button fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePortalOne" aria-expanded="true" aria-controls="collapsePortalOne">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-laptop-fill"></i>
+                                    </div>
+                                    <span>What is e-portal HEM Virtues and how do children get involved?</span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapsePortalOne" class="accordion-collapse collapse show" aria-labelledby="headingPortalOne" data-bs-parent="#hemPortalAccordion">
+                            <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
+                                <p class="mb-2"><strong>HEM Virtues</strong> is the digital initiative to reach out to schools, teachers, and students over the web. In the first phase, nine values are selected. With 3 weeks (21 days) spent per value, it takes 27 weeks to complete the nine values.</p>
+                                <p class="mb-0"><strong>Student Involvement:</strong> Requires two periods weekly (preferably Wednesday for learning activities and Saturday for gaming activities like puzzles and quizzes). Students are assessed, rewarded, and certified.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- General Guidelines & Dashboard -->
+                    <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
+                        <h2 class="accordion-header" id="headingPortalTwo">
+                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePortalTwo" aria-expanded="false" aria-controls="collapsePortalTwo">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-success-subtle text-success rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-person-badge-fill"></i>
+                                    </div>
+                                    <span>General Teacher Registration & Dashboard Guidelines</span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapsePortalTwo" class="accordion-collapse collapse" aria-labelledby="headingPortalTwo" data-bs-parent="#hemPortalAccordion">
+                            <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Teachers from any authorized school can register and participate via the Teacher Onboarding portal.</li>
+                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Registration is simple and provides every teacher with a personalized dashboard.</li>
+                                    <li class="mb-0"><i class="bi bi-check-circle-fill text-success me-2"></i>The dashboard supplies real-time updates, participation tracking, performance insights, and contribution statistics.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEP Based Evaluation -->
+                    <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
+                        <h2 class="accordion-header" id="headingPortalThree">
+                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePortalThree" aria-expanded="false" aria-controls="collapsePortalThree">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-warning-subtle text-warning-emphasis rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-award-fill"></i>
+                                    </div>
+                                    <span>NEP Based Grade-Wise Value Evaluation & Scoring System</span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapsePortalThree" class="accordion-collapse collapse" aria-labelledby="headingPortalThree" data-bs-parent="#hemPortalAccordion">
+                            <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="bi bi-dot text-primary fs-5 me-1"></i>Covers <strong>50 foundational human values</strong> across 4 categories aligned with NEP 2020.</li>
+                                    <li class="mb-2"><i class="bi bi-dot text-primary fs-5 me-1"></i>Each value includes instructional video lessons, downloadable PDF resources, and a 5-question MCQ assessment.</li>
+                                    <li class="mb-2"><i class="bi bi-dot text-primary fs-5 me-1"></i>Each value carries <strong>80 marks</strong>, reaching a cumulative maximum score of <strong>4,000 marks</strong>.</li>
+                                    <li class="mb-2"><i class="bi bi-dot text-primary fs-5 me-1"></i>Students earn an additional <strong>400 Bonus Marks</strong> upon completing each set of five core values in a module.</li>
+                                    <li class="mb-0"><i class="bi bi-dot text-primary fs-5 me-1"></i>Performance tiers include Platinum, Diamond, Gold, Silver, and Bronze, with outstanding performers honored at the annual <strong>Hemostav Ceremony</strong>.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task Evaluation Guidelines -->
+                    <div class="accordion-item border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-white">
+                        <h2 class="accordion-header" id="headingPortalFour">
+                            <button class="accordion-button collapsed fw-bold text-dark shadow-none py-3 px-4 bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePortalFour" aria-expanded="false" aria-controls="collapsePortalFour">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="bg-info-subtle text-info-emphasis rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                                         <i class="bi bi-patch-check-fill"></i>
                                     </div>
-                                    <span>How do students qualify for Digital E-Certificates?</span>
+                                    <span>Task Evaluation & Digital E-Certificate Criteria</span>
                                 </div>
                             </button>
                         </h2>
-                        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#hemFaqAccordion">
+                        <div id="collapsePortalFour" class="accordion-collapse collapse" aria-labelledby="headingPortalFour" data-bs-parent="#hemPortalAccordion">
                             <div class="accordion-body px-4 pb-4 pt-2 text-secondary small" style="line-height: 1.7;">
-                                To qualify for digital e-certificates, students must correctly answer at least 3 out of 5 MCQs per value and successfully complete a minimum of 50% of the assigned practical tasks.
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="bi bi-check2 text-info me-2"></i>Each core value is structured into <strong>12 learning activities</strong> (Accelerated Learning & Moral Story assignments).</li>
+                                    <li class="mb-2"><i class="bi bi-check2 text-info me-2"></i>Teachers evaluate activities using established assessment criteria for consistency.</li>
+                                    <li class="mb-0"><i class="bi bi-check2 text-info me-2"></i><strong>Certification Rule:</strong> Students must correctly answer at least <strong>3 out of 5 MCQs</strong> per value and complete a minimum of <strong>50% of practical activities</strong> to earn secure co-branded Digital E-Certificates.</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
