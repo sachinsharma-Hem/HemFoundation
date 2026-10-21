@@ -857,7 +857,7 @@
             <table class="table" id="projects-table">
                 <thead>
                     <tr>
-                        <th>Sr</th>
+                        <th>Sr.</th>
                         <th>School Name</th>
                         <th>Title / Course</th>
                         <th>Student Name</th>
@@ -885,7 +885,7 @@
             <table class="table" id="evaluated-table">
                 <thead>
                     <tr>
-                        <th>Sr</th>
+                        <th>Sr.</th>
                         <th>Project ID</th>
                         <th>Type</th>
                         <th>Status</th>
@@ -969,14 +969,14 @@
                             <div class="color-option" data-color="Yellow" onclick="selectColor('Yellow')" style="background: #fef3c7;">
                                 <div class="circle" style="background: #eab308;"></div>
                                 <div style="font-weight: 600; color: #78350f; font-size: 0.75rem;">Yellow</div>
-                                <div style="font-size: 0.65rem; color: #451a03;">3 Marks</div>
+                                <div style="font-size: 0.65rem; color: #451a03;">1 Marks</div>
                             </div>
                         </div>
                         <div class="col" style="flex: 0 0 20%; max-width: 20%;">
                             <div class="color-option selected" data-color="Green" onclick="selectColor('Green')" style="background: #d1fae5;">
                                 <div class="circle" style="background: #10b981;"></div>
                                 <div style="font-weight: 600; color: #065f46; font-size: 0.75rem;">Green</div>
-                                <div style="font-size: 0.65rem; color: #047857;">3 Marks</div>
+                                <div style="font-size: 0.65rem; color: #047857;">5 Marks</div>
                             </div>
                         </div>
                     </div>
@@ -1181,9 +1181,9 @@
                     tbody.innerHTML = "";
 
                     if (currentType === 'group-pbl') {
-                        thead.innerHTML = `<tr><th>Sr</th><th>School Name</th><th>Description</th><th>Team Members</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
+                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Description</th><th>Team Members</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
                     } else {
-                        thead.innerHTML = `<tr><th>Sr</th><th>School Name</th><th>Course / Title</th><th>Student Name</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
+                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Course / Title</th><th>Student Name</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
                     }
 
                     if (res.success && res.data.length > 0) {
@@ -1285,22 +1285,36 @@
             buildMarksCircles(color);
         }
 
+       
         function buildMarksCircles(color) {
             let container = document.getElementById("marks-circles-container");
             container.innerHTML = "";
 
             let markValue = 3;
+
             if (color === "Red") {
                 markValue = 0;
             } else if (color === "Orange" || color === "Blue") {
                 markValue = 2;
-            } else if (color === "Yellow" || color === "Green") {
-                markValue = 3;
+            } else if (color === "Yellow") {
+                markValue = 1;
+            } else if (color === "Green") {
+                markValue = 5;
             }
 
-            container.innerHTML = `<button type="button" id="mark-btn-${markValue}" class="mark-btn active" onclick="selectMark(${markValue})">${markValue}</button>`;
+            container.innerHTML = `
+                <button
+                    type="button"
+                    id="mark-btn-${markValue}"
+                    class="mark-btn active"
+                    onclick="selectMark(${markValue})">
+                    ${markValue}
+                </button>
+            `;
+
             selectMark(markValue);
         }
+
 
         function selectMark(mark) {
             document.getElementById("selectedMarks").value = mark;
@@ -1316,7 +1330,6 @@
             document.getElementById("modalInstituteId").value = instituteId;
             document.getElementById("modalCourseName").value = courseName;
 
-            // Media preview container ko hide kar diya hai taaki wo modal mein na dikhe
             let previewContainer = document.getElementById("media-preview-container");
             previewContainer.style.display = "none";
             previewContainer.innerHTML = "";

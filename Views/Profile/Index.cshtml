@@ -376,7 +376,16 @@
                 formData.append('firstName', $('#txtFirstName').val());
                 formData.append('lastName', $('#txtLastName').val());
                 formData.append('phoneNumber', $('#txtMobileNo').val());
-                formData.append('guardianEmail', $('#txtEmail').val());
+                const email = $('#txtEmail').val().trim();
+                const standard = $('#txtStandard').val().trim();
+
+                if (standard !== '') {
+                    // Standard available hai, email optional rahegi
+                    formData.append('guardianEmail', email);
+                } else {
+                    // Email ki existing value bhejo
+                    formData.append('guardianEmail', email);
+                }
                 formData.append('address', $('#txtAddress').val());
                 formData.append('city', $('#txtCity').val());
                 formData.append('state', $('#txtState').val());

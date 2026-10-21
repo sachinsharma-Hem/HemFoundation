@@ -64,6 +64,10 @@ namespace HemFoundation.Controllers.Api
      [FromForm] string? gender,
      [FromForm] string? role)
         {
+            if (model.PortalId == 3)
+            {
+                ModelState.Remove(nameof(model.EmailID));
+            }
 
             if (!ModelState.IsValid)
             {

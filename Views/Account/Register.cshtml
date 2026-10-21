@@ -146,10 +146,10 @@
 
                             <!-- Email ID -->
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1" id="lblEmail">Email ID <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-bold text-secondary mb-1" id="lblEmail">Email ID</label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-envelope"></i></span>
-                                    <input type="email" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtEmailID" placeholder="name@example.com" required />
+                                    <input type="email" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtEmailID" />
                                 </div>
                                 <small id="emailError" class="text-danger d-none ms-1" style="font-size: 11px;">Please enter a valid email address.</small>
                             </div>
@@ -253,6 +253,7 @@
                 $('.org-field').hide();
                 $('#referredByContainer').hide();
 
+                $('#txtEmailID').removeClass('req-field');
                 $('#ddlStandard, #txtGuardianName').addClass('req-field');
                 $('#txtOrgName, #ddlOrgType').removeClass('req-field');
                 loadStandardsDropdown();
@@ -310,8 +311,19 @@
                 if (!$(this).val() || $(this).val().trim() === "") isValid = false;
             });
             if ($('#txtMobileNo').val().trim().length !== 10) isValid = false;
+            let emailVal = $('#txtEmailID').val().trim();
             let emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
-            if (!emailRegex.test($('#txtEmailID').val().trim())) isValid = false;
+
+            if (portalId != "3" || emailVal !== "") {
+                if (!emailRegex.test(emailVal)) {
+                    isValid = false;
+                    if (emailVal !== "") $('#emailError').removeClass('d-none');
+                } else {
+                    $('#emailError').addClass('d-none');
+                }
+            } else {
+                $('#emailError').addClass('d-none');
+            }
 
             $('#btnRegister').prop('disabled', !isValid);
         }
@@ -352,7 +364,13 @@
                 formData.append("lastName", $('#txtLastName').val().trim());
                 formData.append("gender", $('#ddlGender').val()); // Sends "M", "F", or "O" directly
                 formData.append("mobileNo", $('#txtMobileNo').val().trim());
-                formData.append("emailID", $('#txtEmailID').val().trim());
+                let email = $('#txtEmailID').val().trim();
+
+                if (portalId == "3" && email === "") {
+                    formData.append("emailID", "");
+                } else {
+                    formData.append("emailID", email);
+                }
                 formData.append("address", $('#txtAddress').val().trim());
                 formData.append("pincode", $('#txtPincode').val().trim());
                 formData.append("city", $('#txtCity').val().trim());

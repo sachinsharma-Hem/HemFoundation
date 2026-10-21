@@ -8,7 +8,7 @@
         public string? OrganisationName { get; set; } = string.Empty;
         public string? TypeOfOrganisation { get; set; } = string.Empty;
         public string MobileNo { get; set; } = string.Empty; // Acts as Username & Password
-        public string EmailID { get; set; } = string.Empty;
+        public string? EmailID { get; set; } = string.Empty;
         public string? Address { get; set; } = string.Empty;
         public string? BranchName { get; set; } = string.Empty;
         public string? Pincode { get; set; } = string.Empty;

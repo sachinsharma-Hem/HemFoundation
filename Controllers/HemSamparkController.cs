@@ -10,10 +10,15 @@ namespace HemFoundation.Controllers
             return View(); 
         }
 
-        [HttpGet("HemSampark/User")]
-        public IActionResult UserPortal()
+        [HttpGet("hem-sampark/dashboard")]
+        public IActionResult SamparkDashboard()
         {
-            return View(); 
+            if (HttpContext.Session.GetString("IsAdminLoggedIn") != "true" && string.IsNullOrEmpty(User.Identity?.Name))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            return View("~/Views/HemSampark/Dashboard.cshtml");
         }
+
     }
 }

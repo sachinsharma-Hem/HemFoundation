@@ -1,0 +1,216 @@
+﻿@{
+    ViewData["Title"] = "HEM Sampark Dashboard";
+    Layout = "~/Views/Shared/Layouts/_SamparkLayout.cshtml";
+}
+
+<div class="container-fluid py-4 bg-light min-vh-100" id="samparkApp">
+
+    <!-- Top Greeting & Daily Card -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-lg-7">
+            <div class="card border-0 rounded-4 shadow-sm p-4 h-100 bg-white">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center gap-2 text-warning">
+                        <i class="bi bi-sun-fill fs-4"></i>
+                        <span class="fw-bold text-dark">Good Morning, Champion!</span>
+                    </div>
+                    <!-- View PDF Icon Button -->
+                    <button id="viewPdfBtn" class="btn btn-danger btn-sm rounded-pill px-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#pdfViewerModal">
+                        <i class="bi bi-file-earmark-pdf-fill"></i> Read Daily PDF
+                    </button>
+                </div>
+                <p class="text-muted small mb-3">Let's make today a better day!</p>
+
+                <!-- Dynamic Today's Value Box -->
+                <div class="p-3 rounded-4 mb-3" style="background: #fff7f5; border: 1px solid #ffd9d3;">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge bg-danger-subtle text-danger fw-bold">TODAY'S VALUE</span>
+                        <small id="entryDateText" class="text-muted"></small>
+                    </div>
+                    <h5 id="celebrationHeading" class="fw-bold text-dark mb-1">Loading...</h5>
+                    <p id="celebrationContent" class="text-secondary small mb-3 text-truncate-2"></p>
+                </div>
+
+                <button id="startChallengeBtn" class="btn text-white w-100 py-3 rounded-pill fw-bold shadow-sm border-0 d-flex align-items-center justify-content-center gap-2" style="background: #6f42c1;" onclick="startChallenge()">
+                    <i class="bi bi-play-circle-fill"></i> START TODAY'S CHALLENGE
+                </button>
+            </div>
+        </div>
+
+        <!-- 7-Day Streak -->
+        <div class="col-12 col-lg-5">
+            <div class="card border-0 rounded-4 shadow-sm p-4 h-100 bg-white">
+                <div class="d-flex align-items-center gap-2 mb-3 text-danger">
+                    <i class="bi bi-fire fs-4"></i>
+                    <h5 class="fw-bold m-0 text-dark">7-Day Value Streak</h5>
+                </div>
+                <div class="d-flex justify-content-between mb-4 text-center">
+                    <div>
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mx-auto mb-1 shadow-sm" style="width: 35px; height: 35px;"><i class="bi bi-check"></i></div>
+                        <small class="text-muted d-block">Mon</small>
+                        <span class="fw-bold" style="font-size: 10px;">Respect</span>
+                    </div>
+                    <div>
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mx-auto mb-1 shadow-sm" style="width: 35px; height: 35px;"><i class="bi bi-check"></i></div>
+                        <small class="text-muted d-block">Tue</small>
+                        <span class="fw-bold" style="font-size: 10px;">Kindness</span>
+                    </div>
+                    <div>
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mx-auto mb-1 shadow-sm" style="width: 35px; height: 35px;"><i class="bi bi-check"></i></div>
+                        <small class="text-muted d-block">Wed</small>
+                        <span class="fw-bold" style="font-size: 10px;">Gratitude</span>
+                    </div>
+                    <div>
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-1 shadow-sm" style="width: 35px; height: 35px;"><i class="bi bi-award"></i></div>
+                        <small class="text-muted d-block">Thu</small>
+                        <span class="fw-bold" style="font-size: 10px;">Empathy</span>
+                    </div>
+                    <div>
+                        <div class="rounded-circle bg-light text-muted d-flex align-items-center justify-content-center mx-auto mb-1 border" style="width: 35px; height: 35px;"><i class="bi bi-lock"></i></div>
+                        <small class="text-muted d-block">Fri</small>
+                        <span class="fw-bold text-muted" style="font-size: 10px;">Coming</span>
+                    </div>
+                </div>
+                <div class="alert alert-success border-0 rounded-3 small p-3 mb-0">
+                    <span class="fw-bold">You are on a 7-day Value Streak!</span> Come back tomorrow to keep it alive.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Container Area -->
+    <div id="quizContainerCard" class="card border-0 rounded-4 shadow-sm p-4 bg-white d-none mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 id="quizHeaderTitle" class="fw-bold text-primary m-0">Day's Challenge Quiz</h5>
+            <span id="quizProgressText" class="badge bg-secondary">Question 1</span>
+        </div>
+        <div id="quizQuestionBox"></div>
+    </div>
+</div>
+
+<!-- PDF Viewer Modal (Auto-Opens on Login) -->
+<!-- PDF Viewer Modal -->
+<div class="modal fade" id="pdfViewerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-book-fill text-warning"></i> Daily Sampark Reading Material</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <!-- Yahan iframe ki style mein overflow hidden aur parameters add kiye gaye hain -->
+            <div class="modal-body p-0 overflow-hidden" style="height: 80vh;">
+                <iframe id="pdfIframe" src="" width="100%" height="100%" style="border:none;"></iframe>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" data-bs-dismiss="modal">
+                    <i class="bi bi-check-circle"></i> I Have Read It, Start Quiz
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentEntryData = null;
+        let currentQuestionIndex = 0;
+        let userScore = 0;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            loadTodayData();
+        });
+
+        async function loadTodayData() {
+            try {
+                let res = await fetch('/api/hem-sampark/today-entry');
+                if (!res.ok) return;
+
+                let result = await res.json();
+                if (result.success && result.data) {
+                    currentEntryData = result.data;
+                    document.getElementById("entryDateText").textContent = currentEntryData.entryDate;
+                    document.getElementById("celebrationHeading").textContent = currentEntryData.celebrationHeadingEn || '';
+                    document.getElementById("celebrationContent").textContent = currentEntryData.celebrationContentEn || '';
+
+                    if (currentEntryData.pdfUrl) {
+    document.getElementById("pdfIframe").src = currentEntryData.pdfUrl + "#navpanes=0";
+    
+    var pdfModal = new bootstrap.Modal(document.getElementById('pdfViewerModal'));
+    pdfModal.show();
+}
+                }
+            } catch (e) {
+                console.error("Error loading entry:", e);
+            }
+        }
+
+        function startChallenge() {
+            if (!currentEntryData || !currentEntryData.questions || currentEntryData.questions.length === 0) {
+                alert("No questions available for today's challenge.");
+                return;
+            }
+            currentQuestionIndex = 0;
+            userScore = 0;
+            document.getElementById("quizContainerCard").classList.remove("d-none");
+            document.getElementById("quizContainerCard").scrollIntoView({ behavior: 'smooth' });
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            let qList = currentEntryData.questions;
+            if (currentQuestionIndex >= qList.length) {
+                submitQuizResults();
+                return;
+            }
+
+            let q = qList[currentQuestionIndex];
+            document.getElementById("quizProgressText").textContent = `Question ${currentQuestionIndex + 1} of ${qList.length}`;
+
+            let html = `
+                        <p class="fw-bold fs-6 text-dark mb-3">Q${currentQuestionIndex + 1}. ${q.questionText}</p>
+                        <div class="d-flex flex-column gap-2 mb-3">
+                            <button class="btn btn-outline-primary text-start py-2 px-3 rounded-3 option-btn" onclick="selectOption()">1) ${q.option1 || 'Option 1'}</button>
+                            <button class="btn btn-outline-primary text-start py-2 px-3 rounded-3 option-btn" onclick="selectOption()">2) ${q.option2 || 'Option 2'}</button>
+                            <button class="btn btn-outline-primary text-start py-2 px-3 rounded-3 option-btn" onclick="selectOption()">3) ${q.option3 || 'Option 3'}</button>
+                            <button class="btn btn-outline-primary text-start py-2 px-3 rounded-3 option-btn" onclick="selectOption()">4) ${q.option4 || 'Option 4'}</button>
+                        </div>
+                    `;
+            document.getElementById("quizQuestionBox").innerHTML = html;
+        }
+
+        function selectOption() {
+            userScore++;
+            currentQuestionIndex++;
+            renderQuestion();
+        }
+
+        async function submitQuizResults() {
+            let payload = {
+                dailyEntryId: currentEntryData.id,
+                score: userScore,
+                totalQuestions: currentEntryData.questions.length
+            };
+
+            try {
+                let res = await fetch('/api/hem-sampark/submit-quiz', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                let result = await res.json();
+                if (result.success) {
+                    document.getElementById("quizQuestionBox").innerHTML = `
+                                <div class="text-center py-4">
+                                    <i class="bi bi-trophy-fill text-warning display-3 mb-3"></i>
+                                    <h4 class="fw-bold text-success">Congratulations! Excellent Work!</h4>
+                                    <p class="text-muted">Today's Value Score: ${userScore} / ${currentEntryData.questions.length}</p>
+                                    <button class="btn btn-dark rounded-pill px-4 py-2 mt-2" onclick="location.reload()">Back to Dashboard</button>
+                                </div>
+                            `;
+                }
+            } catch (e) {
+                console.error("Submission failed", e);
+            }
+        }
+    </script>
+}
