@@ -1,401 +1,412 @@
-﻿
-@model HemFoundation.Controllers.AffiliatePerformanceDashboardViewModel
-
-@{
+﻿@{
     ViewData["Title"] = "Affiliate Performance";
     Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
-
-    var startRow = Model.TotalCount == 0 ? 0 : ((Model.Page - 1) * Model.PageSize) + 1;
-    var endRow = Math.Min((long)Model.Page * Model.PageSize, Model.TotalCount);
 }
 
 <div class="container-fluid py-3 affiliate-dashboard">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h2 class="fw-bold mb-1">Affiliate Performance</h2>
-            <p class="text-muted mb-0">Monitor affiliate, school, student and project performance.</p>
+            <p class="text-muted mb-0">Monitor all affiliate achievements, active percentages, and project breakdowns.</p>
         </div>
 
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-success"
-               asp-controller="AffiliatePerformance"
-               asp-action="Export"
-               asp-route-format="xlsx"
-               asp-route-search="@Model.Search">
+            <button type="button" class="btn btn-success" id="exportExcel">
                 <i class="bi bi-file-earmark-excel"></i> Excel
-            </a>
-            <a class="btn btn-outline-success"
-               asp-controller="AffiliatePerformance"
-               asp-action="Export"
-               asp-route-format="csv"
-               asp-route-search="@Model.Search">
+            </button>
+            <button type="button" class="btn btn-outline-success" id="exportCsv">
                 <i class="bi bi-filetype-csv"></i> CSV
-            </a>
-            <a class="btn btn-danger"
-               asp-controller="AffiliatePerformance"
-               asp-action="Export"
-               asp-route-format="pdf"
-               asp-route-search="@Model.Search">
+            </button>
+            <button type="button" class="btn btn-danger" id="exportPdf">
                 <i class="bi bi-file-earmark-pdf"></i> PDF
-            </a>
+            </button>
         </div>
     </div>
 
-    <!-- KPI cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-6 col-xl-4">
-            <div class="card kpi-card h-100">
-                <div class="card-body">
-                    <div class="kpi-label">Total Affiliates</div>
-                    <div class="kpi-value">@Model.Summary.TotalAffiliates.ToString("N0")</div>
-                    <i class="bi bi-people kpi-icon"></i>
-                </div>
-            </div>
+    <!-- Loading State Placeholder -->
+    <div id="loadingContainer" class="text-center py-5">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
         </div>
-
-        <div class="col-12 col-sm-6 col-xl-4">
-            <div class="card kpi-card h-100">
-                <div class="card-body">
-                    <div class="kpi-label">Total Schools</div>
-                    <div class="kpi-value">@Model.Summary.TotalSchools.ToString("N0")</div>
-                    <i class="bi bi-buildings kpi-icon"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-4">
-            <div class="card kpi-card h-100">
-                <div class="card-body">
-                    <div class="kpi-label">Total Students</div>
-                    <div class="kpi-value">@Model.Summary.TotalStudents.ToString("N0")</div>
-                    <i class="bi bi-mortarboard kpi-icon"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-4">
-            <div class="card kpi-card h-100">
-                <div class="card-body">
-                    <div class="kpi-label">Active Students</div>
-                    <div class="kpi-value">@Model.Summary.ActiveStudents.ToString("N0")</div>
-                    <i class="bi bi-person-check kpi-icon"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-4">
-            <div class="card kpi-card h-100">
-                <div class="card-body">
-                    <div class="kpi-label">Total Teachers</div>
-                    <div class="kpi-value">@Model.Summary.TotalTeachers.ToString("N0")</div>
-                    <i class="bi bi-person-workspace kpi-icon"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-4">
-            <div class="card kpi-card h-100">
-                <div class="card-body">
-                    <div class="kpi-label">Total Projects</div>
-                    <div class="kpi-value">@Model.Summary.TotalProjects.ToString("N0")</div>
-                    <i class="bi bi-kanban kpi-icon"></i>
-                </div>
-            </div>
-        </div>
+        <h5 class="fw-semibold text-secondary">Loading affiliate performance data...</h5>
     </div>
 
-    <!-- Charts -->
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-xl-8">
-            <div class="card dashboard-card h-100">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-3">Top Affiliates by Students</h5>
-                    <div class="chart-container">
-                        <canvas id="studentsChart"></canvas>
+    <!-- Main Dashboard Content -->
+    <div id="dashboardContent" style="display: none;">
+        
+        <!-- Top Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card h-100">
+                    <div class="card-body">
+                        <div class="kpi-label">Total Affiliates & Schools</div>
+                        <div class="kpi-value fs-4" id="kpiAffSchools">0 / 0</div>
+                        <small class="text-muted fw-semibold">Across all regions</small>
+                        <i class="bi bi-people kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card h-100">
+                    <div class="card-body">
+                        <div class="kpi-label">Students (Active / Total)</div>
+                        <div class="kpi-value fs-4" id="kpiStudents">0 / 0</div>
+                        <small class="text-muted fw-semibold" id="kpiStudentPct">0% Active</small>
+                        <i class="bi bi-mortarboard kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card h-100">
+                    <div class="card-body">
+                        <div class="kpi-label">Teachers (Active / Total)</div>
+                        <div class="kpi-value fs-4" id="kpiTeachers">0 / 0</div>
+                        <small class="text-muted fw-semibold" id="kpiTeacherPct">0% Active</small>
+                        <i class="bi bi-person-workspace kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card h-100">
+                    <div class="card-body">
+                        <div class="kpi-label">Projects Summary (Total)</div>
+                        <div class="kpi-value" id="kpiTotalProjects">0</div>
+                        <small class="text-muted fw-semibold" id="kpiProjectBreakdown">Family: 0 | Indiv: 0 | PBL: 0</small>
+                        <i class="bi bi-kanban kpi-icon"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-xl-4">
-            <div class="card dashboard-card h-100">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-3">Project Distribution</h5>
-                    <div class="chart-container">
-                        <canvas id="projectsChart"></canvas>
+        <!-- Charts -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-xl-8">
+                <div class="card dashboard-card h-100">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Top Affiliates by Active Students</h5>
+                        <div class="chart-container">
+                            <canvas id="studentsComparisonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-4">
+                <div class="card dashboard-card h-100">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Project Type Distribution</h5>
+                        <div class="chart-container">
+                            <canvas id="projectsChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Search and table -->
-    <div class="card dashboard-card">
-        <div class="card-body">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-                <div>
-                    <h5 class="fw-bold mb-1">Affiliate Details</h5>
-                    <small class="text-muted">Showing @startRow–@endRow of @Model.TotalCount records</small>
+        <!-- Search and table -->
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1">Affiliate Details</h5>
+                        <small class="text-muted" id="tableRecordCount">Showing all records</small>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <input type="search" id="clientSearch" class="form-control" placeholder="Search affiliate, referral code or ID..." aria-label="Search affiliates" style="min-width: 280px;" />
+                        <button type="button" id="resetSearch" class="btn btn-outline-secondary">Reset</button>
+                    </div>
                 </div>
 
-                <form method="get"
-                      asp-controller="AffiliatePerformance"
-                      asp-action="Index"
-                      class="d-flex flex-wrap gap-2">
-                    <input type="hidden" name="page" value="1" />
-                    <input type="hidden" name="pageSize" value="@Model.PageSize" />
-                    <input type="hidden" name="sortBy" value="@Model.SortBy" />
-                    <input type="hidden" name="sortDir" value="@Model.SortDir" />
-
-                    <input type="search"
-                           name="search"
-                           value="@Model.Search"
-                           class="form-control"
-                           placeholder="Search affiliate, referral code or ID"
-                           aria-label="Search affiliates" />
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search"></i> Search
-                    </button>
-
-                    <a asp-controller="AffiliatePerformance"
-                       asp-action="Index"
-                       class="btn btn-outline-secondary">Reset</a>
-                </form>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-hover align-middle performance-table">
-                    <thead>
-                        <tr>
-                            <th>
-                                <a asp-action="Index"
-                                   asp-route-search="@Model.Search"
-                                   asp-route-page="@Model.Page"
-                                   asp-route-pageSize="@Model.PageSize"
-                                   asp-route-sortBy="AffiliateId"
-                                   asp-route-sortDir="@(Model.SortBy == "AffiliateId" && Model.SortDir == "asc" ? "desc" : "asc")">
-                                    ID
-                                </a>
-                            </th>
-                            <th>
-                                <a asp-action="Index"
-                                   asp-route-search="@Model.Search"
-                                   asp-route-page="@Model.Page"
-                                   asp-route-pageSize="@Model.PageSize"
-                                   asp-route-sortBy="Name"
-                                   asp-route-sortDir="@(Model.SortBy == "Name" && Model.SortDir == "asc" ? "desc" : "asc")">
-                                    Affiliate Name
-                                </a>
-                            </th>
-                            <th>Referral Code</th>
-                            <th class="text-end">Schools</th>
-                            <th class="text-end">Students</th>
-                            <th class="text-end">Active Students</th>
-                            <th class="text-end">Teachers</th>
-                            <th class="text-end">Active Teachers</th>
-                            <th class="text-end">Projects</th>
-                            <th class="text-end">Family</th>
-                            <th class="text-end">Individual</th>
-                            <th class="text-end">Group PBL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    @if (Model.Rows.Count == 0)
-                    {
-                        <tr>
-                            <td colspan="12" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                                No affiliate records found.
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        foreach (var item in Model.Rows)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle performance-table" id="affiliateTable">
+                        <thead>
                             <tr>
-                                <td>@item.AffiliateId</td>
-                                <td class="fw-semibold">@item.Name</td>
-                                <td><span class="badge text-bg-light">@item.ReferralCode</span></td>
-                                <td class="text-end">@item.TotalSchools.ToString("N0")</td>
-                                <td class="text-end">@item.TotalStudents.ToString("N0")</td>
-                                <td class="text-end">@item.ActiveStudents.ToString("N0")</td>
-                                <td class="text-end">@item.TotalTeachers.ToString("N0")</td>
-                                <td class="text-end">@item.ActiveTeachers.ToString("N0")</td>
-                                <td class="text-end">@item.TotalSelectedProjects.ToString("N0")</td>
-                                <td class="text-end">@item.FamilyProjects.ToString("N0")</td>
-                                <td class="text-end">@item.IndividualProjects.ToString("N0")</td>
-                                <td class="text-end">@item.GroupPbl.ToString("N0")</td>
+                                <th class="sortable" data-sort="affiliateId" style="cursor: pointer;">ID <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="sortable" data-sort="name" style="cursor: pointer;">Affiliate Name <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th>Referral Code</th>
+                                <th class="text-end sortable" data-sort="totalSchools" style="cursor: pointer;">Schools <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end sortable" data-sort="totalStudents" style="cursor: pointer;">Students <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end sortable" data-sort="activeStudents" style="cursor: pointer;">Active Students <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end">Student Active %</th>
+                                <th class="text-end sortable" data-sort="totalTeachers" style="cursor: pointer;">Teachers <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end sortable" data-sort="activeTeachers" style="cursor: pointer;">Active Teachers <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end">Teacher Active %</th>
+                                <th class="text-end sortable" data-sort="totalSelectedProjects" style="cursor: pointer;">Projects <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end">Family</th>
+                                <th class="text-end">Individual</th>
+                                <th class="text-end">Group PBL</th>
                             </tr>
-                        }
-                    }
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
-                <span class="text-muted small">
-                    Page @Model.Page of @Model.TotalPages
-                </span>
-
-                <nav aria-label="Affiliate table pagination">
-                    <ul class="pagination mb-0">
-                        <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
-                            <a class="page-link"
-                               asp-action="Index"
-                               asp-route-search="@Model.Search"
-                               asp-route-page="@(Model.Page - 1)"
-                               asp-route-pageSize="@Model.PageSize"
-                               asp-route-sortBy="@Model.SortBy"
-                               asp-route-sortDir="@Model.SortDir">Previous</a>
-                        </li>
-
-                        <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
-                            <a class="page-link"
-                               asp-action="Index"
-                               asp-route-search="@Model.Search"
-                               asp-route-page="@(Model.Page + 1)"
-                               asp-route-pageSize="@Model.PageSize"
-                               asp-route-sortBy="@Model.SortBy"
-                               asp-route-sortDir="@Model.SortDir">Next</a>
-                        </li>
-                    </ul>
-                </nav>
+                        </thead>
+                        <tbody id="affiliateTableBody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .affiliate-dashboard {
-        color: #172033;
-    }
-
-    .kpi-card, .dashboard-card {
-        border: 1px solid #e8edf4;
-        border-radius: 14px;
-        box-shadow: 0 4px 18px rgba(24, 39, 75, .05);
-    }
-
-    .kpi-card .card-body {
-        position: relative;
-        padding: 1.35rem;
-        overflow: hidden;
-    }
-
-    .kpi-label {
-        color: #667085;
-        font-size: .9rem;
-        font-weight: 600;
-        margin-bottom: .65rem;
-    }
-
-    .kpi-value {
-        font-size: clamp(1.6rem, 2vw, 2rem);
-        font-weight: 750;
-        letter-spacing: -.5px;
-    }
-
-    .kpi-icon {
-        position: absolute;
-        right: 18px;
-        top: 18px;
-        font-size: 1.8rem;
-        color: #4169e1;
-        opacity: .25;
-    }
-
-    .chart-container {
-        position: relative;
-        min-height: 280px;
-        height: 320px;
-    }
-
-    .performance-table {
-        white-space: nowrap;
-        font-size: .88rem;
-    }
-
-    .performance-table thead th {
-        background: #f7f9fc;
-        color: #475467;
-        font-size: .8rem;
-        text-transform: uppercase;
-        letter-spacing: .3px;
-    }
-
-    .performance-table th a {
-        color: inherit;
-        text-decoration: none;
-    }
-
-    .performance-table th a:hover {
-        color: #0d6efd;
-    }
-
-    @@media (max-width: 767px) {
-        .chart-container {
-            height: 280px;
-        }
-
-        .affiliate-dashboard .card-body {
-            padding: 1rem;
-        }
-    }
+    .affiliate-dashboard { color: #172033; }
+    .kpi-card, .dashboard-card { border: 1px solid #e8edf4; border-radius: 14px; box-shadow: 0 4px 18px rgba(24, 39, 75, .05); }
+    .kpi-card .card-body { position: relative; padding: 1.35rem; overflow: hidden; }
+    .kpi-label { color: #667085; font-size: .9rem; font-weight: 600; margin-bottom: .4rem; }
+    .kpi-value { font-size: clamp(1.5rem, 2vw, 1.8rem); font-weight: 750; letter-spacing: -.5px; }
+    .kpi-icon { position: absolute; right: 18px; top: 18px; font-size: 1.8rem; color: #4169e1; opacity: .25; }
+    .chart-container { position: relative; min-height: 280px; height: 320px; }
+    .performance-table { white-space: nowrap; font-size: .88rem; }
+    .performance-table thead th { background: #f7f9fc; color: #475467; font-size: .8rem; text-transform: uppercase; letter-spacing: .3px; }
 </style>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
     <script>
-        // These values are serialized server-side from the filtered PostgreSQL results.
-        const affiliateLabels = @Html.Raw(Model.ChartLabelsJson);
-        const studentValues = @Html.Raw(Model.ChartStudentsJson);
-        const projectValues = @Html.Raw(Model.ChartProjectTypesJson);
+        let allData = [];
+        let filteredData = [];
+        let currentSort = { column: 'name', asc: true };
 
-        new Chart(document.getElementById('studentsChart'), {
-            type: 'bar',
-            data: {
-                labels: affiliateLabels,
-                datasets: [{
-                    label: 'Students',
-                    data: studentValues,
-                    borderWidth: 1,
-                    borderRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: {
-                    x: { beginAtZero: true }
-                },
-                plugins: {
-                    legend: { display: false }
-                }
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('@Url.Action("GetAffiliateData", "AffiliatePerformance")');
+                const result = await response.json();
+                
+                allData = result.rows;
+                filteredData = [...allData];
+                updateSummaryKPIs(result.summary);
+                renderTable(filteredData);
+                renderCharts(allData, result.summary);
+
+                document.getElementById('loadingContainer').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading affiliate data:', error);
+                document.getElementById('loadingContainer').innerHTML = '<div class="alert alert-danger">Failed to load affiliate data. Please refresh the page.</div>';
             }
-        });
 
-        new Chart(document.getElementById('projectsChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Family Projects', 'Individual Projects', 'Group PBL'],
-                datasets: [{
-                    data: projectValues,
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
+            document.getElementById('clientSearch').addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                filteredData = allData.filter(x => 
+                    x.name.toLowerCase().includes(query) ||
+                    x.referralCode.toLowerCase().includes(query) ||
+                    x.affiliateId.toString().includes(query)
+                );
+                renderTable(filteredData);
+            });
+
+            document.getElementById('resetSearch').addEventListener('click', () => {
+                document.getElementById('clientSearch').value = '';
+                filteredData = [...allData];
+                renderTable(filteredData);
+            });
+
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const col = th.getAttribute('data-sort');
+                    if (currentSort.column === col) {
+                        currentSort.asc = !currentSort.asc;
+                    } else {
+                        currentSort.column = col;
+                        currentSort.asc = true;
                     }
-                }
-            }
+                    
+                    filteredData.sort((a, b) => {
+                        let valA = a[col];
+                        let valB = b[col];
+                        if (typeof valA === 'string') {
+                            valA = valA.toLowerCase();
+                            valB = valB.toLowerCase();
+                        }
+                        if (valA < valB) return currentSort.asc ? -1 : 1;
+                        if (valA > valB) return currentSort.asc ? 1 : -1;
+                        return 0;
+                    });
+                    renderTable(filteredData);
+                });
+            });
+
+            document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+            document.getElementById('exportCsv').addEventListener('click', exportToCsv);
+            document.getElementById('exportPdf').addEventListener('click', exportToPdf);
         });
+
+        function updateSummaryKPIs(summary) {
+            document.getElementById('kpiAffSchools').innerText = `${summary.totalAffiliates.toLocaleString()} / ${summary.totalSchools.toLocaleString()}`;
+            
+            document.getElementById('kpiStudents').innerText = `${summary.activeStudents.toLocaleString()} / ${summary.totalStudents.toLocaleString()}`;
+            const studentPct = summary.totalStudents > 0 ? ((summary.activeStudents / summary.totalStudents) * 100).toFixed(1) : 0;
+            document.getElementById('kpiStudentPct').innerText = `${studentPct}% Active against Total`;
+
+            document.getElementById('kpiTeachers').innerText = `${summary.activeTeachers.toLocaleString()} / ${summary.totalTeachers.toLocaleString()}`;
+            const teacherPct = summary.totalTeachers > 0 ? ((summary.activeTeachers / summary.totalTeachers) * 100).toFixed(1) : 0;
+            document.getElementById('kpiTeacherPct').innerText = `${teacherPct}% Active against Total`;
+
+            document.getElementById('kpiTotalProjects').innerText = summary.totalProjects.toLocaleString();
+            document.getElementById('kpiProjectBreakdown').innerText = `Family: ${summary.familyProjects.toLocaleString()} | Indiv: ${summary.individualProjects.toLocaleString()} | PBL: ${summary.groupPbl.toLocaleString()}`;
+        }
+
+        function renderTable(rows) {
+            const tbody = document.getElementById('affiliateTableBody');
+            document.getElementById('tableRecordCount').innerText = `Showing ${rows.length} of ${allData.length} affiliates`;
+
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="14" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>No affiliate records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = rows.map(item => {
+                const studentActivePct = item.totalStudents > 0 ? ((item.activeStudents / item.totalStudents) * 100).toFixed(1) : '0.0';
+                const teacherActivePct = item.totalTeachers > 0 ? ((item.activeTeachers / item.totalTeachers) * 100).toFixed(1) : '0.0';
+                return `
+                    <tr>
+                        <td>${item.affiliateId}</td>
+                        <td class="fw-semibold">${item.name}</td>
+                        <td><span class="badge text-bg-light">${item.referralCode}</span></td>
+                        <td class="text-end">${item.totalSchools.toLocaleString()}</td>
+                        <td class="text-end">${item.totalStudents.toLocaleString()}</td>
+                        <td class="text-end">${item.activeStudents.toLocaleString()}</td>
+                        <td class="text-end fw-semibold text-primary">${studentActivePct}%</td>
+                        <td class="text-end">${item.totalTeachers.toLocaleString()}</td>
+                        <td class="text-end">${item.activeTeachers.toLocaleString()}</td>
+                        <td class="text-end fw-semibold text-success">${teacherActivePct}%</td>
+                        <td class="text-end">${item.totalSelectedProjects.toLocaleString()}</td>
+                        <td class="text-end">${item.familyProjects.toLocaleString()}</td>
+                        <td class="text-end">${item.individualProjects.toLocaleString()}</td>
+                        <td class="text-end">${item.groupPbl.toLocaleString()}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderCharts(rows, summary) {
+            const topChartRows = [...rows].sort((a, b) => b.activeStudents - a.activeStudents).slice(0, 8);
+
+            const labels = topChartRows.map(x => x.name);
+            const totalStudentsData = topChartRows.map(x => x.totalStudents);
+            const activeStudentsData = topChartRows.map(x => x.activeStudents);
+
+            const ctxStudents = document.getElementById('studentsComparisonChart').getContext('2d');
+            new Chart(ctxStudents, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Total Students', data: totalStudentsData, backgroundColor: '#4169e1', borderRadius: 4 },
+                        { label: 'Active Students', data: activeStudentsData, backgroundColor: '#20c997', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: { x: { beginAtZero: true } },
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            const ctxProjects = document.getElementById('projectsChart').getContext('2d');
+            new Chart(ctxProjects, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Family Projects', 'Individual Projects', 'Group PBL'],
+                    datasets: [{
+                        data: [summary.familyProjects, summary.individualProjects, summary.groupPbl],
+                        backgroundColor: ['#0d6efd', '#ffc107', '#0dcaf0'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        // --- Client-Side Export Functions including Active Percentages ---
+        function getTableExportObjects() {
+            return filteredData.map(x => {
+                const studentPct = x.totalStudents > 0 ? ((x.activeStudents / x.totalStudents) * 100).toFixed(1) + '%' : '0.0%';
+                const teacherPct = x.totalTeachers > 0 ? ((x.activeTeachers / x.totalTeachers) * 100).toFixed(1) + '%' : '0.0%';
+                return {
+                    "Affiliate ID": x.affiliateId,
+                    "Name": x.name,
+                    "Referral Code": x.referralCode,
+                    "Total Schools": x.totalSchools,
+                    "Total Students": x.totalStudents,
+                    "Active Students": x.activeStudents,
+                    "Student Active %": studentPct,
+                    "Total Teachers": x.totalTeachers,
+                    "Active Teachers": x.activeTeachers,
+                    "Teacher Active %": teacherPct,
+                    "Total Projects": x.totalSelectedProjects,
+                    "Family Projects": x.familyProjects,
+                    "Individual Projects": x.individualProjects,
+                    "Group PBL": x.groupPbl
+                };
+            });
+        }
+
+        function exportToExcel() {
+            const data = getTableExportObjects();
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Affiliate Performance");
+            XLSX.writeFile(workbook, `affiliate-performance-${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        function exportToCsv() {
+            const data = getTableExportObjects();
+            if (data.length === 0) return;
+            const headers = Object.keys(data[0]);
+            let csvContent = headers.join(",") + "\n";
+            data.forEach(row => {
+                const values = headers.map(h => `"${String(row[h]).replace(/"/g, '""')}"`);
+                csvContent += values.join(",") + "\n";
+            });
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `affiliate-performance-${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportToPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            
+            doc.text("Affiliate Performance Report", 14, 15);
+            
+            const headers = [["ID", "Name", "Referral", "Schools", "Students", "Active", "Stud. %", "Teachers", "Active T.", "Teach. %", "Projects", "Family", "Indiv.", "PBL"]];
+            const data = filteredData.map(x => {
+                const studentPct = x.totalStudents > 0 ? ((x.activeStudents / x.totalStudents) * 100).toFixed(1) + '%' : '0.0%';
+                const teacherPct = x.totalTeachers > 0 ? ((x.activeTeachers / x.totalTeachers) * 100).toFixed(1) + '%' : '0.0%';
+                return [
+                    x.affiliateId, x.name, x.referralCode, x.totalSchools, x.totalStudents, 
+                    x.activeStudents, studentPct, x.totalTeachers, x.activeTeachers, teacherPct, 
+                    x.totalSelectedProjects, x.familyProjects, x.individualProjects, x.groupPbl
+                ];
+            });
+
+            doc.autoTable({
+                head: headers,
+                body: data,
+                startY: 20,
+                styles: { fontSize: 7 }
+            });
+
+            doc.save(`affiliate-performance-${new Date().toISOString().slice(0,10)}.pdf`);
+        }
     </script>
 }

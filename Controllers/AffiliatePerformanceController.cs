@@ -7,7 +7,6 @@ using System.Text;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using System.Text.Json;
 
 namespace HemFoundation.Controllers
 {
@@ -24,7 +23,6 @@ namespace HemFoundation.Controllers
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
-        // Explicit projection: Password is NEVER selected.
         private const string BaseSql = @"
             SELECT
                 ""Afiiliate_ID""::bigint AS ""AffiliateId"",
@@ -41,140 +39,47 @@ namespace HemFoundation.Controllers
                 COALESCE(""Group Project"", 0)::bigint AS ""GroupPbl""
             FROM public.hf_view_Affiliate_PerformanceReport";
 
-        // Only these hardcoded SQL expressions can be used for sorting.
-        private static readonly Dictionary<string, string> SortColumns =
-             new(StringComparer.OrdinalIgnoreCase)
-             {
-                 ["AffiliateId"] = @"""Afiiliate_ID""",
-                 ["Name"] = @"""Name""",
-                 ["ReferralCode"] = @"""ReferralCOde""", // Note exact casing from your DB view
-                 ["TotalSchools"] = @"""School Count""",
-                 ["TotalStudents"] = @"""Total Students""",
-                 ["ActiveStudents"] = @"""Active Students""",
-                 ["TotalTeachers"] = @"""Total Teachers""",
-                 ["ActiveTeachers"] = @"""Active Teachers""",
-                 ["TotalSelectedProjects"] = @"""Total Sel Project""",
-                 ["FamilyProjects"] = @"""Family Project""",
-                 ["IndividualProjects"] = @"""Individual Project""",
-                 ["GroupPbl"] = @"""Group Project"""
-             };
+        [HttpGet]
+        public IActionResult Index()
+        {
+            return View();
+        }
 
         [HttpGet]
-        public async Task<IActionResult> Index(
-            string? search,
-            int page = 1,
-            int pageSize = 10,
-            string sortBy = "Name",
-            string sortDir = "asc",
-            CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetAffiliateData(CancellationToken cancellationToken = default)
         {
-            page = Math.Max(page, 1);
-            pageSize = Math.Clamp(pageSize, 10, 100);
-
-            if (!SortColumns.ContainsKey(sortBy))
-                sortBy = "Name";
-
-            sortDir = sortDir.Equals("desc", StringComparison.OrdinalIgnoreCase)
-                ? "DESC"
-                : "ASC";
-
-            search = search?.Trim();
-            var parameters = new DynamicParameters();
-            parameters.Add("Search", search);
-
-            string whereSql = @"
-                WHERE (
-                    @Search::text IS NULL OR @Search::text = ''
-                    OR COALESCE(""Name"", '') ILIKE '%' || @Search::text || '%'
-                    OR COALESCE(""Referral COde"", '') ILIKE '%' || @Search::text || '%'
-                    OR CAST(""Afiiliate_ID"" AS text) ILIKE '%' || @Search::text || '%'
-                )";
             await using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
 
-            var totalCount = await connection.ExecuteScalarAsync<long>(
-                new CommandDefinition(
-                    "SELECT COUNT(*) FROM public.hf_view_Affiliate_PerformanceReport " + whereSql,
-                    parameters,
-                    cancellationToken: cancellationToken));
-
-            var rowsSql = $@"
-                {BaseSql}
-                {whereSql}
-                ORDER BY {SortColumns[sortBy]} {sortDir} NULLS LAST
-                LIMIT @Limit OFFSET @Offset";
-
-            parameters.Add("Limit", pageSize);
-            parameters.Add("Offset", (page - 1) * pageSize);
-
             var rows = (await connection.QueryAsync<AffiliatePerformanceRow>(
-                new CommandDefinition(
-                    rowsSql,
-                    parameters,
-                    cancellationToken: cancellationToken))).ToList();
+                new CommandDefinition(BaseSql + " ORDER BY \"Name\" ASC", cancellationToken: cancellationToken))).ToList();
 
-            // KPI cards use the full filtered result set, not just the current page.
-            var summarySql = $@"
-                SELECT
-                    COUNT(*)::bigint AS ""TotalAffiliates"",
-                    COALESCE(SUM(COALESCE(""School Count"", 0)), 0)::bigint AS ""TotalSchools"",
-                    COALESCE(SUM(COALESCE(""Total Students"", 0)), 0)::bigint AS ""TotalStudents"",
-                    COALESCE(SUM(COALESCE(""Active Students"", 0)), 0)::bigint AS ""ActiveStudents"",
-                    COALESCE(SUM(COALESCE(""Total Teachers"", 0)), 0)::bigint AS ""TotalTeachers"",
-                    COALESCE(SUM(COALESCE(""Total Sel Project"", 0)), 0)::bigint AS ""TotalProjects""
-                FROM public.hf_view_Affiliate_PerformanceReport
-                {whereSql}";
-
-            var summary = await connection.QuerySingleAsync<AffiliatePerformanceSummary>(
-                new CommandDefinition(
-                    summarySql,
-                    new { Search = search },
-                    cancellationToken: cancellationToken));
-
-            // Chart data: top 8 affiliates in the filtered result.
-            var chartSql = $@"
-                {BaseSql}
-                {whereSql}
-                ORDER BY ""Total Students"" DESC NULLS LAST
-                LIMIT 8";
-
-            var chartRows = (await connection.QueryAsync<AffiliatePerformanceRow>(
-                new CommandDefinition(
-                    chartSql,
-                    new { Search = search },
-                    cancellationToken: cancellationToken))).ToList();
-
-            var model = new AffiliatePerformanceDashboardViewModel
+            var summary = new AffiliatePerformanceSummary
             {
-                Search = search,
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                SortBy = sortBy,
-                SortDir = sortDir.ToLowerInvariant(),
-                Rows = rows,
-                Summary = summary,
-                ChartLabelsJson = JsonSerializer.Serialize(
-                    chartRows.Select(x => x.Name)),
-                ChartStudentsJson = JsonSerializer.Serialize(
-                    chartRows.Select(x => x.TotalStudents)),
-                ChartProjectsJson = JsonSerializer.Serialize(
-                    chartRows.Select(x => x.TotalSelectedProjects)),
-                ChartProjectTypesJson = JsonSerializer.Serialize(new[]
-                {
-                    summary.TotalProjects >= 0 ? chartRows.Sum(x => x.FamilyProjects) : 0,
-                    chartRows.Sum(x => x.IndividualProjects),
-                    chartRows.Sum(x => x.GroupPbl)
-                })
+                TotalAffiliates = rows.Count,
+                TotalSchools = rows.Sum(x => x.TotalSchools),
+                TotalStudents = rows.Sum(x => x.TotalStudents),
+                ActiveStudents = rows.Sum(x => x.ActiveStudents),
+                TotalTeachers = rows.Sum(x => x.TotalTeachers),
+                ActiveTeachers = rows.Sum(x => x.ActiveTeachers),
+                TotalProjects = rows.Sum(x => x.TotalSelectedProjects),
+                FamilyProjects = rows.Sum(x => x.FamilyProjects),
+                IndividualProjects = rows.Sum(x => x.IndividualProjects),
+                GroupPbl = rows.Sum(x => x.GroupPbl)
             };
 
-            return View(model);
+            var responseDto = new AffiliateApiResponse
+            {
+                Rows = rows,
+                Summary = summary
+            };
+
+            return Json(responseDto);
         }
 
         [HttpGet]
         public async Task<IActionResult> Export(
             string format,
-            string? search,
             CancellationToken cancellationToken = default)
         {
             format = format?.Trim().ToLowerInvariant() ?? "";
@@ -182,27 +87,10 @@ namespace HemFoundation.Controllers
             if (format is not ("xlsx" or "csv" or "pdf"))
                 return BadRequest("Supported formats are xlsx, csv and pdf.");
 
-            search = search?.Trim();
-
-            var sql = $@"
-                {BaseSql}
-                WHERE (
-                    @Search::text IS NULL OR @Search::text = ''
-                    OR COALESCE(""Name"", '') ILIKE '%' || @Search::text || '%'
-                    OR COALESCE(""Referral COde"", '') ILIKE '%' || @Search::text || '%'
-                    OR CAST(""Afiiliate_ID"" AS text) ILIKE '%' || @Search::text || '%'
-                )
-                ORDER BY ""Name"" ASC NULLS LAST
-                LIMIT 10000";
-
             await using var connection = new NpgsqlConnection(_connectionString);
             var rows = (await connection.QueryAsync<AffiliatePerformanceRow>(
-                new CommandDefinition(
-                    sql,
-                    new { Search = search },
-                    cancellationToken: cancellationToken))).ToList();
+                new CommandDefinition(BaseSql + " ORDER BY \"Name\" ASC", cancellationToken: cancellationToken))).ToList();
 
-            // Do not include Password or other unapproved fields in this export model.
             if (format == "csv")
             {
                 var csv = BuildCsv(rows);
@@ -272,7 +160,7 @@ namespace HemFoundation.Controllers
                             "Students", "Active Students", "Teachers",
                             "Active Teachers", "Projects", "Family",
                             "Individual", "Group PBL"
-                            };
+                        };
 
                         table.Header(header =>
                         {
@@ -294,7 +182,7 @@ namespace HemFoundation.Controllers
                                 row.TotalTeachers, row.ActiveTeachers,
                                 row.TotalSelectedProjects, row.FamilyProjects,
                                 row.IndividualProjects, row.GroupPbl
-                                };
+                            };
 
                             foreach (var value in values)
                             {
@@ -355,11 +243,8 @@ namespace HemFoundation.Controllers
         private static string CsvEscape(string? value)
         {
             value ??= "";
-
-            // Prevent spreadsheet formula injection in user-controlled text cells.
             if (value.Length > 0 && "=+-@".Contains(value[0]))
                 value = "'" + value;
-
             return "\"" + value.Replace("\"", "\"\"") + "\"";
         }
     }
@@ -382,31 +267,21 @@ namespace HemFoundation.Controllers
 
     public sealed class AffiliatePerformanceSummary
     {
-        public long TotalAffiliates { get; set; }
+        public int TotalAffiliates { get; set; }
         public long TotalSchools { get; set; }
         public long TotalStudents { get; set; }
         public long ActiveStudents { get; set; }
         public long TotalTeachers { get; set; }
+        public long ActiveTeachers { get; set; }
         public long TotalProjects { get; set; }
+        public long FamilyProjects { get; set; }
+        public long IndividualProjects { get; set; }
+        public long GroupPbl { get; set; }
     }
 
-    public sealed class AffiliatePerformanceDashboardViewModel
+    public sealed class AffiliateApiResponse
     {
-        public string? Search { get; set; }
-        public int Page { get; set; }
-        public int PageSize { get; set; }
-        public long TotalCount { get; set; }
-        public string SortBy { get; set; } = "Name";
-        public string SortDir { get; set; } = "asc";
         public List<AffiliatePerformanceRow> Rows { get; set; } = new();
         public AffiliatePerformanceSummary Summary { get; set; } = new();
-        public string ChartLabelsJson { get; set; } = "[]";
-        public string ChartStudentsJson { get; set; } = "[]";
-        public string ChartProjectsJson { get; set; } = "[]";
-        public string ChartProjectTypesJson { get; set; } = "[]";
-
-        public int TotalPages => (int)Math.Max(
-            1, Math.Ceiling((double)TotalCount / Math.Max(PageSize, 1)));
     }
-
 }
