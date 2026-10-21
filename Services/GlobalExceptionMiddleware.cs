@@ -60,7 +60,7 @@ namespace HemFoundation.Services
                     UserIdentifier = context.User.Identity?.IsAuthenticated == true
                                      ? context.User.Identity.Name
                                      : "Anonymous",
-                    CreatedAtUtc = DateTime.UtcNow
+                    CreatedAtUtc = DateTime.Now
                 };
 
                 await dbContext.ErrorLogs.AddAsync(log);

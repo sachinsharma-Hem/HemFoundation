@@ -5,106 +5,300 @@
     ViewBag.Title = "studentcertificate";
     Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
 }
-@* 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
-<!-- Tabulator CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fon@* t-awesome/6.4.2/css/all.min.css"> 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> *@
 
 <link href="https://unpkg.com/tabulator-tables@6.2.5/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
-<div class="container" style="overflow:auto">
-    <h5 class="text-center">Student Certificate List</h5>
-    <!-- Tabulator Table Container -->
-    <div id="studentTable"></div>
-</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
-<!-- Modal Structure -->
-<div class="modal fade" id="stuCertificateModal" tabindex="-1" role="dialog" aria-labelledby="formModalLabel" aria-modal="true">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="formModalLabel">Certificate View</h4>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span>&times;</span>
+<style>
+    /* ============================================
+        TABULATOR DIRECTORY TABLE STYLING
+       ============================================ */
+    .directory-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 10px;
+    }
+
+    .directory-table-wrapper .tabulator {
+        width: max-content !important;
+        min-width: 100%;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: 14px;
+    }
+
+    .directory-table-wrapper .tabulator .tabulator-header {
+        background: #f8f9fa !important;
+        font-weight: 700;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .directory-table-wrapper .tabulator .tabulator-col {
+        min-width: 120px;
+        background: #f8f9fa !important;
+    }
+
+    .directory-table-wrapper .tabulator .tabulator-col-title {
+        white-space: nowrap;
+        overflow: visible;
+        text-overflow: clip;
+        font-weight: 700;
+    }
+
+    .directory-table-wrapper .tabulator .tabulator-header-filter {
+        padding: 5px 6px;
+    }
+
+    .directory-table-wrapper .tabulator .tabulator-header-filter input,
+    .directory-table-wrapper .tabulator .tabulator-header-filter select {
+        width: 100%;
+        min-width: 90px;
+        height: 32px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        padding: 4px 7px;
+        font-size: 12px;
+        outline: none;
+    }
+
+    .directory-table-wrapper .tabulator .tabulator-header-filter input:focus,
+    .directory-table-wrapper .tabulator .tabulator-header-filter select:focus {
+        border-color: #6f42c1;
+        box-shadow: 0 0 0 2px rgba(111, 66, 193, 0.10);
+    }
+
+    .directory-table-wrapper .tabulator .tabulator-cell {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .directory-table-wrapper .tabulator .tabulator-col[tabulator-field] {
+        min-width: 130px;
+    }
+
+    .directory-table-wrapper .tabulator .tabulator-col.tabulator-sortable:hover {
+        background-color: #f0ebfa !important;
+    }
+
+    /* Mobile Responsive Adjustments */
+    @@media (max-width: 768px) {
+        .directory-table-wrapper {
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .directory-table-wrapper .tabulator {
+            min-width: 1100px;
+            font-size: 13px;
+        }
+        .directory-table-wrapper .tabulator .tabulator-col {
+            min-width: 130px;
+        }
+        .directory-table-wrapper .tabulator .tabulator-cell {
+            padding: 8px 10px;
+        }
+        .directory-table-wrapper .tabulator .tabulator-header-filter input {
+            min-width: 110px;
+        }
+    }
+
+    .action-icon-btn {
+        padding: 4px 8px;
+        margin: 0 2px;
+        color: #6c757d;
+        transition: color 0.2s ease;
+    }
+    .action-icon-btn:hover {
+        color: #6f42c1;
+    }
+    .cur-pointer {
+        cursor: pointer;
+    }
+
+    /* Modal Backdrop Overlay Fix */
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+    }
+    .modal-content {
+        background-clip: padding-box;
+        background-color: #fff;
+        border: 0 solid rgba(0,0,0,.2);
+        border-radius: 1rem;
+        outline: 0;
+    }
+    .modal-body {
+        overflow: visible !important;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 gap-3">
+            <h4 class="fw-bold text-dark m-0"><i class="fas fa-certificate text-primary me-2"></i> Student Certificate List</h4>
+            <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-sm-auto justify-content-end">
+                <input type="text" id="certificateSearchInput" class="form-control form-control-sm" placeholder="Search certificates..." onkeyup="filterCertificateTable(this.value)">
+                <button class="btn btn-success btn-sm text-nowrap" onclick="exportCertificateTable('xlsx')">
+                    <i class="fas fa-file-excel me-1"></i> Export Excel
                 </button>
             </div>
-            <div class="modal-body">
+        </div>
+
+        <!-- Tabulator Table Container matching top hub format -->
+        <div class="directory-table-wrapper">
+            <div id="studentTable"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Structure with static backdrop to prevent closing on outside click -->
+<div class="modal fade" id="stuCertificateModal" tabindex="-1" role="dialog" aria-labelledby="formModalLabel" aria-modal="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg p-2">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-primary" id="formModalLabel"><i class="fas fa-eye me-2"></i>Certificate View</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3">
                 <div id="dv_Student_Certificate"></div>
             </div>
         </div>
     </div>
 </div>
 
-@* <!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
-<!-- Bootstrap 5 Bundle -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<!-- Tabulator JS --> *@
-<script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.5/dist/js/tabulator.min.js"></script>
 @section Scripts {
-<script>
-    $(document).ready(function() {
-        // Initialize Tabulator
-        var table = new Tabulator("#studentTable", {
-            ajaxURL: "/School/studentnewCertificate",
-            ajaxConfig: "GET",
-            ajaxResponse: function(url, params, response) {
-                // Parse response if it comes back as a JSON string
-                return typeof response === 'string' ? JSON.parse(response) : response;
-            },
-            layout: "fitColumns",
-            responsiveLayout: "collapse",
-            pagination: "local",
-            paginationSize: 10,
-            paginationSizeSelector: [10, 25, 50, 100],
-            movableColumns: true,
-            columns: [
-                { formatter: "responsiveCollapse", width: 30, minWidth: 30, hozAlign: "center", resizable: false, headerSort: false },
-                { title: "Id", field: "id", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "number" },
-                { title: "Student Name", field: "studentName", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
-                { title: "Standard", field: "standard", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
-                { title: "Institute Name", field: "instituteName", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
-                { title: "EmailID", field: "emailID", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
-                { title: "MobileNo", field: "mobileNo", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
-                { title: "CourseID", field: "courseID", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "number" },
-                { title: "CourseName", field: "courseName", formatter: function(cell) { return cell.getValue() || "N/A"; }, sorter: "string" },
-                {
-                    title: "Action",
-                    formatter: function(cell, formatterParams, onRendered) {
-                        var rowData = cell.getRow().getData();
-                        return `<a href="javascript:void(0);" onclick="fnViewSubmitCertification(${rowData.id})" data-bs-toggle="modal" data-bs-target="#stuCertificateModal"><i class="fa fa-eye"></i></a>`;
-                    },
-                    hozAlign: "center",
-                    headerSort: false,
-                    width: 80
+    <!-- Tabulator JS, SheetJS & Moment.js -->
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.5/dist/js/tabulator.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        var studentCertificateTable;
+
+        $(document).ready(function() {
+            // Reusable configuration object matching the directory standards above
+            const directoryTableDefaults = {
+                layout: "fitData",
+                responsiveLayout: false,
+                pagination: true,
+                paginationMode: "local",
+                paginationSize: 10,
+                paginationSizeSelector: [10, 25, 50, 100],
+                movableColumns: false,
+                headerSort: true,
+                columnDefaults: {
+                    headerSort: true,
+                    headerFilter: "input",
+                    headerFilterFunc: "like",
+                    resizable: false,
+                    tooltip: true
                 }
-            ],
+            };
+
+            // Initialize Tabulator with normalized fields
+            $.ajax({
+                url: "/School/studentnewCertificate",
+                type: "GET",
+                success: function(response) {
+                    let rawData = typeof response === 'string' ? JSON.parse(response) : response;
+                    let processedData = (rawData || []).map(function(d) {
+                        return {
+                            ...d,
+                            _id: d.id || d.ID || '',
+                            _studentName: d.studentName || d.StudentName || '',
+                            _standard: d.standard || d.Standard || '',
+                            _instituteName: d.instituteName || d.InstituteName || '',
+                            _emailID: d.emailID || d.EmailID || '',
+                            _mobileNo: d.mobileNo || d.MobileNo || '',
+                           
+                            _courseName: d.courseName || d.CourseName || ''
+                        };
+                    });
+
+                    studentCertificateTable = new Tabulator("#studentTable", {
+                        ...directoryTableDefaults,
+                        data: processedData,
+                        columns: [
+                            {
+                                formatter: "rownum",
+                                title: "Sr No",
+                                hozAlign: "center",
+                                width: 70,
+                                headerSort: false,
+                                headerFilter: false
+                            },
+                            { title: "ID", field: "_id", width: 90, sorter: "number", headerFilter: "input" },
+                            { title: "Student Name", field: "_studentName", width: 190, sorter: "string", headerFilter: "input" },
+                            { title: "Standard", field: "_standard", width: 120, sorter: "string", headerFilter: "input" },
+                            { title: "Institute Name", field: "_instituteName", width: 220, sorter: "string", headerFilter: "input" },
+                            { title: "Email ID", field: "_emailID", width: 200, sorter: "string", headerFilter: "input" },
+                            { title: "Mobile No", field: "_mobileNo", width: 140, sorter: "string", headerFilter: "input" },
+                          
+                            { title: "Course Name", field: "_courseName", width: 180, sorter: "string", headerFilter: "input" },
+                            {
+                                title: "Action",
+                                hozAlign: "center",
+                                width: 90,
+                                headerSort: false,
+                                headerFilter: false,
+                                download: false,
+                                formatter: function(cell) {
+                                    var rowData = cell.getRow().getData();
+                                    var recordId = rowData.id || rowData.ID || 0;
+                                    return `<a href="javascript:void(0);" class="action-icon-btn text-primary" onclick="fnViewSubmitCertification(${recordId})" data-bs-toggle="modal" data-bs-target="#stuCertificateModal" title="View Certificate"><i class="fa fa-eye"></i></a>`;
+                                }
+                            }
+                        ]
+                    });
+                },
+                error: function() {
+                    console.error("Failed to fetch student certificate data.");
+                }
+            });
         });
 
-       
-
-
-    });
-
-    function fnViewSubmitCertification(id) {
-        debugger
-        if (id > 0) {
-            var url = '@Url.Action("GetStudentCertificate", "School")';
-            var param = { 'eventID': id };
-
-            $.get(url, param, function(data) {
-                debugger
-                $("#dv_Student_Certificate").empty().html(data);
-            }).fail(function() {
-                alert('Failed to load certificate. Please try again.');
-                // $.alert({
-                //     title: 'Error',
-                //     content: 'Failed to load certificate. Please try again.',
-                // });
+        // Global external search input handler
+        function filterCertificateTable(query) {
+            if (!studentCertificateTable) return;
+            query = (query || '').trim();
+            if (!query) {
+                studentCertificateTable.clearFilter();
+                return;
+            }
+            studentCertificateTable.setFilter(function(data) {
+                return Object.keys(data).some(function(key) {
+                    let value = data[key];
+                    if (key.startsWith('_') && value !== null && value !== undefined) {
+                        return String(value).toLowerCase().includes(query.toLowerCase());
+                    }
+                    return false;
+                });
             });
-        } else {
-            alert('Failed to load certificate. Please try again.');
         }
-    }
-</script>
+
+        // Excel Export Feature
+        function exportCertificateTable(format) {
+            if (studentCertificateTable && format === 'xlsx') {
+                studentCertificateTable.download("xlsx", "StudentCertificatesReport.xlsx", { sheetName: "Certificates" });
+            }
+        }
+
+        function fnViewSubmitCertification(id) {
+            if (id > 0) {
+                var url = '@Url.Action("GetStudentCertificate", "School")';
+                var param = { 'eventID': id };
+
+                $.get(url, param, function(data) {
+                    $("#dv_Student_Certificate").empty().html(data);
+                }).fail(function() {
+                    Swal.fire('Error', 'Failed to load certificate. Please try again.', 'error');
+                });
+            } else {
+                Swal.fire('Warning', 'Invalid certificate record reference.', 'warning');
+            }
+        }
+    </script>
 }

@@ -1,0 +1,219 @@
+﻿@{
+    ViewData["Title"] = "Terms & Conditions and Privacy Policy";
+   // Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<style>
+    .legal-page {
+        padding: 30px 15px;
+        background: #f5f7fb;
+        min-height: calc(100vh - 70px);
+    }
+
+    .legal-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e9edf3;
+        padding: 40px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .04);
+    }
+
+    .legal-header {
+        text-align: center;
+        margin-bottom: 35px;
+        border-bottom: 2px solid #edf0f4;
+        padding-bottom: 20px;
+    }
+
+    .legal-header h2 {
+        color: #00607A;
+        font-weight: 700;
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+
+    .legal-header p {
+        color: #7b8794;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .nav-tabs {
+        border-bottom: 2px solid #edf0f4;
+        margin-bottom: 30px;
+    }
+
+    .nav-tabs .nav-link {
+        font-weight: 600;
+        color: #536174;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px 8px 0 0;
+        transition: all .2s ease;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #00607A;
+        background-color: #eef7fa;
+        border-bottom: 3px solid #00607A;
+    }
+
+    .tab-content h3 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #202936;
+        margin-top: 25px;
+        margin-bottom: 12px;
+    }
+
+    .tab-content p, .tab-content li {
+        font-size: 14px;
+        color: #4c5868;
+        line-height: 1.6;
+        margin-bottom: 12px;
+    }
+
+    .tab-content ul {
+        padding-left: 20px;
+        margin-bottom: 15px;
+    }
+
+    .last-updated {
+        font-size: 12px;
+        color: #8a95a3;
+        font-style: italic;
+        margin-bottom: 20px;
+    }
+
+    @@media (max-width: 768px) {
+        .legal-container {
+            padding: 20px;
+        }
+        .legal-header h2 {
+            font-size: 22px;
+        }
+    }
+</style>
+
+<div class="legal-page">
+    <div class="legal-container">
+        
+        <div class="legal-header">
+            <h2>HEM Foundation Policies</h2>
+            <p>Please review our Terms & Conditions and Privacy Policy below.</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs" id="legalTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="terms-tab" data-bs-toggle="tab" data-bs-target="#terms-pane" type="button" role="tab" aria-controls="terms-pane" aria-selected="true">
+                    <i class="bi bi-file-text me-2"></i>Terms & Conditions
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="privacy-tab" data-bs-toggle="tab" data-bs-target="#privacy-pane" type="button" role="tab" aria-controls="privacy-pane" aria-selected="false">
+                    <i class="bi bi-shield-check me-2"></i>Privacy Policy
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Contents -->
+        <div class="tab-content" id="legalTabContent">
+            
+            <!-- TERMS & CONDITIONS PANE -->
+            <div class="tab-pane fade show active" id="terms-pane" role="tabpanel" aria-labelledby="terms-tab">
+                <div class="last-updated">Last Updated: October 13, 2026</div>
+
+                <p>Welcome to HEM Foundation. These Terms and Conditions ("Terms") govern your access to and use of our website, web portal, applications, and related services (collectively, the "Services"). By accessing or using our Services, you agree to be bound by these Terms. If you do not agree with any part of these Terms, please refrain from using our platform.</p>
+
+                <h3>1. Acceptance of Terms</h3>
+                <p>By registering an account, submitting survey responses, participating in our programs, or simply browsing our website, you confirm that you have read, understood, and accepted these Terms, as well as our Privacy Policy.</p>
+
+                <h3>2. User Accounts and Security</h3>
+                <ul>
+                    <li><strong>Registration:</strong> To access certain features (such as teacher or student dashboards, survey tracking, or volunteer portals), you may be required to create an account. You agree to provide accurate, current, and complete information during registration.</li>
+                    <li><strong>Account Responsibility:</strong> You are entirely responsible for maintaining the confidentiality of your account credentials (username, password, and security tokens). You agree to notify us immediately of any unauthorized use of your account.</li>
+                    <li><strong>Account Termination:</strong> We reserve the right to suspend or terminate accounts at our sole discretion if we suspect fraudulent activity, breach of security, or violation of these Terms.</li>
+                </ul>
+
+                <h3>3. Intellectual Property Rights</h3>
+                <p>All content, design elements, text, graphics, logos, software code, databases, and media materials on this platform are the exclusive property of HEM Foundation or its licensors and are protected by applicable intellectual property laws. You may not copy, reproduce, distribute, modify, or create derivative works from any material without our explicit written consent.</p>
+
+                <h3>4. User Conduct and Prohibited Activities</h3>
+                <p>You agree not to use the Services to:</p>
+                <ul>
+                    <li>Violate any applicable local, state, national, or international laws or regulations.</li>
+                    <li>Upload or transmit malicious code, viruses, automated scripts, or harmful data designed to interrupt, destroy, or limit the functionality of our systems.</li>
+                    <li>Attempt unauthorized access to restricted server areas, user databases, or other accounts.</li>
+                    <li>Submit false, misleading, or fraudulent information through our surveys, forms, or registration portals.</li>
+                </ul>
+
+                <h3>5. Limitation of Liability</h3>
+                <p>HEM Foundation provides its services on an "as is" and "as available" basis. To the maximum extent permitted by law, HEM Foundation disclaims all warranties, express or implied. We shall not be held liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of—or inability to use—our platform or services.</p>
+
+                <h3>6. Modifications to Terms</h3>
+                <p>We reserve the right to modify, amend, or update these Terms at any time. Changes will be posted directly on this page with an updated effective date. Continued use of the platform after modifications indicates your acceptance of the updated Terms.</p>
+
+                <h3>7. Governing Law</h3>
+                <p>These Terms shall be governed by and construed in accordance with the laws of India, without regard to conflict of law principles. Any legal disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts located in Mumbai, Maharashtra.</p>
+
+                <h3>8. Contact Us</h3>
+                <p>For any questions regarding these Terms, please contact us at:<br>
+                <strong>Email:</strong> support@hemfoundation.org<br>
+                <strong>Address:</strong> HEM Foundation, Mumbai, India</p>
+            </div>
+
+            <!-- PRIVACY POLICY PANE -->
+            <div class="tab-pane fade" id="privacy-pane" role="tabpanel" aria-labelledby="privacy-tab">
+                <div class="last-updated">Last Updated: October 13, 2026</div>
+
+                <p>HEM Foundation ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy outlines how we collect, use, disclose, and safeguard your information when you visit our website or use our portals and applications.</p>
+
+                <h3>1. Information We Collect</h3>
+                <p>We collect information that you voluntarily provide to us as well as automatic technical data:</p>
+                <ul>
+                    <li><strong>Personal Identification Information:</strong> Full name, date of birth, email address, mobile/phone number, and residential or institutional address.</li>
+                    <li><strong>Academic & Professional Data:</strong> Student records, standard/division details, institute names, course data, pre- and post-survey performance metrics, and teacher/volunteer credentials.</li>
+                    <li><strong>Technical & Usage Data:</strong> IP address, browser type, device information, operating system, session tokens, and activity logs collected automatically when interacting with our web portal.</li>
+                </ul>
+
+                <h3>2. How We Use Your Information</h3>
+                <p>We use the collected data for legitimate operational and educational purposes, including:</p>
+                <ul>
+                    <li>Managing user accounts, student surveys, performance reports, and educational programs.</li>
+                    <li>Facilitating administrative communications, notifications, and technical support.</li>
+                    <li>Verifying user credentials and maintaining platform security.</li>
+                    <li>Generating anonymized statistical reports and analytics to improve our educational initiatives.</li>
+                </ul>
+
+                <h3>3. Data Sharing and Disclosure</h3>
+                <p>We do not sell, trade, or rent your personal information to third parties. We may share your data only under the following circumstances:</p>
+                <ul>
+                    <li><strong>Service Providers:</strong> Trusted third-party vendors and hosting partners who assist us in operating our website and conducting our business, under strict confidentiality agreements.</li>
+                    <li><strong>Legal Requirements:</strong> When required by law, court order, or governmental regulations to protect our rights, safety, or legal obligations.</li>
+                </ul>
+
+                <h3>4. Data Security</h3>
+                <p>We implement robust administrative, technical, and physical security measures—including encrypted database storage, password hashing protocols, and role-based access controls—to protect your personal data from unauthorized access, alteration, or disclosure. However, no method of transmission over the internet is 100% secure.</p>
+
+                <h3>5. Data Retention</h3>
+                <p>We retain your personal information only for as long as necessary to fulfill the purposes outlined in this Privacy Policy, comply with legal requirements, resolve disputes, and enforce our agreements.</p>
+
+                <h3>6. Your Data Rights</h3>
+                <p>Depending on your jurisdiction, you have the right to access, update, or correct your personal information, or request the deletion of your account and associated personal data, subject to operational or legal retention limits.</p>
+
+                <h3>7. Changes to This Privacy Policy</h3>
+                <p>We may update this Privacy Policy from time to time. Any modifications will be posted on this page with the updated revision date. We encourage you to review this policy periodically.</p>
+
+                <h3>8. Contact Us</h3>
+                <p>If you have any questions, concerns, or requests regarding this Privacy Policy, please reach out to us:<br>
+                <strong>Email:</strong> privacy@hemfoundation.org<br>
+                <strong>Address:</strong> HEM Foundation, Mumbai, India</p>
+            </div>
+
+        </div>
+
+    </div>
+</div>

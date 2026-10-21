@@ -1088,7 +1088,30 @@ namespace HemFoundation.Data
                 entity.Property(e => e.Type)
                     .HasColumnName("Type");
             });
+            builder.Entity<WJ_ReferralCodes>(entity =>
+            {
+                entity.ToTable("wj_referralcodes");
 
+                entity.HasKey(e => e.ReferralID);
+
+                entity.Property(e => e.ReferralID)
+                      .HasColumnName("referralid");
+
+                entity.Property(e => e.ReferralCode)
+                      .HasColumnName("referralcode");
+
+                entity.Property(e => e.UserID)
+                      .HasColumnName("userid");
+
+                // Correct mapping for PostgreSQL bit(1) / bit column to bool? using BitArray
+                entity.Property(e => e.IsActive)
+                      .HasColumnName("isactive")
+                      .HasColumnType("bit")
+                      .HasConversion(
+                          v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
+                          v => v != null && v.Count > 0 ? v[0] : (bool?)null
+                      );
+            });
         }
 
 
