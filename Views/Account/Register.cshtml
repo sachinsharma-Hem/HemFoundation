@@ -240,8 +240,56 @@
     <script>
         let portalId = $('#hdnPortalId').val();
 
+        // function customizeFormLabels() {
+        //     if (portalId == "3") { // Student
+        //         $('#formHeader').text("Student Registration");
+        //         $('#badgeRole').html(`<i class="bi bi-mortarboard-fill text-primary me-1"></i> Student Portal`);
+        //         $('#lblFirstName').text("Student First Name");
+        //         $('#lblLastName').text("Student Last Name");
+        //         $('#lblMobile').text("Guardian Mobile No (Username & Password)");
+        //         $('#lblEmail').text("Guardian Email ID");
+
+        //         $('.student-field').removeClass('d-none');
+        //         $('.org-field').hide();
+        //         $('#referredByContainer').hide();
+
+        //         $('#txtEmailID').removeClass('req-field');
+        //         $('#ddlStandard, #txtGuardianName').addClass('req-field');
+        //         $('#txtOrgName, #ddlOrgType').removeClass('req-field');
+        //         loadStandardsDropdown();
+        //     }
+        //     else if (portalId == "4") { // School
+        //         $('#formHeader').text("School Registration");
+        //         $('#badgeRole').html(`<i class="bi bi-building text-warning me-1"></i> School Portal`);
+        //         $('#lblOrgName').html(`School Name <span class="text-danger">*</span>`);
+        //         loadAffiliatesDropdown();
+        //     }
+        //     else if (portalId == "2") { // Teacher
+        //         $('#formHeader').text("Teacher Registration");
+        //         $('#badgeRole').html(`<i class="bi bi-person-badge text-info me-1"></i> Teacher Portal`);
+        //         $('.teacher-field').removeClass('d-none');
+        //         $('.org-field').hide();
+        //         $('#referredByContainer').hide();
+        //         $('#txtQualification').addClass('req-field');
+        //         $('#txtOrgName, #ddlOrgType').removeClass('req-field');
+        //     }
+        //     else if (portalId == "5") { // Parent
+        //         $('#formHeader').text("Parent Registration");
+        //         $('#badgeRole').html(`<i class="bi bi-people-fill text-warning me-1"></i> Parent Portal`);
+        //         $('.parent-field').removeClass('d-none');
+        //         $('.org-field').hide();
+        //         $('#referredByContainer').hide();
+        //         $('#ddlRelation').addClass('req-field');
+        //         $('#txtOrgName, #ddlOrgType').removeClass('req-field');
+        //     }
+        //     else if (portalId == "6") { // Affiliate
+        //         $('#formHeader').text("Affiliate Partner Registration");
+        //         $('#badgeRole').html(`<i class="bi bi-star-fill text-info me-1"></i> Affiliate Partner`);
+        //         $('#referredByContainer').hide();
+        //     }
+        // }
         function customizeFormLabels() {
-            if (portalId == "3") { // Student
+            if (portalId == "3") { 
                 $('#formHeader').text("Student Registration");
                 $('#badgeRole').html(`<i class="bi bi-mortarboard-fill text-primary me-1"></i> Student Portal`);
                 $('#lblFirstName').text("Student First Name");
@@ -256,15 +304,16 @@
                 $('#txtEmailID').removeClass('req-field');
                 $('#ddlStandard, #txtGuardianName').addClass('req-field');
                 $('#txtOrgName, #ddlOrgType').removeClass('req-field');
+
                 loadStandardsDropdown();
             }
-            else if (portalId == "4") { // School
+            else if (portalId == "4") { 
                 $('#formHeader').text("School Registration");
                 $('#badgeRole').html(`<i class="bi bi-building text-warning me-1"></i> School Portal`);
                 $('#lblOrgName').html(`School Name <span class="text-danger">*</span>`);
                 loadAffiliatesDropdown();
             }
-            else if (portalId == "2") { // Teacher
+            else if (portalId == "2") { 
                 $('#formHeader').text("Teacher Registration");
                 $('#badgeRole').html(`<i class="bi bi-person-badge text-info me-1"></i> Teacher Portal`);
                 $('.teacher-field').removeClass('d-none');
@@ -273,7 +322,7 @@
                 $('#txtQualification').addClass('req-field');
                 $('#txtOrgName, #ddlOrgType').removeClass('req-field');
             }
-            else if (portalId == "5") { // Parent
+            else if (portalId == "5") { 
                 $('#formHeader').text("Parent Registration");
                 $('#badgeRole').html(`<i class="bi bi-people-fill text-warning me-1"></i> Parent Portal`);
                 $('.parent-field').removeClass('d-none');
@@ -282,13 +331,17 @@
                 $('#ddlRelation').addClass('req-field');
                 $('#txtOrgName, #ddlOrgType').removeClass('req-field');
             }
-            else if (portalId == "6") { // Affiliate
+            else if (portalId == "6") { 
                 $('#formHeader').text("Affiliate Partner Registration");
                 $('#badgeRole').html(`<i class="bi bi-star-fill text-info me-1"></i> Affiliate Partner`);
                 $('#referredByContainer').hide();
             }
-        }
 
+            if (portalId != "3") {
+                $('#lblEmail').html('Email ID <span class="text-danger">*</span>');
+                $('#txtEmailID').addClass('req-field');
+            }
+        }
         function loadStandardsDropdown() {
             $.get('/api/universal/standards-list', function(data) {
                 let $dropdown = $('#ddlStandard');
