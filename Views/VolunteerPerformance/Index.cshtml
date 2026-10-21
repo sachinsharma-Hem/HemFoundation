@@ -1,0 +1,428 @@
+﻿@{
+    ViewData["Title"] = "Volunteer Performance";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-3 volunteer-dashboard">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Volunteer Performance</h2>
+            <p class="text-muted mb-0">Monitor all volunteer achievements, active percentages, credentials, and project breakdowns.</p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-success" id="exportExcel">
+                <i class="bi bi-file-earmark-excel"></i> Excel
+            </button>
+            <button type="button" class="btn btn-outline-success" id="exportCsv">
+                <i class="bi bi-filetype-csv"></i> CSV
+            </button>
+            <button type="button" class="btn btn-danger" id="exportPdf">
+                <i class="bi bi-file-earmark-pdf"></i> PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State Placeholder -->
+    <div id="loadingContainer" class="text-center py-5">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="fw-semibold text-secondary">Loading volunteer performance data...</h5>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div id="dashboardContent" style="display: none;">
+        
+        <!-- Top Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card h-100">
+                    <div class="card-body">
+                        <div class="kpi-label">Total Volunteers & Schools</div>
+                        <div class="kpi-value fs-4" id="kpiVolSchools">0 / 0</div>
+                        <small class="text-muted fw-semibold">Across all regions</small>
+                        <i class="bi bi-people kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card h-100">
+                    <div class="card-body">
+                        <div class="kpi-label">Students (Active / Total)</div>
+                        <div class="kpi-value fs-4" id="kpiStudents">0 / 0</div>
+                        <small class="text-muted fw-semibold" id="kpiStudentPct">0% Active</small>
+                        <i class="bi bi-mortarboard kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card h-100">
+                    <div class="card-body">
+                        <div class="kpi-label">Teachers (Active / Total)</div>
+                        <div class="kpi-value fs-4" id="kpiTeachers">0 / 0</div>
+                        <small class="text-muted fw-semibold" id="kpiTeacherPct">0% Active</small>
+                        <i class="bi bi-person-workspace kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card kpi-card h-100">
+                    <div class="card-body">
+                        <div class="kpi-label">Projects Summary (Total)</div>
+                        <div class="kpi-value" id="kpiTotalProjects">0</div>
+                        <small class="text-muted fw-semibold" id="kpiProjectBreakdown">Family: 0 | Indiv: 0 | PBL: 0</small>
+                        <i class="bi bi-kanban kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-xl-8">
+                <div class="card dashboard-card h-100">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Top Volunteers by Active Students</h5>
+                        <div class="chart-container">
+                            <canvas id="studentsComparisonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-4">
+                <div class="card dashboard-card h-100">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Project Type Distribution</h5>
+                        <div class="chart-container">
+                            <canvas id="projectsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and table -->
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1">Volunteer Details</h5>
+                        <small class="text-muted" id="tableRecordCount">Showing all records</small>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <input type="search" id="clientSearch" class="form-control" placeholder="Search volunteer, city, email, mobile or ID..." aria-label="Search volunteers" style="min-width: 300px;" />
+                        <button type="button" id="resetSearch" class="btn btn-outline-secondary">Reset</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle performance-table" id="volunteerTable">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="volunteerId" style="cursor: pointer;">ID <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="sortable" data-sort="name" style="cursor: pointer;">Volunteer Name <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th>Mobile No</th>
+                                <th>User Name</th>
+                                <th>Password</th>
+                                <th>Email Id</th>
+                                <th class="sortable" data-sort="cityName" style="cursor: pointer;">City <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end sortable" data-sort="totalSchools" style="cursor: pointer;">Schools <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end sortable" data-sort="totalStudents" style="cursor: pointer;">Students <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end sortable" data-sort="activeStudents" style="cursor: pointer;">Active Students <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end">Student Active %</th>
+                                <th class="text-end sortable" data-sort="totalTeachers" style="cursor: pointer;">Teachers <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end sortable" data-sort="activeTeachers" style="cursor: pointer;">Active Teachers <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end">Teacher Active %</th>
+                                <th class="text-end sortable" data-sort="totalSelectedProjects" style="cursor: pointer;">Projects <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="text-end">Family</th>
+                                <th class="text-end">Individual</th>
+                                <th class="text-end">Group PBL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="volunteerTableBody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .volunteer-dashboard { color: #172033; }
+    .kpi-card, .dashboard-card { border: 1px solid #e8edf4; border-radius: 14px; box-shadow: 0 4px 18px rgba(24, 39, 75, .05); }
+    .kpi-card .card-body { position: relative; padding: 1.35rem; overflow: hidden; }
+    .kpi-label { color: #667085; font-size: .9rem; font-weight: 600; margin-bottom: .4rem; }
+    .kpi-value { font-size: clamp(1.5rem, 2vw, 1.8rem); font-weight: 750; letter-spacing: -.5px; }
+    .kpi-icon { position: absolute; right: 18px; top: 18px; font-size: 1.8rem; color: #4169e1; opacity: .25; }
+    .chart-container { position: relative; min-height: 280px; height: 320px; }
+    .performance-table { white-space: nowrap; font-size: .85rem; }
+    .performance-table thead th { background: #f7f9fc; color: #475467; font-size: .75rem; text-transform: uppercase; letter-spacing: .3px; }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        let allData = [];
+        let filteredData = [];
+        let currentSort = { column: 'name', asc: true };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('@Url.Action("GetVolunteerData", "VolunteerPerformance")');
+                const result = await response.json();
+                
+                allData = result.rows;
+                filteredData = [...allData];
+                updateSummaryKPIs(result.summary);
+                renderTable(filteredData);
+                renderCharts(allData, result.summary);
+
+                document.getElementById('loadingContainer').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading volunteer data:', error);
+                document.getElementById('loadingContainer').innerHTML = '<div class="alert alert-danger">Failed to load volunteer data. Please refresh the page.</div>';
+            }
+
+            document.getElementById('clientSearch').addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                filteredData = allData.filter(x => 
+                    x.name.toLowerCase().includes(query) ||
+                    x.mobileNo.toLowerCase().includes(query) ||
+                    x.userName.toLowerCase().includes(query) ||
+                    x.emailId.toLowerCase().includes(query) ||
+                    x.cityName.toLowerCase().includes(query) ||
+                    x.volunteerId.toString().includes(query)
+                );
+                renderTable(filteredData);
+            });
+
+            document.getElementById('resetSearch').addEventListener('click', () => {
+                document.getElementById('clientSearch').value = '';
+                filteredData = [...allData];
+                renderTable(filteredData);
+            });
+
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const col = th.getAttribute('data-sort');
+                    if (currentSort.column === col) {
+                        currentSort.asc = !currentSort.asc;
+                    } else {
+                        currentSort.column = col;
+                        currentSort.asc = true;
+                    }
+                    
+                    filteredData.sort((a, b) => {
+                        let valA = a[col];
+                        let valB = b[col];
+                        if (typeof valA === 'string') {
+                            valA = valA.toLowerCase();
+                            valB = valB.toLowerCase();
+                        }
+                        if (valA < valB) return currentSort.asc ? -1 : 1;
+                        if (valA > valB) return currentSort.asc ? 1 : -1;
+                        return 0;
+                    });
+                    renderTable(filteredData);
+                });
+            });
+
+            document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+            document.getElementById('exportCsv').addEventListener('click', exportToCsv);
+            document.getElementById('exportPdf').addEventListener('click', exportToPdf);
+        });
+
+        function updateSummaryKPIs(summary) {
+            document.getElementById('kpiVolSchools').innerText = `${summary.totalVolunteers.toLocaleString()} / ${summary.totalSchools.toLocaleString()}`;
+            
+            document.getElementById('kpiStudents').innerText = `${summary.activeStudents.toLocaleString()} / ${summary.totalStudents.toLocaleString()}`;
+            const studentPct = summary.totalStudents > 0 ? ((summary.activeStudents / summary.totalStudents) * 100).toFixed(1) : 0;
+            document.getElementById('kpiStudentPct').innerText = `${studentPct}% Active against Total`;
+
+            document.getElementById('kpiTeachers').innerText = `${summary.activeTeachers.toLocaleString()} / ${summary.totalTeachers.toLocaleString()}`;
+            const teacherPct = summary.totalTeachers > 0 ? ((summary.activeTeachers / summary.totalTeachers) * 100).toFixed(1) : 0;
+            document.getElementById('kpiTeacherPct').innerText = `${teacherPct}% Active against Total`;
+
+            document.getElementById('kpiTotalProjects').innerText = summary.totalProjects.toLocaleString();
+            document.getElementById('kpiProjectBreakdown').innerText = `Family: ${summary.familyProjects.toLocaleString()} | Indiv: ${summary.individualProjects.toLocaleString()} | PBL: ${summary.groupPbl.toLocaleString()}`;
+        }
+
+        function renderTable(rows) {
+            const tbody = document.getElementById('volunteerTableBody');
+            document.getElementById('tableRecordCount').innerText = `Showing ${rows.length} of ${allData.length} volunteers`;
+
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="18" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>No volunteer records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = rows.map(item => {
+                const studentActivePct = item.totalStudents > 0 ? ((item.activeStudents / item.totalStudents) * 100).toFixed(1) : '0.0';
+                const teacherActivePct = item.totalTeachers > 0 ? ((item.activeTeachers / item.totalTeachers) * 100).toFixed(1) : '0.0';
+                return `
+                    <tr>
+                        <td>${item.volunteerId}</td>
+                        <td class="fw-semibold">${item.name}</td>
+                        <td>${item.mobileNo}</td>
+                        <td>${item.userName}</td>
+                        <td><code>${item.password}</code></td>
+                        <td>${item.emailId}</td>
+                        <td>${item.cityName}</td>
+                        <td class="text-end">${item.totalSchools.toLocaleString()}</td>
+                        <td class="text-end">${item.totalStudents.toLocaleString()}</td>
+                        <td class="text-end">${item.activeStudents.toLocaleString()}</td>
+                        <td class="text-end fw-semibold text-primary">${studentActivePct}%</td>
+                        <td class="text-end">${item.totalTeachers.toLocaleString()}</td>
+                        <td class="text-end">${item.activeTeachers.toLocaleString()}</td>
+                        <td class="text-end fw-semibold text-success">${teacherActivePct}%</td>
+                        <td class="text-end">${item.totalSelectedProjects.toLocaleString()}</td>
+                        <td class="text-end">${item.familyProjects.toLocaleString()}</td>
+                        <td class="text-end">${item.individualProjects.toLocaleString()}</td>
+                        <td class="text-end">${item.groupPbl.toLocaleString()}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderCharts(rows, summary) {
+            const topChartRows = [...rows].sort((a, b) => b.activeStudents - a.activeStudents).slice(0, 8);
+
+            const labels = topChartRows.map(x => x.name);
+            const totalStudentsData = topChartRows.map(x => x.totalStudents);
+            const activeStudentsData = topChartRows.map(x => x.activeStudents);
+
+            const ctxStudents = document.getElementById('studentsComparisonChart').getContext('2d');
+            new Chart(ctxStudents, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Total Students', data: totalStudentsData, backgroundColor: '#4169e1', borderRadius: 4 },
+                        { label: 'Active Students', data: activeStudentsData, backgroundColor: '#20c997', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: { x: { beginAtZero: true } },
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            const ctxProjects = document.getElementById('projectsChart').getContext('2d');
+            new Chart(ctxProjects, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Family Projects', 'Individual Projects', 'Group PBL'],
+                    datasets: [{
+                        data: [summary.familyProjects, summary.individualProjects, summary.groupPbl],
+                        backgroundColor: ['#0d6efd', '#ffc107', '#0dcaf0'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        // --- Client-Side Export Functions ---
+        function getTableExportObjects() {
+            return filteredData.map(x => {
+                const studentPct = x.totalStudents > 0 ? ((x.activeStudents / x.totalStudents) * 100).toFixed(1) + '%' : '0.0%';
+                const teacherPct = x.totalTeachers > 0 ? ((x.activeTeachers / x.totalTeachers) * 100).toFixed(1) + '%' : '0.0%';
+                return {
+                    "Volunteer ID": x.volunteerId,
+                    "Name": x.name,
+                    "Mobile No": x.mobileNo,
+                    "User Name": x.userName,
+                    "Password": x.password,
+                    "Email Id": x.emailId,
+                    "City Name": x.cityName,
+                    "Total Schools": x.totalSchools,
+                    "Total Students": x.totalStudents,
+                    "Active Students": x.activeStudents,
+                    "Student Active %": studentPct,
+                    "Total Teachers": x.totalTeachers,
+                    "Active Teachers": x.activeTeachers,
+                    "Teacher Active %": teacherPct,
+                    "Total Projects": x.totalSelectedProjects,
+                    "Family Projects": x.familyProjects,
+                    "Individual Projects": x.individualProjects,
+                    "Group PBL": x.groupPbl
+                };
+            });
+        }
+
+        function exportToExcel() {
+            const data = getTableExportObjects();
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Volunteer Performance");
+            XLSX.writeFile(workbook, `volunteer-performance-${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        function exportToCsv() {
+            const data = getTableExportObjects();
+            if (data.length === 0) return;
+            const headers = Object.keys(data[0]);
+            let csvContent = headers.join(",") + "\n";
+            data.forEach(row => {
+                const values = headers.map(h => `"${String(row[h]).replace(/"/g, '""')}"`);
+                csvContent += values.join(",") + "\n";
+            });
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `volunteer-performance-${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportToPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            
+            doc.text("Volunteer Performance Report", 14, 15);
+            
+            const headers = [["ID", "Name", "Mobile", "User", "Pass", "Email", "City", "Schools", "Students", "Active", "Stud.%", "Teachers", "Active T.", "Teach.%", "Proj.", "Family", "Indiv.", "PBL"]];
+            const data = filteredData.map(x => {
+                const studentPct = x.totalStudents > 0 ? ((x.activeStudents / x.totalStudents) * 100).toFixed(1) + '%' : '0.0%';
+                const teacherPct = x.totalTeachers > 0 ? ((x.activeTeachers / x.totalTeachers) * 100).toFixed(1) + '%' : '0.0%';
+                return [
+                    x.volunteerId, x.name, x.mobileNo, x.userName, x.password, x.emailId, x.cityName,
+                    x.totalSchools, x.totalStudents, x.activeStudents, studentPct, 
+                    x.totalTeachers, x.activeTeachers, teacherPct, 
+                    x.totalSelectedProjects, x.familyProjects, x.individualProjects, x.groupPbl
+                ];
+            });
+
+            doc.autoTable({
+                head: headers,
+                body: data,
+                startY: 20,
+                styles: { fontSize: 6 }
+            });
+
+            doc.save(`volunteer-performance-${new Date().toISOString().slice(0,10)}.pdf`);
+        }
+    </script>
+}

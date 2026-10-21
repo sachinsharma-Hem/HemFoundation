@@ -7,7 +7,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h2 class="fw-bold mb-1">Affiliate Performance</h2>
-            <p class="text-muted mb-0">Monitor all affiliate achievements, active percentages, and project breakdowns.</p>
+            <p class="text-muted mb-0">Monitor all affiliate achievements, credentials, contact info, and project breakdowns.</p>
         </div>
 
         <div class="d-flex flex-wrap gap-2">
@@ -116,7 +116,7 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <input type="search" id="clientSearch" class="form-control" placeholder="Search affiliate, referral code or ID..." aria-label="Search affiliates" style="min-width: 280px;" />
+                        <input type="search" id="clientSearch" class="form-control" placeholder="Search affiliate, city, email, mobile or ID..." aria-label="Search affiliates" style="min-width: 300px;" />
                         <button type="button" id="resetSearch" class="btn btn-outline-secondary">Reset</button>
                     </div>
                 </div>
@@ -128,6 +128,11 @@
                                 <th class="sortable" data-sort="affiliateId" style="cursor: pointer;">ID <i class="bi bi-arrow-down-up text-muted"></i></th>
                                 <th class="sortable" data-sort="name" style="cursor: pointer;">Affiliate Name <i class="bi bi-arrow-down-up text-muted"></i></th>
                                 <th>Referral Code</th>
+                                <th>Mobile No</th>
+                                <th>User Name</th>
+                                <th>Password</th>
+                                <th>Email Id</th>
+                                <th class="sortable" data-sort="cityName" style="cursor: pointer;">City <i class="bi bi-arrow-down-up text-muted"></i></th>
                                 <th class="text-end sortable" data-sort="totalSchools" style="cursor: pointer;">Schools <i class="bi bi-arrow-down-up text-muted"></i></th>
                                 <th class="text-end sortable" data-sort="totalStudents" style="cursor: pointer;">Students <i class="bi bi-arrow-down-up text-muted"></i></th>
                                 <th class="text-end sortable" data-sort="activeStudents" style="cursor: pointer;">Active Students <i class="bi bi-arrow-down-up text-muted"></i></th>
@@ -159,8 +164,8 @@
     .kpi-value { font-size: clamp(1.5rem, 2vw, 1.8rem); font-weight: 750; letter-spacing: -.5px; }
     .kpi-icon { position: absolute; right: 18px; top: 18px; font-size: 1.8rem; color: #4169e1; opacity: .25; }
     .chart-container { position: relative; min-height: 280px; height: 320px; }
-    .performance-table { white-space: nowrap; font-size: .88rem; }
-    .performance-table thead th { background: #f7f9fc; color: #475467; font-size: .8rem; text-transform: uppercase; letter-spacing: .3px; }
+    .performance-table { white-space: nowrap; font-size: .85rem; }
+    .performance-table thead th { background: #f7f9fc; color: #475467; font-size: .75rem; text-transform: uppercase; letter-spacing: .3px; }
 </style>
 
 @section Scripts {
@@ -197,6 +202,10 @@
                 filteredData = allData.filter(x => 
                     x.name.toLowerCase().includes(query) ||
                     x.referralCode.toLowerCase().includes(query) ||
+                    x.mobileNo.toLowerCase().includes(query) ||
+                    x.userName.toLowerCase().includes(query) ||
+                    x.emailId.toLowerCase().includes(query) ||
+                    x.cityName.toLowerCase().includes(query) ||
                     x.affiliateId.toString().includes(query)
                 );
                 renderTable(filteredData);
@@ -258,7 +267,7 @@
             document.getElementById('tableRecordCount').innerText = `Showing ${rows.length} of ${allData.length} affiliates`;
 
             if (rows.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="14" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>No affiliate records found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="19" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>No affiliate records found.</td></tr>`;
                 return;
             }
 
@@ -270,6 +279,11 @@
                         <td>${item.affiliateId}</td>
                         <td class="fw-semibold">${item.name}</td>
                         <td><span class="badge text-bg-light">${item.referralCode}</span></td>
+                        <td>${item.mobileNo}</td>
+                        <td>${item.userName}</td>
+                        <td><code>${item.password}</code></td>
+                        <td>${item.emailId}</td>
+                        <td>${item.cityName}</td>
                         <td class="text-end">${item.totalSchools.toLocaleString()}</td>
                         <td class="text-end">${item.totalStudents.toLocaleString()}</td>
                         <td class="text-end">${item.activeStudents.toLocaleString()}</td>
@@ -331,7 +345,7 @@
             });
         }
 
-        // --- Client-Side Export Functions including Active Percentages ---
+        // --- Client-Side Export Functions ---
         function getTableExportObjects() {
             return filteredData.map(x => {
                 const studentPct = x.totalStudents > 0 ? ((x.activeStudents / x.totalStudents) * 100).toFixed(1) + '%' : '0.0%';
@@ -340,6 +354,11 @@
                     "Affiliate ID": x.affiliateId,
                     "Name": x.name,
                     "Referral Code": x.referralCode,
+                    "Mobile No": x.mobileNo,
+                    "User Name": x.userName,
+                    "Password": x.password,
+                    "Email Id": x.emailId,
+                    "City Name": x.cityName,
                     "Total Schools": x.totalSchools,
                     "Total Students": x.totalStudents,
                     "Active Students": x.activeStudents,
@@ -388,13 +407,14 @@
             
             doc.text("Affiliate Performance Report", 14, 15);
             
-            const headers = [["ID", "Name", "Referral", "Schools", "Students", "Active", "Stud. %", "Teachers", "Active T.", "Teach. %", "Projects", "Family", "Indiv.", "PBL"]];
+            const headers = [["ID", "Name", "Mobile", "User", "Pass", "Email", "City", "Schools", "Students", "Active", "Stud.%", "Teachers", "Active T.", "Teach.%", "Proj.", "Family", "Indiv.", "PBL"]];
             const data = filteredData.map(x => {
                 const studentPct = x.totalStudents > 0 ? ((x.activeStudents / x.totalStudents) * 100).toFixed(1) + '%' : '0.0%';
                 const teacherPct = x.totalTeachers > 0 ? ((x.activeTeachers / x.totalTeachers) * 100).toFixed(1) + '%' : '0.0%';
                 return [
-                    x.affiliateId, x.name, x.referralCode, x.totalSchools, x.totalStudents, 
-                    x.activeStudents, studentPct, x.totalTeachers, x.activeTeachers, teacherPct, 
+                    x.affiliateId, x.name, x.mobileNo, x.userName, x.password, x.emailId, x.cityName,
+                    x.totalSchools, x.totalStudents, x.activeStudents, studentPct, 
+                    x.totalTeachers, x.activeTeachers, teacherPct, 
                     x.totalSelectedProjects, x.familyProjects, x.individualProjects, x.groupPbl
                 ];
             });
@@ -403,7 +423,7 @@
                 head: headers,
                 body: data,
                 startY: 20,
-                styles: { fontSize: 7 }
+                styles: { fontSize: 6 }
             });
 
             doc.save(`affiliate-performance-${new Date().toISOString().slice(0,10)}.pdf`);
