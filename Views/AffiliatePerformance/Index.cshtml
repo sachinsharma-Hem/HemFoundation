@@ -1,0 +1,401 @@
+﻿
+@model HemFoundation.Controllers.AffiliatePerformanceDashboardViewModel
+
+@{
+    ViewData["Title"] = "Affiliate Performance";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+
+    var startRow = Model.TotalCount == 0 ? 0 : ((Model.Page - 1) * Model.PageSize) + 1;
+    var endRow = Math.Min((long)Model.Page * Model.PageSize, Model.TotalCount);
+}
+
+<div class="container-fluid py-3 affiliate-dashboard">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Affiliate Performance</h2>
+            <p class="text-muted mb-0">Monitor affiliate, school, student and project performance.</p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-success"
+               asp-controller="AffiliatePerformance"
+               asp-action="Export"
+               asp-route-format="xlsx"
+               asp-route-search="@Model.Search">
+                <i class="bi bi-file-earmark-excel"></i> Excel
+            </a>
+            <a class="btn btn-outline-success"
+               asp-controller="AffiliatePerformance"
+               asp-action="Export"
+               asp-route-format="csv"
+               asp-route-search="@Model.Search">
+                <i class="bi bi-filetype-csv"></i> CSV
+            </a>
+            <a class="btn btn-danger"
+               asp-controller="AffiliatePerformance"
+               asp-action="Export"
+               asp-route-format="pdf"
+               asp-route-search="@Model.Search">
+                <i class="bi bi-file-earmark-pdf"></i> PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="card kpi-card h-100">
+                <div class="card-body">
+                    <div class="kpi-label">Total Affiliates</div>
+                    <div class="kpi-value">@Model.Summary.TotalAffiliates.ToString("N0")</div>
+                    <i class="bi bi-people kpi-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="card kpi-card h-100">
+                <div class="card-body">
+                    <div class="kpi-label">Total Schools</div>
+                    <div class="kpi-value">@Model.Summary.TotalSchools.ToString("N0")</div>
+                    <i class="bi bi-buildings kpi-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="card kpi-card h-100">
+                <div class="card-body">
+                    <div class="kpi-label">Total Students</div>
+                    <div class="kpi-value">@Model.Summary.TotalStudents.ToString("N0")</div>
+                    <i class="bi bi-mortarboard kpi-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="card kpi-card h-100">
+                <div class="card-body">
+                    <div class="kpi-label">Active Students</div>
+                    <div class="kpi-value">@Model.Summary.ActiveStudents.ToString("N0")</div>
+                    <i class="bi bi-person-check kpi-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="card kpi-card h-100">
+                <div class="card-body">
+                    <div class="kpi-label">Total Teachers</div>
+                    <div class="kpi-value">@Model.Summary.TotalTeachers.ToString("N0")</div>
+                    <i class="bi bi-person-workspace kpi-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="card kpi-card h-100">
+                <div class="card-body">
+                    <div class="kpi-label">Total Projects</div>
+                    <div class="kpi-value">@Model.Summary.TotalProjects.ToString("N0")</div>
+                    <i class="bi bi-kanban kpi-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-xl-8">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Top Affiliates by Students</h5>
+                    <div class="chart-container">
+                        <canvas id="studentsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Project Distribution</h5>
+                    <div class="chart-container">
+                        <canvas id="projectsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and table -->
+    <div class="card dashboard-card">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Affiliate Details</h5>
+                    <small class="text-muted">Showing @startRow–@endRow of @Model.TotalCount records</small>
+                </div>
+
+                <form method="get"
+                      asp-controller="AffiliatePerformance"
+                      asp-action="Index"
+                      class="d-flex flex-wrap gap-2">
+                    <input type="hidden" name="page" value="1" />
+                    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+                    <input type="hidden" name="sortBy" value="@Model.SortBy" />
+                    <input type="hidden" name="sortDir" value="@Model.SortDir" />
+
+                    <input type="search"
+                           name="search"
+                           value="@Model.Search"
+                           class="form-control"
+                           placeholder="Search affiliate, referral code or ID"
+                           aria-label="Search affiliates" />
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+
+                    <a asp-controller="AffiliatePerformance"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary">Reset</a>
+                </form>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle performance-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-page="@Model.Page"
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-sortBy="AffiliateId"
+                                   asp-route-sortDir="@(Model.SortBy == "AffiliateId" && Model.SortDir == "asc" ? "desc" : "asc")">
+                                    ID
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-page="@Model.Page"
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-sortBy="Name"
+                                   asp-route-sortDir="@(Model.SortBy == "Name" && Model.SortDir == "asc" ? "desc" : "asc")">
+                                    Affiliate Name
+                                </a>
+                            </th>
+                            <th>Referral Code</th>
+                            <th class="text-end">Schools</th>
+                            <th class="text-end">Students</th>
+                            <th class="text-end">Active Students</th>
+                            <th class="text-end">Teachers</th>
+                            <th class="text-end">Active Teachers</th>
+                            <th class="text-end">Projects</th>
+                            <th class="text-end">Family</th>
+                            <th class="text-end">Individual</th>
+                            <th class="text-end">Group PBL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.Rows.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="12" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                No affiliate records found.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var item in Model.Rows)
+                        {
+                            <tr>
+                                <td>@item.AffiliateId</td>
+                                <td class="fw-semibold">@item.Name</td>
+                                <td><span class="badge text-bg-light">@item.ReferralCode</span></td>
+                                <td class="text-end">@item.TotalSchools.ToString("N0")</td>
+                                <td class="text-end">@item.TotalStudents.ToString("N0")</td>
+                                <td class="text-end">@item.ActiveStudents.ToString("N0")</td>
+                                <td class="text-end">@item.TotalTeachers.ToString("N0")</td>
+                                <td class="text-end">@item.ActiveTeachers.ToString("N0")</td>
+                                <td class="text-end">@item.TotalSelectedProjects.ToString("N0")</td>
+                                <td class="text-end">@item.FamilyProjects.ToString("N0")</td>
+                                <td class="text-end">@item.IndividualProjects.ToString("N0")</td>
+                                <td class="text-end">@item.GroupPbl.ToString("N0")</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                <span class="text-muted small">
+                    Page @Model.Page of @Model.TotalPages
+                </span>
+
+                <nav aria-label="Affiliate table pagination">
+                    <ul class="pagination mb-0">
+                        <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-search="@Model.Search"
+                               asp-route-page="@(Model.Page - 1)"
+                               asp-route-pageSize="@Model.PageSize"
+                               asp-route-sortBy="@Model.SortBy"
+                               asp-route-sortDir="@Model.SortDir">Previous</a>
+                        </li>
+
+                        <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-search="@Model.Search"
+                               asp-route-page="@(Model.Page + 1)"
+                               asp-route-pageSize="@Model.PageSize"
+                               asp-route-sortBy="@Model.SortBy"
+                               asp-route-sortDir="@Model.SortDir">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .affiliate-dashboard {
+        color: #172033;
+    }
+
+    .kpi-card, .dashboard-card {
+        border: 1px solid #e8edf4;
+        border-radius: 14px;
+        box-shadow: 0 4px 18px rgba(24, 39, 75, .05);
+    }
+
+    .kpi-card .card-body {
+        position: relative;
+        padding: 1.35rem;
+        overflow: hidden;
+    }
+
+    .kpi-label {
+        color: #667085;
+        font-size: .9rem;
+        font-weight: 600;
+        margin-bottom: .65rem;
+    }
+
+    .kpi-value {
+        font-size: clamp(1.6rem, 2vw, 2rem);
+        font-weight: 750;
+        letter-spacing: -.5px;
+    }
+
+    .kpi-icon {
+        position: absolute;
+        right: 18px;
+        top: 18px;
+        font-size: 1.8rem;
+        color: #4169e1;
+        opacity: .25;
+    }
+
+    .chart-container {
+        position: relative;
+        min-height: 280px;
+        height: 320px;
+    }
+
+    .performance-table {
+        white-space: nowrap;
+        font-size: .88rem;
+    }
+
+    .performance-table thead th {
+        background: #f7f9fc;
+        color: #475467;
+        font-size: .8rem;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+    }
+
+    .performance-table th a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .performance-table th a:hover {
+        color: #0d6efd;
+    }
+
+    @@media (max-width: 767px) {
+        .chart-container {
+            height: 280px;
+        }
+
+        .affiliate-dashboard .card-body {
+            padding: 1rem;
+        }
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // These values are serialized server-side from the filtered PostgreSQL results.
+        const affiliateLabels = @Html.Raw(Model.ChartLabelsJson);
+        const studentValues = @Html.Raw(Model.ChartStudentsJson);
+        const projectValues = @Html.Raw(Model.ChartProjectTypesJson);
+
+        new Chart(document.getElementById('studentsChart'), {
+            type: 'bar',
+            data: {
+                labels: affiliateLabels,
+                datasets: [{
+                    label: 'Students',
+                    data: studentValues,
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('projectsChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Family Projects', 'Individual Projects', 'Group PBL'],
+                datasets: [{
+                    data: projectValues,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+}
