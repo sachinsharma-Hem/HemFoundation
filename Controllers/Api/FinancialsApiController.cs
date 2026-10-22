@@ -488,49 +488,92 @@ namespace HemFoundation.Controllers.Api
                 });
             }
         }
-       
+
 
         [HttpPost("upload-signed-bill")]
         public async Task<IActionResult> UploadSignedBill([FromForm] int billId, [FromForm] IFormFile signedFile)
         {
             var bill = await _context.MonthlyBills.FindAsync(billId);
-            if (bill == null) return NotFound(new { success = false, message = "Bill not found" });
+            if (bill == null)
+                return NotFound(new { success = false, message = "Bill not found" });
 
-            if (signedFile != null && signedFile.Length > 0)
+            if (signedFile == null || signedFile.Length == 0)
             {
-                var folder = Path.Combine(_env.WebRootPath, "uploads", "signed_bills");
-                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                return BadRequest(new { success = false, message = "Please select a valid PDF file." });
+            }
 
-                var fileName = $"Signed_{bill.BillNumber}_{Guid.NewGuid()}{Path.GetExtension(signedFile.FileName)}";
-                var filePath = Path.Combine(folder, fileName);
+            try
+            {
+                var uploadUrl = _configuration["FileSettings:InHouseUploadUrl"];
+                var apiKey = _configuration["FileSettings:ApiKey"];
 
-                using (var fs = new FileStream(filePath, FileMode.Create))
+                if (string.IsNullOrEmpty(uploadUrl))
                 {
-                    await signedFile.CopyToAsync(fs);
+                    return StatusCode(500, new { success = false, message = "InHouseUploadUrl configuration is missing." });
                 }
 
-                bill.SignedPdfUrl = "/uploads/signed_bills/" + fileName;
+                using var httpClient = new HttpClient();
+                using var formData = new MultipartFormDataContent();
+
+                using var stream = signedFile.OpenReadStream();
+                using var streamContent = new StreamContent(stream);
+
+                formData.Add(streamContent, "file", signedFile.FileName);
+
+                if (!string.IsNullOrEmpty(apiKey))
+                {
+                    httpClient.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+                }
+
+                var response = await httpClient.PostAsync(uploadUrl, formData);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorResponse = await response.Content.ReadAsStringAsync();
+                    return StatusCode(500, new { success = false, message = "Failed to upload file to central server.", details = errorResponse });
+                }
+
+                var resultJson = await response.Content.ReadAsStringAsync();
+
+                using var doc = System.Text.Json.JsonDocument.Parse(resultJson);
+                var root = doc.RootElement;
+
+                string savedPath = string.Empty;
+                if (root.TryGetProperty("filePath", out var pathProp))
+                {
+                    savedPath = pathProp.GetString();
+                }
+                else if (root.TryGetProperty("url", out var urlProp))
+                {
+                    savedPath = urlProp.GetString();
+                }
+                else
+                {
+                    savedPath = "/uploads/signed_bills/" + signedFile.FileName;
+                }
+
+                bill.SignedPdfUrl = savedPath;
                 bill.Status = "Uploaded";
                 bill.ModifiedDate = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
                 return Ok(new { success = true, message = "Signed bill uploaded successfully!" });
             }
-
-            return BadRequest(new { success = false, message = "Please select a valid PDF file." });
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while uploading the file.", error = ex.Message });
+            }
         }
 
         private async Task<string> GeneratePdfAsync(
-         MonthlyBill bill,
-         Users aff,
-         OrganizationMaster org,
-         AffiliateBankDetail bank,
-         List<BillItemDto> items)
+           MonthlyBill bill,
+           Users aff,
+           OrganizationMaster org,
+           AffiliateBankDetail bank,
+           List<BillItemDto> items)
         {
             try
             {
-               
-
                 string itemRows = "";
 
                 if (items != null && items.Count > 0)
@@ -566,11 +609,6 @@ namespace HemFoundation.Controllers.Api
                     </td>
                 </tr>";
                 }
-
-
-                // =========================================================
-                // 2. SAFE VALUES
-                // =========================================================
 
                 string orgName = org?.OrgName ?? "Organization";
                 string orgAddress = org?.Address ?? "";
@@ -625,11 +663,6 @@ namespace HemFoundation.Controllers.Api
                 string billNumber =
                     bill?.BillNumber ?? "N/A";
 
-
-                // =========================================================
-                // 3. CONVERT LOCAL LOGO TO BASE64
-                // =========================================================
-
                 string base64Logo = "";
 
                 if (org != null && !string.IsNullOrWhiteSpace(org.LogoUrl))
@@ -638,15 +671,13 @@ namespace HemFoundation.Controllers.Api
                     {
                         string relativeLogoPath =
                             org.LogoUrl.TrimStart('/')
-                                      .Replace("/", Path.DirectorySeparatorChar.ToString());
+                                    .Replace("/", Path.DirectorySeparatorChar.ToString());
 
                         string physicalPath =
                             Path.Combine(
                                 _env.WebRootPath,
                                 relativeLogoPath
                             );
-
-                        Console.WriteLine("PDF Logo Path: " + physicalPath);
 
                         if (System.IO.File.Exists(physicalPath))
                         {
@@ -665,31 +696,13 @@ namespace HemFoundation.Controllers.Api
 
                             base64Logo =
                                 $"data:image/{ext};base64,{Convert.ToBase64String(imageArray)}";
-
-                            Console.WriteLine("PDF Logo loaded successfully.");
-                        }
-                        else
-                        {
-                            Console.WriteLine(
-                                "PDF Logo file not found: " + physicalPath
-                            );
                         }
                     }
-                    catch (Exception logoEx)
+                    catch
                     {
-                        Console.WriteLine(
-                            "PDF Logo Error: " + logoEx
-                        );
-
-                        // Logo fail hone par PDF generation continue hogi
                         base64Logo = "";
                     }
                 }
-
-
-                // =========================================================
-                // 4. LOGO HTML
-                // =========================================================
 
                 string logoHtml;
 
@@ -716,572 +729,126 @@ namespace HemFoundation.Controllers.Api
                 </h2>";
                 }
 
-
-                // =========================================================
-                // 5. HTML CONTENT
-                // =========================================================
-
                 string htmlContent = $@"
 <!DOCTYPE html>
-
 <html>
 <head>
-
     <meta charset='UTF-8' />
-
     <style>
-
-        * {{
-            box-sizing: border-box;
-        }}
-
+        * {{ box-sizing: border-box; }}
         body {{
-            font-family:
-                ""Helvetica Neue"",
-                Helvetica,
-                Arial,
-                sans-serif;
-
+            font-family: ""Helvetica Neue"", Helvetica, Arial, sans-serif;
             padding: 50px;
             background-color: #fff;
             color: #333;
             margin: 0;
         }}
-
-        table {{
-            border-collapse: collapse;
-        }}
-
+        table {{ border-collapse: collapse; }}
     </style>
-
 </head>
-
 <body>
-
-    <!-- ===================================================== -->
-    <!-- HEADER -->
-    <!-- ===================================================== -->
-
-    <table
-        width='100%'
-        style='
-            border-bottom: 3px solid #0b5ed7;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        '>
-
+    <table width='100%' style='border-bottom: 3px solid #0b5ed7; padding-bottom: 20px; margin-bottom: 30px;'>
         <tr>
-
-            <td width='60%' valign='top'>
-
-                {logoHtml}
-
-            </td>
-
-            <td
-                width='40%'
-                valign='top'
-                style='text-align: right;'>
-
-                <h1 style='
-                    color: #0b5ed7;
-                    margin: 0 0 5px 0;
-                    font-size: 32px;
-                    letter-spacing: 2px;
-                '>
-                    INVOICE
-                </h1>
-
-                <p style='
-                    margin: 0;
-                    font-size: 14px;
-                    color: #777;
-                '>
-
-                    <b>Bill No:</b>
-                    {System.Net.WebUtility.HtmlEncode(billNumber)}
-
-                    <br>
-
-                    <b>Date:</b>
-                    {bill.BillDate:dd-MMM-yyyy}
-
+            <td width='60%' valign='top'>{logoHtml}</td>
+            <td width='40%' valign='top' style='text-align: right;'>
+                <h1 style='color: #0b5ed7; margin: 0 0 5px 0; font-size: 32px; letter-spacing: 2px;'>INVOICE</h1>
+                <p style='margin: 0; font-size: 14px; color: #777;'>
+                    <b>Bill No:</b> {System.Net.WebUtility.HtmlEncode(billNumber)}<br>
+                    <b>Date:</b> {bill.BillDate:dd-MMM-yyyy}
                 </p>
-
             </td>
-
         </tr>
-
     </table>
 
-
-    <!-- ===================================================== -->
-    <!-- BILLED TO / FROM -->
-    <!-- ===================================================== -->
-
-    <table
-        width='100%'
-        style='margin-bottom: 40px;'>
-
+    <table width='100%' style='margin-bottom: 40px;'>
         <tr>
-
-            <!-- BILLED TO -->
-
-            <td
-                width='50%'
-                valign='top'
-                style='padding-right: 20px;'>
-
-                <h4 style='
-                    margin: 0 0 10px 0;
-                    color: #fff;
-                    background-color: #6c757d;
-                    padding: 6px 12px;
-                    display: inline-block;
-                    border-radius: 4px;
-                    font-size: 12px;
-                    text-transform: uppercase;
-                '>
-                    Billed To
-                </h4>
-
-                <p style='
-                    margin: 0;
-                    font-size: 15px;
-                    line-height: 1.6;
-                '>
-
-                    <strong style='
-                        font-size: 18px;
-                        color: #212529;
-                    '>
-                        {System.Net.WebUtility.HtmlEncode(orgName)}
-                    </strong>
-
-                    <br>
-
-                    {System.Net.WebUtility.HtmlEncode(orgAddress)
-                                .Replace("\r\n", "<br>")
-                                .Replace("\n", "<br>")}
-
+            <td width='50%' valign='top' style='padding-right: 20px;'>
+                <h4 style='margin: 0 0 10px 0; color: #fff; background-color: #6c757d; padding: 6px 12px; display: inline-block; border-radius: 4px; font-size: 12px; text-transform: uppercase;'>Billed To</h4>
+                <p style='margin: 0; font-size: 15px; line-height: 1.6;'>
+                    <strong style='font-size: 18px; color: #212529;'>{System.Net.WebUtility.HtmlEncode(orgName)}</strong><br>
+                    {System.Net.WebUtility.HtmlEncode(orgAddress).Replace("\r\n", "<br>").Replace("\n", "<br>")}
                 </p>
-
             </td>
-
-
-            <!-- FROM -->
-
-            <td
-                width='50%'
-                valign='top'
-                style='
-                    text-align: right;
-                    padding-left: 20px;
-                '>
-
-                <h4 style='
-                    margin: 0 0 10px 0;
-                    color: #fff;
-                    background-color: #198754;
-                    padding: 6px 12px;
-                    display: inline-block;
-                    border-radius: 4px;
-                    font-size: 12px;
-                    text-transform: uppercase;
-                '>
-                    From
-                </h4>
-
-                <p style='
-                    margin: 0;
-                    font-size: 15px;
-                    line-height: 1.6;
-                '>
-
-                    <strong style='
-                        font-size: 18px;
-                        color: #212529;
-                    '>
-                        {System.Net.WebUtility.HtmlEncode(affiliateName)}
-                    </strong>
-
-                    <br>
-
-                    {System.Net.WebUtility.HtmlEncode(affiliateAddress)}
-
-                    <br>
-
-                    <b>Phone:</b>
-                    {System.Net.WebUtility.HtmlEncode(mobile)}
-
-                    <br>
-
-                    <b>Email:</b>
-                    {System.Net.WebUtility.HtmlEncode(email)}
-
+            <td width='50%' valign='top' style='text-align: right; padding-left: 20px;'>
+                <h4 style='margin: 0 0 10px 0; color: #fff; background-color: #198754; padding: 6px 12px; display: inline-block; border-radius: 4px; font-size: 12px; text-transform: uppercase;'>From</h4>
+                <p style='margin: 0; font-size: 15px; line-height: 1.6;'>
+                    <strong style='font-size: 18px; color: #212529;'>{System.Net.WebUtility.HtmlEncode(affiliateName)}</strong><br>
+                    {System.Net.WebUtility.HtmlEncode(affiliateAddress)}<br>
+                    <b>Phone:</b> {System.Net.WebUtility.HtmlEncode(mobile)}<br>
+                    <b>Email:</b> {System.Net.WebUtility.HtmlEncode(email)}
                 </p>
-
             </td>
-
         </tr>
-
     </table>
 
-
-    <!-- ===================================================== -->
-    <!-- PARTICULARS -->
-    <!-- ===================================================== -->
-
-    <div style='
-        background-color: #f8f9fa;
-        padding: 10px 15px;
-        border-left: 4px solid #0b5ed7;
-        margin-bottom: 25px;
-    '>
-
-        <h5 style='
-            margin: 0;
-            font-size: 14px;
-            color: #555;
-        '>
-            PARTICULARS
-        </h5>
-
-        <p style='
-            margin: 5px 0 0 0;
-            font-size: 16px;
-            font-weight: bold;
-            color: #000;
-        '>
-            {System.Net.WebUtility.HtmlEncode(particulars)}
-        </p>
-
+    <div style='background-color: #f8f9fa; padding: 10px 15px; border-left: 4px solid #0b5ed7; margin-bottom: 25px;'>
+        <h5 style='margin: 0; font-size: 14px; color: #555;'>PARTICULARS</h5>
+        <p style='margin: 5px 0 0 0; font-size: 16px; font-weight: bold; color: #000;'>{System.Net.WebUtility.HtmlEncode(particulars)}</p>
     </div>
 
-
-    <!-- ===================================================== -->
-    <!-- ITEMS -->
-    <!-- ===================================================== -->
-
-    <table
-        width='100%'
-        style='
-            border-collapse: collapse;
-            margin-bottom: 30px;
-            font-size: 15px;
-        '>
-
+    <table width='100%' style='border-collapse: collapse; margin-bottom: 30px; font-size: 15px;'>
         <thead>
-
-            <tr style='
-                background-color: #0b5ed7;
-                color: #fff;
-            '>
-
-                <th style='
-                    padding: 12px 15px;
-                    text-align: center;
-                    width: 10%;
-                    border-radius: 6px 0 0 0;
-                '>
-                    S.No
-                </th>
-
-                <th style='
-                    padding: 12px 15px;
-                    text-align: left;
-                    width: 65%;
-                '>
-                    Description (Annexure)
-                </th>
-
-                <th style='
-                    padding: 12px 15px;
-                    text-align: right;
-                    width: 25%;
-                    border-radius: 0 6px 0 0;
-                '>
-                    Amount (Rs)
-                </th>
-
+            <tr style='background-color: #0b5ed7; color: #fff;'>
+                <th style='padding: 12px 15px; text-align: center; width: 10%; border-radius: 6px 0 0 0;'>S.No</th>
+                <th style='padding: 12px 15px; text-align: left; width: 65%;'>Description (Annexure)</th>
+                <th style='padding: 12px 15px; text-align: right; width: 25%; border-radius: 0 6px 0 0;'>Amount (Rs)</th>
             </tr>
-
         </thead>
-
-
         <tbody>
-
             {itemRows}
-
         </tbody>
-
-
         <tfoot>
-
             <tr>
-
-                <td
-                    colspan='2'
-                    style='
-                        padding: 15px;
-                        text-align: right;
-                        font-size: 16px;
-                        border-top: 2px solid #0b5ed7;
-                    '>
-
+                <td colspan='2' style='padding: 15px; text-align: right; font-size: 16px; border-top: 2px solid #0b5ed7;'>
                     <b>Total Amount:</b>
-
                 </td>
-
-                <td style='
-                    padding: 15px;
-                    text-align: right;
-                    font-size: 18px;
-                    color: #198754;
-                    border-top: 2px solid #0b5ed7;
-                '>
-
-                    <b>
-                        ₹{bill.TotalAmount:0.00}
-                    </b>
-
+                <td style='padding: 15px; text-align: right; font-size: 18px; color: #198754; border-top: 2px solid #0b5ed7;'>
+                    <b>₹{bill.TotalAmount:0.00}</b>
                 </td>
-
             </tr>
-
         </tfoot>
-
     </table>
 
-
-    <!-- ===================================================== -->
-    <!-- AMOUNT IN WORDS -->
-    <!-- ===================================================== -->
-
-    <p style='
-        font-size: 14px;
-        background-color: #e9ecef;
-        padding: 10px;
-        border-radius: 4px;
-    '>
-
-        <b>Amount in Words:</b>
-
-        Rupees
-        {System.Net.WebUtility.HtmlEncode(amountInWords)}
-        Only.
-
+    <p style='font-size: 14px; background-color: #e9ecef; padding: 10px; border-radius: 4px;'>
+        <b>Amount in Words:</b> Rupees {System.Net.WebUtility.HtmlEncode(amountInWords)} Only.
     </p>
 
-
-    <!-- ===================================================== -->
-    <!-- BANK DETAILS + SIGNATURE -->
-    <!-- ===================================================== -->
-
-    <table
-        width='100%'
-        style='margin-top: 50px;'>
-
+    <table width='100%' style='margin-top: 50px;'>
         <tr>
-
-            <!-- BANK -->
-
-            <td
-                width='60%'
-                valign='bottom'>
-
-                <div style='
-                    border: 1px solid #dee2e6;
-                    border-radius: 6px;
-                    padding: 15px;
-                    background-color: #fcfcfc;
-                '>
-
-                    <h4 style='
-                        margin: 0 0 10px 0;
-                        color: #495057;
-                        font-size: 14px;
-                        text-transform: uppercase;
-                    '>
-                        Bank Details for Payment
-                    </h4>
-
-
-                    <table
-                        style='
-                            font-size: 13px;
-                            color: #555;
-                        '
-                        cellpadding='3'>
-
-                        <tr>
-
-                            <td>
-                                <b>Account Name:</b>
-                            </td>
-
-                            <td>
-                                {System.Net.WebUtility.HtmlEncode(accountName)}
-                            </td>
-
-                        </tr>
-
-
-                        <tr>
-
-                            <td>
-                                <b>Account No:</b>
-                            </td>
-
-                            <td>
-                                {System.Net.WebUtility.HtmlEncode(accountNumber)}
-                            </td>
-
-                        </tr>
-
-
-                        <tr>
-
-                            <td>
-                                <b>Bank Name:</b>
-                            </td>
-
-                            <td>
-                                {System.Net.WebUtility.HtmlEncode(bankName)}
-                            </td>
-
-                        </tr>
-
-
-                        <tr>
-
-                            <td>
-                                <b>IFSC Code:</b>
-                            </td>
-
-                            <td>
-                                {System.Net.WebUtility.HtmlEncode(ifsc)}
-                            </td>
-
-                        </tr>
-
-
-                        <tr>
-
-                            <td>
-                                <b>PAN No:</b>
-                            </td>
-
-                            <td>
-                                {System.Net.WebUtility.HtmlEncode(pan)}
-                            </td>
-
-                        </tr>
-
+            <td width='60%' valign='bottom'>
+                <div style='border: 1px solid #dee2e6; border-radius: 6px; padding: 15px; background-color: #fcfcfc;'>
+                    <h4 style='margin: 0 0 10px 0; color: #495057; font-size: 14px; text-transform: uppercase;'>Bank Details for Payment</h4>
+                    <table style='font-size: 13px; color: #555;' cellpadding='3'>
+                        <tr><td><b>Account Name:</b></td><td>{System.Net.WebUtility.HtmlEncode(accountName)}</td></tr>
+                        <tr><td><b>Account No:</b></td><td>{System.Net.WebUtility.HtmlEncode(accountNumber)}</td></tr>
+                        <tr><td><b>Bank Name:</b></td><td>{System.Net.WebUtility.HtmlEncode(bankName)}</td></tr>
+                        <tr><td><b>IFSC Code:</b></td><td>{System.Net.WebUtility.HtmlEncode(ifsc)}</td></tr>
+                        <tr><td><b>PAN No:</b></td><td>{System.Net.WebUtility.HtmlEncode(pan)}</td></tr>
                     </table>
-
                 </div>
-
             </td>
-
-
-            <!-- SIGNATURE -->
-
-            <td
-                width='40%'
-                valign='bottom'
-                style='
-                    text-align: center;
-                    padding-left: 30px;
-                '>
-
-                <div style='
-                    border-bottom: 1px solid #000;
-                    width: 100%;
-                    height: 40px;
-                    margin-bottom: 5px;
-                '>
-                </div>
-
-                <b style='
-                    font-size: 14px;
-                    color: #333;
-                '>
-                    Signature of Affiliate
-                </b>
-
+            <td width='40%' valign='bottom' style='text-align: center; padding-left: 30px;'>
+                <div style='border-bottom: 1px solid #000; width: 100%; height: 40px; margin-bottom: 5px;'></div>
+                <b style='font-size: 14px; color: #333;'>Signature of Affiliate</b>
             </td>
-
         </tr>
-
     </table>
-
-
 </body>
 </html>";
 
-
-                // =========================================================
-                // 6. LOGGING
-                // =========================================================
-
-                Console.WriteLine("==============================================");
-                Console.WriteLine("PDF GENERATION STARTED");
-                Console.WriteLine("Bill Number: " + billNumber);
-                Console.WriteLine("WebRootPath: " + _env.WebRootPath);
-                Console.WriteLine("ContentRootPath: " + _env.ContentRootPath);
-                Console.WriteLine("==============================================");
-
-
-                // =========================================================
-                // 7. ENSURE PDF UPLOAD DIRECTORY EXISTS
-                // =========================================================
-
-                string uploadDir = Path.Combine(
-                    _env.WebRootPath,
-                    "uploads",
-                    "bills"
-                );
-
-                if (!Directory.Exists(uploadDir))
+                string tempDir = Path.Combine(_env.WebRootPath, "uploads", "temp");
+                if (!Directory.Exists(tempDir))
                 {
-                    Directory.CreateDirectory(uploadDir);
+                    Directory.CreateDirectory(tempDir);
                 }
 
-                Console.WriteLine(
-                    "PDF Upload Directory: " + uploadDir
-                );
+                string fileName = $"Bill_{billNumber}_{DateTime.Now.Ticks}.pdf";
+                string tempFilePath = Path.Combine(tempDir, fileName);
 
-
-                // =========================================================
-                // 8. CHECK WRITE ACCESS
-                // =========================================================
-
-                if (!Directory.Exists(uploadDir))
-                {
-                    throw new Exception(
-                        "PDF upload directory could not be created: "
-                        + uploadDir
-                    );
-                }
-
-
-                Console.WriteLine("Preparing Chromium...");
-
-                string chromiumPath = Path.Combine(
-                    _env.ContentRootPath,
-                    "Chromium"
-                );
-
-                Console.WriteLine(
-                    "Chromium Directory: " + chromiumPath
-                );
-
+                string chromiumPath = Path.Combine(_env.ContentRootPath, "Chromium");
                 if (!Directory.Exists(chromiumPath))
                 {
-                    throw new Exception(
-                        "Chromium directory not found: " + chromiumPath
-                    );
+                    throw new Exception("Chromium directory not found: " + chromiumPath);
                 }
 
                 var browserFetcher =
@@ -1297,134 +864,48 @@ namespace HemFoundation.Controllers.Api
                 string executablePath =
                     installedBrowser.GetExecutablePath();
 
-                Console.WriteLine(
-                    "Chromium Executable Path: "
-                    + executablePath
-                );
-
-
-                // =========================================================
-                // 10. VERIFY CHROMIUM FILE
-                // =========================================================
-
-                if (string.IsNullOrWhiteSpace(executablePath))
+                if (string.IsNullOrWhiteSpace(executablePath) || !System.IO.File.Exists(executablePath))
                 {
-                    throw new Exception(
-                        "Chromium executable path is empty."
-                    );
+                    throw new Exception("Chromium executable path is invalid.");
                 }
-
-                if (!System.IO.File.Exists(executablePath))
-                {
-                    throw new Exception(
-                        "Chromium executable was not found at: "
-                        + executablePath
-                    );
-                }
-
-                Console.WriteLine(
-                    "Chromium executable exists."
-                );
-
-
-                // =========================================================
-                // 11. LAUNCH CHROMIUM
-                // =========================================================
-
-                Console.WriteLine("Launching Chromium...");
 
                 using var browser =
                     await Puppeteer.LaunchAsync(
                         new LaunchOptions
                         {
                             Headless = true,
-
                             ExecutablePath = executablePath,
-
                             Args = new[]
                             {
-                        "--no-sandbox",
-                        "--disable-setuid-sandbox",
-                        "--disable-dev-shm-usage",
-                        "--disable-gpu",
-                        "--disable-software-rasterizer",
-                        "--no-first-run",
-                        "--no-zygote"
+                                "--no-sandbox",
+                                "--disable-setuid-sandbox",
+                                "--disable-dev-shm-usage",
+                                "--disable-gpu",
+                                "--disable-software-rasterizer",
+                                "--no-first-run",
+                                "--no-zygote"
                             },
-
                             Timeout = 120000
                         }
                     );
 
-
-                Console.WriteLine(
-                    "Chromium launched successfully."
-                );
-
-
-                // =========================================================
-                // 12. CREATE PAGE
-                // =========================================================
-
-                using var page =
-                    await browser.NewPageAsync();
-
-                Console.WriteLine(
-                    "Browser page created."
-                );
-
-
-                // =========================================================
-                // 13. LOAD HTML
-                // =========================================================
+                using var page = await browser.NewPageAsync();
 
                 await page.SetContentAsync(
                     htmlContent,
                     new NavigationOptions
                     {
-                        WaitUntil = new[]
-                        {
-                    WaitUntilNavigation.Load
-                        },
+                        WaitUntil = new[] { WaitUntilNavigation.Load },
                         Timeout = 120000
                     }
                 );
 
-                Console.WriteLine(
-                    "PDF HTML content loaded."
-                );
-
-
-                // =========================================================
-                // 14. PDF FILE NAME
-                // =========================================================
-
-                string fileName =
-                    $"Bill_{billNumber}_{DateTime.Now.Ticks}.pdf";
-
-                string filePath =
-                    Path.Combine(
-                        uploadDir,
-                        fileName
-                    );
-
-                Console.WriteLine(
-                    "PDF File Path: " + filePath
-                );
-
-
-                // =========================================================
-                // 15. GENERATE PDF
-                // =========================================================
-
                 await page.PdfAsync(
-                    filePath,
+                    tempFilePath,
                     new PdfOptions
                     {
                         Format = PaperFormat.A4,
-
                         PrintBackground = true,
-
                         MarginOptions = new MarginOptions
                         {
                             Top = "10px",
@@ -1435,81 +916,76 @@ namespace HemFoundation.Controllers.Api
                     }
                 );
 
-
-                Console.WriteLine(
-                    "PDF generated successfully."
-                );
-
-
-                // =========================================================
-                // 16. VERIFY PDF FILE
-                // =========================================================
-
-                if (!System.IO.File.Exists(filePath))
+                if (!System.IO.File.Exists(tempFilePath))
                 {
-                    throw new Exception(
-                        "PDF generation completed but file was not found: "
-                        + filePath
-                    );
+                    throw new Exception("PDF generation completed but file was not found.");
                 }
 
-
-                var fileInfo =
-                    new System.IO.FileInfo(filePath);
-
-                Console.WriteLine(
-                    $"PDF File Size: {fileInfo.Length} bytes"
-                );
-
-
+                var fileInfo = new System.IO.FileInfo(tempFilePath);
                 if (fileInfo.Length == 0)
                 {
-                    throw new Exception(
-                        "Generated PDF file is empty."
-                    );
+                    throw new Exception("Generated PDF file is empty.");
                 }
 
-
                 // =========================================================
-                // 17. RETURN URL
+                // UPLOAD TO CENTRAL SERVER (InHouseUploadUrl)
                 // =========================================================
+                var uploadUrl = _configuration["FileSettings:InHouseUploadUrl"];
+                var apiKey = _configuration["FileSettings:ApiKey"];
 
-                string pdfUrl =
-                    $"/uploads/bills/{fileName}";
+                if (string.IsNullOrEmpty(uploadUrl))
+                {
+                    throw new Exception("InHouseUploadUrl configuration is missing.");
+                }
 
-                Console.WriteLine(
-                    "PDF URL: " + pdfUrl
-                );
+                using var httpClient = new HttpClient();
+                using var formData = new MultipartFormDataContent();
 
-                Console.WriteLine(
-                    "PDF GENERATION COMPLETED SUCCESSFULLY"
-                );
+                byte[] pdfBytes = await System.IO.File.ReadAllBytesAsync(tempFilePath);
+                using var byteContent = new ByteArrayContent(pdfBytes);
+                byteContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+                formData.Add(byteContent, "file", fileName);
 
-                Console.WriteLine(
-                    "=============================================="
-                );
+                if (!string.IsNullOrEmpty(apiKey))
+                {
+                    httpClient.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+                }
 
+                var response = await httpClient.PostAsync(uploadUrl, formData);
 
-                return pdfUrl;
+                // Local temp file delete karein
+                if (System.IO.File.Exists(tempFilePath))
+                {
+                    System.IO.File.Delete(tempFilePath);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Failed to upload generated PDF to central server.");
+                }
+
+                var resultJson = await response.Content.ReadAsStringAsync();
+                using var doc = System.Text.Json.JsonDocument.Parse(resultJson);
+                var root = doc.RootElement;
+
+                string remotePdfUrl = string.Empty;
+                if (root.TryGetProperty("filePath", out var pathProp))
+                {
+                    remotePdfUrl = pathProp.GetString();
+                }
+                else if (root.TryGetProperty("url", out var urlProp))
+                {
+                    remotePdfUrl = urlProp.GetString();
+                }
+                else
+                {
+                    remotePdfUrl = "/uploads/bills/" + fileName;
+                }
+
+                return remotePdfUrl;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine(
-                    "=============================================="
-                );
-
-                Console.WriteLine(
-                    "PDF GENERATION FAILED"
-                );
-
-                Console.WriteLine(
-                    ex.ToString()
-                );
-
-                Console.WriteLine(
-                    "=============================================="
-                );
-
                 throw;
             }
         }

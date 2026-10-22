@@ -122,7 +122,6 @@ namespace HemFoundation.Controllers
             });
         }
 
-        // 4. Update Progress / Complete Visit
         [HttpPost("update-progress")]
         public async Task<IActionResult> UpdateProgress(
             [FromForm] int id,
@@ -138,7 +137,11 @@ namespace HemFoundation.Controllers
 
             if (plan.Status != null && (plan.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase) || plan.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase)))
             {
-                return BadRequest(new { success = false, message = "Ye visit pehle hi complete ya cancel ho chuki hai, ab dubara update nahi ho sakti." });
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "This visit is already completed or cancelled and cannot be updated again."
+                });
             }
 
             if (status == "Completed" && (visitImage == null || visitImage.Length == 0) && string.IsNullOrEmpty(plan.ImagePath))

@@ -391,9 +391,34 @@
         const container = document.getElementById('affiliate-dynamic-container');
         const backBtn = document.getElementById('btnBackToAffDashboard');
 
+        // cards.forEach(card => {
+        //     card.addEventListener('click', function() {
+        //         let moduleName = this.getAttribute('data-module');
+        //         $(grid).fadeOut(200, function() {
+        //             backBtn.classList.remove('d-none');
+        //             $.get('/Affiliate/LoadModule/' + moduleName, function(htmlResponse) {
+        //                 $(container).html(htmlResponse).hide().fadeIn(300);
+        //             }).fail(function() {
+        //                 $(container).html(`<div class="card shadow-sm rounded-4 bg-white p-4 text-center text-muted border" style="border: 1px solid #d9dfe5 !important;"><h4>${moduleName.toUpperCase()} Module</h4><p>Module content under construction.</p></div>`).hide().fadeIn(300);
+        //             });
+        //         });
+        //     });
+        // });
         cards.forEach(card => {
             card.addEventListener('click', function() {
                 let moduleName = this.getAttribute('data-module');
+
+                if (moduleName === 'rewards' || moduleName === 'reports') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Coming Soon!',
+                        text: 'This module is under processing and will be available soon.',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#0b5ed7'
+                    });
+                    return;
+                }
+
                 $(grid).fadeOut(200, function() {
                     backBtn.classList.remove('d-none');
                     $.get('/Affiliate/LoadModule/' + moduleName, function(htmlResponse) {

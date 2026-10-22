@@ -102,23 +102,23 @@
                         <div class="col-md-12 mt-4"><h6 class="fw-bold text-primary m-0 border-top pt-3">2. Bank Details (Auto-Saved)</h6></div>
                         
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">Name on Account</label>
+                            <label class="form-label small fw-bold">Name on Account <span class="text-danger">*</span></label>
                             <input type="text" id="bName" class="form-control shadow-none" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">Account Number</label>
-                            <input type="text" id="bAccNo" class="form-control shadow-none" required>
+                            <label class="form-label small fw-bold">Account Number <span class="text-danger">*</span></label>
+                            <input type="text" id="bAccNo" class="form-control shadow-none" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">Bank Name</label>
+                            <label class="form-label small fw-bold">Bank Name <span class="text-danger">*</span></label>
                             <input type="text" id="bBank" class="form-control shadow-none" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">IFSC Code</label>
+                            <label class="form-label small fw-bold">IFSC Code <span class="text-danger">*</span></label>
                             <input type="text" id="bIfsc" class="form-control shadow-none" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">PAN Number</label>
+                            <label class="form-label small fw-bold">PAN Number <span class="text-danger">*</span></label>
                             <input type="text" id="bPan" class="form-control shadow-none" required>
                         </div>
 
@@ -221,12 +221,13 @@
 
 @section Scripts {
     <script>
-
+        $(document).on('keypress', '#bAccNo', function(e) {
+            if (e.which < 48 || e.which > 57) {
+                e.preventDefault();
+            }
+        });
 
         const FILE_BASE_URL = '@Html.Raw(fileBaseUrl)';
-
-
-
 
         function getFileUrl(filePath) {
 
@@ -438,10 +439,22 @@
         // ================= 5. FORM SUBMIT (SAVE & PDF) =================
         $('#frmBill').on('submit', function (e) {
             e.preventDefault();
+            let bName = $('#bName').val().trim();
+            let bAccNo = $('#bAccNo').val().trim();
+            let bBank = $('#bBank').val().trim();
+            let bIfsc = $('#bIfsc').val().trim();
+            let bPan = $('#bPan').val().trim();
+            let particulars = $('#txtParticulars').val().trim();
+
+            if (!bName || !bAccNo || !bBank || !bIfsc || !bPan || !particulars) {
+                alert("Please fill all required fields properly. Blank spaces are not allowed.");
+                return;
+            }
+            // ---------------------------------------------
             let items = [];
-            $('#tblItems tr').each(function () {
+            $('#tblItems tr').each(function() {
                 items.push({
-                    Description: $(this).find('.item-desc').val(),
+                    Description: $(this).find('.item-desc').val().trim(),
                     Amount: parseFloat($(this).find('.item-amt').val()) || 0
                 });
             });
@@ -455,14 +468,14 @@
                 BillId: parseInt($('#hdnEditBillId').val()) || 0,
                 OrganizationId: parseInt($('#ddlOrg').val()),
                 BillDate: $('#txtBillDate').val(),
-                Particulars: $('#txtParticulars').val(),
+                Particulars: particulars, 
                 TotalAmount: parseFloat($('#txtTotal').val()),
                 AmountInWords: $('#lblWords').text(),
-                AccountName: $('#bName').val(),
-                AccountNumber: $('#bAccNo').val(),
-                BankName: $('#bBank').val(),
-                IFSC: $('#bIfsc').val(),
-                PAN: $('#bPan').val(),
+                AccountName: bName,      
+                AccountNumber: bAccNo,    
+                BankName: bBank,          
+                IFSC: bIfsc,             
+                PAN: bPan,                
                 Items: items
             };
 

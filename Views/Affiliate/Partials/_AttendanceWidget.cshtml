@@ -1909,6 +1909,13 @@
 
             initializeLeaveDatePickers();
 
+                // === YAHAN YE NEW CODE ADD KARDENA HAI ===
+                document
+                    .getElementById("attendanceHistoryModal")
+                    .addEventListener("hidden.bs.modal", function() {
+                        resetFilters();
+                    });
+                // ==========================================
 
             /* Punch */
 

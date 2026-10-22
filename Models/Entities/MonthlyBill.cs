@@ -13,7 +13,7 @@ namespace HemFoundation.Models.Entities
         public DateTime BillDate { get; set; }
 
         [StringLength(255)]
-        public string Particulars { get; set; } = string.Empty; // Main heading
+        public string Particulars { get; set; } = string.Empty; 
 
         public decimal TotalAmount { get; set; }
 
@@ -22,15 +22,14 @@ namespace HemFoundation.Models.Entities
 
         // URLs
         [StringLength(500)]
-        public string? GeneratedPdfUrl { get; set; } // System generated PDF
+        public string? GeneratedPdfUrl { get; set; }
         [StringLength(500)]
-        public string? SignedPdfUrl { get; set; } // Uploaded by Affiliate
+        public string? SignedPdfUrl { get; set; } 
 
-        // Status: Draft, Generated, Uploaded, In Process, Approved, Paid, Rejected
         [StringLength(50)]
         public string Status { get; set; } = "Draft";
 
         [StringLength(1000)]
-        public string? AdminRemarks { get; set; } // Corrections or rejections
+        public string? AdminRemarks { get; set; }
     }
 }

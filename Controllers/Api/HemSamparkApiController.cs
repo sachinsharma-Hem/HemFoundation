@@ -1,4 +1,5 @@
 ﻿using HemFoundation.Data;
+using HemFoundation.Models;
 using HemFoundation.Models.HemSampark;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -709,13 +710,15 @@ namespace HemFoundation.Controllers
             try
             {
                 var today = DateTime.Now.Date;
+
                 var entry = await _context.dailysamparkentries
                     .Where(x => x.EntryDate.Date == today)
-                    .FirstOrDefaultAsync()
-                    ?? await _context.dailysamparkentries.OrderByDescending(x => x.Id).FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync();
 
                 if (entry == null)
-                    return NotFound(new { success = false, message = "No entry found" });
+                {
+                    return NotFound(new { success = false, message = "No entry found for today." });
+                }
 
                 var questions = await _context.Set<DailyQuestion>()
                     .Where(q => q.DailyEntryId == entry.Id)
@@ -757,9 +760,10 @@ namespace HemFoundation.Controllers
         [HttpPost("submit-quiz")]
         public async Task<IActionResult> SubmitQuiz([FromBody] QuizSubmissionDto model)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "StudentUser";
+            var userIdInt = HttpContext.Session.GetInt32("UserID") ?? 0;
+            string userId = userIdInt > 0 ? userIdInt.ToString() : (User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "StudentUser");
 
-            var submission = new StudentQuizSubmission
+            var submission = new hemsampark_quiz_submission
             {
                 UserId = userId,
                 DailyEntryId = model.DailyEntryId,
@@ -768,7 +772,7 @@ namespace HemFoundation.Controllers
                 SubmittedAt = DateTime.Now
             };
 
-            _context.Set<StudentQuizSubmission>().Add(submission);
+            _context.Set<hemsampark_quiz_submission>().Add(submission);
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Quiz submitted successfully!" });
@@ -780,17 +784,6 @@ namespace HemFoundation.Controllers
             public int Score { get; set; }
             public int TotalQuestions { get; set; }
         }
-
-        public class StudentQuizSubmission
-        {
-            public int Id { get; set; }
-            public string UserId { get; set; }
-            public int DailyEntryId { get; set; }
-            public int Score { get; set; }
-            public int TotalQuestions { get; set; }
-            public DateTime SubmittedAt { get; set; }
-        }
-
 
     }
 }

@@ -123,7 +123,14 @@
         async function loadTodayData() {
             try {
                 let res = await fetch('/api/hem-sampark/today-entry');
-                if (!res.ok) return;
+
+                if (!res.ok) {
+                    document.getElementById("entryDateText").textContent = new Date().toISOString().split('T')[0];
+                    document.getElementById("celebrationHeading").textContent = "No Entry Found For Today";
+                    document.getElementById("celebrationContent").textContent = "Please check back later or contact admin to add today's Sampark entry.";
+                    document.getElementById("startChallengeBtn").style.display = "none";
+                    return;
+                }
 
                 let result = await res.json();
                 if (result.success && result.data) {
@@ -133,11 +140,10 @@
                     document.getElementById("celebrationContent").textContent = currentEntryData.celebrationContentEn || '';
 
                     if (currentEntryData.pdfUrl) {
-    document.getElementById("pdfIframe").src = currentEntryData.pdfUrl + "#navpanes=0";
-    
-    var pdfModal = new bootstrap.Modal(document.getElementById('pdfViewerModal'));
-    pdfModal.show();
-}
+                        document.getElementById("pdfIframe").src = currentEntryData.pdfUrl;
+                        var pdfModal = new bootstrap.Modal(document.getElementById('pdfViewerModal'));
+                        pdfModal.show();
+                    }
                 }
             } catch (e) {
                 console.error("Error loading entry:", e);
