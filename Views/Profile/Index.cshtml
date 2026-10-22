@@ -63,11 +63,11 @@
                     <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-person-lines-fill text-success me-2"></i> Profile Information</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">First Name</label>
+                            <label class="form-label small fw-semibold">First Name<span class="text-danger">*</span></label>
                             <input type="text" id="txtFirstName" class="form-control rounded-3 shadow-none" />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Last Name</label>
+                            <label class="form-label small fw-semibold">Last Name<span class="text-danger">*</span></label>
                             <input type="text" id="txtLastName" class="form-control rounded-3 shadow-none" />
                         </div>
                         <div class="col-md-6">
@@ -75,7 +75,7 @@
                             <input type="text" id="txtMobileNo" class="form-control rounded-3 shadow-none" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="Enter 10-digit mobile number" required />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Gender</label>
+                            <label class="form-label small fw-semibold">Gender<span class="text-danger">*</span></label>
                             <select id="ddlGender" class="form-select rounded-3 shadow-none">
                                 <option value="">Select Gender</option>
                                 <option value="Male">Male</option>
@@ -84,15 +84,15 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Email ID</label>
+                            <label class="form-label small fw-semibold">Email ID<span class="text-danger">*</span></label>
                             <input type="email" id="txtEmail" class="form-control rounded-3 shadow-none" />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Pincode (Auto-fills City & State)</label>
+                            <label class="form-label small fw-semibold">Pincode (Auto-fills City & State)<span class="text-danger">*</span></label>
                             <input type="text" id="txtPincode" maxlength="6" class="form-control rounded-3 shadow-none" />
                         </div>
                         <div class="col-12">
-                            <label class="form-label small fw-semibold">Address</label>
+                            <label class="form-label small fw-semibold">Address<span class="text-danger">*</span></label>
                             <input type="text" id="txtAddress" class="form-control rounded-3 shadow-none" />
                         </div>
 

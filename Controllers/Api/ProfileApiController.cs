@@ -150,7 +150,7 @@ namespace HemFoundation.Controllers.Api
                 standard = standard,
                 division = division,
                 guardianName = guardianName,
-                guardianEmail = customUser.EmailID??"NA",
+                guardianEmail = customUser?.EmailID ?? "",
                 guardianMobile = guardianMobile,
                 studentInstituteName = studentInstituteName,
                 studentInstituteId = studentInstituteId
@@ -164,7 +164,7 @@ namespace HemFoundation.Controllers.Api
                 {
                     user.Id,
                     fullName = (customUser != null ? $"{customUser.FirstName} {customUser.LastName}".Trim() : user.UserName),
-                    Email = customUser?.EmailID ?? "NA",
+                    Email = customUser?.EmailID ?? "",
                     phoneNumber = customUser?.MobileNo ?? user.PhoneNumber
                 },
                 profile = profileData
