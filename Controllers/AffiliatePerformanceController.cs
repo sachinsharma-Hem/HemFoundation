@@ -28,6 +28,11 @@ namespace HemFoundation.Controllers
                 ""Afiiliate_ID""::bigint AS ""AffiliateId"",
                 COALESCE(""Name"", '')::text AS ""Name"",
                 COALESCE(""Referral COde"", '')::text AS ""ReferralCode"",
+                COALESCE(""Mobile No"", '')::text AS ""MobileNo"",
+                COALESCE(""User Name"", '')::text AS ""UserName"",
+                COALESCE(""Password"", '')::text AS ""Password"",
+                COALESCE(""Email Id"", '')::text AS ""EmailId"",
+                COALESCE(""City Name"", '')::text AS ""CityName"",
                 COALESCE(""School Count"", 0)::bigint AS ""TotalSchools"",
                 COALESCE(""Total Students"", 0)::bigint AS ""TotalStudents"",
                 COALESCE(""Active Students"", 0)::bigint AS ""ActiveStudents"",
@@ -110,6 +115,11 @@ namespace HemFoundation.Controllers
                     x.AffiliateId,
                     x.Name,
                     x.ReferralCode,
+                    x.MobileNo,
+                    x.UserName,
+                    x.Password,
+                    x.EmailId,
+                    x.CityName,
                     x.TotalSchools,
                     x.TotalStudents,
                     x.ActiveStudents,
@@ -138,28 +148,27 @@ namespace HemFoundation.Controllers
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4.Landscape());
-                    page.Margin(20);
-                    page.DefaultTextStyle(x => x.FontSize(8));
+                    page.Margin(15);
+                    page.DefaultTextStyle(x => x.FontSize(7));
 
                     page.Header()
                         .Text("Affiliate Performance Report")
-                        .FontSize(18)
+                        .FontSize(16)
                         .Bold();
 
                     page.Content().Table(table =>
                     {
                         table.ColumnsDefinition(columns =>
                         {
-                            for (int i = 0; i < 12; i++)
+                            for (int i = 0; i < 17; i++)
                                 columns.RelativeColumn();
                         });
 
                         string[] headers =
                         {
-                            "ID", "Affiliate", "Referral Code", "Schools",
-                            "Students", "Active Students", "Teachers",
-                            "Active Teachers", "Projects", "Family",
-                            "Individual", "Group PBL"
+                            "ID", "Affiliate", "Referral", "Mobile", "User", "Pass", "Email", "City",
+                            "Schools", "Students", "Active S.", "Teachers", "Active T.",
+                            "Projects", "Family", "Indiv.", "PBL"
                         };
 
                         table.Header(header =>
@@ -168,7 +177,7 @@ namespace HemFoundation.Controllers
                             {
                                 header.Cell()
                                     .Background(Colors.Grey.Lighten2)
-                                    .Padding(3)
+                                    .Padding(2)
                                     .Text(heading).Bold();
                             }
                         });
@@ -177,7 +186,8 @@ namespace HemFoundation.Controllers
                         {
                             object[] values =
                             {
-                                row.AffiliateId, row.Name, row.ReferralCode,
+                                row.AffiliateId, row.Name, row.ReferralCode, row.MobileNo,
+                                row.UserName, row.Password, row.EmailId, row.CityName,
                                 row.TotalSchools, row.TotalStudents, row.ActiveStudents,
                                 row.TotalTeachers, row.ActiveTeachers,
                                 row.TotalSelectedProjects, row.FamilyProjects,
@@ -186,7 +196,7 @@ namespace HemFoundation.Controllers
 
                             foreach (var value in values)
                             {
-                                table.Cell().Padding(3)
+                                table.Cell().Padding(2)
                                     .Text(Convert.ToString(value, CultureInfo.InvariantCulture) ?? "");
                             }
                         }
@@ -208,7 +218,8 @@ namespace HemFoundation.Controllers
             var builder = new StringBuilder();
             var headers = new[]
             {
-                "Affiliate ID", "Name", "Referral Code", "Total Schools",
+                "Affiliate ID", "Name", "Referral Code", "Mobile No", "User Name",
+                "Password", "Email Id", "City Name", "Total Schools",
                 "Total Students", "Active Students", "Total Teachers",
                 "Active Teachers", "Total Selected Projects", "Family Projects",
                 "Individual Projects", "Group PBL"
@@ -223,6 +234,11 @@ namespace HemFoundation.Controllers
                     row.AffiliateId.ToString(CultureInfo.InvariantCulture),
                     row.Name,
                     row.ReferralCode,
+                    row.MobileNo,
+                    row.UserName,
+                    row.Password,
+                    row.EmailId,
+                    row.CityName,
                     row.TotalSchools.ToString(CultureInfo.InvariantCulture),
                     row.TotalStudents.ToString(CultureInfo.InvariantCulture),
                     row.ActiveStudents.ToString(CultureInfo.InvariantCulture),
@@ -254,6 +270,11 @@ namespace HemFoundation.Controllers
         public long AffiliateId { get; set; }
         public string Name { get; set; } = "";
         public string ReferralCode { get; set; } = "";
+        public string MobileNo { get; set; } = "";
+        public string UserName { get; set; } = "";
+        public string Password { get; set; } = "";
+        public string EmailId { get; set; } = "";
+        public string CityName { get; set; } = "";
         public long TotalSchools { get; set; }
         public long TotalStudents { get; set; }
         public long ActiveStudents { get; set; }
