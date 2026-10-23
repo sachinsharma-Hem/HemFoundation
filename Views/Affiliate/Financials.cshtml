@@ -627,7 +627,7 @@ let pdfs = `
 }
 
                             html += `<tr>
-                                <td><b>#${b.billNumber}</b><br><small class="text-muted">${formatDate(b.billDate)}</small></td>
+                                <td><b>${b.billNumber}</b><br><small class="text-muted">${formatDate(b.billDate)}</small></td>
                                 <td><b>${b.orgName}</b></td>
                                 <td><b>₹${b.totalAmount.toFixed(2)}</b><br><small class="text-muted">${b.particulars}</small></td>
                                 <td><span class="badge bg-${badge}-subtle text-${badge} px-3 py-2 rounded-pill">${b.status}</span></td>

@@ -3,15 +3,46 @@
     Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
 }
 
+@section Styles {
+    <style>
+        /* Fix z-index for Select2 inside Bootstrap modal */
+        .select2-container {
+            z-index: 1056 !important;
+            width: 100% !important;
+        }
+    </style>
+}
+
 <div class="container-fluid py-4">
-    <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
         <div>
             <h3 class="fw-bold text-dark m-0"><i class="bi bi-calendar-check text-primary me-2"></i> Visit Plan & Other Activities</h3>
             <p class="text-muted small m-0">Schedule visits to your assigned schools or log other field activities.</p>
         </div>
-        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openPlanModal()">
-            <i class="bi bi-plus-lg me-1"></i> Schedule New Visit / Activity
-        </button>
+
+        <!-- Filter & Action Bar -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <input type="date" id="filterFromDate" class="form-control form-control-sm shadow-none" style="width: 140px;" title="From Date">
+            <input type="date" id="filterToDate" class="form-control form-control-sm shadow-none" style="width: 140px;" title="To Date">
+            <select id="filterStatus" class="form-select form-select-sm shadow-none" style="width: 130px;">
+                <option value="">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+            <button class="btn btn-success btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="loadPlans()">
+                <i class="bi bi-search me-1"></i> Filter
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="resetFilters()">
+                <i class="bi bi-arrow-counterclockwise"></i>
+            </button>
+            <button class="btn btn-warning btn-sm rounded-pill px-3 fw-semibold shadow-sm text-dark" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel-fill me-1"></i> Export Excel
+            </button>
+            <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="openPlanModal()">
+                <i class="bi bi-plus-lg me-1"></i> Schedule New Visit
+            </button>
+        </div>
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
@@ -37,7 +68,7 @@
 </div>
 
 <!-- ================= MODAL: SCHEDULE VISIT / ACTIVITY ================= -->
-<div class="modal fade" id="planModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="planModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 border-0 shadow-lg p-4 bg-white">
             <div class="modal-header border-bottom pb-3">
@@ -59,7 +90,7 @@
                     <div class="row g-3">
                         <div class="col-12" id="divSchoolDropdown">
                             <label class="form-label small fw-bold">Select Assigned School <span class="text-danger">*</span></label>
-                            <select id="ddlSchool" class="form-select rounded-3 shadow-none">
+                            <select id="ddlSchool" class="form-select rounded-3 shadow-none" style="width: 100%;">
                                 <option value="">-- Choose School --</option>
                             </select>
                         </div>
@@ -78,11 +109,11 @@
                                 <input type="text" id="txtAddress" class="form-control rounded-3 shadow-none">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold">City</label>
+                                <label class="form-label small fw-bold">City <span class="text-danger">*</span></label>
                                 <input type="text" id="txtCity" class="form-control rounded-3 shadow-none bg-light" readonly>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold">State</label>
+                                <label class="form-label small fw-bold">State <span class="text-danger">*</span></label>
                                 <input type="text" id="txtState" class="form-control rounded-3 shadow-none bg-light" readonly>
                             </div>
                         </div>
@@ -104,7 +135,7 @@
 </div>
 
 <!-- ================= MODAL: UPDATE PROGRESS / COMPLETE VISIT ================= -->
-<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg p-4 bg-white">
             <div class="modal-header border-bottom pb-3">
@@ -126,7 +157,6 @@
                         </select>
                     </div>
 
-                    <!-- Naya Field: Actual Visit Date -->
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Actual Visit Date & Time <span class="text-danger">*</span></label>
                         <input type="datetime-local" id="updateVisitDate" class="form-control rounded-3 shadow-none" required>
@@ -148,8 +178,8 @@
     </div>
 </div>
 
-<!-- Lightbox Modal for viewing uploaded photo -->
-<div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
+<!-- Lightbox Modal -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 overflow-hidden shadow">
             <div class="modal-header border-0 pb-0">
@@ -162,14 +192,48 @@
         </div>
     </div>
 </div>
+
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(function() {
+            $('#ddlSchool').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#planModal'),
+                placeholder: '-- Choose School --',
+                allowClear: true
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('status')) {
+                $('#filterStatus').val(urlParams.get('status'));
+            }
+            if (urlParams.has('fromDate')) {
+                $('#filterFromDate').val(urlParams.get('fromDate'));
+            }
+            if (urlParams.has('toDate')) {
+                $('#filterToDate').val(urlParams.get('toDate'));
+            }
+
             loadPlans();
             loadAssignedSchoolsDropdown();
             setMinDateTime();
             setupPincodeLookup();
         });
+
+        function exportToExcel() {
+            let fromDate = $('#filterFromDate').val();
+            let toDate = $('#filterToDate').val();
+            let status = $('#filterStatus').val();
+
+            let queryParams = new URLSearchParams();
+            if (fromDate) queryParams.append('fromDate', fromDate);
+            if (toDate) queryParams.append('toDate', toDate);
+            if (status) queryParams.append('status', status);
+
+            let url = '/api/volunteer-plan/export-excel' + (queryParams.toString() ? '?' + queryParams.toString() : '');
+            window.location.href = url;
+        }
 
         function setMinDateTime() {
             let now = new Date();
@@ -179,35 +243,47 @@
         }
 
         function setupPincodeLookup() {
-            $('#txtPincode').on('blur', function() {
-                let pin = $(this).val().trim();
-                if (pin.length === 6 && /^\d+$/.test(pin)) {
+            $('#txtPincode').on('input blur', function() {
+                let pin = $(this).val().replace(/\D/g, '').slice(0, 6);
+                $(this).val(pin);
+
+                if (pin.length === 6) {
                     $.get(`https://api.postalpincode.in/pincode/${pin}`, function(data) {
                         if (data && data[0].Status === "Success") {
                             let po = data[0].PostOffice[0];
                             $('#txtCity').val(po.District || po.Region || '');
                             $('#txtState').val(po.State || '');
+                        } else {
+                            $('#txtCity').val('');
+                            $('#txtState').val('');
                         }
                     });
+                } else {
+                    $('#txtCity').val('');
+                    $('#txtState').val('');
                 }
             });
         }
 
-        function captureLocation(callback) {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        callback(position.coords.latitude, position.coords.longitude);
-                    },
-                    function(error) {
-                        console.warn("Geolocation error: ", error.message);
-                        callback(null, null);
-                    },
-                    { timeout: 10000, enableHighAccuracy: true }
-                );
-            } else {
-                callback(null, null);
-            }
+        function getCurrentLocation() {
+            return new Promise((resolve, reject) => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            resolve({
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            });
+                        },
+                        function(error) {
+                            reject(error);
+                        },
+                        { timeout: 10000, enableHighAccuracy: true }
+                    );
+                } else {
+                    reject(new Error("Geolocation is not supported by this browser."));
+                }
+            });
         }
 
         function loadAssignedSchoolsDropdown() {
@@ -218,16 +294,28 @@
                     if (res.success) {
                         let html = '<option value="">-- Choose School --</option>';
                         res.data.forEach(s => html += `<option value="${s.instituteID}">${s.name}</option>`);
-                        $('#ddlSchool').html(html);
+                        $('#ddlSchool').html(html).trigger('change');
                     }
                 }
             });
         }
 
         function loadPlans() {
-            $('#planTableBody').html('<tr><td colspan="8" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>');
+            let fromDate = $('#filterFromDate').val();
+            let toDate = $('#filterToDate').val();
+            let status = $('#filterStatus').val();
+
+            let queryParams = new URLSearchParams();
+            if (fromDate) queryParams.append('fromDate', fromDate);
+            if (toDate) queryParams.append('toDate', toDate);
+            if (status) queryParams.append('status', status);
+
+            let url = '/api/volunteer-plan/list' + (queryParams.toString() ? '?' + queryParams.toString() : '');
+
+            $('#planTableBody').html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>');
+
             $.ajax({
-                url: '/api/volunteer-plan/list',
+                url: url,
                 type: 'GET',
                 success: function(res) {
                     if (res.success && res.data.length > 0) {
@@ -235,7 +323,6 @@
                         res.data.forEach(p => {
                             let typeBadge = p.isOtherActivity ? '<span class="badge bg-warning-subtle text-warning">Other Activity</span>' : '<span class="badge bg-primary-subtle text-primary">School Visit</span>';
 
-                            // Status Badge Styling
                             let statusLower = (p.status || '').toLowerCase();
                             let statusBadge = statusLower === 'completed' ? 'bg-success-subtle text-success' : (statusLower === 'cancelled' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning');
 
@@ -247,43 +334,49 @@
                                 ? `<a href="https://www.google.com/maps?q=${p.reportLatitude},${p.reportLongitude}" target="_blank" class="btn btn-outline-success btn-sm rounded-circle p-1 shadow-none" title="View Report Location"><i class="bi bi-geo-alt-fill"></i></a>`
                                 : `<span class="text-muted">-</span>`;
 
-                            // Photo Icon Button
                             let photoIcon = p.imagePath
                                 ? `<button class="btn btn-outline-secondary btn-sm rounded-circle p-1 shadow-none ms-2" onclick="viewPhoto('${p.imagePath}')" title="View Uploaded Photo"><i class="bi bi-image-fill text-info"></i></button>`
                                 : `<span class="text-muted ms-2" title="No Photo">-</span>`;
 
                             let visitDateStr = p.visitDate ? new Date(p.visitDate).toLocaleString('en-GB') : '<span class="text-muted">Not Visited</span>';
 
-                            // FRONTEND LOCK CHECK: Agar Completed ya Cancelled hai toh Update button hide ho jayega
                             let actionBtn = (statusLower === 'completed' || statusLower === 'cancelled')
                                 ? `<span class="badge bg-light text-muted border px-2 py-1"><i class="bi bi-lock-fill me-1"></i> Locked (${p.status})</span>`
                                 : `<button class="btn btn-sm btn-light border text-primary shadow-none" onclick="openUpdateModal(${p.id})"><i class="bi bi-pencil-square me-1"></i> Update</button>`;
 
                             html += `<tr>
-                                                <td>${typeBadge}</td>
-                                                <td><b>${p.schoolName || 'N/A'}</b></td>
-                                                <td>
-                                                    <div><b>Plan:</b> ${new Date(p.scheduleDate).toLocaleString('en-GB')}</div>
-                                                    <div class="text-muted small"><b>Visit:</b> ${visitDateStr}</div>
-                                                </td>
-                                                <td>${p.purpose}</td>
-                                                <td class="text-center">
-                                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                                        <span><b>Plan:</b> ${planLocBtn}</span>
-                                                        <span><b>Rep:</b> ${reportLocBtn}</span>
-                                                        <span><b>Pic:</b> ${photoIcon}</span>
-                                                    </div>
-                                                </td>
-                                                <td><span class="badge ${statusBadge}">${p.status}</span></td>
-                                                <td class="text-center">${actionBtn}</td>
-                                            </tr>`;
+                                        <td>${typeBadge}</td>
+                                        <td><b>${p.schoolName || 'N/A'}</b></td>
+                                        <td>
+                                            <div><b>Plan:</b> ${new Date(p.scheduleDate).toLocaleString('en-GB')}</div>
+                                            <div class="text-muted small"><b>Visit:</b> ${visitDateStr}</div>
+                                        </td>
+                                        <td>${p.purpose}</td>
+                                        <td class="text-center">
+                                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                                <span><b>Plan:</b> ${planLocBtn}</span>
+                                                <span><b>Rep:</b> ${reportLocBtn}</span>
+                                                <span><b>Pic:</b> ${photoIcon}</span>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge ${statusBadge}">${p.status}</span></td>
+                                        <td class="text-center">${actionBtn}</td>
+                                    </tr>`;
                         });
                         $('#planTableBody').html(html);
                     } else {
-                        $('#planTableBody').html('<tr><td colspan="8" class="text-center py-5 text-muted">No visit plans scheduled yet.</td></tr>');
+                        $('#planTableBody').html('<tr><td colspan="7" class="text-center py-5 text-muted">No visit plans found for selected filters.</td></tr>');
                     }
                 }
             });
+        }
+
+        function resetFilters() {
+            $('#filterFromDate').val('');
+            $('#filterToDate').val('');
+            $('#filterStatus').val('');
+            window.history.replaceState({}, document.title, window.location.pathname);
+            loadPlans();
         }
 
         function viewPhoto(path) {
@@ -295,78 +388,48 @@
             $('#updatePlanId').val(id);
             $('#frmUpdate')[0].reset();
 
-            // 1. Current local date & time nikalna
             let now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             let currentDateTime = now.toISOString().slice(0, 16);
 
-            // 2. Input field par max limit set karna taaki future date select na ho
-            $('#updateVisitDate').attr('max', currentDateTime);
-
-            // 3. By default current date & time value me dalna
-            $('#updateVisitDate').val(currentDateTime);
-
-            captureLocation(function(lat, lng) {
-                $('#updateLat').val(lat);
-                $('#updateLng').val(lng);
-            });
+            $('#updateVisitDate').attr('min', currentDateTime);
+            $('#updateVisitDate').removeAttr('max'); 
+            $('#updateVisitDate').val(currentDateTime); 
 
             $('#updateModal').modal('show');
         }
 
-        $('#frmUpdate').on('submit', function(e) {
+        $('#frmUpdate').on('submit', async function(e) {
             e.preventDefault();
-            let formData = new FormData();
-            formData.append('id', $('#updatePlanId').val());
-            formData.append('status', $('#updateStatus').val());
-            formData.append('visitDate', $('#updateVisitDate').val()); // <-- Visit Date backend par bhejne ke liye
-            formData.append('remarks', $('#updateRemarks').val());
-            formData.append('latitude', $('#updateLat').val());
-            formData.append('longitude', $('#updateLng').val());
 
-            let fileInput = $('#updateImage')[0].files[0];
-            if (fileInput) {
-                formData.append('visitImage', fileInput);
-            } else if ($('#updateStatus').val() === 'Completed') {
-                alert("Please click or upload a photo proof to submit.");
+            let lat = '', lng = '';
+            try {
+                let coords = await getCurrentLocation();
+                lat = coords.lat;
+                lng = coords.lng;
+            } catch (err) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Location Permission Required',
+                    html: 'Location access is blocked or denied. Please click the <b>Lock/Settings icon</b> in your browser address bar, enable location permission, and try again.',
+                    confirmButtonColor: '#198754'
+                });
                 return;
             }
 
-            $.ajax({
-                url: '/api/volunteer-plan/update-progress',
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function(res) {
-                    if (res.success) {
-                        $('#updateModal').modal('hide');
-                        loadPlans();
-                    } else {
-                        alert(res.message);
-                    }
-                },
-                error: function(xhr) {
-                    alert(xhr.responseJSON?.message || "Error updating progress.");
-                }
-            });
-        });
-
-        $('#frmUpdate').on('submit', function(e) {
-            e.preventDefault();
             let formData = new FormData();
             formData.append('id', $('#updatePlanId').val());
             formData.append('status', $('#updateStatus').val());
             formData.append('visitDate', $('#updateVisitDate').val());
             formData.append('remarks', $('#updateRemarks').val());
-            formData.append('latitude', $('#updateLat').val());
-            formData.append('longitude', $('#updateLng').val());
+            formData.append('latitude', lat);
+            formData.append('longitude', lng);
 
             let fileInput = $('#updateImage')[0].files[0];
             if (fileInput) {
                 formData.append('visitImage', fileInput);
             } else if ($('#updateStatus').val() === 'Completed') {
-                alert("Please click or upload a photo proof to submit.");
+                Swal.fire({ icon: 'warning', title: 'Required', text: 'Please upload a photo proof to submit.', confirmButtonColor: '#198754' });
                 return;
             }
 
@@ -380,25 +443,23 @@
                     if (res.success) {
                         $('#updateModal').modal('hide');
                         loadPlans();
+                        Swal.fire({ icon: 'success', title: 'Updated', text: res.message || 'Progress updated successfully!', timer: 1500, showConfirmButton: false });
                     } else {
-                        alert(res.message);
+                        Swal.fire({ icon: 'error', title: 'Error', text: res.message, confirmButtonColor: '#dc3545' });
                     }
                 },
                 error: function(xhr) {
-                    alert(xhr.responseJSON?.message || "Error updating progress.");
+                    Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || "Error updating progress.", confirmButtonColor: '#dc3545' });
                 }
             });
         });
+
         function openPlanModal() {
             $('#frmPlan')[0].reset();
+            $('#ddlSchool').val('').trigger('change');
             $('#chkOtherActivity').prop('checked', false);
             toggleActivityType();
             setMinDateTime();
-
-            captureLocation(function(lat, lng) {
-                $('#txtLat').val(lat);
-                $('#txtLng').val(lng);
-            });
 
             $('#planModal').modal('show');
         }
@@ -408,31 +469,53 @@
                 $('#divSchoolDropdown').addClass('d-none');
                 $('#ddlSchool').removeAttr('required');
                 $('#divOtherActivityFields').removeClass('d-none');
-                $('#txtSchoolName, #txtAddress, #txtPincode').attr('required', 'required');
+                $('#txtSchoolName, #txtAddress, #txtPincode, #txtCity, #txtState').attr('required', 'required');
             } else {
                 $('#divOtherActivityFields').addClass('d-none');
-                $('#txtSchoolName, #txtAddress, #txtPincode').removeAttr('required');
+                $('#txtSchoolName, #txtAddress, #txtPincode, #txtCity, #txtState').removeAttr('required');
                 $('#divSchoolDropdown').removeClass('d-none');
                 $('#ddlSchool').attr('required', 'required');
             }
         }
 
-        $('#frmPlan').on('submit', function(e) {
+        $('#frmPlan').on('submit', async function(e) {
             e.preventDefault();
+
             let isOther = $('#chkOtherActivity').is(':checked');
+            let pincodeVal = $('#txtPincode').val().trim();
+
+            if (isOther && (!/^\d{6}$/.test(pincodeVal))) {
+                Swal.fire({ icon: 'warning', title: 'Invalid Pincode', text: 'Please enter a valid 6-digit numeric pincode.', confirmButtonColor: '#dc3545' });
+                return;
+            }
+
+            let lat = '', lng = '';
+            try {
+                let coords = await getCurrentLocation();
+                lat = coords.lat;
+                lng = coords.lng;
+            } catch (err) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Location Permission Required',
+                    html: 'Location access is blocked or denied. Please click the <b>Lock/Settings icon</b> in your browser address bar, enable location permission, and try again.',
+                    confirmButtonColor: '#198754'
+                });
+                return;
+            }
 
             let payload = {
                 IsOtherActivity: isOther,
                 InstituteId: isOther ? null : (parseInt($('#ddlSchool').val()) || null),
                 SchoolName: isOther ? $('#txtSchoolName').val() : null,
                 Address: isOther ? $('#txtAddress').val() : null,
-                Pincode: isOther ? $('#txtPincode').val() : null,
+                Pincode: isOther ? pincodeVal : null,
                 City: isOther ? $('#txtCity').val() : null,
                 State: isOther ? $('#txtState').val() : null,
                 ScheduleDate: $('#txtScheduleDate').val(),
                 Purpose: $('#txtPurpose').val(),
-                PlanLatitude: $('#txtLat').val(),
-                PlanLongitude: $('#txtLng').val()
+                PlanLatitude: lat,
+                PlanLongitude: lng
             };
 
             $.ajax({
@@ -444,58 +527,10 @@
                     if (res.success) {
                         $('#planModal').modal('hide');
                         loadPlans();
+                        Swal.fire({ icon: 'success', title: 'Success', text: 'Visit plan scheduled successfully!', timer: 1500, showConfirmButton: false });
                     } else {
-                        alert(res.message);
+                        Swal.fire({ icon: 'error', title: 'Error', text: res.message, confirmButtonColor: '#dc3545' });
                     }
-                }
-            });
-        });
-
-        function openUpdateModal(id) {
-            $('#updatePlanId').val(id);
-            $('#frmUpdate')[0].reset();
-
-            captureLocation(function(lat, lng) {
-                $('#updateLat').val(lat);
-                $('#updateLng').val(lng);
-            });
-
-            $('#updateModal').modal('show');
-        }
-
-        $('#frmUpdate').on('submit', function(e) {
-            e.preventDefault();
-            let formData = new FormData();
-            formData.append('id', $('#updatePlanId').val());
-            formData.append('status', $('#updateStatus').val());
-            formData.append('remarks', $('#updateRemarks').val());
-            formData.append('latitude', $('#updateLat').val());
-            formData.append('longitude', $('#updateLng').val());
-
-            let fileInput = $('#updateImage')[0].files[0];
-            if (fileInput) {
-                formData.append('visitImage', fileInput);
-            } else {
-                alert("Please click or upload a photo proof to submit.");
-                return;
-            }
-
-            $.ajax({
-                url: '/api/volunteer-plan/update-progress',
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function(res) {
-                    if (res.success) {
-                        $('#updateModal').modal('hide');
-                        loadPlans();
-                    } else {
-                        alert(res.message);
-                    }
-                },
-                error: function(xhr) {
-                    alert(xhr.responseJSON?.message || "Error updating progress.");
                 }
             });
         });

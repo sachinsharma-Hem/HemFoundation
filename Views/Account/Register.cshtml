@@ -32,8 +32,7 @@
                                 <label class="form-label small fw-bold text-secondary mb-1" id="lblFirstName">First Name <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-person"></i></span>
-                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtFirstName" placeholder="First Name" required />
-                                </div>
+<input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtFirstName" placeholder="First Name" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required />                                </div>
                             </div>
 
                             <!-- Last Name -->
@@ -41,8 +40,7 @@
                                 <label class="form-label small fw-bold text-secondary mb-1" id="lblLastName">Last Name <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-person-fill"></i></span>
-                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtLastName" placeholder="Last Name" required />
-                                </div>
+<input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtLastName" placeholder="Last Name" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required />                                </div>
                             </div>
 
                             <!-- Student Specific: Standard Dropdown -->
@@ -84,8 +82,7 @@
                                 <label class="form-label small fw-bold text-secondary mb-1">Guardian / Parent Name <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-primary"><i class="bi bi-people"></i></span>
-                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtGuardianName" placeholder="Guardian Full Name" />
-                                </div>
+<input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtGuardianName" placeholder="Guardian Full Name" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" />                                </div>
                             </div>
 
                             <!-- Teacher Specific: Qualification -->
@@ -116,8 +113,7 @@
                                 <label class="form-label small fw-bold text-secondary mb-1" id="lblOrgName">Organisation / Institution Name <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-building"></i></span>
-                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtOrgName" placeholder="Enter Name" required />
-                                </div>
+<input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtOrgName" placeholder="Enter Name" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required />                                </div>
                             </div>
 
                             <!-- Type Of Organisation -->
@@ -361,12 +357,21 @@
 
         function validateForm() {
             let isValid = true;
+            let nameRegex = /^[A-Za-z\s]+$/; 
+
             $('.req-field:visible').each(function() {
                 if (!$(this).val() || $(this).val().trim() === "") isValid = false;
             });
+
+            if ($('#txtFirstName').is(':visible') && !nameRegex.test($('#txtFirstName').val().trim())) isValid = false;
+            if ($('#txtLastName').is(':visible') && !nameRegex.test($('#txtLastName').val().trim())) isValid = false;
+            if ($('#txtOrgName').is(':visible') && portalId == "4" && !nameRegex.test($('#txtOrgName').val().trim())) isValid = false; // School Name
+            if ($('#txtGuardianName').is(':visible') && !nameRegex.test($('#txtGuardianName').val().trim())) isValid = false; // Guardian Name
+
             if ($('#txtMobileNo').val().trim().length !== 10) isValid = false;
+            
             let emailVal = $('#txtEmailID').val().trim();
-            let emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+            let emailRegex = /^[^\s\x40]+\x40[^\s\x40]+\.[^\s\x40]+$/;
 
             if (portalId != "3" || emailVal !== "") {
                 if (!emailRegex.test(emailVal)) {

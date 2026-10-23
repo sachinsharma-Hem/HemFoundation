@@ -64,12 +64,10 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">First Name<span class="text-danger">*</span></label>
-                            <input type="text" id="txtFirstName" class="form-control rounded-3 shadow-none" />
-                        </div>
+<input type="text" id="txtFirstName" class="form-control rounded-3 shadow-none" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" />                        </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Last Name<span class="text-danger">*</span></label>
-                            <input type="text" id="txtLastName" class="form-control rounded-3 shadow-none" />
-                        </div>
+<input type="text" id="txtLastName" class="form-control rounded-3 shadow-none" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" />                        </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Mobile Number <span class="text-danger">*</span></label>
                             <input type="text" id="txtMobileNo" class="form-control rounded-3 shadow-none" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="Enter 10-digit mobile number" required />
@@ -89,8 +87,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Pincode (Auto-fills City & State)<span class="text-danger">*</span></label>
-                            <input type="text" id="txtPincode" maxlength="6" class="form-control rounded-3 shadow-none" />
-                        </div>
+<input type="text" class="form-control form-control-lg rounded-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtPincode" maxlength="6" placeholder="Pincode" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onkeyup="fetchCityState(this.value)" required />                        </div>
                         <div class="col-12">
                             <label class="form-label small fw-semibold">Address<span class="text-danger">*</span></label>
                             <input type="text" id="txtAddress" class="form-control rounded-3 shadow-none" />
@@ -107,12 +104,10 @@
 
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold text-muted">City</label>
-                            <input type="text" id="txtCity" class="form-control rounded-3 shadow-none bg-light" readonly />
-                        </div>
+<input type="text" id="txtCity" class="form-control rounded-3 shadow-none bg-light" readonly oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" />                        </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold text-muted">State</label>
-                            <input type="text" id="txtState" class="form-control rounded-3 shadow-none bg-light" readonly />
-                        </div>
+<input type="text" id="txtState" class="form-control rounded-3 shadow-none bg-light" readonly oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" />                        </div>
                     </div>
                 </div>
 
@@ -136,8 +131,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold">Guardian Name</label>
-                            <input type="text" id="txtGuardianName" class="form-control rounded-3 shadow-none" />
-                        </div>
+<input type="text" id="txtGuardianName" class="form-control rounded-3 shadow-none" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" />                        </div>
                         @* <div class="col-md-4">
                             <label class="form-label small fw-semibold">Guardian Email ID</label>
                             <input type="email" id="txtGuardianEmail" class="form-control rounded-3 shadow-none" />
