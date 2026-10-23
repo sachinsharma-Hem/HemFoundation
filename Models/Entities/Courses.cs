@@ -55,7 +55,7 @@ namespace HemFoundation.Models.Entities
         public Nullable<int> ModifiedBy { get; set; }
 
         [Column("featuredimage")]
-        public string FeaturedImage { get; set; }
+        public string? FeaturedImage { get; set; }
 
         [Column("author")]
         public Nullable<int> Author { get; set; }
@@ -70,10 +70,10 @@ namespace HemFoundation.Models.Entities
         public Nullable<System.DateTime> ExpectedDeliveryDate { get; set; }
 
         [Column("approvalremark")]
-        public string ApprovalRemark { get; set; }
+        public string? ApprovalRemark { get; set; }
 
         [Column("approvalstatus")]
-        public string ApprovalStatus { get; set; }
+        public string? ApprovalStatus { get; set; }
 
         [Column("approvedon")]
         public Nullable<System.DateTime> ApprovedOn { get; set; }
@@ -82,16 +82,16 @@ namespace HemFoundation.Models.Entities
         public Nullable<int> ApprovedBy { get; set; }
 
         [Column("trainerresource")]
-        public string TrainerResource { get; set; }
+        public string? TrainerResource { get; set; }
 
         [Column("studentresourse")]
-        public string StudentResourse { get; set; }
+        public string? StudentResourse { get; set; }
 
         [Column("trainerexercise")]
-        public string TrainerExercise { get; set; }
+        public string? TrainerExercise { get; set; }
 
         [Column("studentexercise")]
-        public string StudentExercise { get; set; }
+        public string? StudentExercise { get; set; }
 
         [Column("manager")]
         public Nullable<int> Manager { get; set; }
@@ -109,7 +109,7 @@ namespace HemFoundation.Models.Entities
         public Nullable<int> ToAge { get; set; }
 
         [Column("maincategory")]
-        public string MainCategory { get; set; }
+        public string? MainCategory { get; set; }
 
 
         public virtual ICollection<CourseCustomerType> CourseCustomerType { get; set; }

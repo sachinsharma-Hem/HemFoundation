@@ -22,22 +22,28 @@ namespace HemFoundation.Models.Entities
     }
 
     // 2. Course Registration Master
-    public class CourseRegistration : BaseMasterEntity
+    public class CourseRegistrationRequest
     {
-        [Required, StringLength(200)] public string CourseName { get; set; } = string.Empty;
-        public string? Description { get; set; }
+        public int CourseID { get; set; }
+        public string CourseName { get; set; } = string.Empty;
         public DateTime ExpectedDeliveryDate { get; set; }
-        public int FromAge { get; set; }
-        public int ToAge { get; set; }
-        public int NumberOfSessions { get; set; }
 
-        public int CourseAuthorId { get; set; }
-        public int CourseManagerId { get; set; }
-        public int MainCourseId { get; set; }
-        public int CourseForId { get; set; }
-        public int CourseCustomerTypeId { get; set; }
+        public int? FromAge { get; set; }
+        public int? ToAge { get; set; }
+        public int? NumberOfSessions { get; set; }
+        public int? CourseAuthorId { get; set; }
+        public int? CourseManagerId { get; set; }
+        public int? MainCourseId { get; set; }
+        public string? courseAllocatedTo { get; set; }
+       // public int? CourseCustomerTypeId { get; set; }
+        public string? Description { get; set; }
+
+        public IFormFile? FeatureImage { get; set; }
+        public bool ShowFeatureImage { get; set; }
+        public bool IsDeleted { get; set; } = false;
+        public bool IsActive { get; set; } = true;
+
     }
-
     // 3. Quiz Creation Master
     public class CourseQuiz : BaseMasterEntity
     {

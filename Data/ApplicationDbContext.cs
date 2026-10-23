@@ -57,7 +57,7 @@ namespace HemFoundation.Data
         public DbSet<CourseLevel> CourseLevels { get; set; }
         public DbSet<WebinarMcqCategory> WebinarMcqCategories { get; set; }
         public DbSet<Syllabus> CourseSyllabuses { get; set; }
-        public DbSet<CourseRegistration> CourseRegistrations { get; set; }
+        //public DbSet<CourseRegistrationRequest> CourseRegistrations { get; set; }
         public DbSet<CourseQuiz> CourseQuizzes { get; set; }
         public DbSet<CourseTopic> CourseTopics { get; set; }
         public DbSet<CourseSubTopic> CourseSubTopics { get; set; }
@@ -575,6 +575,8 @@ namespace HemFoundation.Data
                 entity.HasMany(q => q.QuestionOption)
                       .WithOne(o => o.Questions)
                       .HasForeignKey(o => o.QuestionID);
+
+                
             });
 
             builder.Entity<ExaminationRecords>(entity =>
@@ -614,6 +616,30 @@ namespace HemFoundation.Data
                 entity.ToTable("courses");
                 entity.Ignore("Quiz");
                 entity.Ignore("WJ_Practicals");
+                entity.Ignore(e => e.Courses2);
+                entity.Ignore(e => e.Courses1);
+                entity.Ignore(e => e.Users);
+                entity.Ignore(e => e.Users1);
+                entity.Ignore(e => e.Users2);
+                entity.Property(e => e.IsActive)
+              .HasColumnType("bit")
+              .HasConversion(
+                  // Convert C# bool to PostgreSQL BitArray
+                  v => new System.Collections.BitArray(new[] { v }),
+                  // Convert PostgreSQL BitArray to C# bool (defaults to false if null or empty)
+                  v => v != null && v.Count > 0 ? v[0] : false
+              );
+
+                entity.Property(e => e.isPublished)
+                    .HasColumnType("bit")
+                    .HasConversion(
+                        v => v.HasValue
+                            ? new System.Collections.BitArray(new[] { v.Value })
+                            : null,
+                        v => v != null && v.Count > 0
+                            ? v[0]
+                            : (bool?)null
+                    );
             });
 
             builder.Entity<Levels>().ToTable("levels");
