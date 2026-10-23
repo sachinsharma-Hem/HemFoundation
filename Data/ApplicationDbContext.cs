@@ -158,6 +158,7 @@ namespace HemFoundation.Data
         public DbSet<MonthlyExpenseBill> MonthlyExpenseBills { get; set; }
         public DbSet<AffiliatePunchLog> AffiliatePunchLogs { get; set; }
         public DbSet<hemsampark_quiz_submission> hemsampark_quiz_submissions { get; set; }
+        public DbSet<hemsampark_quiz_answer> hemsampark_quiz_answers { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -1113,6 +1114,9 @@ namespace HemFoundation.Data
                           v => v != null && v.Count > 0 ? v[0] : (bool?)null
                       );
             });
+            builder.Entity<hemsampark_quiz_submission>()
+    .HasIndex(s => new { s.DailyEntryId, s.UserId })
+    .IsUnique();
         }
 
 

@@ -178,8 +178,6 @@ namespace HemFoundation.Controllers
             return Ok(new { success = true, pdfUrl = entry.PdfUrl });
         }
 
-
-
         private async Task<string> GenerateHemSamparkPdfAsync(
             DailySamparkEntry entry,
             MasterSetting master)
@@ -720,21 +718,65 @@ namespace HemFoundation.Controllers
                     return NotFound(new { success = false, message = "No entry found for today." });
                 }
 
+                // Get Current Logged-in User ID & Name
+                var userIdInt = HttpContext.Session.GetInt32("UserID") ?? 0;
+                string userId = userIdInt > 0 ? userIdInt.ToString() : (User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "StudentUser");
+
+                string fullName = "Champion";
+                var dbUser = userIdInt > 0
+                    ? await _context.Users.FirstOrDefaultAsync(u => u.UserID == userIdInt)
+                    : await _context.Users.FirstOrDefaultAsync(u => u.AspNetUserID == userId);
+
+                if (dbUser != null)
+                {
+                    fullName = $"{dbUser.FirstName} {dbUser.LastName}".Trim();
+                }
+
+                // Check if user already submitted quiz for today's entry
+                var existingSubmission = await _context.Set<hemsampark_quiz_submission>()
+                    .Where(s => s.DailyEntryId == entry.Id && s.UserId == userId)
+                    .FirstOrDefaultAsync();
+
                 var questions = await _context.Set<DailyQuestion>()
-                    .Where(q => q.DailyEntryId == entry.Id)
-                    .Select(q => new {
-                        id = q.Id,
-                        questionText = q.QuestionText,
-                        option1 = q.Option1,
-                        option2 = q.Option2,
-                        option3 = q.Option3,
-                        option4 = q.Option4
-                    })
-                    .ToListAsync();
+    .Where(q => q.DailyEntryId == entry.Id)
+    .OrderBy(q => q.Id)
+    .Select(q => new
+    {
+        id = q.Id,
+        questionText = q.QuestionText,
+        option1 = q.Option1,
+        option2 = q.Option2,
+        option3 = q.Option3,
+        option4 = q.Option4
+    })
+    .ToListAsync();
+
+                object detailedAnswers = null;
+                if (existingSubmission != null)
+                {
+                    detailedAnswers = await _context.Set<hemsampark_quiz_answer>()
+                        .Where(a => a.SubmissionId == existingSubmission.Id)
+                        .ToListAsync();
+                }
 
                 return Ok(new
                 {
                     success = true,
+                    userName = fullName,
+                    isSubmitted = existingSubmission != null,
+                    submissionDetails = existingSubmission != null ? new
+                    {
+                        score = existingSubmission.Score,
+                        totalQuestions = existingSubmission.TotalQuestions,
+                        submittedAt = existingSubmission.SubmittedAt
+        .ToString("dd-MMM-yyyy hh:mm tt"),
+                        answers = detailedAnswers,
+                        correctAnswers = existingSubmission.Score,
+                        wrongAnswers = Math.Max(
+        0,
+        existingSubmission.TotalQuestions - existingSubmission.Score
+    )
+                    } : null,
                     data = new
                     {
                         id = entry.Id,
@@ -760,30 +802,189 @@ namespace HemFoundation.Controllers
         [HttpPost("submit-quiz")]
         public async Task<IActionResult> SubmitQuiz([FromBody] QuizSubmissionDto model)
         {
-            var userIdInt = HttpContext.Session.GetInt32("UserID") ?? 0;
-            string userId = userIdInt > 0 ? userIdInt.ToString() : (User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "StudentUser");
-
-            var submission = new hemsampark_quiz_submission
+            try
             {
-                UserId = userId,
-                DailyEntryId = model.DailyEntryId,
-                Score = model.Score,
-                TotalQuestions = model.TotalQuestions,
-                SubmittedAt = DateTime.Now
-            };
+                if (model == null || model.DailyEntryId <= 0 ||
+                    model.Answers == null || model.Answers.Count == 0)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Invalid quiz submission."
+                    });
+                }
 
-            _context.Set<hemsampark_quiz_submission>().Add(submission);
-            await _context.SaveChangesAsync();
+                var userIdInt = HttpContext.Session.GetInt32("UserID") ?? 0;
 
-            return Ok(new { success = true, message = "Quiz submitted successfully!" });
+                string userId = userIdInt > 0
+                    ? userIdInt.ToString()
+                    : (User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "StudentUser");
+
+                var today = DateTime.Today;
+
+                var entry = await _context.dailysamparkentries
+                    .FirstOrDefaultAsync(e =>
+                        e.Id == model.DailyEntryId &&
+                        e.EntryDate >= today &&
+                        e.EntryDate < today.AddDays(1));
+
+                if (entry == null)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Today's challenge is not available."
+                    });
+                }
+
+                // Block repeat attempts
+                var alreadySubmitted = await _context
+                    .Set<hemsampark_quiz_submission>()
+                    .AnyAsync(s =>
+                        s.DailyEntryId == model.DailyEntryId &&
+                        s.UserId == userId);
+
+                if (alreadySubmitted)
+                {
+                    return Conflict(new
+                    {
+                        success = false,
+                        alreadySubmitted = true,
+                        message = "You have already completed today's challenge."
+                    });
+                }
+
+                // Fetch the actual questions belonging to this entry
+                var questions = await _context.Set<DailyQuestion>()
+                    .Where(q => q.DailyEntryId == model.DailyEntryId)
+                    .ToListAsync();
+
+                if (questions.Count == 0 ||
+                    model.Answers.Count != questions.Count ||
+                    model.Answers.Select(a => a.QuestionId).Distinct().Count()
+                        != model.Answers.Count)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Please answer every question exactly once."
+                    });
+                }
+
+                var questionLookup = questions.ToDictionary(q => q.Id);
+
+                // Reject invalid question IDs or option numbers
+                foreach (var answer in model.Answers)
+                {
+                    if (!questionLookup.ContainsKey(answer.QuestionId) ||
+                        answer.SelectedOption < 1 ||
+                        answer.SelectedOption > 4)
+                    {
+                        return BadRequest(new
+                        {
+                            success = false,
+                            message = "Invalid question or selected option."
+                        });
+                    }
+                }
+
+                int correctCount = model.Answers.Count(a =>
+                    questionLookup[a.QuestionId].CorrectOption == a.SelectedOption);
+
+                int totalQuestions = questions.Count;
+
+                // Save submission and answers together
+                await using var transaction =
+                    await _context.Database.BeginTransactionAsync();
+
+                // Check again immediately before inserting
+                alreadySubmitted = await _context
+                    .Set<hemsampark_quiz_submission>()
+                    .AnyAsync(s =>
+                        s.DailyEntryId == model.DailyEntryId &&
+                        s.UserId == userId);
+
+                if (alreadySubmitted)
+                {
+                    await transaction.RollbackAsync();
+
+                    return Conflict(new
+                    {
+                        success = false,
+                        alreadySubmitted = true,
+                        message = "You have already completed today's challenge."
+                    });
+                }
+
+                var submission = new hemsampark_quiz_submission
+                {
+                    UserId = userId,
+                    DailyEntryId = model.DailyEntryId,
+                    Score = correctCount,
+                    TotalQuestions = totalQuestions,
+                    SubmittedAt = DateTime.Now
+                };
+
+                _context.Set<hemsampark_quiz_submission>().Add(submission);
+
+                await _context.SaveChangesAsync();
+
+                var answers = model.Answers.Select(a =>
+                    new hemsampark_quiz_answer
+                    {
+                        SubmissionId = submission.Id,
+                        QuestionId = a.QuestionId,
+                        SelectedOption = a.SelectedOption,
+                        IsCorrect =
+                            questionLookup[a.QuestionId].CorrectOption
+                            == a.SelectedOption
+                    }).ToList();
+
+                _context.Set<hemsampark_quiz_answer>().AddRange(answers);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    completed = true,
+                    score = correctCount,
+                    total = totalQuestions,
+                    correctAnswers = correctCount,
+                    wrongAnswers = totalQuestions - correctCount,
+                    submittedAt = submission.SubmittedAt
+                        .ToString("dd-MMM-yyyy hh:mm tt"),
+                    message = "Today's challenge completed successfully!"
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log the actual exception on the server
+                Console.Error.WriteLine(
+                    $"SubmitQuiz failed: {ex}");
+
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Unable to submit the quiz. Please check the server logs."
+                });
+            }
+        }
+
+        public class QuizAnswerDto
+        {
+            public int QuestionId { get; set; }
+            public int SelectedOption { get; set; }
         }
 
         public class QuizSubmissionDto
         {
             public int DailyEntryId { get; set; }
-            public int Score { get; set; }
-            public int TotalQuestions { get; set; }
+            public List<QuizAnswerDto> Answers { get; set; }
         }
+
+      
 
     }
 }

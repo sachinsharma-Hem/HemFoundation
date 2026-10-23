@@ -68,40 +68,51 @@ namespace HemFoundation.Controllers
 
             return volunteer;
         }
-
         [HttpGet("list")]
-        public async Task<IActionResult> GetPlans()
+        public async Task<IActionResult> GetPlans([FromQuery] string? status, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
         {
             var volunteer = await GetCurrentVolunteerAsync();
 
             if (volunteer == null)
             {
-                return Unauthorized(new
-                {
-                    success = false,
-                    message = "Unauthorized"
-                });
+                return Unauthorized(new { success = false, message = "Unauthorized" });
             }
 
-            var plans = await _context.VolunteerVisitPlans
+            var query = _context.VolunteerVisitPlans
                 .AsNoTracking()
-                .Where(p =>
-                    p.VolunteerId == volunteer.Id &&
-                    !p.IsDeleted
-                )
+                .Where(p => p.VolunteerId == volunteer.Id && !p.IsDeleted);
+
+            // Status filter
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(p => p.Status.ToLower() == status.ToLower());
+            }
+
+            // From Date filter
+            if (fromDate.HasValue)
+            {
+                query = query.Where(p => p.ScheduleDate >= fromDate.Value.Date);
+            }
+
+            // To Date filter
+            if (toDate.HasValue)
+            {
+                var endDate = toDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(p => p.ScheduleDate <= endDate);
+            }
+
+            var plans = await query
                 .OrderByDescending(p => p.ScheduleDate)
                 .Select(p => new
                 {
                     p.Id,
                     p.IsOtherActivity,
-
                     SchoolName = p.IsOtherActivity
                         ? p.SchoolName
                         : _context.SchoolProfileDetails
                             .Where(s => s.instituteid == p.InstituteId)
                             .Select(s => s.institute_name)
                             .FirstOrDefault(),
-
                     p.ScheduleDate,
                     VisitDate = p.visitdate,
                     p.Purpose,
@@ -115,11 +126,7 @@ namespace HemFoundation.Controllers
                 })
                 .ToListAsync();
 
-            return Ok(new
-            {
-                success = true,
-                data = plans
-            });
+            return Ok(new { success = true, data = plans });
         }
 
         [HttpPost("update-progress")]
@@ -338,6 +345,68 @@ namespace HemFoundation.Controllers
                     activityPending = activityPendingCount
                 }
             });
+        }
+        [HttpGet("export-excel")]
+        public async Task<IActionResult> ExportExcel([FromQuery] string? status, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
+        {
+            var volunteer = await GetCurrentVolunteerAsync();
+            if (volunteer == null)
+            {
+                return Unauthorized(new { success = false, message = "Unauthorized" });
+            }
+
+            var query = _context.VolunteerVisitPlans
+                .AsNoTracking()
+                .Where(p => p.VolunteerId == volunteer.Id && !p.IsDeleted);
+
+            // Status filter
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(p => p.Status.ToLower() == status.ToLower());
+            }
+
+            // From Date filter
+            if (fromDate.HasValue)
+            {
+                query = query.Where(p => p.ScheduleDate >= fromDate.Value.Date);
+            }
+
+            // To Date filter
+            if (toDate.HasValue)
+            {
+                var endDate = toDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(p => p.ScheduleDate <= endDate);
+            }
+
+            var plans = await query
+                .OrderByDescending(p => p.ScheduleDate)
+                .ToListAsync();
+
+            // CSV format string build karna (Excel isko easily open kar leta hai)
+            var builder = new System.Text.StringBuilder();
+            builder.AppendLine("ID,Type,School / Location Name,Schedule Date,Actual Visit Date,Purpose,Status,Remarks,Plan Latitude,Plan Longitude,Report Latitude,Report Longitude");
+
+            foreach (var p in plans)
+            {
+                string schoolName = p.IsOtherActivity ? p.SchoolName : _context.SchoolProfileDetails
+                    .Where(s => s.instituteid == p.InstituteId)
+                    .Select(s => s.institute_name)
+                    .FirstOrDefault() ?? "N/A";
+
+                string type = p.IsOtherActivity ? "Other Activity" : "School Visit";
+                string scheduleDate = p.ScheduleDate.ToString("yyyy-MM-dd HH:mm");
+                string visitDate = p.visitdate.HasValue ? p.visitdate.Value.ToString("yyyy-MM-dd HH:mm") : "Not Visited";
+                string purpose = $"\"{p.Purpose?.Replace("\"", "\"\"")}\"";
+                string statusVal = p.Status ?? "";
+                string remarks = $"\"{p.Remarks?.Replace("\"", "\"\"")}\"";
+
+                builder.AppendLine($"{p.Id},{type},\"{schoolName}\",{scheduleDate},{visitDate},{purpose},{statusVal},{remarks},{p.PlanLatitude},{p.PlanLongitude},{p.ReportLatitude},{p.ReportLongitude}");
+            }
+
+            byte[] fileBytes = System.Text.Encoding.UTF8.GetBytes(builder.ToString());
+            string fileName = $"VisitPlans_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+            return File(fileBytes, "text/csv", fileName);
         }
     }
 }
