@@ -95,28 +95,28 @@
                             </select>
                         </div>
 
-                        <div id="divOtherActivityFields" class="row g-3 d-none">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">School / Organization Name <span class="text-danger">*</span></label>
-                                <input type="text" id="txtSchoolName" class="form-control rounded-3 shadow-none">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Pincode <span class="text-danger">*</span></label>
-                                <input type="text" id="txtPincode" class="form-control rounded-3 shadow-none" maxlength="6" placeholder="Enter 6-digit pincode">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-bold">Address <span class="text-danger">*</span></label>
-                                <input type="text" id="txtAddress" class="form-control rounded-3 shadow-none">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">City <span class="text-danger">*</span></label>
-                                <input type="text" id="txtCity" class="form-control rounded-3 shadow-none bg-light" readonly>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">State <span class="text-danger">*</span></label>
-                                <input type="text" id="txtState" class="form-control rounded-3 shadow-none bg-light" readonly>
-                            </div>
-                        </div>
+                       <div id="divOtherActivityFields" class="row g-3 d-none">
+    <div class="col-md-6">
+        <label class="form-label small fw-bold">School / Organization Name <span class="text-danger">*</span></label>
+        <input type="text" id="txtSchoolName" class="form-control rounded-3 shadow-none" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label small fw-bold">Pincode <span class="text-danger">*</span></label>
+        <input type="text" id="txtPincode" class="form-control rounded-3 shadow-none" maxlength="6" placeholder="Enter 6-digit pincode" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+    </div>
+    <div class="col-12">
+        <label class="form-label small fw-bold">Address <span class="text-danger">*</span></label>
+        <input type="text" id="txtAddress" class="form-control rounded-3 shadow-none">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label small fw-bold">City <span class="text-danger">*</span></label>
+        <input type="text" id="txtCity" class="form-control rounded-3 shadow-none bg-light" readonly oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label small fw-bold">State <span class="text-danger">*</span></label>
+        <input type="text" id="txtState" class="form-control rounded-3 shadow-none bg-light" readonly oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+    </div>
+</div>
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Schedule Date & Time <span class="text-danger">*</span></label>
@@ -300,76 +300,73 @@
             });
         }
 
-        function loadPlans() {
-            let fromDate = $('#filterFromDate').val();
-            let toDate = $('#filterToDate').val();
-            let status = $('#filterStatus').val();
+      function loadPlans() {
+    let fromDate = $('#filterFromDate').val();
+    let toDate = $('#filterToDate').val();
+    let status = $('#filterStatus').val();
 
-            let queryParams = new URLSearchParams();
-            if (fromDate) queryParams.append('fromDate', fromDate);
-            if (toDate) queryParams.append('toDate', toDate);
-            if (status) queryParams.append('status', status);
+    let queryParams = new URLSearchParams();
+    if (fromDate) queryParams.append('fromDate', fromDate);
+    if (toDate) queryParams.append('toDate', toDate);
+    if (status) queryParams.append('status', status);
 
-            let url = '/api/volunteer-plan/list' + (queryParams.toString() ? '?' + queryParams.toString() : '');
+    let url = '/api/volunteer-plan/list' + (queryParams.toString() ? '?' + queryParams.toString() : '');
 
-            $('#planTableBody').html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>');
+    $.ajax({
+        url: url,
+        type: 'GET',
+        success: function(res) {
+            if (res.success && res.data.length > 0) {
+                let html = '';
+                res.data.forEach(p => {
+                    let typeBadge = p.isOtherActivity ? '<span class="badge bg-warning-subtle text-warning">Other Activity</span>' : '<span class="badge bg-primary-subtle text-primary">School Visit</span>';
+                    let statusLower = (p.status || '').toLowerCase();
+                    let statusBadge = statusLower === 'completed' ? 'bg-success-subtle text-success' : (statusLower === 'cancelled' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning');
 
-            $.ajax({
-                url: url,
-                type: 'GET',
-                success: function(res) {
-                    if (res.success && res.data.length > 0) {
-                        let html = '';
-                        res.data.forEach(p => {
-                            let typeBadge = p.isOtherActivity ? '<span class="badge bg-warning-subtle text-warning">Other Activity</span>' : '<span class="badge bg-primary-subtle text-primary">School Visit</span>';
+                    let planLocBtn = (p.planLatitude && p.planLongitude)
+                        ? `<a href="https://www.google.com/maps?q=${p.planLatitude},${p.planLongitude}" target="_blank" class="btn btn-outline-primary btn-sm rounded-circle p-1 shadow-none me-2" title="View Plan Location"><i class="bi bi-map-fill"></i></a>`
+                        : `<span class="text-muted me-2">-</span>`;
 
-                            let statusLower = (p.status || '').toLowerCase();
-                            let statusBadge = statusLower === 'completed' ? 'bg-success-subtle text-success' : (statusLower === 'cancelled' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning');
+                    let reportLocBtn = (p.reportLatitude && p.reportLongitude)
+                        ? `<a href="https://www.google.com/maps?q=${p.reportLatitude},${p.reportLongitude}" target="_blank" class="btn btn-outline-success btn-sm rounded-circle p-1 shadow-none" title="View Report Location"><i class="bi bi-geo-alt-fill"></i></a>`
+                        : `<span class="text-muted">-</span>`;
 
-                            let planLocBtn = (p.planLatitude && p.planLongitude)
-                                ? `<a href="https://www.google.com/maps?q=${p.planLatitude},${p.planLongitude}" target="_blank" class="btn btn-outline-primary btn-sm rounded-circle p-1 shadow-none me-2" title="View Plan Location"><i class="bi bi-map-fill"></i></a>`
-                                : `<span class="text-muted me-2">-</span>`;
+                    let photoIcon = p.imagePath
+                        ? `<button class="btn btn-outline-secondary btn-sm rounded-circle p-1 shadow-none ms-2" onclick="viewPhoto('${p.imagePath}')" title="View Uploaded Photo"><i class="bi bi-image-fill text-info"></i></button>`
+                        : `<span class="text-muted ms-2" title="No Photo">-</span>`;
 
-                            let reportLocBtn = (p.reportLatitude && p.reportLongitude)
-                                ? `<a href="https://www.google.com/maps?q=${p.reportLatitude},${p.reportLongitude}" target="_blank" class="btn btn-outline-success btn-sm rounded-circle p-1 shadow-none" title="View Report Location"><i class="bi bi-geo-alt-fill"></i></a>`
-                                : `<span class="text-muted">-</span>`;
+                    let visitDateStr = p.visitDate ? new Date(p.visitDate).toLocaleString('en-GB') : '<span class="text-muted">Not Visited</span>';
 
-                            let photoIcon = p.imagePath
-                                ? `<button class="btn btn-outline-secondary btn-sm rounded-circle p-1 shadow-none ms-2" onclick="viewPhoto('${p.imagePath}')" title="View Uploaded Photo"><i class="bi bi-image-fill text-info"></i></button>`
-                                : `<span class="text-muted ms-2" title="No Photo">-</span>`;
+                    let actionBtn = (statusLower === 'completed' || statusLower === 'cancelled')
+                        ? `<span class="badge bg-light text-muted border px-2 py-1"><i class="bi bi-lock-fill me-1"></i> Locked (${p.status})</span>`
+                        : `<button class="btn btn-sm btn-light border text-primary shadow-none" onclick="openUpdateModal(${p.id})"><i class="bi bi-pencil-square me-1"></i> Update</button>`;
 
-                            let visitDateStr = p.visitDate ? new Date(p.visitDate).toLocaleString('en-GB') : '<span class="text-muted">Not Visited</span>';
-
-                            let actionBtn = (statusLower === 'completed' || statusLower === 'cancelled')
-                                ? `<span class="badge bg-light text-muted border px-2 py-1"><i class="bi bi-lock-fill me-1"></i> Locked (${p.status})</span>`
-                                : `<button class="btn btn-sm btn-light border text-primary shadow-none" onclick="openUpdateModal(${p.id})"><i class="bi bi-pencil-square me-1"></i> Update</button>`;
-
-                            html += `<tr>
-                                        <td>${typeBadge}</td>
-                                        <td><b>${p.schoolName || 'N/A'}</b></td>
-                                        <td>
-                                            <div><b>Plan:</b> ${new Date(p.scheduleDate).toLocaleString('en-GB')}</div>
-                                            <div class="text-muted small"><b>Visit:</b> ${visitDateStr}</div>
-                                        </td>
-                                        <td>${p.purpose}</td>
-                                        <td class="text-center">
-                                            <div class="d-flex align-items-center justify-content-center gap-1">
-                                                <span><b>Plan:</b> ${planLocBtn}</span>
-                                                <span><b>Rep:</b> ${reportLocBtn}</span>
-                                                <span><b>Pic:</b> ${photoIcon}</span>
-                                            </div>
-                                        </td>
-                                        <td><span class="badge ${statusBadge}">${p.status}</span></td>
-                                        <td class="text-center">${actionBtn}</td>
-                                    </tr>`;
-                        });
-                        $('#planTableBody').html(html);
-                    } else {
-                        $('#planTableBody').html('<tr><td colspan="7" class="text-center py-5 text-muted">No visit plans found for selected filters.</td></tr>');
-                    }
-                }
-            });
+                    html += `<tr>
+                                <td>${typeBadge}</td>
+                                <td><b>${p.schoolName || 'N/A'}</b></td>
+                                <td>
+                                    <div><b>Plan:</b> ${new Date(p.scheduleDate).toLocaleString('en-GB')}</div>
+                                    <div class="text-muted small"><b>Visit:</b> ${visitDateStr}</div>
+                                </td>
+                                <td>${p.purpose}</td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center gap-1">
+                                        <span><b>Plan:</b> ${planLocBtn}</span>
+                                        <span><b>Rep:</b> ${reportLocBtn}</span>
+                                        <span><b>Pic:</b> ${photoIcon}</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge ${statusBadge}">${p.status}</span></td>
+                                <td class="text-center">${actionBtn}</td>
+                            </tr>`;
+                });
+                $('#planTableBody').html(html);
+            } else {
+                $('#planTableBody').html('<tr><td colspan="7" class="text-center py-5 text-muted">No visit plans found for selected filters.</td></tr>');
+            }
         }
+    });
+}
 
         function resetFilters() {
             $('#filterFromDate').val('');

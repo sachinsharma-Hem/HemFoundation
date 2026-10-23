@@ -183,7 +183,7 @@
                     } else if (item.fileType === 'VideoLink') {
                         actionBtn = `<button class="btn btn-outline-${themeColor} btn-sm border-2 rounded-pill fw-bold shadow-sm px-3 text-nowrap" onclick="playYouTubeVideo('${item.title.replace(/'/g, "\\'")}', '${item.fileUrl}')"><i class="bi bi-youtube me-1 text-danger"></i> Watch</button>`;
                     } else {
-                        actionBtn = `<a href="${item.fileUrl}" target="_blank" class="btn btn-danger btn-sm rounded-pill fw-bold shadow-sm px-3 text-nowrap"><i class="bi bi-download me-1"></i> Download</a>`;
+                        actionBtn = `<a href="${item.fileUrl}" target="_blank" class="btn btn-danger btn-sm rounded-pill fw-bold shadow-sm px-3 text-nowrap"><i class="bi bi-download me-1"></i> View</a>`;
                     }
 
                     html += `

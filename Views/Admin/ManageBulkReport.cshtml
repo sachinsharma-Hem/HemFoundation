@@ -345,33 +345,80 @@
                     data: formData,
                     processData: false,
                     contentType: false,
-                   success: function(res) {
-        if (res.success) {
-            $('#previewLogId').val(logId);
-            $('#previewFilePath').val(res.filePath);
+                    success: function(res) {
+                        if (res.success) {
+                            $('#previewLogId').val(logId);
+                            $('#previewFilePath').val(res.filePath);
 
-            let thead = '<tr>';
-            res.columns.forEach(c => {
-                let mappedField = res.columnMapping[c] || 'Unmapped';
-                thead += `<th>${c}<br><small class="text-success fw-normal" style="font-size: 10px;">➔ ${mappedField}</small></th>`;
-            });
-            thead += '</tr>';
-            $('#previewTable thead').html(thead);
+                            // Pata lagana ki upload kis type ka hai (Student, Teacher ya Volunteer)
+                            let currentLog = allLogsData.find(l => l.logID == logId);
+                            let uploadType = currentLog ? currentLog.uploadType.toLowerCase() : '';
 
-            let tbody = '';
-            res.previewData.forEach(row => {
-                tbody += '<tr>';
-                res.columns.forEach(c => tbody += `<td>${row[c] || '<span class="text-muted fst-italic">null</span>'}</td>`);
-                tbody += '</tr>';
-            });
-            $('#previewTable tbody').html(tbody);
+                            let thead = '<tr>';
+                            res.columns.forEach(c => {
+                                let mappedField = res.columnMapping[c] || 'Unmapped';
+                                thead += `<th>${c}<br><small class="text-success fw-normal" style="font-size: 10px;">➔ ${mappedField}</small></th>`;
+                            });
+                            thead += '</tr>';
+                            $('#previewTable thead').html(thead);
 
-            $('#importProgressContainer').addClass('d-none');
-            $('#btnConfirmImport').prop('disabled', false);
-            $('#previewModal').modal('show');
-        } else {
-            alert(res.message);
-        }
+                            let hasInvalidData = false;
+                            let tbody = '';
+
+                            res.previewData.forEach(row => {
+                                tbody += '<tr>';
+                                res.columns.forEach(c => {
+                                    let cellValue = String(row[c] || '');
+                                    // Column ka naam lowercase aur bina space ke (e.g. 'firstname', 'guardianfullname')
+                                    let colKey = c.toLowerCase().replace(/\s+/g, '');
+                                    let isInvalid = false;
+
+                                    // Fields jinme strictly numbers allow nahi karne hain
+                                    let alphaFields = ['firstname', 'lastname', 'first', 'last', 'name'];
+
+                                    if (uploadType.includes('student')) {
+                                        alphaFields.push('division', 'guardian', 'guardianfullname');
+                                    } else if (uploadType.includes('teacher') || uploadType.includes('volunteer')) {
+                                        alphaFields.push('city');
+                                    }
+
+                                    // Check karna ki column restriction me aata hai ya nahi
+                                    let needsValidation = alphaFields.some(field => colKey.includes(field));
+
+                                    if (needsValidation && cellValue !== '') {
+                                        // Agar string me koi bhi digit (\d) milta hai
+                                        if (/\d/.test(cellValue)) {
+                                            isInvalid = true;
+                                            hasInvalidData = true;
+                                        }
+                                    }
+
+                                    if (isInvalid) {
+                                        tbody += `<td class="bg-danger-subtle text-danger fw-bold border-danger" title="Numbers are not allowed in Name, Division or City!">${cellValue} ⚠️</td>`;
+                                    } else {
+                                        tbody += `<td>${row[c] || '<span class="text-muted fst-italic">null</span>'}</td>`;
+                                    }
+                                });
+                                tbody += '</tr>';
+                            });
+                            $('#previewTable tbody').html(tbody);
+
+                            $('#importProgressContainer').addClass('d-none');
+
+                            // ERROR HANDLING & BUTTON HIDING
+                            $('#previewErrorWarning').remove(); // Pehle ka koi error ho to hatayein
+                            if (hasInvalidData) {
+                                $('#btnConfirmImport').addClass('d-none'); // Agree Button Hide kar dega
+                                // Top par error alert show karega
+                                $('<div id="previewErrorWarning" class="alert alert-danger small py-2 mb-3 fw-bold shadow-sm"><i class="bi bi-exclamation-octagon-fill me-2"></i>Validation Error: Numbers (0-9) are not allowed in Name, Division, or City fields. Please fix the Excel file and upload again.</div>').insertBefore('.table-responsive');
+                            } else {
+                                $('#btnConfirmImport').removeClass('d-none').prop('disabled', false);
+                            }
+
+                            $('#previewModal').modal('show');
+                        } else {
+                            alert(res.message);
+                        }
                     },
                     error: function(xhr) {
                         alert(xhr.responseJSON?.message || "Failed to preview excel.");

@@ -101,30 +101,34 @@
 
                         <div class="col-md-12 mt-4"><h6 class="fw-bold text-primary m-0 border-top pt-3">2. Bank Details (Auto-Saved)</h6></div>
                         
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Name on Account <span class="text-danger">*</span></label>
-                            <input type="text" id="bName" class="form-control shadow-none" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Account Number <span class="text-danger">*</span></label>
-                            <input type="text" id="bAccNo" class="form-control shadow-none" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Bank Name <span class="text-danger">*</span></label>
-                            <input type="text" id="bBank" class="form-control shadow-none" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">IFSC Code <span class="text-danger">*</span></label>
-                            <input type="text" id="bIfsc" class="form-control shadow-none" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">PAN Number <span class="text-danger">*</span></label>
-                            <input type="text" id="bPan" class="form-control shadow-none" required>
-                        </div>
+                      <div class="col-md-4">
+    <label class="form-label small fw-bold">Name on Account <span class="text-danger">*</span></label>
+    <input type="text" id="bName" class="form-control shadow-none" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" required>
+</div>
+
+<div class="col-md-4">
+    <label class="form-label small fw-bold">Account Number <span class="text-danger">*</span></label>
+    <input type="text" id="bAccNo" class="form-control shadow-none" minlength="9" maxlength="18" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+</div>
+
+<div class="col-md-4">
+    <label class="form-label small fw-bold">Bank Name <span class="text-danger">*</span></label>
+    <input type="text" id="bBank" class="form-control shadow-none" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" required>
+</div>
+
+<div class="col-md-4">
+    <label class="form-label small fw-bold">IFSC Code <span class="text-danger">*</span></label>
+    <input type="text" id="bIfsc" class="form-control shadow-none" maxlength="11" pattern="^[A-Z]{4}0[A-Z0-9]{6}$" title="Enter valid 11-digit IFSC code (e.g., SBIN0001234)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" required>
+</div>
+
+<div class="col-md-4">
+    <label class="form-label small fw-bold">PAN Number <span class="text-danger">*</span></label>
+    <input type="text" id="bPan" class="form-control shadow-none" maxlength="10" pattern="^[A-Z]{5}[0-9]{4}[A-Z]{1}$" title="Enter valid 10-digit PAN (e.g., ABCDE1234F)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" required>
+</div>
 
                         <div class="col-md-12 mt-4">
                             <div class="d-flex justify-content-between align-items-center border-top border-bottom py-2 mb-3">
-                                <h6 class="fw-bold text-primary m-0">3. Annexure (Line Items)</h6>
+                                <h6 class="fw-bold text-primary m-0">3. Annexure (Line Items)<span class="text-danger">*</span></h6>
                                 <button type="button" class="btn btn-sm btn-success rounded-pill px-3 shadow-none" onclick="addLineItem()">
                                     <i class="bi bi-plus-lg"></i> Add Row
                                 </button>

@@ -72,63 +72,50 @@ namespace HemFoundation.Controllers
         public async Task<IActionResult> GetPlans([FromQuery] string? status, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
         {
             var volunteer = await GetCurrentVolunteerAsync();
-
-            if (volunteer == null)
-            {
-                return Unauthorized(new { success = false, message = "Unauthorized" });
-            }
+            if (volunteer == null) return Unauthorized(new { success = false, message = "Unauthorized" });
 
             var query = _context.VolunteerVisitPlans
                 .AsNoTracking()
                 .Where(p => p.VolunteerId == volunteer.Id && !p.IsDeleted);
 
-            // Status filter
             if (!string.IsNullOrEmpty(status))
-            {
                 query = query.Where(p => p.Status.ToLower() == status.ToLower());
-            }
 
-            // From Date filter
             if (fromDate.HasValue)
-            {
                 query = query.Where(p => p.ScheduleDate >= fromDate.Value.Date);
-            }
 
-            // To Date filter
             if (toDate.HasValue)
             {
                 var endDate = toDate.Value.Date.AddDays(1).AddTicks(-1);
                 query = query.Where(p => p.ScheduleDate <= endDate);
             }
 
-            var plans = await query
-                .OrderByDescending(p => p.ScheduleDate)
-                .Select(p => new
-                {
-                    p.Id,
-                    p.IsOtherActivity,
-                    SchoolName = p.IsOtherActivity
-                        ? p.SchoolName
-                        : _context.SchoolProfileDetails
-                            .Where(s => s.instituteid == p.InstituteId)
-                            .Select(s => s.institute_name)
-                            .FirstOrDefault(),
-                    p.ScheduleDate,
-                    VisitDate = p.visitdate,
-                    p.Purpose,
-                    p.Status,
-                    p.Remarks,
-                    p.ImagePath,
-                    p.PlanLatitude,
-                    p.PlanLongitude,
-                    p.ReportLatitude,
-                    p.ReportLongitude
-                })
-                .ToListAsync();
+            // N+1 Query problem fixed with explicit LEFT JOIN for instant loading
+            var resultQuery = from p in query
+                              join s in _context.SchoolProfileDetails
+                              on p.InstituteId equals s.instituteid into schoolGroup
+                              from school in schoolGroup.DefaultIfEmpty()
+                              orderby p.ScheduleDate descending
+                              select new
+                              {
+                                  p.Id,
+                                  p.IsOtherActivity,
+                                  SchoolName = p.IsOtherActivity ? p.SchoolName : (school != null ? school.institute_name : null),
+                                  p.ScheduleDate,
+                                  VisitDate = p.visitdate,
+                                  p.Purpose,
+                                  p.Status,
+                                  p.Remarks,
+                                  p.ImagePath,
+                                  p.PlanLatitude,
+                                  p.PlanLongitude,
+                                  p.ReportLatitude,
+                                  p.ReportLongitude
+                              };
 
+            var plans = await resultQuery.ToListAsync();
             return Ok(new { success = true, data = plans });
         }
-
         [HttpPost("update-progress")]
         public async Task<IActionResult> UpdateProgress(
             [FromForm] int id,
@@ -322,8 +309,8 @@ namespace HemFoundation.Controllers
                 p.Status.ToLower() == "completed");
 
             var pendingCount = await query.CountAsync(p =>
-                p.Status == null ||
-                p.Status.ToLower() != "completed");
+    p.Status == null ||
+    (p.Status.ToLower() != "completed" && p.Status.ToLower() != "cancelled"));
 
             var activityUpdatedCount = await query.CountAsync(p =>
                 p.ReportedDate.HasValue ||
@@ -382,7 +369,6 @@ namespace HemFoundation.Controllers
                 .OrderByDescending(p => p.ScheduleDate)
                 .ToListAsync();
 
-            // CSV format string build karna (Excel isko easily open kar leta hai)
             var builder = new System.Text.StringBuilder();
             builder.AppendLine("ID,Type,School / Location Name,Schedule Date,Actual Visit Date,Purpose,Status,Remarks,Plan Latitude,Plan Longitude,Report Latitude,Report Longitude");
 

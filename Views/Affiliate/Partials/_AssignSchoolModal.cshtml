@@ -26,11 +26,11 @@
                         <div class="card border rounded-4 p-3 bg-light h-100">
                             <h6 class="fw-bold text-dark mb-2"><i class="bi bi-building me-1"></i> Available Schools</h6>
                             
-                            <!-- Pincode Search Filter Input -->
+                            <!-- Search Filter Input -->
                             <div class="input-group input-group-sm mb-2">
                                 <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                                <input type="text" id="txtPincodeSearch" class="form-control shadow-none" placeholder="Search by Pincode..." onkeyup="filterUnassignedSchools()">
-                                <button class="btn btn-outline-secondary" type="button" onclick="$('#txtPincodeSearch').val(''); filterUnassignedSchools();"><i class="bi bi-x"></i></button>
+                                <input type="text" id="txtSchoolSearch" class="form-control shadow-none" placeholder="Search by ID, Name or Pincode..." onkeyup="filterUnassignedSchools()">
+                                <button class="btn btn-outline-secondary" type="button" onclick="$('#txtSchoolSearch').val(''); filterUnassignedSchools();"><i class="bi bi-x"></i></button>
                             </div>
 
                             <div class="border rounded-3 bg-white p-2" style="height: 230px; overflow-y: auto;">
@@ -204,15 +204,22 @@
         $('#listUnassignedSchools').html(unassignedHtml);
     }
 
+    // =========================================================
+    // RENDER & FILTER UNASSIGNED SCHOOLS BY ID, NAME, OR PINCODE
+    // =========================================================
     function filterUnassignedSchools() {
-        let query = $('#txtPincodeSearch').val().trim().toLowerCase();
+        let query = $('#txtSchoolSearch').val().trim().toLowerCase();
         if (!query) {
             renderUnassignedSchools(globalUnassignedSchools);
             return;
         }
 
         let filtered = globalUnassignedSchools.filter(s => {
-            return s.pincode && s.pincode.toLowerCase().includes(query);
+            let matchId = s.instituteId ? String(s.instituteId).toLowerCase().includes(query) : false;
+            let matchName = s.name ? s.name.toLowerCase().includes(query) : false;
+            let matchPin = s.pincode ? s.pincode.toLowerCase().includes(query) : false;
+
+            return matchId || matchName || matchPin;
         });
 
         renderUnassignedSchools(filtered);
