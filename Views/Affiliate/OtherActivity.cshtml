@@ -214,8 +214,7 @@
     </div>
 </div>
 
-<!-- ================= MODAL: UPLOAD SIGNED EXPENSE BILL ================= -->
-<div class="modal fade" id="expenseUploadModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="expenseUploadModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg p-3">
             <div class="modal-header border-bottom pb-3">
@@ -240,7 +239,7 @@
 </div>
 
 <!-- ================= MODAL: NEW ACTIVITY ================= -->
-<div class="modal fade" id="activityModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="activityModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow-lg">
             <div class="modal-header">
@@ -264,7 +263,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold small">Pincode<span class="text-danger">*</span></label>
-                            <input type="text" id="activityPincode" maxlength="6" class="form-control rounded-3" placeholder="Enter 6-digit pincode">
+                            <input type="text" id="activityPincode" maxlength="6" class="form-control rounded-3" placeholder="Enter 6-digit pincode" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold small">City</label>
@@ -296,7 +295,7 @@
 </div>
 
 <!-- ================= MODAL: UPDATE ACTIVITY ================= -->
-<div class="modal fade" id="updateActivityModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="updateActivityModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow-lg">
             <div class="modal-header">
@@ -339,7 +338,7 @@
 </div>
 
 <!-- ================= MODAL: SUBMIT EXPENSE ================= -->
-<div class="modal fade" id="expenseModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="expenseModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow-lg">
             <div class="modal-header">
@@ -400,7 +399,7 @@
     </div>
 </div>
 <!-- MONTHLY BILL SUCCESS MODAL -->
-<div class="modal fade" id="monthlyBillSuccessModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="monthlyBillSuccessModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow-lg">
             <div class="modal-body text-center p-4">

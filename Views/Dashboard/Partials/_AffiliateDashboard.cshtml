@@ -358,6 +358,8 @@
             return data;
         };
 
+        window.isModuleOpen = false; 
+
         window.checkHubVisibility = async function() {
             try {
                 const res = await apiRequest("/api/affiliate-attendance/status");
@@ -366,7 +368,10 @@
                 const backBtn = document.getElementById('btnBackToAffDashboard');
 
                 if (res.success && res.isCheckedIn === true) {
-                    if (hubGrid) hubGrid.style.display = "flex";
+                    // Agar koi module open NAHI hai, tabhi grid ko dikhaye
+                    if (hubGrid && !window.isModuleOpen) {
+                        hubGrid.style.display = "flex";
+                    }
                     if (hubWarning) hubWarning.style.display = "none";
                 } else {
                     if (hubGrid) hubGrid.style.display = "none";
@@ -419,6 +424,8 @@
                     return;
                 }
 
+                window.isModuleOpen = true;
+
                 $(grid).fadeOut(200, function() {
                     backBtn.classList.remove('d-none');
                     $.get('/Affiliate/LoadModule/' + moduleName, function(htmlResponse) {
@@ -432,10 +439,15 @@
 
         if (backBtn) {
             backBtn.addEventListener('click', function() {
+                // Back button dabane par flag ko wapas false kar do
+                window.isModuleOpen = false;
+
                 $(container).fadeOut(200, function() {
                     $(this).html('');
                     backBtn.classList.add('d-none');
-                    $(grid).fadeIn(300);
+                    $(grid).fadeIn(300, function() {
+                        $(this).css('display', 'flex'); // Wapas proper grid design me laane ke liye
+                    });
                 });
             });
         }

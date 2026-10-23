@@ -460,12 +460,34 @@
                     <input type="hidden" name="portalId" value="3" />
                     <input type="hidden" name="role" value="WJ_Students" />
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="small fw-bold">First Name</label><input type="text" name="firstName" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Last Name</label><input type="text" name="lastName" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Guardian Mobile (Username)</label><input type="tel" name="mobileNo" class="form-control" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Guardian Email</label><input type="email" name="emailID" class="form-control"></div>                        <div class="col-md-6"><label class="small fw-bold">Standard</label><select name="standard" id="ddlInternalStandard" class="form-select" required></select></div>
-                        <div class="col-md-6"><label class="small fw-bold">Division</label><input type="text" name="division" class="form-control" required></div>
-                        <div class="col-md-12"><label class="small fw-bold">Guardian Full Name</label><input type="text" name="guardianName" class="form-control" required></div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">First Name <span class="text-danger">*</span></label>
+                            <input type="text" name="firstName" class="form-control" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" name="lastName" class="form-control" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Guardian Mobile (Username) <span class="text-danger">*</span></label>
+                            <input type="tel" name="mobileNo" class="form-control" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Guardian Email</label>
+                            <input type="email" name="emailID" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Standard <span class="text-danger">*</span></label>
+                            <select name="standard" id="ddlInternalStandard" class="form-select" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Division <span class="text-danger">*</span></label>
+                            <input type="text" name="division" class="form-control" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="small fw-bold">Guardian Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="guardianName" class="form-control" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100 rounded-pill mt-4 fw-bold">Submit Student</button>
                 </form>
@@ -487,12 +509,30 @@
                     <input type="hidden" name="portalId" value="2" />
                     <input type="hidden" name="role" value="WJ_Teacher" />
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="small fw-bold">First Name</label><input type="text" name="firstName" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Last Name</label><input type="text" name="lastName" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Mobile No (Username)</label><input type="tel" name="mobileNo" class="form-control" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Email ID</label><input type="email" name="emailID" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Qualification</label><input type="text" name="qualification" class="form-control"></div>
-                        <div class="col-md-6"><label class="small fw-bold">City</label><input type="text" name="city" class="form-control" required></div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">First Name <span class="text-danger">*</span></label>
+                            <input type="text" name="firstName" class="form-control" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" name="lastName" class="form-control" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Mobile No (Username) <span class="text-danger">*</span></label>
+                            <input type="tel" name="mobileNo" class="form-control" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Email ID <span class="text-danger">*</span></label>
+                            <input type="email" name="emailID" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Qualification</label>
+                            <input type="text" name="qualification" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">City <span class="text-danger">*</span></label>
+                            <input type="text" name="city" class="form-control" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-success w-100 rounded-pill mt-4 fw-bold">Submit Teacher</button>
                 </form>
@@ -515,11 +555,26 @@
                     <input type="hidden" name="portalId" value="7" />
                     <input type="hidden" name="role" value="HF_Volunteers" />
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="small fw-bold">First Name</label><input type="text" name="firstName" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Last Name</label><input type="text" name="lastName" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Mobile No (Username)</label><input type="tel" name="mobileNo" class="form-control" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">Email ID</label><input type="email" name="emailID" class="form-control" required></div>                    
-                        <div class="col-md-6"><label class="small fw-bold">City</label><input type="text" name="city" class="form-control" required></div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">First Name <span class="text-danger">*</span></label>
+                            <input type="text" name="firstName" class="form-control" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" name="lastName" class="form-control" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Mobile No (Username) <span class="text-danger">*</span></label>
+                            <input type="tel" name="mobileNo" class="form-control" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Email ID <span class="text-danger">*</span></label>
+                            <input type="email" name="emailID" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">City <span class="text-danger">*</span></label>
+                            <input type="text" name="city" class="form-control" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-success w-100 rounded-pill mt-4 fw-bold">Submit Volunteer</button>
                 </form>

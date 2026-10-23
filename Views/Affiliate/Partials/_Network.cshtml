@@ -211,8 +211,16 @@
             success: function(res) {
                 if (res.success && res.data.length > 0) {
                     let html = '';
+
+                    // Aaj ki date nikalne ke liye (Time ignore karke)
+                    let now = new Date();
+                    let todayDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
                     res.data.forEach(v => {
                         let d = new Date(v.scheduleDate);
+                        // Visit ki date (Time ignore karke)
+                        let visitDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
                         let dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} <br/> <small class="text-muted">${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>`;
 
                         let badge = v.status == 'Completed' ? '<span class="badge bg-success-subtle text-success">Completed</span>' :
@@ -220,19 +228,24 @@
                                 '<span class="badge bg-warning-subtle text-warning">Pending</span>');
 
                         if (statusTab === 'Pending') {
-                            let actionBtn = `<button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="openReportModal(${v.id})"><i class="bi bi-camera me-1"></i> Report Visit</button>`;
+                            // Agar visit ki date aaj se choti hai (beet chuki hai), toh true hoga
+                            let isExpired = visitDateOnly < todayDateOnly;
+
+                            let actionBtn = isExpired
+                                ? `<button class="btn btn-secondary btn-sm rounded-pill px-3 shadow-sm" disabled title="Visit date has passed"><i class="bi bi-clock-history me-1"></i> Expired</button>`
+                                : `<button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="openReportModal(${v.id})"><i class="bi bi-camera me-1"></i> Report Visit</button>`;
+
                             html += `<tr>
-                                    <td class="fw-semibold">${dateStr}</td>
-                                    <td><b>${v.schoolName}</b><br><small class="text-muted">${v.schoolCity || ''}</small></td>
-                                    <td>${v.purpose}</td>
-                                    <td>${badge}</td>
-                                    <td class="text-center">${actionBtn}</td>
-                                </tr>`;
+                                        <td class="fw-semibold">${dateStr}</td>
+                                        <td><b>${v.schoolName}</b><br><small class="text-muted">${v.schoolCity || ''}</small></td>
+                                        <td>${v.purpose}</td>
+                                        <td>${badge}</td>
+                                        <td class="text-center">${actionBtn}</td>
+                                    </tr>`;
                         }
                         else if (statusTab === 'Completed') {
                             let descText = v.description ? `<span class="d-block text-dark">${v.description}</span>` : `<span class="text-muted italic">No description</span>`;
 
-                            // Google Maps Navigation Link Button
                             let mapBtn = (v.latitude && v.longitude)
                                 ? `<a href="https://www.google.com/maps?q=${v.latitude},${v.longitude}" target="_blank" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold shadow-sm text-nowrap"><i class="bi bi-map-fill me-1"></i> View on Map</a>`
                                 : `<span class="text-muted small">N/A</span>`;
@@ -240,22 +253,22 @@
                             let photoBtn = v.photoUrl ? `<button class="btn btn-outline-primary btn-sm rounded-circle p-2 shadow-sm" onclick="viewPhoto('${v.photoUrl}')" title="View Captured Photo"><i class="bi bi-image fs-6"></i></button>` : `<span class="text-muted small">No Photo</span>`;
 
                             html += `<tr>
-                                    <td class="fw-semibold">${dateStr}</td>
-                                    <td><b>${v.schoolName}</b><br><small class="text-muted">${v.schoolCity || ''}</small></td>
-                                    <td>${v.purpose}</td>
-                                    <td>${descText}</td>
-                                    <td class="text-center">${mapBtn}</td>
-                                    <td class="text-center">${photoBtn}</td>
-                                    <td class="text-center">${badge}</td>
-                                </tr>`;
+                                        <td class="fw-semibold">${dateStr}</td>
+                                        <td><b>${v.schoolName}</b><br><small class="text-muted">${v.schoolCity || ''}</small></td>
+                                        <td>${v.purpose}</td>
+                                        <td>${descText}</td>
+                                        <td class="text-center">${mapBtn}</td>
+                                        <td class="text-center">${photoBtn}</td>
+                                        <td class="text-center">${badge}</td>
+                                    </tr>`;
                         }
                         else if (statusTab === 'Cancelled') {
                             html += `<tr>
-                                    <td class="fw-semibold">${dateStr}</td>
-                                    <td><b>${v.schoolName}</b><br><small class="text-muted">${v.schoolCity || ''}</small></td>
-                                    <td>${v.purpose}</td>
-                                    <td>${badge}</td>
-                                </tr>`;
+                                        <td class="fw-semibold">${dateStr}</td>
+                                        <td><b>${v.schoolName}</b><br><small class="text-muted">${v.schoolCity || ''}</small></td>
+                                        <td>${v.purpose}</td>
+                                        <td>${badge}</td>
+                                    </tr>`;
                         }
                     });
                     $(tableId).html(html);

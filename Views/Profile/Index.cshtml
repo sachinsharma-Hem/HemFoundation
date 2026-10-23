@@ -82,7 +82,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Email ID<span class="text-danger">*</span></label>
+                            <label class="form-label small fw-semibold" id="lblEmailUpdate">Email ID<span class="text-danger" id="emailAsterisk">*</span></label>
                             <input type="email" id="txtEmail" class="form-control rounded-3 shadow-none" />
                         </div>
                         <div class="col-md-6">
@@ -172,7 +172,7 @@
 </div>
 
 <!-- Modern Bootstrap Modal Popup for Messages -->
-<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div id="modalHeaderBg" class="modal-header text-white px-4 py-3">
@@ -299,6 +299,7 @@
                         }
 
                         if (res.role && res.role.toLowerCase() === 'wj_students') {
+                            $('#emailAsterisk').hide();
                             $('#studentInfoCard').removeClass('d-none');
                             $('#txtStandard').val(res.profile.standard === 'Not Updated' ? '' : res.profile.standard);
                             $('#txtDivision').val(res.profile.division === 'Not Updated' ? '' : res.profile.division);
@@ -371,13 +372,15 @@
                 formData.append('lastName', $('#txtLastName').val());
                 formData.append('phoneNumber', $('#txtMobileNo').val());
                 const email = $('#txtEmail').val().trim();
+                if (currentUserRole.toLowerCase() !== 'wj_students' && email === "") {
+                    showPopup("Email ID is required to update your profile.", false);
+                    return;
+                }
                 const standard = $('#txtStandard').val().trim();
 
                 if (standard !== '') {
-                    // Standard available hai, email optional rahegi
                     formData.append('guardianEmail', email);
                 } else {
-                    // Email ki existing value bhejo
                     formData.append('guardianEmail', email);
                 }
                 formData.append('address', $('#txtAddress').val());
