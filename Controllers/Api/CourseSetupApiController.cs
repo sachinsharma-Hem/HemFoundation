@@ -23,7 +23,7 @@ namespace HemFoundation.Controllers.Api
         {
             object data = masterType.ToLower() switch
             {
-                "maincourse" => await _context.MainCourses.Where(x => !x.IsDeleted).ToListAsync(),
+                "maincourse" => await _context.MainCourseSetups.ToListAsync(),
                 "category" => await _context.CourseCategories.Where(x => !x.IsDeleted).ToListAsync(),
                 "subcategory" => await _context.CourseSubCategories.Where(x => !x.IsDeleted).ToListAsync(),
                 "ordernumber" => await _context.CourseOrderNumbers.Where(x => !x.IsDeleted).OrderBy(x => x.DisplayOrder).ToListAsync(),
