@@ -56,7 +56,7 @@ namespace HemFoundation.Data
         public DbSet<CourseMcqLevel> CourseMcqLevels { get; set; }
         public DbSet<CourseLevel> CourseLevels { get; set; }
         public DbSet<WebinarMcqCategory> WebinarMcqCategories { get; set; }
-        public DbSet<CourseSyllabus> CourseSyllabuses { get; set; }
+        public DbSet<Syllabus> CourseSyllabuses { get; set; }
         public DbSet<CourseRegistration> CourseRegistrations { get; set; }
         public DbSet<CourseQuiz> CourseQuizzes { get; set; }
         public DbSet<CourseTopic> CourseTopics { get; set; }
@@ -1112,6 +1112,17 @@ namespace HemFoundation.Data
                           v => v.HasValue ? new System.Collections.BitArray(new[] { v.Value }) : null,
                           v => v != null && v.Count > 0 ? v[0] : (bool?)null
                       );
+            });
+            builder.Entity<MainCourseSetup>(entity =>
+            {
+                entity.Property(e => e.IsActive)
+              .HasColumnType("bit")
+              .HasConversion(
+                  // Convert C# bool to PostgreSQL BitArray
+                  v => new System.Collections.BitArray(new[] { v }),
+                  // Convert PostgreSQL BitArray to C# bool (defaults to false if null or empty)
+                  v => v != null && v.Count > 0 ? v[0] : false
+              );
             });
         }
 

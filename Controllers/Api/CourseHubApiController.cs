@@ -50,7 +50,7 @@ namespace HemFoundation.Controllers.Api
 
         // --- 1. SYLLABUS ---
         [HttpGet("syllabus/list")]
-        public async Task<IActionResult> GetSyllabusList() => Ok(new { success = true, data = await _context.CourseSyllabuses.Where(x => !x.IsDeleted).ToListAsync() });
+        public async Task<IActionResult> GetSyllabusList() => Ok(new { success = true, data = await _context.CourseSyllabuses.ToListAsync() });
 
         [HttpPost("syllabus/save")]
         public async Task<IActionResult> SaveSyllabus([FromBody] CourseSyllabus model)
@@ -92,7 +92,7 @@ namespace HemFoundation.Controllers.Api
 
         // --- 2. COURSES ---
         [HttpGet("course/list")]
-        public async Task<IActionResult> GetCourseList() => Ok(new { success = true, data = await _context.CourseRegistrations.Where(x => !x.IsDeleted).ToListAsync() });
+        public async Task<IActionResult> GetCourseList() => Ok(new { success = true, data = await _context.Courses.Where(x => x.IsActive).ToListAsync() });
 
         [HttpPost("course/save")]
         public async Task<IActionResult> SaveCourse([FromBody] CourseRegistration model)

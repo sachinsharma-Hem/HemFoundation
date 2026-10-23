@@ -18,7 +18,7 @@ namespace HemFoundation.Models.Entities // Match your actual namespace
         public string? Description { get; set; }
 
         [Column("isactive", TypeName = "bit")]
-        public System.Collections.BitArray? IsActive { get; set; } // Or bool? if using value converters
+        public bool IsActive { get; set; } // Or bool? if using value converters
 
         [Column("createdby")]
         public int? CreatedBy { get; set; }
