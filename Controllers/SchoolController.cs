@@ -79,16 +79,15 @@ namespace HemFoundation.Controllers
 
                     string query = @"
                         SELECT DISTINCT 
-                            WVC.Id, 
-                            VWSD.firstname || ' ' || VWSD.lastname AS ""StudentName"", 
-                            VWSD.Standard, 
-                            VWSD.InstituteName, 
-                            VWSD.EmailID, 
-                            VWSD.MobileNo, 
+                            WVC.Id, WJS.StudentID ,
+                           u.firstname || ' ' || u.lastname AS ""StudentName"", 
+                            WJS.Standard, 
+                            WJI.""Name"" InstituteName, 
+                            u.EmailID, 
+                            u.MobileNo, 
                             C.CourseID, 
                             C.CourseName 
-                        FROM view_wj_students_details_info AS VWSD 
-                        INNER JOIN WJ_Students AS WJS ON VWSD.StudentID = WJS.StudentID 
+                        FROM  WJ_Students AS WJS
                         INNER JOIN Users AS U ON U.UserID = WJS.StudentID 
                         INNER JOIN WJ_StudentAssociates AS SA ON SA.StudentID = U.UserID 
                         LEFT JOIN WJ_Institutes AS WJI ON WJI.InstituteID = SA.InstituteID 
@@ -166,6 +165,7 @@ namespace HemFoundation.Controllers
                                 model.Standard = reader["standard"]?.ToString();
                                 model.InstituteName = reader["institutename"]?.ToString();
                                 model.CourseName = reader["coursename"]?.ToString();
+                                model.UserID = userId;
                             }
                         }
                     }
@@ -1351,6 +1351,7 @@ namespace HemFoundation.Controllers
     internal class View_WJ_Teachercertificate
     {
         public string StudentName { get; set; }
+        public string StudentID { get; set; }
         public string Standard { get; set; }
         public string InstituteName { get; set; }
         public string EmailID { get; set; }

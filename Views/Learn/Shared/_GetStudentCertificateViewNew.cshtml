@@ -165,7 +165,7 @@
         catch (e) { alert(e); }
         return false;
     }
-    var currentStudentID = @ViewBag.StudentID;
+    var currentStudentID = @Model.UserID;
     function SaveImage() {
         var studentID = currentStudentID;
         var Cerid = $("#Cerid").val();
