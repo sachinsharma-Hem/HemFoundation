@@ -48,7 +48,7 @@ namespace HemFoundation.Models.Entities
         public bool? WhizJuniorSyllabus { get; set; }
 
         [Column("courseallocatedto")]
-        public string CourseAllocatedTo { get; set; }
+        public string? CourseAllocatedTo { get; set; }
 
         [Column("mcqlevel")]
         public string? MCQLevel { get; set; }

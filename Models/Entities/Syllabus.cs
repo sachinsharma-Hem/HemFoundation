@@ -27,10 +27,10 @@ namespace HemFoundation.Models.Entities
         public int? InstituteId { get; set; }
 
         [Column("categoryid")]
-        public int CategoryId { get; set; }
+        public int? CategoryId { get; set; }
 
         [Column("subcategoryid")]
-        public int SubCategoryId { get; set; }
+        public int? SubCategoryId { get; set; }
 
         [Column("orderno")]
         public int? OrderNo { get; set; }

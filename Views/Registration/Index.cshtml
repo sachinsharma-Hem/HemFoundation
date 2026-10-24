@@ -1002,15 +1002,46 @@ function getDownloadUrl(filePath) {
                         width: 110,
                         sorter: "string",
                         headerFilter: "input"
-                    },
+                    }, 
 
-                    {
-                        title: "Standard",
-                        field: "_standard",
-                        width: 120,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                     
+                        {
+                            title: "Standard",
+                            field: "_standard",
+                            hozAlign: "center",
+                            width: 160,
+                            sorter: "string",
+                            headerFilter: "input",
+                            download: true,
+
+                            formatter: function(cell) {
+                                const d = cell.getData();
+
+                                const studentId = Number(d._studentId) || 0;
+                                const studentName = d._studentName || "";
+                                const standard = d._standard || "";
+                                const division = d._division || "";
+
+                                return `
+                    <button type="button"
+                            class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                            onclick="ChangeStandard(
+                                ${studentId},
+                                this.dataset.name,
+                                this.dataset.standard,
+                                this.dataset.division
+                            )"
+                            data-name="${escapeHtml(studentName)}"
+                            data-standard="${escapeHtml(standard)}"
+                            data-division="${escapeHtml(division)}"
+                            title="Change Student Standard">
+                        <i class="fas fa-edit me-1"></i>
+                        ${escapeHtml(standard || "Assign Standard")}
+                    </button>
+                `;
+                            }
+                        },
+
 
                     {
                         title: "Division",
@@ -1707,6 +1738,18 @@ function getDownloadUrl(filePath) {
                 var standardArray = standard.split(',');
                 $('#dll_Standard').multiselect('select', standardArray);
             }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, function(char) {
+                return {
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;"
+                }[char];
+            });
         }
 
             function fnSubmitStandardToTeacher() {

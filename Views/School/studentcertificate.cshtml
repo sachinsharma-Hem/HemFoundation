@@ -208,6 +208,7 @@
                         return {
                             ...d,
                             _id: d.id || d.ID || '',
+                            _studentID: d.studentID || d.StudentID||'',
                             _studentName: d.studentName || d.StudentName || '',
                             _standard: d.standard || d.Standard || '',
                             _instituteName: d.instituteName || d.InstituteName || '',
@@ -231,6 +232,7 @@
                                 headerFilter: false
                             },
                             { title: "ID", field: "_id", width: 90, sorter: "number", headerFilter: "input" },
+                            { title: "Student ID", field: "_studentID", width: 150, sorter: "string", headerFilter: "input" },
                             { title: "Student Name", field: "_studentName", width: 190, sorter: "string", headerFilter: "input" },
                             { title: "Standard", field: "_standard", width: 120, sorter: "string", headerFilter: "input" },
                             { title: "Institute Name", field: "_instituteName", width: 220, sorter: "string", headerFilter: "input" },
