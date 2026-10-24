@@ -851,6 +851,11 @@
             <div class="search-container">
                 <input type="text" id="searchBox" class="search-input" placeholder="Search projects..." onkeyup="filterProjects()" />
                 <span class="record-badge" id="record-count">Total: 0</span>
+
+                <!-- EXCEL EXPORT BUTTON -->
+                <button class="btn btn-sm btn-light text-success fw-bold ms-2" onclick="exportToExcel()">
+                    <i class="bi bi-file-earmark-excel"></i> Export Excel
+                </button>
             </div>
         </div>
         <div class="table-responsive">
@@ -868,6 +873,12 @@
                 </thead>
                 <tbody></tbody>
             </table>
+        </div>
+        <!-- HISTORY PAGINATION -->
+        <div class="pagination-controls" id="history-pagination" style="display: none; border-top: none; background: transparent; padding: 0.5rem 1rem;">
+            <button class="btn-pagination btn-sm" id="hist-prev" onclick="changeHistoryPage(-1)">← Previous</button>
+            <span class="pagination-info" id="hist-page-info">Page 1</span>
+            <button class="btn-pagination btn-sm" id="hist-next" onclick="changeHistoryPage(1)">Next →</button>
         </div>
         <div class="pagination-controls">
             <button class="btn-pagination" id="prev-btn" onclick="changePage(-1)">← Previous</button>
@@ -939,7 +950,18 @@
 
                 <!-- Media Preview -->
                 <div id="media-preview-container" class="media-preview" style="display:none;"></div>
-
+                <!-- OVERVIEW & GRADES INFO -->
+                <div class="alert alert-info p-2 mb-3" style="font-size: 0.85rem; border-left: 4px solid var(--info-color);">
+                    <h6 class="fw-bold mb-1"><i class="bi bi-info-circle me-1"></i>Project Info & Grades</h6>
+                    <p class="mb-1 text-dark fw-bold" id="modalOverviewText"></p>
+                    <hr class="my-1">
+                    <strong>Grades:</strong>
+                    <span class="text-success fw-bold">Green (5)</span> |
+                    <span class="text-warning fw-bold">Orange (2)</span> |
+                    <span class="text-primary fw-bold">Blue (2)</span> |
+                    <span class="text-secondary fw-bold">Yellow (1)</span> |
+                    <span class="text-danger fw-bold">Red (0)</span>
+                </div>
                 <!-- Status Color Selection (5 Colors) -->
                 <div class="mb-4">
                     <label class="form-label fw-bold">Select Evaluation Status:</label>
@@ -1011,16 +1033,10 @@
 
         function getFileUrl(filePath) {
             if (!filePath) return '#';
-
-            if (
-                filePath.startsWith('http://') ||
-                filePath.startsWith('https://')
-            ) {
+            if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
                 return filePath;
             }
-
             let cleanPath = filePath.replace(/^\/+/, '');
-
             return fileBaseUrl.replace(/\/+$/, '') + '/' + cleanPath;
         }
 
@@ -1044,6 +1060,9 @@
             });
         });
 
+        // ==========================
+        // ANALYTICS & CHARTS
+        // ==========================
         function toggleAnalytics() {
             var modal = new bootstrap.Modal(document.getElementById('analyticsModal'));
             modal.show();
@@ -1055,23 +1074,18 @@
                     setTimeout(initializeAnalyticsCharts, 150);
                 })
                 .catch(error => {
-                    console.error('Error loading analytics:', error);
-                    document.getElementById('analytics-content').innerHTML = '<div class="alert alert-danger" role="alert"><strong>Error loading analytics.</strong> Make sure the <code>GetAnalyticsPartial()</code> action is added to your ProjectEvaluationController.</div>';
+                    document.getElementById('analytics-content').innerHTML = '<div class="alert alert-danger">Error loading analytics.</div>';
                 });
         }
 
         function initializeAnalyticsCharts() {
-            if (typeof Chart === 'undefined') {
-                console.warn('Chart.js not loaded yet');
-                return;
-            }
+            if (typeof Chart === 'undefined') return;
 
             fetch('/api/project-evaluations/dashboard-counts')
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
                         let counts = data.data.filtered;
-
                         const submissionCtx = document.getElementById('submissionSplitChart')?.getContext('2d');
                         if (submissionCtx) {
                             new Chart(submissionCtx, {
@@ -1088,25 +1102,7 @@
                                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
                             });
                         }
-
-                        const statusCtx = document.getElementById('evaluationStatusChart')?.getContext('2d');
-                        if (statusCtx) {
-                            new Chart(statusCtx, {
-                                type: 'bar',
-                                data: {
-                                    labels: ['Individual', 'Family', 'Group', 'SEL'],
-                                    datasets: [
-                                        { label: 'Green', data: [Math.floor(counts.individualProjects * 0.65), Math.floor(counts.familyProjects * 0.60), Math.floor(counts.groupPbl * 0.70), Math.floor(counts.totalSelProjects * 0.55)], backgroundColor: '#10b981', borderRadius: 4 },
-                                        { label: 'Yellow', data: [Math.floor(counts.individualProjects * 0.10), Math.floor(counts.familyProjects * 0.10), Math.floor(counts.groupPbl * 0.10), Math.floor(counts.totalSelProjects * 0.15)], backgroundColor: '#eab308', borderRadius: 4 },
-                                        { label: 'Blue', data: [Math.floor(counts.individualProjects * 0.05), Math.floor(counts.familyProjects * 0.05), Math.floor(counts.groupPbl * 0.05), Math.floor(counts.totalSelProjects * 0.05)], backgroundColor: '#3b82f6', borderRadius: 4 },
-                                        { label: 'Orange', data: [Math.floor(counts.individualProjects * 0.10), Math.floor(counts.familyProjects * 0.15), Math.floor(counts.groupPbl * 0.10), Math.floor(counts.totalSelProjects * 0.15)], backgroundColor: '#f59e0b', borderRadius: 4 },
-                                        { label: 'Red', data: [Math.floor(counts.individualProjects * 0.05), Math.floor(counts.familyProjects * 0.05), Math.floor(counts.groupPbl * 0.05), Math.floor(counts.totalSelProjects * 0.05)], backgroundColor: '#ef4444', borderRadius: 4 }
-                                    ]
-                                },
-                                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#e5e7eb' } } }, plugins: { legend: { display: false } } }
-                            });
-                        }
-
+                        // Overall Status Chart example code remains as it was...
                         const overallCtx = document.getElementById('overallStatusChart')?.getContext('2d');
                         if (overallCtx) {
                             let total = counts.individualProjects + counts.familyProjects + counts.groupPbl + counts.totalSelProjects;
@@ -1117,11 +1113,10 @@
                             new Chart(overallCtx, {
                                 type: 'doughnut',
                                 data: {
-                                    labels: ['High (Green/Yellow)', 'Medium (Blue/Orange)', 'Low (Red)'],
+                                    labels: ['High', 'Medium', 'Low'],
                                     datasets: [{
                                         data: [greenYellow, orangeBlue, red],
                                         backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                                        borderColor: '#ffffff',
                                         borderWidth: 2
                                     }]
                                 },
@@ -1129,8 +1124,7 @@
                             });
                         }
                     }
-                })
-                .catch(err => console.error('Error loading analytics data:', err));
+                });
         }
 
         function onFilterChange() {
@@ -1161,6 +1155,9 @@
                 });
         }
 
+        // ==========================
+        // FETCH DATA & RENDER TABLE
+        // ==========================
         function fetchProjects() {
             document.getElementById("inspection-section").style.display = "block";
             let typeLabel = currentType.replace(/-/g, ' ').toUpperCase();
@@ -1202,60 +1199,40 @@
 
                             if (item.fileLink) {
                                 const fileUrl = getFileUrl(item.fileLink);
-                                mediaHtml = `
-                                        <a href="${fileUrl}"
-                                           target="_blank"
-                                           class="btn btn-sm btn-outline-info">
-                                            <i class="bi bi-eye me-1"></i> View
-                                        </a>`;
+                                mediaHtml = `<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-outline-info"><i class="bi bi-eye me-1"></i> View</a>`;
                             }
 
                             if (currentType === 'group-pbl') {
                                 mediaHtml = '';
-
                                 if (item.imageActivity) {
                                     const imageUrl = getFileUrl(item.imageActivity);
-                                    mediaHtml += `
-                                            <a href="${imageUrl}"
-                                               target="_blank"
-                                               class="btn btn-sm btn-outline-primary me-1">
-                                                <i class="bi bi-image me-1"></i> Image
-                                            </a>`;
+                                    mediaHtml += `<a href="${imageUrl}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1"><i class="bi bi-image me-1"></i> Image</a><br>`;
                                 }
-
                                 if (item.videoActivity) {
                                     const videoUrl = getFileUrl(item.videoActivity);
-                                    mediaHtml += `
-                                            <a href="${videoUrl}"
-                                               target="_blank"
-                                               class="btn btn-sm btn-outline-success me-1">
-                                                <i class="bi bi-play-circle me-1"></i> Video
-                                            </a>`;
-                                }
-
-                                if (!item.imageActivity && !item.videoActivity) {
-                                    mediaHtml = 'No Media';
+                                    mediaHtml += `<a href="${videoUrl}" target="_blank" class="btn btn-sm btn-outline-success me-1"><i class="bi bi-play-circle me-1"></i> Video</a>`;
                                 }
                             }
 
-                            if (!mediaHtml) {
-                                mediaHtml = 'No Media';
-                            }
+                            if (!mediaHtml) mediaHtml = 'No Media';
 
                             let statusClass = item.isEvaluated ? item.evaluatedColor.toLowerCase() : 'pending';
                             let statusBadge = item.isEvaluated
                                 ? `<span class="status-badge ${statusClass}"><span class="status-dot"></span>${item.evaluatedColor} (${item.evaluatedMarks})</span>`
                                 : `<span class="status-badge pending"><span class="status-dot"></span>Pending</span>`;
 
+                            let projectTitleText = JSON.stringify(item.title || item.courseName || "");
+                            let mediaData = JSON.stringify(item.fileLink || item.videoActivity || item.imageActivity || "");
+
                             let rowHtml = `<tr>
-                                                    <td>${srNoOffset + index + 1}</td>
-                                                    <td>${item.schoolName}</td>
-                                                    <td>${item.title}</td>
-                                                    <td>${item.firstName} ${item.lastName}</td>
-                                                    <td>${statusBadge}</td>
-                                                    <td>${mediaHtml}</td>
-                                                    <td><button class="btn btn-sm btn-primary" onclick='openModal(${item.id}, ${JSON.stringify(item.fileLink || item.videoActivity || item.imageActivity)}, ${item.studentId || 0}, ${item.instituteId || 0}, ${JSON.stringify(item.courseName || "")})'>Evaluate</button></td>
-                                                </tr>`;
+                                        <td>${srNoOffset + index + 1}</td>
+                                        <td>${item.schoolName}</td>
+                                        <td>${item.title}</td>
+                                        <td>${item.firstName} ${item.lastName}</td>
+                                        <td>${statusBadge}</td>
+                                        <td>${mediaHtml}</td>
+                                        <td><button class="btn btn-sm btn-primary" onclick='openModal(${item.id}, ${mediaData}, ${item.studentId || 0}, ${item.instituteId || 0}, ${JSON.stringify(item.courseName || "")}, ${projectTitleText})'>Evaluate</button></td>
+                                    </tr>`;
                             tbody.innerHTML += rowHtml;
                         });
                     } else {
@@ -1266,17 +1243,50 @@
                 });
         }
 
-        function filterProjects() {
-            currentPage = 1;
-            fetchProjects();
-        }
-
+        function filterProjects() { currentPage = 1; fetchProjects(); }
         function changePage(direction) {
             currentPage += direction;
             if (currentPage < 1) currentPage = 1;
             fetchProjects();
         }
 
+        // ==========================
+        // EXPORT TO EXCEL
+        // ==========================
+        function exportToExcel() {
+            let table = document.getElementById("projects-table");
+            if (!table) return;
+            let rows = table.querySelectorAll("tr");
+            let csvContent = "";
+
+            rows.forEach((row, rowIndex) => {
+                let cols = row.querySelectorAll("th, td");
+                let rowData = [];
+                let colCount = cols.length - 1; // Last column (Action button) ignore kar rahe hain
+
+                for (let i = 0; i < colCount; i++) {
+                    let data = cols[i].innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+                    data = data.replace(/"/g, '""'); // Escaping double quotes
+                    rowData.push('"' + data + '"');
+                }
+                csvContent += rowData.join(",") + "\n";
+            });
+
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            let url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            let filenameType = currentType ? currentType.toUpperCase() : 'All_Projects';
+            link.setAttribute("download", `Evaluations_${filenameType}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // ==========================
+        // MODAL & EVALUATION SAVE
+        // ==========================
         function selectColor(color) {
             document.getElementById("selectedColor").value = color;
             document.querySelectorAll(".color-option").forEach(el => el.classList.remove("selected"));
@@ -1285,36 +1295,18 @@
             buildMarksCircles(color);
         }
 
-       
         function buildMarksCircles(color) {
             let container = document.getElementById("marks-circles-container");
             container.innerHTML = "";
-
             let markValue = 3;
+            if (color === "Red") markValue = 0;
+            else if (color === "Orange" || color === "Blue") markValue = 2;
+            else if (color === "Yellow") markValue = 1;
+            else if (color === "Green") markValue = 5;
 
-            if (color === "Red") {
-                markValue = 0;
-            } else if (color === "Orange" || color === "Blue") {
-                markValue = 2;
-            } else if (color === "Yellow") {
-                markValue = 1;
-            } else if (color === "Green") {
-                markValue = 5;
-            }
-
-            container.innerHTML = `
-                <button
-                    type="button"
-                    id="mark-btn-${markValue}"
-                    class="mark-btn active"
-                    onclick="selectMark(${markValue})">
-                    ${markValue}
-                </button>
-            `;
-
+            container.innerHTML = `<button type="button" id="mark-btn-${markValue}" class="mark-btn active" onclick="selectMark(${markValue})">${markValue}</button>`;
             selectMark(markValue);
         }
-
 
         function selectMark(mark) {
             document.getElementById("selectedMarks").value = mark;
@@ -1323,12 +1315,18 @@
             if (activeBtn) activeBtn.classList.add("active");
         }
 
-        function openModal(id, fileLink, studentId, instituteId, courseName) {
+        function openModal(id, fileLink, studentId, instituteId, courseName, projectTitle) {
             document.getElementById("modalProjId").value = id;
             document.getElementById("modalProjType").value = currentType;
             document.getElementById("modalStudentId").value = studentId;
             document.getElementById("modalInstituteId").value = instituteId;
             document.getElementById("modalCourseName").value = courseName;
+
+            // Show overview/title text dynamically
+            let overviewElement = document.getElementById("modalOverviewText");
+            if (overviewElement) {
+                overviewElement.innerText = projectTitle || courseName || "Project Details";
+            }
 
             let previewContainer = document.getElementById("media-preview-container");
             previewContainer.style.display = "none";
@@ -1365,8 +1363,14 @@
                 .then(res => res.json())
                 .then(res => {
                     if (res.success) {
-                        alert(res.message);
-                        location.reload();
+                        // Modal close karke silently refresh karenge, Reload nahi hoga!
+                        var myModalEl = document.getElementById('evaluateModal');
+                        var modal = bootstrap.Modal.getInstance(myModalEl);
+                        if (modal) modal.hide();
+
+                        fetchProjects();
+                        loadEvaluatedHistory();
+                        loadDashboardCounts();
                     } else {
                         alert("Error saving evaluation");
                     }
@@ -1375,7 +1379,7 @@
 
         function formatProjectType(type) {
             const typeMap = {
-                "individual-projects": "Individual Project ",
+                "individual-projects": "Individual Project",
                 "group-pbl": "Group Project",
                 "family-projects": "Family Project",
                 "sel-projects": "SEL Project"
@@ -1383,40 +1387,73 @@
             return typeMap[type?.toLowerCase()] || type;
         }
 
+        // ==========================
+        // EVALUATED HISTORY PAGING
+        // ==========================
+        let historyData = [];
+        let historyCurrentPage = 1;
+        let historyPageSize = 10;
+
         function loadEvaluatedHistory() {
             fetch('/api/project-evaluations/history')
                 .then(res => res.json())
                 .then(res => {
                     if (res.success) {
-                        let tbody = document.querySelector("#evaluated-table tbody");
-                        tbody.innerHTML = "";
-
-                        res.data.forEach((item, index) => {
-                            let statusClass = item.statusColor.toLowerCase();
-                            let statusBadge = `
-                                        <span class="status-badge ${statusClass}">
-                                            <span class="status-dot"></span>
-                                            ${item.statusColor}
-                                        </span>
-                                    `;
-
-                            tbody.innerHTML += `
-                                        <tr>
-                                            <td>${index + 1}</td>
-                                            <td><code>${item.projectID}</code></td>
-                                            <td><span class="badge bg-light text-dark border">${formatProjectType(item.projectType)}</span></td>
-                                            <td>${statusBadge}</td>
-                                            <td><span class="fw-bold">${item.marks}</span></td>
-                                            <td>${item.description || '-'}</td>
-                                            <td>${new Date(item.evaluatedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' })}</td>
-                                        </tr>
-                                    `;
-                        });
+                        historyData = res.data;
+                        historyCurrentPage = 1;
+                        renderHistoryTable();
                     }
-                })
-                .catch(error => {
-                    console.error("Error loading evaluated history:", error);
                 });
+        }
+
+        function renderHistoryTable() {
+            let tbody = document.querySelector("#evaluated-table tbody");
+            tbody.innerHTML = "";
+            let paginationContainer = document.getElementById("history-pagination");
+
+            if (historyData && historyData.length > 0) {
+                if (paginationContainer) paginationContainer.style.display = "flex";
+
+                let totalPages = Math.ceil(historyData.length / historyPageSize);
+                let start = (historyCurrentPage - 1) * historyPageSize;
+                let end = start + historyPageSize;
+                let pagedData = historyData.slice(start, end);
+
+                let pageInfo = document.getElementById("hist-page-info");
+                if (pageInfo) pageInfo.innerText = `Page ${historyCurrentPage} of ${totalPages}`;
+
+                let prevBtn = document.getElementById("hist-prev");
+                if (prevBtn) prevBtn.disabled = historyCurrentPage === 1;
+
+                let nextBtn = document.getElementById("hist-next");
+                if (nextBtn) nextBtn.disabled = historyCurrentPage >= totalPages;
+
+                pagedData.forEach((item, index) => {
+                    let actualIndex = start + index + 1;
+                    let statusClass = item.statusColor.toLowerCase();
+                    let statusBadge = `<span class="status-badge ${statusClass}"><span class="status-dot"></span>${item.statusColor}</span>`;
+
+                    tbody.innerHTML += `
+                                <tr>
+                                    <td>${actualIndex}</td>
+                                    <td><code>${item.projectID}</code></td>
+                                    <td><span class="badge bg-light text-dark border">${formatProjectType(item.projectType)}</span></td>
+                                    <td>${statusBadge}</td>
+                                    <td><span class="fw-bold">${item.marks}</span></td>
+                                    <td>${item.description || '-'}</td>
+                                    <td>${new Date(item.evaluatedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' })}</td>
+                                </tr>
+                            `;
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No history found</td></tr>`;
+                if (paginationContainer) paginationContainer.style.display = "none";
+            }
+        }
+
+        function changeHistoryPage(dir) {
+            historyCurrentPage += dir;
+            renderHistoryTable();
         }
     </script>
 }
