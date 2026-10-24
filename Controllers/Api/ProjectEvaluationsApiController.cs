@@ -67,9 +67,321 @@ namespace HemFoundation.Controllers.Api
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
-
         [HttpGet("list/{projectType}")]
         public async Task<IActionResult> GetProjectList(string projectType, int page = 1, int pageSize = 10, string searchTerm = "", int? month = null, int? year = null)
+        {
+            try
+            {
+                projectType = projectType?.Trim().ToLower() ?? "";
+                searchTerm = searchTerm?.Trim().ToLower() ?? "";
+                int skip = (page - 1) * pageSize;
+
+                // 1. Institutes & Students
+                var institutes = await _context.Set<WJ_Institutes>().AsNoTracking()
+                    .Where(i => i != null).ToDictionaryAsync(i => i.InstituteID, i => i.Name ?? "Unknown Institute");
+
+                var studentAssociatesList = await _context.Set<WJ_StudentAssociates>().AsNoTracking()
+                    .Where(x => x != null).ToListAsync();
+
+                var studentInstitutes = studentAssociatesList
+                    .GroupBy(x => x.StudentID)
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault(x => x.IsPrimaryAssociate == true)?.InstituteID ?? g.First().InstituteID);
+
+                // 2. Student Standard fetch (WJ_Students)
+                var studentStandardsRaw = await _context.Set<WJ_Students>().AsNoTracking()
+                    .Where(s => s.StudentID != null)
+                    .Select(s => new { s.StudentID, s.Standard })
+                    .ToListAsync();
+
+                var studentStandards = studentStandardsRaw
+                    .GroupBy(s => s.StudentID)
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault()?.Standard ?? "");
+
+                // 3. Courses Dictionary (Course Name -> Course ID)
+                var coursesListRaw = await _context.Set<Courses>().AsNoTracking()
+                    .Where(c => !string.IsNullOrEmpty(c.CourseName))
+                    .Select(c => new { c.CourseName, c.CourseID })
+                    .ToListAsync();
+
+                var courseNameToIdDict = coursesListRaw
+                    .GroupBy(c => c.CourseName.Trim().ToLower())
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault().CourseID);
+
+                // 4. WJ_Syllabus Dictionary (MainCourse Mapping)
+                var syllabusRaw = await _context.Set<CourseSyllabuses>().AsNoTracking()
+                    .Where(s =>  s.MainCourseId != null)
+                    .Select(s => new { CourseID = s.CourseId, MainCourseID = s.MainCourseId })
+                    .ToListAsync();
+
+                var courseIdToMainCourseId = syllabusRaw
+                    .GroupBy(s => s.CourseID)
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault().MainCourseID);
+
+                var mainCourseIdToCourseIds = syllabusRaw
+                    .GroupBy(s => s.MainCourseID)
+                    .ToDictionary(g => g.Key, g => g.Select(s => s.CourseID).ToList());
+
+                // 5. WJ_Practicals (Evaluation Files) - DYNAMIC FILTER APPLIED HERE
+                var allowedCodesForEval = new List<string>();
+                if (projectType == "family-projects")
+                {
+                    allowedCodesForEval.Add("G_E_010");
+                }
+                else if (projectType == "individual-projects")
+                {
+                    allowedCodesForEval.Add("G_E_011");
+                }
+                else
+                {
+                    // Group ke liye fallback list
+                    allowedCodesForEval.AddRange(new[] { "G_E_010", "G_E_10", "G_E_011" });
+                }
+
+                var practicalFilesRaw = await _context.Set<WJ_Practicals>().AsNoTracking()
+                    .Where(p => !string.IsNullOrEmpty(p.Resources) && allowedCodesForEval.Contains(p.Code))
+                    .Select(p => new { p.CourseID, p.Resources })
+                    .ToListAsync();
+
+                var practicalFiles = practicalFilesRaw
+                    .GroupBy(p => p.CourseID)
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault()?.Resources ?? "");
+
+                var evaluations = await _context.ProjectEvaluations.AsNoTracking()
+                    .Where(x => x != null && x.ProjectType == projectType).ToDictionaryAsync(x => x.ProjectID, x => x);
+
+                if (projectType == "family-projects")
+                {
+                    var rawData = await _context.Set<HfUploadAnubhuti>().AsNoTracking().Where(x => x != null).ToListAsync();
+
+                    if (month.HasValue && year.HasValue)
+                        rawData = rawData.Where(x => x.IsCreatedDate.HasValue && x.IsCreatedDate.Value.Month == month.Value && x.IsCreatedDate.Value.Year == year.Value).ToList();
+
+                    var query = rawData.Select(f => {
+                        int? studentId = f.iscreatedby;
+                        int? instId = (studentId != null && studentInstitutes.ContainsKey(studentId.Value)) ? studentInstitutes[studentId.Value] : (int?)null;
+                        string schoolName = (instId != null && institutes.ContainsKey(instId.Value)) ? institutes[instId.Value] : "Unknown School";
+                        var eval = evaluations.ContainsKey(f.Id) ? evaluations[f.Id] : null;
+
+                        string courseName = f.CourseName ?? "";
+                        string standard = (studentId != null && studentStandards.ContainsKey(studentId.Value)) ? studentStandards[studentId.Value] : "";
+
+                        int courseId = 0;
+                        string normalizedCourseName = courseName.Trim().ToLower();
+                        if (!string.IsNullOrEmpty(normalizedCourseName))
+                        {
+                            if (!courseNameToIdDict.TryGetValue(normalizedCourseName, out courseId))
+                            {
+                                var match = courseNameToIdDict.FirstOrDefault(c => c.Key.Contains(normalizedCourseName) || normalizedCourseName.Contains(c.Key));
+                                if (match.Key != null) courseId = match.Value;
+                            }
+                        }
+
+                        string evalFileLink = "";
+                        if (courseId != 0)
+                        {
+                            if (courseIdToMainCourseId.TryGetValue(courseId, out int mainCourseId))
+                            {
+                                if (mainCourseIdToCourseIds.TryGetValue(mainCourseId, out var relatedCourseIds))
+                                {
+                                    foreach (var relId in relatedCourseIds)
+                                    {
+                                        if (practicalFiles.TryGetValue(relId, out string res))
+                                        {
+                                            evalFileLink = FormatWebPath(res);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            if (string.IsNullOrEmpty(evalFileLink) && practicalFiles.TryGetValue(courseId, out string directRes))
+                            {
+                                evalFileLink = FormatWebPath(directRes);
+                            }
+                        }
+
+                        return new
+                        {
+                            Id = f.Id,
+                            InstituteId = instId,
+                            StudentId = studentId,
+                            CourseName = courseName,
+                            SchoolName = schoolName,
+                            Standard = standard,
+                            Title = f.Title ?? f.CourseName ?? "Anubhuti Family Project",
+                            FirstName = f.FirstName ?? "",
+                            LastName = f.LastName ?? "",
+                            FileLink = FormatWebPath(f.FileLink ?? string.Empty),
+                            EvaluationFileUrl = evalFileLink,
+                            Status = f.Status ?? "Pending",
+                            CreatedDate = f.IsCreatedDate?.ToString("yyyy-MM-dd") ?? "",
+                            EvaluatedColor = eval?.StatusColor ?? "",
+                            EvaluatedMarks = eval?.Marks ?? 0,
+                            IsEvaluated = eval != null
+                        };
+                    }).AsQueryable();
+
+                    if (!string.IsNullOrEmpty(searchTerm))
+                        query = query.Where(x => x.SchoolName.ToLower().Contains(searchTerm) || x.FirstName.ToLower().Contains(searchTerm) || x.Title.ToLower().Contains(searchTerm) || x.Status.ToLower().Contains(searchTerm) || x.EvaluatedColor.ToLower().Contains(searchTerm));
+
+                    query = query.OrderBy(x => x.CourseName).ThenBy(x => x.Standard);
+                    var totalRecords = query.Count();
+                    var data = query.Skip(skip).Take(pageSize).ToList();
+                    return Ok(new { success = true, totalRecords, data });
+                }
+                else if (projectType == "individual-projects")
+                {
+                    var rawData = await _context.Set<HfTblUploadIndividualProject>().AsNoTracking().Where(x => x != null).ToListAsync();
+
+                    if (month.HasValue && year.HasValue)
+                        rawData = rawData.Where(x => x.IsCreatedDate.HasValue && x.IsCreatedDate.Value.Month == month.Value && x.IsCreatedDate.Value.Year == year.Value).ToList();
+
+                    var query = rawData.Select(ind => {
+                        int? studentId = ind.Iscreatedby;
+                        int? instId = (studentId != null && studentInstitutes.ContainsKey(studentId.Value)) ? studentInstitutes[studentId.Value] : (int?)null;
+                        string schoolName = (instId != null && institutes.ContainsKey(instId.Value)) ? institutes[instId.Value] : "Unknown School";
+                        var eval = evaluations.ContainsKey(ind.Id) ? evaluations[ind.Id] : null;
+
+                        string courseName = ind.CourseName ?? "";
+                        string standard = (studentId != null && studentStandards.ContainsKey(studentId.Value)) ? studentStandards[studentId.Value] : "";
+
+                        int courseId = 0;
+                        string normalizedCourseName = courseName.Trim().ToLower();
+                        if (!string.IsNullOrEmpty(normalizedCourseName))
+                        {
+                            if (!courseNameToIdDict.TryGetValue(normalizedCourseName, out courseId))
+                            {
+                                var match = courseNameToIdDict.FirstOrDefault(c => c.Key.Contains(normalizedCourseName) || normalizedCourseName.Contains(c.Key));
+                                if (match.Key != null) courseId = match.Value;
+                            }
+                        }
+
+                        string evalFileLink = "";
+                        if (courseId != 0)
+                        {
+                            if (courseIdToMainCourseId.TryGetValue(courseId, out int mainCourseId))
+                            {
+                                if (mainCourseIdToCourseIds.TryGetValue(mainCourseId, out var relatedCourseIds))
+                                {
+                                    foreach (var relId in relatedCourseIds)
+                                    {
+                                        if (practicalFiles.TryGetValue(relId, out string res))
+                                        {
+                                            evalFileLink = FormatWebPath(res);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            if (string.IsNullOrEmpty(evalFileLink) && practicalFiles.TryGetValue(courseId, out string directRes))
+                            {
+                                evalFileLink = FormatWebPath(directRes);
+                            }
+                        }
+
+                        return new
+                        {
+                            Id = ind.Id,
+                            InstituteId = instId,
+                            StudentId = studentId,
+                            CourseName = courseName,
+                            SchoolName = schoolName,
+                            Standard = standard,
+                            Title = ind.Title ?? ind.CourseName ?? "Individual PBL Project",
+                            FirstName = ind.FirstName ?? "",
+                            LastName = ind.LastName ?? "",
+                            FileLink = FormatWebPath(ind.FileLink ?? string.Empty),
+                            EvaluationFileUrl = evalFileLink,
+                            Status = ind.Status ?? "Pending",
+                            CreatedDate = ind.IsCreatedDate?.ToString("yyyy-MM-dd") ?? "",
+                            EvaluatedColor = eval?.StatusColor ?? "",
+                            EvaluatedMarks = eval?.Marks ?? 0,
+                            IsEvaluated = eval != null
+                        };
+                    }).AsQueryable();
+
+                    if (!string.IsNullOrEmpty(searchTerm))
+                        query = query.Where(x => x.SchoolName.ToLower().Contains(searchTerm) || x.FirstName.ToLower().Contains(searchTerm) || x.Title.ToLower().Contains(searchTerm) || x.Status.ToLower().Contains(searchTerm) || x.EvaluatedColor.ToLower().Contains(searchTerm));
+
+                    query = query.OrderBy(x => x.CourseName).ThenBy(x => x.Standard);
+                    var totalRecords = query.Count();
+                    var data = query.Skip(skip).Take(pageSize).ToList();
+                    return Ok(new { success = true, totalRecords, data });
+                }
+                else if (projectType == "group-pbl")
+                {
+                    var rawData = await _context.creativityActivitiesSubmission2021s.AsNoTracking().Where(x => x != null).ToListAsync();
+
+                    if (month.HasValue && year.HasValue)
+                        rawData = rawData.Where(x => x.CreatedDate.HasValue && x.CreatedDate.Value.Month == month.Value && x.CreatedDate.Value.Year == year.Value).ToList();
+
+                    var query = rawData.Select(g => {
+                        var eval = evaluations.ContainsKey(g.SubmissionID) ? evaluations[g.SubmissionID] : null;
+                        string schoolName = (g.InstituteID != null && institutes.ContainsKey(g.InstituteID.Value)) ? institutes[g.InstituteID.Value] : "Unknown Institute";
+
+                        string courseName = g.MainCourseID.ToString();
+                        int mainCourseId = g.MainCourseID ?? 0;
+                        string evalFileLink = "";
+
+                        if (mainCourseId != 0)
+                        {
+                            if (mainCourseIdToCourseIds.TryGetValue(mainCourseId, out var relatedCourseIds))
+                            {
+                                foreach (var relId in relatedCourseIds)
+                                {
+                                    if (practicalFiles.TryGetValue(relId, out string res))
+                                    {
+                                        evalFileLink = FormatWebPath(res);
+                                        break;
+                                    }
+                                }
+                            }
+                            if (string.IsNullOrEmpty(evalFileLink) && practicalFiles.TryGetValue(mainCourseId, out string directRes))
+                            {
+                                evalFileLink = FormatWebPath(directRes);
+                            }
+                        }
+
+                        return new
+                        {
+                            Id = g.SubmissionID,
+                            InstituteId = g.InstituteID,
+                            StudentId = (int?)null,
+                            CourseName = courseName,
+                            SchoolName = schoolName,
+                            Standard = "",
+                            Title = g.ShortDescription ?? "Group PBL Activity",
+                            FirstName = "Team Members",
+                            LastName = g.TeamMembersList ?? "",
+                            FileLink = "",
+                            ImageActivity = FormatWebPath(g.ImageActivity ?? string.Empty),
+                            VideoActivity = FormatWebPath(g.VideoActivity ?? string.Empty),
+                            EvaluationFileUrl = evalFileLink,
+                            Status = "Submitted",
+                            CreatedDate = g.CreatedDate?.ToString("yyyy-MM-dd") ?? "",
+                            EvaluatedColor = eval?.StatusColor ?? "",
+                            EvaluatedMarks = eval?.Marks ?? 0,
+                            IsEvaluated = eval != null
+                        };
+                    }).AsQueryable();
+
+                    if (!string.IsNullOrEmpty(searchTerm))
+                        query = query.Where(x => x.SchoolName.ToLower().Contains(searchTerm) || x.Title.ToLower().Contains(searchTerm) || x.LastName.ToLower().Contains(searchTerm) || x.EvaluatedColor.ToLower().Contains(searchTerm));
+
+                    query = query.OrderBy(x => x.CourseName).ThenBy(x => x.Standard);
+                    var totalRecords = query.Count();
+                    var data = query.Skip(skip).Take(pageSize).ToList();
+                    return Ok(new { success = true, totalRecords, data });
+                }
+
+                return BadRequest(new { success = false, message = "Invalid project type." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+        [HttpGet("list1/{projectType}")]
+        public async Task<IActionResult> GetProjectList1(string projectType, int page = 1, int pageSize = 10, string searchTerm = "", int? month = null, int? year = null)
         {
             try
             {
