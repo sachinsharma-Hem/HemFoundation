@@ -108,10 +108,10 @@ namespace HemFoundation.Controllers.Api
                     .ToDictionary(g => g.Key, g => g.FirstOrDefault().CourseID);
 
                 // 4. WJ_Syllabus Dictionary (MainCourse Mapping)
-                var syllabusRaw = await _context.Set<CourseSyllabuses>().AsNoTracking()
-                    .Where(s =>  s.MainCourseId != null)
-                    .Select(s => new { CourseID = s.CourseId, MainCourseID = s.MainCourseId })
-                    .ToListAsync();
+                var syllabusRaw = await _context.CourseSyllabuses.AsNoTracking()
+    .Where(s => s.MainCourseId != null)
+    .Select(s => new { CourseID = s.CourseId, MainCourseID = s.MainCourseId })
+    .ToListAsync();
 
                 var courseIdToMainCourseId = syllabusRaw
                     .GroupBy(s => s.CourseID)
@@ -125,7 +125,7 @@ namespace HemFoundation.Controllers.Api
                 var allowedCodesForEval = new List<string>();
                 if (projectType == "family-projects")
                 {
-                    allowedCodesForEval.Add("G_E_010");
+                    allowedCodesForEval.Add("G_E_01");
                 }
                 else if (projectType == "individual-projects")
                 {
@@ -179,7 +179,7 @@ namespace HemFoundation.Controllers.Api
                         string evalFileLink = "";
                         if (courseId != 0)
                         {
-                            if (courseIdToMainCourseId.TryGetValue(courseId, out int mainCourseId))
+                            if (courseIdToMainCourseId.TryGetValue(courseId, out int? mainCourseId))
                             {
                                 if (mainCourseIdToCourseIds.TryGetValue(mainCourseId, out var relatedCourseIds))
                                 {
@@ -258,7 +258,7 @@ namespace HemFoundation.Controllers.Api
                         string evalFileLink = "";
                         if (courseId != 0)
                         {
-                            if (courseIdToMainCourseId.TryGetValue(courseId, out int mainCourseId))
+                            if (courseIdToMainCourseId.TryGetValue(courseId, out int? mainCourseId))
                             {
                                 if (mainCourseIdToCourseIds.TryGetValue(mainCourseId, out var relatedCourseIds))
                                 {
@@ -380,6 +380,7 @@ namespace HemFoundation.Controllers.Api
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+       
         [HttpGet("list1/{projectType}")]
         public async Task<IActionResult> GetProjectList1(string projectType, int page = 1, int pageSize = 10, string searchTerm = "", int? month = null, int? year = null)
         {
