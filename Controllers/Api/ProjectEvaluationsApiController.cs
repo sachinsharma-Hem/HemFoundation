@@ -13,7 +13,7 @@ namespace HemFoundation.Controllers.Api
     public class ProjectEvaluationsApiController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly IConfiguration _configuration; 
         public ProjectEvaluationsApiController(
      ApplicationDbContext context,
      IConfiguration configuration)
@@ -120,6 +120,25 @@ namespace HemFoundation.Controllers.Api
                 var mainCourseIdToCourseIds = syllabusRaw
                     .GroupBy(s => s.MainCourseID)
                     .ToDictionary(g => g.Key, g => g.Select(s => s.CourseID).ToList());
+
+
+
+                var masterItems = await _context.vw_valueitemmasters.AsNoTracking().ToListAsync();
+
+                var courseNames = masterItems
+                    .Where(x => x.MainCourseId != 0)
+                    .GroupBy(x => x.MainCourseId)
+                    .ToDictionary(g => g.Key, g => g.First().ValueTitleEng ?? g.First().ValueTitleEng);
+
+                var standards = masterItems
+                    .Where(x => x.MainCourseId != 0 && !string.IsNullOrEmpty(x.GradeId))
+                    .GroupBy(x => x.MainCourseId)
+                    .ToDictionary(g => g.Key, g => g.First().GradeId);
+
+                var MpracticalFiles = masterItems
+                    .Where(x => x.MainCourseId != 0 && !string.IsNullOrEmpty(x.ActivityPdfUrl))
+                    .GroupBy(x => x.MainCourseId)
+                    .ToDictionary(g => g.Key, g => g.First().ActivityPdfUrl);
 
                 // 5. WJ_Practicals (Evaluation Files) - DYNAMIC FILTER APPLIED HERE
                 var allowedCodesForEval = new List<string>();
@@ -314,31 +333,26 @@ namespace HemFoundation.Controllers.Api
                     if (month.HasValue && year.HasValue)
                         rawData = rawData.Where(x => x.CreatedDate.HasValue && x.CreatedDate.Value.Month == month.Value && x.CreatedDate.Value.Year == year.Value).ToList();
 
+                    // Ensure you have pre-loaded lookup dictionaries from vw_valueitemmasters:
+                    // e.g., 
+                    // var courseNames = ... (keyed by MainCourseID or Id)
+                    // var standards = ... (keyed by MainCourseID or Id, returning `grade`)
+                    // var practicalFiles = ... (keyed by MainCourseID or Id, returning `activitypdfurl`)
+
                     var query = rawData.Select(g => {
                         var eval = evaluations.ContainsKey(g.SubmissionID) ? evaluations[g.SubmissionID] : null;
                         string schoolName = (g.InstituteID != null && institutes.ContainsKey(g.InstituteID.Value)) ? institutes[g.InstituteID.Value] : "Unknown Institute";
 
-                        string courseName = g.MainCourseID.ToString();
                         int mainCourseId = g.MainCourseID ?? 0;
-                        string evalFileLink = "";
 
-                        if (mainCourseId != 0)
+                        // Retrieve CourseName, Standard (Grade), and Evaluation File URL directly using MainCourseID
+                        string courseName = (mainCourseId != 0 && courseNames.ContainsKey(mainCourseId)) ? courseNames[mainCourseId] : (g.MainCourseID?.ToString() ?? "");
+                        string standard = (mainCourseId != 0 && standards.ContainsKey(mainCourseId)) ? standards[mainCourseId] : "";
+
+                        string evalFileLink = "";
+                        if (mainCourseId != 0 && MpracticalFiles.TryGetValue(mainCourseId, out string res))
                         {
-                            if (mainCourseIdToCourseIds.TryGetValue(mainCourseId, out var relatedCourseIds))
-                            {
-                                foreach (var relId in relatedCourseIds)
-                                {
-                                    if (practicalFiles.TryGetValue(relId, out string res))
-                                    {
-                                        evalFileLink = FormatWebPath(res);
-                                        break;
-                                    }
-                                }
-                            }
-                            if (string.IsNullOrEmpty(evalFileLink) && practicalFiles.TryGetValue(mainCourseId, out string directRes))
-                            {
-                                evalFileLink = FormatWebPath(directRes);
-                            }
+                            evalFileLink = FormatWebPath(res);
                         }
 
                         return new
@@ -348,7 +362,7 @@ namespace HemFoundation.Controllers.Api
                             StudentId = (int?)null,
                             CourseName = courseName,
                             SchoolName = schoolName,
-                            Standard = "",
+                            Standard = standard,
                             Title = g.ShortDescription ?? "Group PBL Activity",
                             FirstName = "Team Members",
                             LastName = g.TeamMembersList ?? "",

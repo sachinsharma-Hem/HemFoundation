@@ -29,6 +29,9 @@ namespace HemFoundation.Models.Entities
         [Column("activitypdfurl")]
         public string? ActivityPdfUrl { get; set; }
 
+        [Column("maincourseid")]
+        public int MainCourseId { get; set; }
+
         //[Column("isactive")]
         //public bool IsActive { get; set; } = true;
 
