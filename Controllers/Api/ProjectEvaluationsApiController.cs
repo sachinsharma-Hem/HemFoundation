@@ -68,7 +68,7 @@ namespace HemFoundation.Controllers.Api
             }
         }
         [HttpGet("list/{projectType}")]
-        public async Task<IActionResult> GetProjectList(string projectType, int page = 1, int pageSize = 10, string searchTerm = "", int? month = null, int? year = null)
+        public async Task<IActionResult> GetProjectList(string projectType, int page = 1, int pageSize = 3000, string searchTerm = "", int? month = null, int? year = null)
         {
             try
             {

@@ -725,6 +725,37 @@
         color: #475569;
         white-space: nowrap;
     }
+    /* Table Sorting & Column Filter Styling */
+    .table thead th {
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+    }
+
+        .table thead th:hover {
+            background-color: #e5e7eb;
+        }
+
+        .table thead th .sort-icon {
+            margin-left: 0.3rem;
+            font-size: 0.7rem;
+            color: #9ca3af;
+        }
+
+    .col-filter-input {
+        width: 100%;
+        padding: 0.2rem 0.4rem;
+        font-size: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-weight: normal;
+        text-transform: none;
+    }
+
+        .col-filter-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(88, 80, 236, 0.1);
 </style>
 
 <div class="container-fluid py-4">
@@ -854,7 +885,10 @@
 
                 <!-- EXCEL EXPORT BUTTON -->
                 <button class="btn btn-sm btn-light text-success fw-bold ms-2" onclick="exportToExcel()">
-                    <i class="bi bi-file-earmark-excel"></i> Export Excel
+                    <i class="bi bi-file-earmark-excel"></i> Export Page
+                </button>
+                <button class="btn btn-sm btn-success text-white fw-bold" onclick="exportAllToExcel()" title="Export Entire List">
+                    <i class="bi bi-file-earmark-excel-fill"></i> Export All
                 </button>
             </div>
         </div>
@@ -1043,7 +1077,7 @@
 
         let currentType = "";
         let currentPage = 1;
-        let pageSize = 10;
+        let pageSize = 25;
         let totalRecords = 0;
 
         document.addEventListener("DOMContentLoaded", function() {
@@ -1155,11 +1189,230 @@
                     }
                 });
         }
+        let allFetchedRecords = []; // Store current page records locally for sorting & column filtering
+        let currentSortColumn = -1;
+        let sortAscending = true;
+
+        function fetchProjects() {
+            document.getElementById("inspection-section").style.display = "block";
+            let typeLabel = currentType.replace(/-/g, ' ').toUpperCase();
+            document.getElementById("section-title").innerText = "Project List: " + typeLabel;
+
+            let searchTerm = document.getElementById("searchBox").value;
+            let month = document.getElementById("filterMonth").value;
+            let year = document.getElementById("filterYear").value;
+
+            let url = `/api/project-evaluations/list/${currentType}?page=${currentPage}&pageSize=${pageSize}&searchTerm=${encodeURIComponent(searchTerm)}`;
+            if (month) url += `&month=${month}&year=${year}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        totalRecords = res.totalRecords;
+                        allFetchedRecords = res.data || [];
+                        document.getElementById("record-count").innerText = `Total: ${totalRecords}`;
+
+                        let totalPages = Math.ceil(totalRecords / pageSize);
+                        document.getElementById("page-info").innerText = `Page ${currentPage} of ${totalPages || 1}`;
+                        document.getElementById("prev-btn").disabled = currentPage === 1;
+                        document.getElementById("next-btn").disabled = currentPage >= totalPages;
+
+                        renderTableHeaders();
+                        renderTableBody(allFetchedRecords);
+                    } else {
+                        allFetchedRecords = [];
+                        renderTableHeaders();
+                        renderTableBody([]);
+                        document.getElementById("record-count").innerText = `Total: 0`;
+                        document.getElementById("page-info").innerText = `Page 1 of 1`;
+                    }
+                });
+        }
+
+        function renderTableHeaders() {
+            let thead = document.querySelector("#projects-table thead");
+
+            let columns = (currentType === 'group-pbl')
+                ? ["Sr.", "School Name", "Standard", "Course / Title", "Comment", "Ref Media", "Status", "Media", "Action"]
+                : ["Sr.", "School Name", "Standard", "Course / Title", "Student Name", "Ref Media", "Status", "Media", "Action"];
+
+            // Row 1: Column Titles with Sorting
+            let headerRow = "<tr>";
+            columns.forEach((col, index) => {
+                let sortIndicator = "";
+                if (currentSortColumn === index) {
+                    sortIndicator = `<span class="sort-icon">${sortAscending ? '▲' : '▼'}</span>`;
+                } else if (index < columns.length - 2) { // Make data columns sortable (exclude Media & Action)
+                    sortIndicator = `<span class="sort-icon">↕</span>`;
+                }
+
+                let sortClick = (index < columns.length - 2) ? `onclick="sortColumns(${index})"` : "";
+                headerRow += `<th ${sortClick}>${col} ${sortIndicator}</th>`;
+            });
+            headerRow += "</tr>";
+
+            // Row 2: Column-wise Search Inputs
+            let filterRow = "<tr class='bg-light'>";
+            columns.forEach((col, index) => {
+                if (index === 0 || index >= columns.length - 2) {
+                    filterRow += `<th></th>`; // Skip filter for Sr., Media, and Action
+                } else {
+                    filterRow += `<th><input type="text" class="col-filter-input" placeholder="Filter ${col}..." onkeyup="applyColumnFilters()" /></th>`;
+                }
+            });
+            filterRow += "</tr>";
+
+            thead.innerHTML = headerRow + filterRow;
+        }
+
+        function renderTableBody(data) {
+            let tbody = document.querySelector("#projects-table tbody");
+            tbody.innerHTML = "";
+
+            if (!data || data.length === 0) {
+                let colSpan = currentType === 'group-pbl' ? 9 : 9;
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-muted py-4">No records found</td></tr>`;
+                return;
+            }
+
+            let srNoOffset = (currentPage - 1) + 1;
+
+            data.forEach((item, index) => {
+                let mediaHtml = '';
+
+                if (item.fileLink) {
+                    const fileUrl = getFileUrl(item.fileLink);
+                    mediaHtml = `<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-outline-info"><i class="bi bi-eye me-1"></i> View</a>`;
+                }
+
+                if (currentType === 'group-pbl') {
+                    mediaHtml = '';
+                    if (item.imageActivity) {
+                        const imageUrl = getFileUrl(item.imageActivity);
+                        mediaHtml += `<a href="${imageUrl}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1"><i class="bi bi-image me-1"></i> Image</a><br>`;
+                    }
+                    if (item.videoActivity) {
+                        const videoUrl = getFileUrl(item.videoActivity);
+                        mediaHtml += `<a href="${videoUrl}" target="_blank" class="btn btn-sm btn-outline-success me-1"><i class="bi bi-play-circle me-1"></i> Video</a>`;
+                    }
+                }
+
+                if (!mediaHtml) mediaHtml = 'No Media';
+
+                let statusClass = item.isEvaluated ? item.evaluatedColor.toLowerCase() : 'pending';
+                let statusBadge = item.isEvaluated
+                    ? `<span class="status-badge ${statusClass}"><span class="status-dot"></span>${item.evaluatedColor} (${item.evaluatedMarks})</span>`
+                    : `<span class="status-badge pending"><span class="status-dot"></span>Pending</span>`;
+
+                let projectTitleText = JSON.stringify(item.title || item.courseName || "");
+                let mediaData = JSON.stringify(item.fileLink || item.videoActivity || item.imageActivity || "");
+
+                let rowHtml = "";
+                if (currentType === 'group-pbl') {
+                    rowHtml = `<tr>
+                                <td>${(currentPage - 1) * pageSize + index + 1}</td>
+                                <td>${item.schoolName || ''}</td>
+                                <td>${item.standard || ''}</td>
+                                <td>${item.courseName || ''}</td>
+                                <td>${item.title || ''}</td>
+                                <td><a href="${item.evaluationFileUrl || '#'}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1"><i class="bi bi-image me-1"></i> PBL</a></td>
+                                <td>${statusBadge}</td>
+                                <td>${mediaHtml}</td>
+                                <td><button class="btn btn-sm btn-primary" onclick='openModal(${item.id}, ${mediaData}, ${item.studentId || 0}, ${item.instituteId || 0}, ${JSON.stringify(item.courseName || "")}, ${projectTitleText})'>Evaluate</button></td>
+                            </tr>`;
+                } else {
+                    rowHtml = `<tr>
+                                <td>${(currentPage - 1) * pageSize + index + 1}</td>
+                                <td>${item.schoolName || ''}</td>
+                                <td>${item.standard || ''}</td>
+                                <td>${item.title || ''}</td>
+                                <td>${(item.firstName || '')} ${(item.lastName || '')}</td>
+                                <td><a href="${item.evaluationFileUrl || '#'}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1"><i class="bi bi-image me-1"></i> PBL</a></td>
+                                <td>${statusBadge}</td>
+                                <td>${mediaHtml}</td>
+                                <td><button class="btn btn-sm btn-primary" onclick='openModal(${item.id}, ${mediaData}, ${item.studentId || 0}, ${item.instituteId || 0}, ${JSON.stringify(item.courseName || "")}, ${projectTitleText})'>Evaluate</button></td>
+                            </tr>`;
+                }
+                tbody.innerHTML += rowHtml;
+            });
+        }
 
         // ==========================
-        // FETCH DATA & RENDER TABLE
+        // SORTING & COLUMN FILTERING
         // ==========================
-        function fetchProjects() {
+        function sortColumns(columnIndex) {
+            if (currentSortColumn === columnIndex) {
+                sortAscending = !sortAscending;
+            } else {
+                currentSortColumn = columnIndex;
+                sortAscending = true;
+            }
+
+            allFetchedRecords.sort((a, b) => {
+                let valA = getColumnValue(a, columnIndex);
+                let valB = getColumnValue(b, columnIndex);
+
+                if (!isNaN(valA) && !isNaN(valB)) {
+                    valA = parseFloat(valA);
+                    valB = parseFloat(valB);
+                } else {
+                    valA = String(valA).toLowerCase();
+                    valB = String(valB).toLowerCase();
+                }
+
+                if (valA < valB) return sortAscending ? -1 : 1;
+                if (valA > valB) return sortAscending ? 1 : -1;
+                return 0;
+            });
+
+            renderTableHeaders();
+            applyColumnFilters(); // Re-apply active filters after sort
+        }
+
+        function getColumnValue(item, index) {
+            if (currentType === 'group-pbl') {
+                // Columns: 0:Sr, 1:SchoolName, 2:Standard, 3:CourseName, 4:Title, 5:RefMedia, 6:Status...
+                switch (index) {
+                    case 1: return item.schoolName || '';
+                    case 2: return item.standard || '';
+                    case 3: return item.courseName || '';
+                    case 4: return item.title || '';
+                    default: return '';
+                }
+            } else {
+                // Columns: 0:Sr, 1:SchoolName, 2:Standard, 3:Title, 4:StudentName, 5:RefMedia, 6:Status...
+                switch (index) {
+                    case 1: return item.schoolName || '';
+                    case 2: return item.standard || '';
+                    case 3: return item.title || '';
+                    case 4: return `${item.firstName || ''} ${item.lastName || ''}`;
+                    default: return '';
+                }
+            }
+        }
+
+        function applyColumnFilters() {
+            let filterInputs = document.querySelectorAll(".col-filter-input");
+            let filters = [];
+
+            filterInputs.forEach((input, idx) => {
+                // Map input index back to column index
+                let colIndex = idx === 0 ? 1 : idx === 1 ? 2 : idx === 2 ? 3 : 4;
+                filters.push({ colIndex: colIndex, keyword: input.value.toLowerCase().trim() });
+            });
+
+            let filteredData = allFetchedRecords.filter(item => {
+                return filters.every(f => {
+                    if (!f.keyword) return true;
+                    let val = String(getColumnValue(item, f.colIndex)).toLowerCase();
+                    return val.includes(f.keyword);
+                });
+            });
+
+            renderTableBody(filteredData);
+        }
+        function fetchProjects1() {
             document.getElementById("inspection-section").style.display = "block";
             let typeLabel = currentType.replace(/-/g, ' ').toUpperCase();
             document.getElementById("section-title").innerText = "Project List: " + typeLabel;
@@ -1179,9 +1432,9 @@
                     tbody.innerHTML = "";
 
                     if (currentType === 'group-pbl') {
-                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Description</th><th>Team Members</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
+                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Standard</th><th>Course / Title</th><th>Comment</th><th>Ref Media</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
                     } else {
-                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Course / Title</th><th>Student Name</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
+                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Standard</th><th>Course / Title</th><th>Student Name</th><th>Ref Media</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
                     }
 
                     if (res.success && res.data.length > 0) {
@@ -1224,17 +1477,39 @@
 
                             let projectTitleText = JSON.stringify(item.title || item.courseName || "");
                             let mediaData = JSON.stringify(item.fileLink || item.videoActivity || item.imageActivity || "");
-
-                            let rowHtml = `<tr>
+                             if (currentType === 'group-pbl') {
+                                  let rowHtml = `<tr>
                                         <td>${srNoOffset + index + 1}</td>
                                         <td>${item.schoolName}</td>
-                                        <td>${item.title}</td>
-                                        <td>${item.firstName} ${item.lastName}</td>
+                                         <td>${item.standard}</td>
+                                        <td>${item.courseName}</td>
+                                          <td>${item.title}</td>
+                                        <td><a href="${item.evaluationFileUrl}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1"><i class="bi bi-image me-1"></i> PBL</a></td>
+                                       
                                         <td>${statusBadge}</td>
                                         <td>${mediaHtml}</td>
                                         <td><button class="btn btn-sm btn-primary" onclick='openModal(${item.id}, ${mediaData}, ${item.studentId || 0}, ${item.instituteId || 0}, ${JSON.stringify(item.courseName || "")}, ${projectTitleText})'>Evaluate</button></td>
                                     </tr>`;
-                            tbody.innerHTML += rowHtml;
+                                   tbody.innerHTML += rowHtml;
+                             }
+                             else
+                             {
+                                  let rowHtml = `<tr>
+                                        <td>${srNoOffset + index + 1}</td>
+                                        <td>${item.schoolName}</td>
+                                         <td>${item.standard}</td>
+                                        <td>${item.title}</td>
+                                        <td>${item.firstName} ${item.lastName}</td>
+                                        
+                                        <td><a href="${item.evaluationFileUrl}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1"><i class="bi bi-image me-1"></i> PBL</a></td>
+                                        <td>${statusBadge}</td>
+                                        <td>${mediaHtml}</td>
+                                        <td><button class="btn btn-sm btn-primary" onclick='openModal(${item.id}, ${mediaData}, ${item.studentId || 0}, ${item.instituteId || 0}, ${JSON.stringify(item.courseName || "")}, ${projectTitleText})'>Evaluate</button></td>
+                                    </tr>`;
+                                      tbody.innerHTML += rowHtml;
+
+                             }
+                           
                         });
                     } else {
                         tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No records found</td></tr>`;
@@ -1250,10 +1525,6 @@
             if (currentPage < 1) currentPage = 1;
             fetchProjects();
         }
-
-        // ==========================
-        // EXPORT TO EXCEL
-        // ==========================
         function exportToExcel() {
             let table = document.getElementById("projects-table");
             if (!table) return;
@@ -1263,11 +1534,60 @@
             rows.forEach((row, rowIndex) => {
                 let cols = row.querySelectorAll("th, td");
                 let rowData = [];
-                let colCount = cols.length - 1; // Last column (Action button) ignore kar rahe hain
+                let colCount = cols.length - 1; // Exclude the Action column
+
+                for (let i = 0; i < colCount; i++) {
+                    let cell = cols[i];
+                    let cellText = "";
+
+                    // Check if this cell contains media links (usually the 'Media' column)
+                    let links = cell.querySelectorAll("a");
+                    if (links.length > 0) {
+                        let urls = [];
+                        links.forEach(link => {
+                            let href = link.getAttribute("href");
+                            if (href && href !== '#' && !href.startsWith('javascript:')) {
+                                urls.push(href);
+                            }
+                        });
+                        // Join multiple media URLs with a semicolon if there are more than one (e.g., Image + Video)
+                        cellText = urls.length > 0 ? urls.join("; ") : "No Media";
+                    } else {
+                        // Fallback to regular text content for other columns
+                        cellText = cell.innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+                    }
+
+                    cellText = cellText.replace(/"/g, '""');
+                    rowData.push('"' + cellText + '"');
+                }
+                csvContent += rowData.join(",") + "\n";
+            });
+
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            let url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            let filenameType = currentType ? currentType.toUpperCase() : 'All_Projects';
+            link.setAttribute("download", `Evaluations_${filenameType}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        function exportToExcel1() {
+            let table = document.getElementById("projects-table");
+            if (!table) return;
+            let rows = table.querySelectorAll("tr");
+            let csvContent = "";
+
+            rows.forEach((row, rowIndex) => {
+                let cols = row.querySelectorAll("th, td");
+                let rowData = [];
+                let colCount = cols.length - 1; 
 
                 for (let i = 0; i < colCount; i++) {
                     let data = cols[i].innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
-                    data = data.replace(/"/g, '""'); // Escaping double quotes
+                    data = data.replace(/"/g, '""');
                     rowData.push('"' + data + '"');
                 }
                 csvContent += rowData.join(",") + "\n";
@@ -1285,9 +1605,7 @@
             document.body.removeChild(link);
         }
 
-        // ==========================
-        // MODAL & EVALUATION SAVE
-        // ==========================
+        
         function selectColor(color) {
             document.getElementById("selectedColor").value = color;
             document.querySelectorAll(".color-option").forEach(el => el.classList.remove("selected"));
@@ -1455,6 +1773,89 @@
         function changeHistoryPage(dir) {
             historyCurrentPage += dir;
             renderHistoryTable();
+        }
+        function exportAllToExcel() {
+            if (!currentType) {
+                alert("Please select a project category first.");
+                return;
+            }
+
+            let searchTerm = document.getElementById("searchBox").value;
+            let month = document.getElementById("filterMonth").value;
+            let year = document.getElementById("filterYear").value;
+
+            // Fetch all records by setting a high page size (e.g. 999999)
+            let url = `/api/project-evaluations/list/${currentType}?page=1&pageSize=999999&searchTerm=${encodeURIComponent(searchTerm)}`;
+            if (month) url += `&month=${month}&year=${year}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success && res.data && res.data.length > 0) {
+                        let records = res.data;
+                        let csvContent = "";
+
+                        // Define headers based on project type
+                        let headers = (currentType === 'group-pbl')
+                            ? ["Sr.", "School Name", "Standard", "Course / Title", "Comment", "Ref Media", "Status", "Media"]
+                            : ["Sr.", "School Name", "Standard", "Course / Title", "Student Name", "Ref Media", "Status", "Media"];
+
+                        csvContent += headers.map(h => `"${h}"`).join(",") + "\n";
+
+                        records.forEach((item, index) => {
+                            let srNo = index + 1;
+                            let schoolName = (item.schoolName || "").replace(/"/g, '""');
+                            let standard = (item.standard || "").replace(/"/g, '""');
+                            let courseOrTitle = (item.courseName || item.title || "").replace(/"/g, '""');
+                            let secondCol = (currentType === 'group-pbl') 
+                                ? (item.title || "").replace(/"/g, '""') 
+                                : `${item.firstName || ""} ${item.lastName || ""}`.trim().replace(/"/g, '""');
+                            
+                            let refMedia = item.evaluationFileUrl ? getFileUrl(item.evaluationFileUrl) : "";
+                            let statusText = item.isEvaluated ? `${item.evaluatedColor} (${item.evaluatedMarks})` : "Pending";
+
+                            // Extract absolute media URLs
+                            let mediaUrls = [];
+                            if (currentType === 'group-pbl') {
+                                if (item.imageActivity) mediaUrls.push(getFileUrl(item.imageActivity));
+                                if (item.videoActivity) mediaUrls.push(getFileUrl(item.videoActivity));
+                            } else {
+                                if (item.fileLink) mediaUrls.push(getFileUrl(item.fileLink));
+                            }
+                            let mediaText = mediaUrls.length > 0 ? mediaUrls.join("; ") : "No Media";
+
+                            let rowData = [
+                                `"${srNo}"`,
+                                `"${schoolName}"`,
+                                `"${standard}"`,
+                                `"${courseOrTitle}"`,
+                                `"${secondCol}"`,
+                                `"${refMedia}"`,
+                                `"${statusText}"`,
+                                `"${mediaText}"`
+                            ];
+
+                            csvContent += rowData.join(",") + "\n";
+                        });
+
+                        let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                        let link = document.createElement("a");
+                        let urlBlob = URL.createObjectURL(blob);
+                        link.setAttribute("href", urlBlob);
+                        let filenameType = currentType.toUpperCase();
+                        link.setAttribute("download", `Evaluations_${filenameType}_All.csv`);
+                        link.style.visibility = 'hidden';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else {
+                        alert("No records found to export.");
+                    }
+                })
+                .catch(err => {
+                    console.error("Export all error:", err);
+                    alert("Error exporting all records.");
+                });
         }
     </script>
 }
