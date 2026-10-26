@@ -1156,9 +1156,6 @@
                 });
         }
 
-        // ==========================
-        // FETCH DATA & RENDER TABLE
-        // ==========================
         function fetchProjects() {
             document.getElementById("inspection-section").style.display = "block";
             let typeLabel = currentType.replace(/-/g, ' ').toUpperCase();
@@ -1179,9 +1176,9 @@
                     tbody.innerHTML = "";
 
                     if (currentType === 'group-pbl') {
-                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Description</th><th>Team Members</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
+                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Standard</th><th>Course / Title</th><th>Comment</th><th>Ref Media</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
                     } else {
-                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Course / Title</th><th>Student Name</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
+                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Standard</th><th>Course / Title</th><th>Student Name</th><th>Ref Media</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
                     }
 
                     if (res.success && res.data.length > 0) {
@@ -1224,17 +1221,39 @@
 
                             let projectTitleText = JSON.stringify(item.title || item.courseName || "");
                             let mediaData = JSON.stringify(item.fileLink || item.videoActivity || item.imageActivity || "");
-
-                            let rowHtml = `<tr>
+                             if (currentType === 'group-pbl') {
+                                  let rowHtml = `<tr>
                                         <td>${srNoOffset + index + 1}</td>
                                         <td>${item.schoolName}</td>
-                                        <td>${item.title}</td>
-                                        <td>${item.firstName} ${item.lastName}</td>
+                                         <td>${item.standard}</td>
+                                        <td>${item.courseName}</td>
+                                          <td>${item.title}</td>
+                                        <td><a href="${item.evaluationFileUrl}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1"><i class="bi bi-image me-1"></i> PBL</a></td>
+                                       
                                         <td>${statusBadge}</td>
                                         <td>${mediaHtml}</td>
                                         <td><button class="btn btn-sm btn-primary" onclick='openModal(${item.id}, ${mediaData}, ${item.studentId || 0}, ${item.instituteId || 0}, ${JSON.stringify(item.courseName || "")}, ${projectTitleText})'>Evaluate</button></td>
                                     </tr>`;
-                            tbody.innerHTML += rowHtml;
+                                   tbody.innerHTML += rowHtml;
+                             }
+                             else
+                             {
+                                  let rowHtml = `<tr>
+                                        <td>${srNoOffset + index + 1}</td>
+                                        <td>${item.schoolName}</td>
+                                         <td>${item.standard}</td>
+                                        <td>${item.title}</td>
+                                        <td>${item.firstName} ${item.lastName}</td>
+                                        
+                                        <td><a href="${item.evaluationFileUrl}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1"><i class="bi bi-image me-1"></i> PBL</a></td>
+                                        <td>${statusBadge}</td>
+                                        <td>${mediaHtml}</td>
+                                        <td><button class="btn btn-sm btn-primary" onclick='openModal(${item.id}, ${mediaData}, ${item.studentId || 0}, ${item.instituteId || 0}, ${JSON.stringify(item.courseName || "")}, ${projectTitleText})'>Evaluate</button></td>
+                                    </tr>`;
+                                      tbody.innerHTML += rowHtml;
+
+                             }
+                           
                         });
                     } else {
                         tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No records found</td></tr>`;
@@ -1251,9 +1270,6 @@
             fetchProjects();
         }
 
-        // ==========================
-        // EXPORT TO EXCEL
-        // ==========================
         function exportToExcel() {
             let table = document.getElementById("projects-table");
             if (!table) return;
@@ -1263,11 +1279,11 @@
             rows.forEach((row, rowIndex) => {
                 let cols = row.querySelectorAll("th, td");
                 let rowData = [];
-                let colCount = cols.length - 1; // Last column (Action button) ignore kar rahe hain
+                let colCount = cols.length - 1; 
 
                 for (let i = 0; i < colCount; i++) {
                     let data = cols[i].innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
-                    data = data.replace(/"/g, '""'); // Escaping double quotes
+                    data = data.replace(/"/g, '""');
                     rowData.push('"' + data + '"');
                 }
                 csvContent += rowData.join(",") + "\n";
@@ -1285,9 +1301,7 @@
             document.body.removeChild(link);
         }
 
-        // ==========================
-        // MODAL & EVALUATION SAVE
-        // ==========================
+        
         function selectColor(color) {
             document.getElementById("selectedColor").value = color;
             document.querySelectorAll(".color-option").forEach(el => el.classList.remove("selected"));
