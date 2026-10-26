@@ -140,7 +140,6 @@ namespace HemFoundation.Controllers.Api
                     .GroupBy(x => x.MainCourseId)
                     .ToDictionary(g => g.Key, g => g.First().ActivityPdfUrl);
 
-                // 5. WJ_Practicals (Evaluation Files) - DYNAMIC FILTER APPLIED HERE
                 var allowedCodesForEval = new List<string>();
                 if (projectType == "family-projects")
                 {
@@ -152,7 +151,6 @@ namespace HemFoundation.Controllers.Api
                 }
                 else
                 {
-                    // Group ke liye fallback list
                     allowedCodesForEval.AddRange(new[] { "G_E_010", "G_E_10", "G_E_011" });
                 }
 
