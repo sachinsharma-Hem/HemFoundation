@@ -51,76 +51,14 @@ namespace HemFoundation.Controllers.Api
             }
         }
 
-        // --- 1. SYLLABUS ---
         [HttpGet("syllabus/list")]
         public async Task<IActionResult> GetSyllabusList() => Ok(new { success = true, data = await _context.CourseSyllabuses.ToListAsync() });
 
-        //[HttpPost("syllabus/save")]
-        //public async Task<IActionResult> SaveSyllabus([FromBody] CourseSyllabus model)
-        //{
-        //    if (model == null) return BadRequest(new { success = false, message = "Invalid payload." });
-        //    try
-        //    {
-        //        if (model.Id == 0) { model.CreatedDate = DateTime.UtcNow; _context.CourseSyllabuses.Add(model); }
-        //        else
-        //        {
-        //            var item = await _context.CourseSyllabuses.FindAsync(model.Id);
-        //            if (item == null) return NotFound(new { success = false, message = "Record not found." });
-        //            item.CourseYearId = model.CourseYearId; item.MainCourseId = model.MainCourseId; item.CourseCategoryId = model.CourseCategoryId; item.CourseSubCategoryId = model.CourseSubCategoryId; item.DisplayOrderId = model.DisplayOrderId; item.CourseId = model.CourseId; item.QuizId = model.QuizId; item.StandardMasterId = model.StandardMasterId; item.IsForTeachers = model.IsForTeachers; item.IsForAll = model.IsForAll; item.Remarks = model.Remarks; item.ModifiedDate = DateTime.UtcNow;
-        //        }
-        //        await _context.SaveChangesAsync();
-        //        return Ok(new { success = true, message = "Syllabus saved successfully!" });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { success = false, message = "Error: " + ex.Message });
-        //    }
-        //}
-
-        //[HttpPatch("syllabus/toggle/{id}")]
-        //public async Task<IActionResult> ToggleSyllabus(int id)
-        //{
-        //    var item = await _context.CourseSyllabuses.FindAsync(id);
-        //    if (item != null) { item.IsActive = !item.IsActive; await _context.SaveChangesAsync(); }
-        //    return Ok(new { success = true });
-        //}
-
-        //[HttpDelete("syllabus/delete/{id}")]
-        //public async Task<IActionResult> DeleteSyllabus(int id)
-        //{
-        //    var item = await _context.CourseSyllabuses.FindAsync(id);
-        //    if (item != null) { item.IsDeleted = true; await _context.SaveChangesAsync(); }
-        //    return Ok(new { success = true, message = "Deleted successfully!" });
-        //}
-
-        // --- 2. COURSES ---
+       
         [HttpGet("course/list")]
         public async Task<IActionResult> GetCourseList() => Ok(new { success = true, data = await _context.Courses.Where(x => x.IsActive).OrderByDescending(x =>x.CourseID).ToListAsync() });
 
-        //[HttpPost("course/save1")]
-        //public async Task<IActionResult> SaveCourse1([FromBody] CourseRegistrationRequest model)
-        //{
-        //    if (model == null) return BadRequest(new { success = false, message = "Invalid payload." });
-        //    try
-        //    {
-        //        if (model.ExpectedDeliveryDate.Kind == DateTimeKind.Unspecified) model.ExpectedDeliveryDate = DateTime.SpecifyKind(model.ExpectedDeliveryDate, DateTimeKind.Utc);
-        //        else model.ExpectedDeliveryDate = model.ExpectedDeliveryDate.ToUniversalTime();
-
-        //        if (model.Id == 0) { model.CreatedDate = DateTime.UtcNow; _context.CourseRegistrations.Add(model); }
-        //        else
-        //        {
-        //            var item = await _context.CourseRegistrations.FindAsync(model.Id);
-        //            if (item == null) return NotFound(new { success = false, message = "Record not found." });
-        //            item.CourseName = model.CourseName; item.ExpectedDeliveryDate = model.ExpectedDeliveryDate; item.FromAge = model.FromAge; item.ToAge = model.ToAge; item.NumberOfSessions = model.NumberOfSessions; item.CourseAuthorId = model.CourseAuthorId; item.CourseManagerId = model.CourseManagerId; item.MainCourseId = model.MainCourseId; item.CourseForId = model.CourseForId; item.CourseCustomerTypeId = model.CourseCustomerTypeId; item.Description = model.Description; item.ModifiedDate = DateTime.UtcNow;
-        //        }
-        //        await _context.SaveChangesAsync();
-        //        return Ok(new { success = true, message = "Course registered successfully!" });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { success = false, message = "Error: " + ex.Message });
-        //    }
-        //}
+       
         [HttpPost("course/save")]
         [RequestSizeLimit(10 * 1024 * 1024)]
         public async Task<IActionResult> SaveCourse(
