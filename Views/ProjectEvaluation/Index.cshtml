@@ -1234,8 +1234,8 @@
             let thead = document.querySelector("#projects-table thead");
 
             let columns = (currentType === 'group-pbl')
-                ? ["Sr.", "School Name", "Standard", "Course / Title", "Comment", "Ref Media", "Status", "Media", "Action"]
-                : ["Sr.", "School Name", "Standard", "Course / Title", "Student Name", "Ref Media", "Status", "Media", "Action"];
+                ? ["Sr.", "School Name", "Standard", "Course / Title", "Comment", "PBL", "Status", "Media", "Action"]
+                : ["Sr.", "School Name", "Standard", "Course / Title", "Student Name", "PBL", "Status", "Media", "Action"];
 
             // Row 1: Column Titles with Sorting
             let headerRow = "<tr>";
@@ -1432,9 +1432,9 @@
                     tbody.innerHTML = "";
 
                     if (currentType === 'group-pbl') {
-                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Standard</th><th>Course / Title</th><th>Comment</th><th>Ref Media</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
+                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Standard</th><th>Course / Title</th><th>Comment</th><th>PBL</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
                     } else {
-                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Standard</th><th>Course / Title</th><th>Student Name</th><th>Ref Media</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
+                        thead.innerHTML = `<tr><th>Sr.</th><th>School Name</th><th>Standard</th><th>Course / Title</th><th>Student Name</th><th>PBL</th><th>Status</th><th>Media</th><th>Action</th></tr>`;
                     }
 
                     if (res.success && res.data.length > 0) {
@@ -1525,7 +1525,7 @@
             if (currentPage < 1) currentPage = 1;
             fetchProjects();
         }
-        function exportToExcel() {
+        function exportToExcel2() {
             let table = document.getElementById("projects-table");
             if (!table) return;
             let rows = table.querySelectorAll("tr");
@@ -1774,6 +1774,75 @@
             historyCurrentPage += dir;
             renderHistoryTable();
         }
+       function exportToExcel() {
+            let table = document.getElementById("projects-table");
+            if (!table) return;
+            
+            // Only grab rows from the tbody OR strictly the first header row of the thead (ignoring the filter input row)
+            let headerRow = table.querySelector("thead tr"); // Gets the main column titles row
+            let bodyRows = table.querySelectorAll("tbody tr");
+            let csvContent = "";
+
+            // 1. Process Main Header Row only
+            if (headerRow) {
+                let cols = headerRow.querySelectorAll("th");
+                let rowData = [];
+                // Exclude the last column (Action)
+                let colCount = cols.length - 1; 
+
+                for (let i = 0; i < colCount; i++) {
+                    // Clean text and remove any sort arrows (▲, ▼, ↕)
+                    let data = cols[i].innerText.replace(/[▲▼↕]/g, "").replace(/(\r\n|\n|\r)/gm, " ").trim();
+                    data = data.replace(/"/g, '""');
+                    rowData.push('"' + data + '"');
+                }
+                csvContent += rowData.join(",") + "\n";
+            }
+
+            // 2. Process Data Rows
+            bodyRows.forEach((row) => {
+                let cols = row.querySelectorAll("td");
+                if (cols.length <= 1) return; // Skip "No records found" row
+                let rowData = [];
+                let colCount = cols.length - 1; // Exclude Action column
+
+                for (let i = 0; i < colCount; i++) {
+                    let cell = cols[i];
+                    let cellText = "";
+
+                    let links = cell.querySelectorAll("a");
+                    if (links.length > 0) {
+                        let urls = [];
+                        links.forEach(link => {
+                            let href = link.getAttribute("href");
+                            if (href && href !== '#' && !href.startsWith('javascript:')) {
+                                urls.push(href);
+                            }
+                        });
+                        cellText = urls.length > 0 ? urls.join("; ") : "No Media";
+                    } else {
+                        cellText = cell.innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+                    }
+
+                    cellText = cellText.replace(/"/g, '""');
+                    rowData.push('"' + cellText + '"');
+                }
+                csvContent += rowData.join(",") + "\n";
+            });
+
+            // Add UTF-8 BOM (\ufeff) so Excel correctly interprets special symbols and formatting
+            let blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            let url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            let filenameType = currentType ? currentType.toUpperCase() : 'All_Projects';
+            link.setAttribute("download", `Evaluations_${filenameType}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         function exportAllToExcel() {
             if (!currentType) {
                 alert("Please select a project category first.");
@@ -1784,7 +1853,6 @@
             let month = document.getElementById("filterMonth").value;
             let year = document.getElementById("filterYear").value;
 
-            // Fetch all records by setting a high page size (e.g. 999999)
             let url = `/api/project-evaluations/list/${currentType}?page=1&pageSize=999999&searchTerm=${encodeURIComponent(searchTerm)}`;
             if (month) url += `&month=${month}&year=${year}`;
 
@@ -1795,10 +1863,9 @@
                         let records = res.data;
                         let csvContent = "";
 
-                        // Define headers based on project type
                         let headers = (currentType === 'group-pbl')
-                            ? ["Sr.", "School Name", "Standard", "Course / Title", "Comment", "Ref Media", "Status", "Media"]
-                            : ["Sr.", "School Name", "Standard", "Course / Title", "Student Name", "Ref Media", "Status", "Media"];
+                            ? ["Sr.", "School Name", "Standard", "Course / Title", "Comment", "PBL", "Status", "Media"]
+                            : ["Sr.", "School Name", "Standard", "Course / Title", "Student Name", "PBL", "Status", "Media"];
 
                         csvContent += headers.map(h => `"${h}"`).join(",") + "\n";
 
@@ -1814,7 +1881,6 @@
                             let refMedia = item.evaluationFileUrl ? getFileUrl(item.evaluationFileUrl) : "";
                             let statusText = item.isEvaluated ? `${item.evaluatedColor} (${item.evaluatedMarks})` : "Pending";
 
-                            // Extract absolute media URLs
                             let mediaUrls = [];
                             if (currentType === 'group-pbl') {
                                 if (item.imageActivity) mediaUrls.push(getFileUrl(item.imageActivity));
@@ -1838,7 +1904,8 @@
                             csvContent += rowData.join(",") + "\n";
                         });
 
-                        let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                        // Add UTF-8 BOM (\ufeff) for proper Excel character rendering
+                        let blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
                         let link = document.createElement("a");
                         let urlBlob = URL.createObjectURL(blob);
                         link.setAttribute("href", urlBlob);

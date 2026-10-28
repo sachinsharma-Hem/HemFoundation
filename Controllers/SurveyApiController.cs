@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using HemFoundation.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 
@@ -232,7 +233,11 @@ namespace HemFoundation.Controllers
         // =========================================================
         // POSTGRESQL REFCURSOR FUNCTION
         // =========================================================
-
+        private NpgsqlConnection GetConnection()
+        {
+            return new NpgsqlConnection(
+                _configuration.GetConnectionString("DefaultConnection"));
+        }
         private async Task<List<SurveyModel>> GetSurveyDataAsync(
      NpgsqlConnection connection,
      string mainCourseName,
@@ -286,6 +291,311 @@ namespace HemFoundation.Controllers
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+
+        [HttpGet("list")]
+        public async Task<IActionResult> GetSurveys(
+            [FromQuery] int courseId,
+            [FromQuery] int? topicId = null,
+            [FromQuery] int? subTopicId = null,
+            [FromQuery] int? languageId = null)
+        {
+            try
+            {
+                if (courseId <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "A valid courseId is required."
+                    });
+                }
+
+                const string sql = @"
+                    SELECT
+                        id          AS ""Id"",
+                        courseid    AS ""CourseId"",
+                        topicid     AS ""TopicId"",
+                        topicname   AS ""TopicName"",
+                        subtopicid  AS ""SubTopicId"",
+                        question    AS ""Question"",
+                        option1     AS ""Option1"",
+                        option2     AS ""Option2"",
+                        option3     AS ""Option3"",
+                        option4     AS ""Option4"",
+                        option5     AS ""Option5"",
+                        languageid  AS ""LanguageId""
+                    FROM public.hf_surveydata
+                    WHERE courseid = @CourseId
+                      AND (@TopicId IS NULL OR topicid = @TopicId)
+                      AND (@SubTopicId IS NULL OR subtopicid = @SubTopicId)
+                      AND (@LanguageId IS NULL OR languageid = @LanguageId)
+                    ORDER BY id DESC;";
+
+                await using var connection = GetConnection();
+
+                var surveys = await connection.QueryAsync<SurveyDataDto>(
+                    sql,
+                    new
+                    {
+                        CourseId = courseId,
+                        TopicId = topicId,
+                        SubTopicId = subTopicId,
+                        LanguageId = languageId
+                    });
+
+                return Ok(new
+                {
+                    success = true,
+                    data = surveys
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception using your application's existing logger.
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Unable to load survey questions.",
+                    detail = ex.Message
+                });
+            }
+        }
+
+        // GET: /api/survey/91
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetSurveyById(int id)
+        {
+            const string sql = @"
+        SELECT
+            id AS ""Id"",
+            courseid AS ""CourseId"",
+            topicid AS ""TopicId"",
+            topicname AS ""TopicName"",
+            subtopicid AS ""SubTopicId"",
+            question AS ""Question"",
+            option1 AS ""Option1"",
+            option2 AS ""Option2"",
+            option3 AS ""Option3"",
+            option4 AS ""Option4"",
+            option5 AS ""Option5"",
+            languageid AS ""LanguageId""
+        FROM public.hf_surveydata
+        WHERE id = @Id;";
+
+            await using var connection = GetConnection();
+
+            var survey = await connection.QuerySingleOrDefaultAsync<SurveyDataDto>(
+                sql, new { Id = id });
+
+            if (survey == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Survey question not found."
+                });
+            }
+
+            return Ok(new { success = true, data = survey });
+        }
+
+        // POST: /api/survey/save
+        [HttpPost("save")]
+        public async Task<IActionResult> SaveSurvey(
+            [FromBody] SaveSurveyRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid survey data.",
+                    errors = ModelState
+                });
+
+            const string sql = @"
+        INSERT INTO public.hf_surveydata
+        (
+            courseid, topicid, topicname, subtopicid,
+            question, option1, option2, option3,
+            option4, option5, languageid
+        )
+        VALUES
+        (
+            @CourseId, @TopicId, @TopicName, @SubTopicId,
+            @Question, @Option1, @Option2, @Option3,
+            @Option4, @Option5, @LanguageId
+        )
+        RETURNING id;";
+
+            await using var connection = GetConnection();
+
+            var newId = await connection.ExecuteScalarAsync<int>(
+                sql, request);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Survey question saved successfully.",
+                id = newId
+            });
+        }
+
+        // PUT: /api/survey/update/91
+        [HttpPut("update/{id:int}")]
+        public async Task<IActionResult> UpdateSurvey(
+            int id,
+            [FromBody] SaveSurveyRequest request)
+        {
+            if (id <= 0)
+                return BadRequest(new { success = false, message = "Invalid survey ID." });
+
+            if (!ModelState.IsValid)
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid survey data.",
+                    errors = ModelState
+                });
+
+            const string sql = @"
+        UPDATE public.hf_surveydata
+        SET
+            courseid = @CourseId,
+            topicid = @TopicId,
+            topicname = @TopicName,
+            subtopicid = @SubTopicId,
+            question = @Question,
+            option1 = @Option1,
+            option2 = @Option2,
+            option3 = @Option3,
+            option4 = @Option4,
+            option5 = @Option5,
+            languageid = @LanguageId
+        WHERE id = @Id;";
+
+            await using var connection = GetConnection();
+
+            var affected = await connection.ExecuteAsync(sql, new
+            {
+                Id = id,
+                request.CourseId,
+                request.TopicId,
+                request.TopicName,
+                request.SubTopicId,
+                request.Question,
+                request.Option1,
+                request.Option2,
+                request.Option3,
+                request.Option4,
+                request.Option5,
+                request.LanguageId
+            });
+
+            if (affected == 0)
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Survey question not found."
+                });
+
+            return Ok(new
+            {
+                success = true,
+                message = "Survey question updated successfully."
+            });
+        }
+
+        // DELETE: /api/survey/delete/91
+        [HttpDelete("delete/{id:int}")]
+        public async Task<IActionResult> DeleteSurvey(int id)
+        {
+            if (id <= 0)
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid survey ID."
+                });
+
+            const string sql = @"
+        DELETE FROM public.hf_surveydata
+        WHERE id = @Id;";
+
+            await using var connection = GetConnection();
+
+            var affected = await connection.ExecuteAsync(sql, new { Id = id });
+
+            if (affected == 0)
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Survey question not found."
+                });
+
+            return Ok(new
+            {
+                success = true,
+                message = "Survey question deleted successfully."
+            });
+        }
+
+        // GET: /api/survey/dropdowns?courseId=487
+        [HttpGet("dropdowns")]
+        public async Task<IActionResult> GetSurveyDropdowns(
+            [FromQuery] int courseId)
+        {
+            if (courseId <= 0)
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "A valid courseId is required."
+                });
+
+            const string sql = @"
+        SELECT DISTINCT
+            topicname AS ""Name""
+        FROM public.hf_surveydata
+        WHERE courseid = @CourseId
+        ORDER BY ""Name"";";
+
+            const string subTopicSql = @"
+        SELECT DISTINCT
+            subtopicid AS ""Id""
+        FROM public.hf_surveydata
+        WHERE courseid = @CourseId
+        ORDER BY ""Id"";";
+
+            const string languageSql = @"
+        SELECT DISTINCT
+            languageid AS ""Id""
+        FROM public.hf_surveydata
+        WHERE courseid = @CourseId
+        ORDER BY ""Id"";";
+
+            await using var connection = GetConnection();
+
+            var parameters = new { CourseId = courseId };
+
+            var surveyTypes = await connection.QueryAsync<string>(
+                sql, parameters);
+
+            var subTopics = await connection.QueryAsync<int>(
+                subTopicSql, parameters);
+
+            var languages = await connection.QueryAsync<int>(
+                languageSql, parameters);
+
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    surveyTypes,
+                    subTopics,
+                    languages
+                }
+            });
         }
     }
 

@@ -6,7 +6,11 @@
    
  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <partial name="~/Views/Shared/Partials/_Styles.cshtml" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#007bff" />
 
+    <!-- Apple Touch Icon (recommended for iOS PWA support) -->
+    <link rel="apple-touch-icon" href="~/appstore-images/ios/192.png" />
     @await RenderSectionAsync("Styles", required: false)
 
 </head>
@@ -79,12 +83,18 @@
                 }
             });
     </script>
+
     <partial name="~/Views/Shared/Partials/_Header.cshtml" />
 
     <main class="main-content min-vh-100">
         @RenderBody()
     </main>
-
+    <script>
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/serviceworker.js')
+                    .then(() => console.log('Service Worker Registered'));
+            }
+    </script>
     <partial name="~/Views/Shared/Partials/_Footer.cshtml" />
     <partial name="~/Views/Shared/Partials/_ScrollDrawer.cshtml" />
     <partial name="~/Views/Shared/Partials/_LoginModal.cshtml" />

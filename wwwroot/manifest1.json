@@ -1,0 +1,38 @@
+{
+  "background_color": "#b693ad",
+  "dir": "ltr",
+  "display": "fullscreen",
+  "name": "HemVirtues",
+  "orientation": "any",
+  "scope": "https://uat.hemafoundation.org:97/",
+  "short_name": "HemVirtues",
+  "start_url": "/Home/Index",
+  "theme_color": "#f5e2e2",
+  "icons": [
+    {
+      "src": "https://uat.hemafoundation.org:97/favicon.ico",
+      "type": "image/x-icon",
+      "isSquare": false,
+      "isPng": false,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 0,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
+    }
+  ],
+  "id": "1",
+  "description": "Hemvirtues PWA App",
+  "lang": "en",
+  "display_override": [
+    "browser",
+    "fullscreen",
+    "minimal-ui",
+    "standalone",
+    "window-controls-overlay"
+  ],
+  "categories": [
+    "education"
+  ]
+}
