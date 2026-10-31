@@ -1,0 +1,175 @@
+﻿@using System.Data
+@{
+    ViewBag.Title = "UploadCertificate";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<div class="bg-default align-center p-xlg">
+    <div class="container mt-sm pt-sm pb-xlg mb-xlg">
+        <div class="col-md-12">
+            <div class="featured-boxes">
+                <div class="row">
+                    <div class="col-sm-7 zindex99 col-sm-offset-3">
+                        <div class="featured-box featured-box-primary align-left mt-xlg">
+                            <div class="box-content box-content-light">
+                                <h2 class="center"><b>Upload Certificate</b></h2>
+
+                                <div class="row mb-lg">
+                                    @using (Html.BeginForm("UploadCertificate", "School", FormMethod.Post, new { id = "Upload_Form", enctype = "multipart/form-data", onsubmit = "return goUpload();" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <div class="row">
+                                            <div class="col-md-12 mb-sm">
+                                                <!-- Quiz Name Dropdown -->
+                                                <div class="form-group">
+                                                    <label><i class="fa fa-bank"></i> Quiz Name</label>
+                                                    <select class="form-control select2" id="QuizID" name="quizID" required>
+                                                        <option value="0">Please select the Quiz</option>
+                                                        @if (ViewBag.QuizList != null)
+                                                        {
+                                                            foreach (var item in ViewBag.QuizList)
+                                                            {
+                                                                <option value="@item.Value">@item.Text</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <br />
+                                                <!-- Course Name Dropdown -->
+                                                <div class="form-group">
+                                                    <label><i class="fa fa-bank"></i> Course Name</label>
+                                                    <select class="form-control select2" id="CourseID" name="courseID" required>
+                                                        <option value="0">Please select the Course</option>
+                                                        @if (ViewBag.CourseList != null)
+                                                        {
+                                                            foreach (var item in ViewBag.CourseList)
+                                                            {
+                                                                <option value="@item.Value">@item.Text</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <br />
+                                                <!-- Institute Name Dropdown -->
+                                                <div class="form-group">
+                                                    <label><i class="fa fa-bank"></i> Institute Name</label>
+                                                    <select id="InstituteID" name="instituteID" class="form-control select2" required>
+                                                        <option value="0">Please select the Institute</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div><br /></div>
+                                        <div class="row">
+                                            <div class="col-md-12 mb-sm">
+                                                <div class="form-group">
+                                                    <i class="fa fa-folder-open-o"></i>
+                                                    <label> Select file</label>
+                                                    <input type="file" name="imageData" class="form-control" id="Certificate_Image" required />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-md">
+                                            <div class="col-xs-12 center">
+                                                <button type="submit" class="btn btn-primary btn-lg">Upload</button>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // 1. Initialize Select2 on all dropdowns with theme support
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+
+            // 2. Fetch and populate Institute dropdown via AJAX
+            var temp = "<option value='0'>Please select the Institute</option>";
+
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("JsonInstituteBind", "School")',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (response) {
+                    if (response && response.length > 0) {
+                        for (var i = 0; i < response.length; i++) {
+                            var item = response[i];
+                            // Note: handles both lowercase 'value'/'text' or PascalCase 'Value'/'Text' returned from JSON serializer
+                            var val = item.value !== undefined ? item.value : item.Value;
+                            var txt = item.text !== undefined ? item.text : item.Text;
+                            temp += "<option value='" + val + "'>" + txt + "</option>";
+                        }
+
+                        // Populate and refresh Select2 instance so it recognizes the new items
+                        $("#InstituteID").html(temp).trigger('change');
+                    }
+                },
+                error: function (xhr) {
+                    alert("Error loading institutes: " + xhr.statusText);
+                }
+            });
+        });
+
+        function goUpload() {
+            var CID = $('#CourseID').val();
+            var QID = $('#QuizID').val();
+            var IID = $('#InstituteID').val();
+
+            if (QID == "0" || QID === "" || QID === null) {
+                alert("Please Select Quiz...");
+                return false;
+            }
+            if (CID == "0" || CID === "" || CID === null) {
+                alert("Please Select Course...");
+                return false;
+            }
+            // if (IID == "0" || IID === "" || IID === null) {
+            //     alert("Please Select Institute...");
+            //     return false;
+            // }
+
+            var formName = $("#Upload_Form");
+            var formData = new FormData(formName[0]);
+
+            $.ajax({
+                url: formName.attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        formName[0].reset();
+
+                        // Reset Select2 dropdown values and trigger change to reflect UI
+                        $('#InstituteID').val('0').trigger('change');
+                        $('#CourseID').val('0').trigger('change');
+                        $('#QuizID').val('0').trigger('change');
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function (xhr) {
+                    alert("Error: " + xhr.responseText);
+                }
+            });
+
+            return false;
+        }
+    </script>
+}

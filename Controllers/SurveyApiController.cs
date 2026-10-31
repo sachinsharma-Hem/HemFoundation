@@ -404,7 +404,7 @@ namespace HemFoundation.Controllers
         // POST: /api/survey/save
         [HttpPost("save")]
         public async Task<IActionResult> SaveSurvey(
-            [FromBody] SaveSurveyRequest request)
+      [FromBody] SaveSurveyRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new
@@ -415,23 +415,24 @@ namespace HemFoundation.Controllers
                 });
 
             const string sql = @"
-        INSERT INTO public.hf_surveydata
+        INSERT INTO public.hf_surveydata 
         (
-            courseid, topicid, topicname, subtopicid,
-            question, option1, option2, option3,
+            courseid, topicid, topicname, subtopicid, 
+            question, option1, option2, option3, 
             option4, option5, languageid
-        )
-        VALUES
+        ) 
+        VALUES 
         (
-            @CourseId, @TopicId, @TopicName, @SubTopicId,
-            @Question, @Option1, @Option2, @Option3,
+            @CourseId, @TopicId, @TopicName, @SubTopicId, 
+            @Question, @Option1, @Option2, @Option3, 
             @Option4, @Option5, @LanguageId
-        )
+        ) 
         RETURNING id;";
 
             await using var connection = GetConnection();
 
-            var newId = await connection.ExecuteScalarAsync<int>(
+            // Changed <int> to <long> to match PostgreSQL bigint (SERIAL / BIGSERIAL / IDENTITY)
+            var newId = await connection.ExecuteScalarAsync<long>(
                 sql, request);
 
             return Ok(new

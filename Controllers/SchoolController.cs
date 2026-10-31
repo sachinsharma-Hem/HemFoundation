@@ -7,8 +7,12 @@ using HemFoundation.Models;
 using HemFoundation.Models.Entities; // Required for View_WJ_Teachercertificate (adjust namespace if needed)
 using HemFoundation.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Build.Framework;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration; // Required for IConfiguration
+using Newtonsoft.Json;
 using Npgsql;
 using Rotativa.AspNetCore;
 using System.Collections.Generic;
@@ -23,13 +27,15 @@ namespace HemFoundation.Controllers
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _context;
         private readonly ExceptionLoggerService _exceptionLogger;
+        private readonly ICertificateManager _certificateManager;
 
         // Constructor injection for configuration
-        public SchoolController(IConfiguration configuration, ApplicationDbContext context, ExceptionLoggerService exceptionLogger)
+        public SchoolController(IConfiguration configuration, ApplicationDbContext context, ExceptionLoggerService exceptionLogger, ICertificateManager certificateManager)
         {
             _configuration = configuration;
             _context = context;
             _exceptionLogger = exceptionLogger;
+            _certificateManager = certificateManager;
         }
 
         public IActionResult Index()
@@ -1345,6 +1351,80 @@ namespace HemFoundation.Controllers
                     "--enable-local-file-access " +
                     "--javascript-delay 1000"
             };
+        }
+
+        //[HttpGet("UploadCertificate")]
+        public async Task<IActionResult> UploadCertificate()
+        {
+            try
+            {
+                ViewBag.CourseList = await _certificateManager.GetCoursesAsync();
+                ViewBag.QuizList = await _certificateManager.GetQuizzesAsync();
+            }
+            catch (Exception ex)
+            {
+               
+                TempData["Error"] = "Error loading form options.";
+                await _exceptionLogger.LogExceptionAsync(ex);
+            }
+
+            return View();
+        }
+        [HttpGet]
+        public async Task<IActionResult> JsonInstituteBind()
+        {
+            // Query the database asynchronously using EF Core
+            var institutes = await _context.WJ_Institutes
+                .AsNoTracking()
+                .Where(e => e.InstituteType == "School" && e.Name != null)
+                .OrderBy(e => e.Name)
+                .Select(txt => new
+                {
+                    Text = txt.Name + " (" + txt.InstituteID + ")",
+                    Value = txt.InstituteID.ToString()
+                })
+                .Distinct()
+                .ToListAsync();
+
+            // Map to SelectListItem for dropdown binding
+            var listInstitute = institutes.Select(x => new SelectListItem
+            {
+                Text = x.Text,
+                Value = x.Value,
+                Selected = false
+            }).ToList();
+
+            // Return as a clean JSON result (ASP.NET Core handles serialization automatically)
+            return Json(listInstitute);
+        }
+        [HttpPost("UploadCertificate")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadCertificate(int instituteID, int quizID, int courseID, IFormFile imageData)
+        {
+            try
+            {
+                if (quizID <= 0 || courseID <= 0 || imageData == null || imageData.Length == 0)
+                {
+                    return Json(new { Success = false, Message = "Please select valid options and upload an image." });
+                }
+
+                byte[] bytes;
+                using (var memoryStream = new MemoryStream())
+                {
+                    await imageData.CopyToAsync(memoryStream);
+                    bytes = memoryStream.ToArray();
+                }
+
+                int? instIdParam = instituteID > 0 ? instituteID : null;
+                await _certificateManager.InsertCertificateAsync(instIdParam, quizID, courseID, bytes);
+
+                return Json(new { Success = true, Message = "Certificate Uploaded Successfully!!!!" });
+            }
+            catch (Exception ex)
+            {
+                await _exceptionLogger.LogExceptionAsync(ex);
+                return Json(new { Success = false, Message = "Certificate Not Uploaded..... An error occurred." });
+            }
         }
     }
 

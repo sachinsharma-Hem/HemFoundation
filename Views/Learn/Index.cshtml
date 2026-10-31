@@ -855,7 +855,7 @@
         }
         function checkCertificateEligibility(mcId) {
     var rawRows = getAllMainCourseRows(mcId);
-
+    debugger
     // Keep your existing eligibility validation here.
 
 
@@ -909,6 +909,7 @@
                     subName.includes('post - value')
                 ) {
                     if (isAttempted) {
+                        console.log("isAttempted and postSurveyCompleted"+mcId)
                         postSurveyCompleted = true;
                         quizId = row.quizID || row.QuizID || quizId;
                     }
@@ -916,6 +917,7 @@
 
                 // Practical labs/games across the main course
                 if (isGame && !isAttempted) {
+                    console.log("isAttempted and gamesIncomplete" + mcId)
                     gamesIncomplete = true;
                 }
 
@@ -926,10 +928,11 @@
                     !subName.includes('survey') &&
                     itemScore < 3
                 ) {
+                    console.log("isAttempted and lowMcqScores" + mcId)
                     lowMcqScores = true;
                 }
             });
-
+          //  console.log("postSurveyCompleted" + postSurveyCompleted + "+gamesIncomplete" + gamesIncomplete );
             return {
                 eligible:
                     postSurveyCompleted &&
