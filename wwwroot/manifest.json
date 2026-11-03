@@ -4,12 +4,12 @@
   "display": "fullscreen",
   "name": "HemVirtues",
   "orientation": "any",
-  "scope": "https://uat.hemafoundation.org:97/",
+  "scope": "https://www.hemvirtues.com/",
   "short_name": "HemVirtues",
   "start_url": "/Home/Index",
   "theme_color": "#f5e2e2",
   "id": "1",
-  "description": "Hemvirtues PWA App",
+  "description": "Hemvirtues App",
   "lang": "en",
   "display_override": [
     "fullscreen",
@@ -21,19 +21,19 @@
     "education"
   ],
   "icons": [
-  {
+    {
       "src": "/appstore-images/android/launchericon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
-  },
-  {
+    },
+    {
       "src": "/appstore-images/android/launchericon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-  }
-],
+    }
+  ],
   "screenshots": [
     {
       "src": "/appstore-images/desktop-screenshot.png",

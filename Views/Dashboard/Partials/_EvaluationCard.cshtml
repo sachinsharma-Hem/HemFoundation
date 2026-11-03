@@ -119,9 +119,9 @@
         const marks = schoolAllData.map(d => Number(d.marks) || 0);
         const total = marks.length;
         const avg = total ? marks.reduce((a, b) => a + b, 0) / total : 0;
-        document.getElementById("ehStatTotal").textContent = total;
-        // document.getElementById("ehStatAvg").textContent = avg.toFixed(Number.isInteger(avg) ? 0 : 1);
-        document.getElementById("ehStatMax").textContent = total ? Math.max(...marks) : 0;
+        // document.getElementById("ehStatTotal").textContent = total;
+        // // document.getElementById("ehStatAvg").textContent = avg.toFixed(Number.isInteger(avg) ? 0 : 1);
+        // document.getElementById("ehStatMax").textContent = total ? Math.max(...marks) : 0;
     }
 
     function loadHistory() {

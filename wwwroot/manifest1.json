@@ -4,13 +4,13 @@
   "display": "fullscreen",
   "name": "HemVirtues",
   "orientation": "any",
-  "scope": "https://uat.hemafoundation.org:97/",
+  "scope": "https://www.hemvirtues.com/",
   "short_name": "HemVirtues",
   "start_url": "/Home/Index",
   "theme_color": "#f5e2e2",
   "icons": [
     {
-      "src": "https://uat.hemafoundation.org:97/favicon.ico",
+      "src": "https://www.hemvirtues.com/favicon.ico",
       "type": "image/x-icon",
       "isSquare": false,
       "isPng": false,
@@ -23,7 +23,7 @@
     }
   ],
   "id": "1",
-  "description": "Hemvirtues PWA App",
+  "description": "Hemvirtues App",
   "lang": "en",
   "display_override": [
     "browser",

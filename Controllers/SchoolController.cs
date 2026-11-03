@@ -708,16 +708,8 @@ namespace HemFoundation.Controllers
         -- =========================================================
         -- 9. Students Wise Certified List
         -- =========================================================
-        SELECT
-            ""Student_Name"",
-            ""Standard_"",
-            ""No_of_Courses_Completed"",
-           ""No_of_Courses_Pending"",
-            ""MarksObtain"",
-            ""Courses_Completed"",
-            ""Courses_Pending""
-        FROM hf_view_studentwisecompletedmaincourselistascertificatewise
-        WHERE ""InstituteID"" = @InstituteID;
+        SELECT * FROM public.get_institute_student_certificate_report(@InstituteID);
+        
 
     ";
 
