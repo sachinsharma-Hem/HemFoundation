@@ -1,15 +1,16 @@
 ﻿using HemFoundation.Data;
 using HemFoundation.Migrations;
+using HemFoundation.Models;
 using HemFoundation.Models.Entities;
 using HemFoundation.Models.Identity;
 using HemFoundation.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HemFoundation.Models;
 
 namespace HemFoundation.Common
 {
@@ -163,5 +164,32 @@ namespace HemFoundation.Common
                 throw new Exception(ex.Message);
             }
         }
+        public static List<T> ConvertToList1<T>(DataTable dt) where T : new()
+        {
+            var columnNames = dt.Columns.Cast<DataColumn>().Select(c => c.ColumnName.ToLower()).ToList();
+            var properties = typeof(T).GetProperties();
+
+            return dt.AsEnumerable().Select(row =>
+            {
+                var obj = new T();
+                foreach (var prop in properties)
+                {
+                    if (columnNames.Contains(prop.Name.ToLower()))
+                    {
+                        try
+                        {
+                            var value = row[prop.Name];
+                            prop.SetValue(obj, value == DBNull.Value ? null : value);
+                        }
+                        catch
+                        {
+                            // Ignore property set failures
+                        }
+                    }
+                }
+                return obj;
+            }).ToList();
+        }
+
     }
 }

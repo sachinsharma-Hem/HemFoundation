@@ -1400,7 +1400,7 @@
 
             if (codeVal !== '' && codeVal !== '0' && codeVal !== 'NULL' && !subName.includes('pdf')) return 'practical';
 
-            if (subName.includes('pre value survey') || subName.includes('pre - value') || subName.includes('pre-survey') || subName.includes('belief') || subName.includes('behav')) return 'presurvey';
+            if (subName.includes('pre value survey') || subName.includes('pre - value') || subName.includes('pre-survey') || (subName.includes('belief') && !subName.includes('self belief')) || subName.includes('behav')) return 'presurvey';
             if (subName.includes('post value survey') || subName.includes('post-survey') || subName.includes('post - value')) return 'postsurvey';
             
             var noOfQ = row.noOfQuestion !== undefined ? row.noOfQuestion : (row.NoOfQuestion || 0);
