@@ -23,6 +23,7 @@ builder.Services.AddHttpClient("InHouseFileStorage");
 
 builder.Services.AddScoped<IPasswordMismatchRepository,
     PasswordMismatchRepository>();
+builder.Services.AddScoped<ICertificateManager, CertificateManager>();
 
 builder.Services.AddScoped<IPasswordHasher<IdentityUser>,
     PasswordHasher<IdentityUser>>();

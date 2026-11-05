@@ -855,7 +855,7 @@
         }
         function checkCertificateEligibility(mcId) {
     var rawRows = getAllMainCourseRows(mcId);
-
+    debugger
     // Keep your existing eligibility validation here.
 
 
@@ -909,6 +909,7 @@
                     subName.includes('post - value')
                 ) {
                     if (isAttempted) {
+                        console.log("isAttempted and postSurveyCompleted"+mcId)
                         postSurveyCompleted = true;
                         quizId = row.quizID || row.QuizID || quizId;
                     }
@@ -916,6 +917,7 @@
 
                 // Practical labs/games across the main course
                 if (isGame && !isAttempted) {
+                    console.log("isAttempted and gamesIncomplete" + mcId)
                     gamesIncomplete = true;
                 }
 
@@ -926,10 +928,11 @@
                     !subName.includes('survey') &&
                     itemScore < 3
                 ) {
+                    console.log("isAttempted and lowMcqScores" + mcId)
                     lowMcqScores = true;
                 }
             });
-
+          //  console.log("postSurveyCompleted" + postSurveyCompleted + "+gamesIncomplete" + gamesIncomplete );
             return {
                 eligible:
                     postSurveyCompleted &&
@@ -1397,7 +1400,7 @@
 
             if (codeVal !== '' && codeVal !== '0' && codeVal !== 'NULL' && !subName.includes('pdf')) return 'practical';
 
-            if (subName.includes('pre value survey') || subName.includes('pre - value') || subName.includes('pre-survey') || subName.includes('belief') || subName.includes('behav')) return 'presurvey';
+            if (subName.includes('pre value survey') || subName.includes('pre - value') || subName.includes('pre-survey') || (subName.includes('belief') && !subName.includes('self belief')) || subName.includes('behav')) return 'presurvey';
             if (subName.includes('post value survey') || subName.includes('post-survey') || subName.includes('post - value')) return 'postsurvey';
             
             var noOfQ = row.noOfQuestion !== undefined ? row.noOfQuestion : (row.NoOfQuestion || 0);

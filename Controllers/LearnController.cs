@@ -212,6 +212,7 @@ namespace HemFoundation.Controllers
                                 model.Standard = reader["standard"]?.ToString();
                                 model.InstituteName = reader["institutename"]?.ToString();
                                 model.CourseName = reader["coursename"]?.ToString();
+                                model.UserID = studentId;
                             }
                         }
                     }
