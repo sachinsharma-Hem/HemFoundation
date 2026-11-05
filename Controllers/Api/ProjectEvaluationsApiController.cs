@@ -669,7 +669,6 @@ namespace HemFoundation.Controllers.Api
 
             return normalized;
         }
-
         [HttpGet("school-history")]
         public async Task<IActionResult> GetSchoolEvaluatedHistory()
         {
@@ -709,6 +708,59 @@ namespace HemFoundation.Controllers.Api
                         u => $"{u.FirstName ?? ""} {u.LastName ?? ""}".Trim()
                     );
 
+                // Fetch student standards mapping
+                var studentStandards = await _context.Set<WJ_Students>().AsNoTracking()
+                    .Where(s => s.StudentID != null && studentIds.Contains((int)s.StudentID))
+                    .Select(s => new { s.StudentID, s.Standard })
+                    .ToListAsync();
+                var studentStdDict = studentStandards.GroupBy(s => s.StudentID).ToDictionary(g => g.Key, g => g.FirstOrDefault()?.Standard ?? "");
+
+                // Fetch Courses & Syllabus mappings for PBL file lookup
+                var coursesListRaw = await _context.Set<Courses>().AsNoTracking()
+                    .Where(c => !string.IsNullOrEmpty(c.CourseName))
+                    .Select(c => new { c.CourseName, c.CourseID })
+                    .ToListAsync();
+
+                var courseNameToIdDict = coursesListRaw
+                    .GroupBy(c => c.CourseName.Trim().ToLower())
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault().CourseID);
+
+                var syllabusRaw = await _context.CourseSyllabuses.AsNoTracking()
+                    .Where(s => s.MainCourseId != null)
+                    .Select(s => new { CourseID = s.CourseId, MainCourseID = s.MainCourseId })
+                    .ToListAsync();
+
+                var courseIdToMainCourseId = syllabusRaw
+                    .GroupBy(s => s.CourseID)
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault().MainCourseID);
+
+                var mainCourseIdToCourseIds = syllabusRaw
+                    .GroupBy(s => s.MainCourseID)
+                    .ToDictionary(g => g.Key, g => g.Select(s => s.CourseID).ToList());
+
+                var masterItems = await _context.vw_valueitemmasters.AsNoTracking().ToListAsync();
+                var MpracticalFiles = masterItems.Where(x => x.MainCourseId != 0 && !string.IsNullOrEmpty(x.ActivityPdfUrl))
+                    .GroupBy(x => x.MainCourseId).ToDictionary(g => g.Key, g => g.First().ActivityPdfUrl);
+
+                var allowedCodesForEval = new List<string> { "G_E_01", "G_E_011", "G_E_010", "G_E_10" };
+                var practicalFilesRaw = await _context.Set<WJ_Practicals>().AsNoTracking()
+                    .Where(p => !string.IsNullOrEmpty(p.Resources) && allowedCodesForEval.Contains(p.Code))
+                    .Select(p => new { p.CourseID, p.Resources })
+                    .ToListAsync();
+
+                var practicalFiles = practicalFilesRaw
+                    .GroupBy(p => p.CourseID)
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault()?.Resources ?? "");
+
+                var groupSubmissions = await _context.creativityActivitiesSubmission2021s.AsNoTracking()
+                    .Where(g => g.InstituteID == instituteId).ToDictionaryAsync(g => g.SubmissionID, g => g);
+
+                var individualProjects = await _context.Set<HfTblUploadIndividualProject>().AsNoTracking().ToListAsync();
+                var indDict = individualProjects.ToDictionary(ind => ind.Id, ind => ind);
+
+                var anubhutiProjects = await _context.Set<HfUploadAnubhuti>().AsNoTracking().ToListAsync();
+                var anubhutiDict = anubhutiProjects.ToDictionary(a => a.Id, a => a);
+
                 string schoolName = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
 
                 var resultList = evaluations.Select(x => {
@@ -717,6 +769,69 @@ namespace HemFoundation.Controllers.Api
                     {
                         studentName = studentDict[x.StudentID.Value];
                         if (string.IsNullOrEmpty(studentName)) studentName = "Unknown Student";
+                    }
+
+                    string standard = "";
+                    string imageActivity = "";
+                    string videoActivity = "";
+                    string evaluationFileUrl = "";
+
+                    if (x.StudentID.HasValue && studentStdDict.ContainsKey(x.StudentID.Value))
+                    {
+                        standard = studentStdDict[x.StudentID.Value];
+                    }
+
+                    // Helper lambda to resolve PBL file link by course name
+                    Func<string, string> getEvalFileUrlByCourse = (string cName) => {
+                        if (string.IsNullOrEmpty(cName)) return "";
+                        int cId = 0;
+                        string normName = cName.Trim().ToLower();
+                        if (courseNameToIdDict.TryGetValue(normName, out cId) ||
+                            (courseNameToIdDict.FirstOrDefault(c => c.Key.Contains(normName) || normName.Contains(c.Key)).Key != null))
+                        {
+                            if (cId == 0) cId = courseNameToIdDict.FirstOrDefault(c => c.Key.Contains(normName) || normName.Contains(c.Key)).Value;
+                        }
+
+                        if (cId != 0)
+                        {
+                            if (courseIdToMainCourseId.TryGetValue(cId, out int? mId) && mId.HasValue)
+                            {
+                                if (mainCourseIdToCourseIds.TryGetValue(mId.Value, out var relIds))
+                                {
+                                    foreach (var rId in relIds)
+                                    {
+                                        if (practicalFiles.TryGetValue(rId, out string res)) return FormatWebPath(res);
+                                    }
+                                }
+                                if (MpracticalFiles.TryGetValue(mId.Value, out string mRes)) return FormatWebPath(mRes);
+                            }
+                            if (practicalFiles.TryGetValue(cId, out string dRes)) return FormatWebPath(dRes);
+                        }
+                        return "";
+                    };
+
+                    // Map specific project type details (Media & PBL files)
+                    if (x.ProjectType == "group-pbl" && groupSubmissions.ContainsKey(x.ProjectID))
+                    {
+                        var grp = groupSubmissions[x.ProjectID];
+                        imageActivity = FormatWebPath(grp.ImageActivity ?? "");
+                        videoActivity = FormatWebPath(grp.VideoActivity ?? "");
+                        if (grp.MainCourseID.HasValue && MpracticalFiles.ContainsKey(grp.MainCourseID.Value))
+                        {
+                            evaluationFileUrl = FormatWebPath(MpracticalFiles[grp.MainCourseID.Value]);
+                        }
+                    }
+                    else if (x.ProjectType == "individual-projects" && indDict.ContainsKey(x.ProjectID))
+                    {
+                        var ind = indDict[x.ProjectID];
+                        imageActivity = FormatWebPath(ind.FileLink ?? "");
+                        evaluationFileUrl = getEvalFileUrlByCourse(ind.CourseName ?? x.CourseName ?? "");
+                    }
+                    else if (x.ProjectType == "family-projects" && anubhutiDict.ContainsKey(x.ProjectID))
+                    {
+                        var fam = anubhutiDict[x.ProjectID];
+                        imageActivity = FormatWebPath(fam.FileLink ?? "");
+                        evaluationFileUrl = getEvalFileUrlByCourse(fam.CourseName ?? x.CourseName ?? "");
                     }
 
                     return new
@@ -729,6 +844,10 @@ namespace HemFoundation.Controllers.Api
                         StudentName = studentName,
                         SchoolName = schoolName,
                         x.CourseName,
+                        Standard = standard,
+                        EvaluationFileUrl = evaluationFileUrl,
+                        ImageActivity = imageActivity,
+                        VideoActivity = videoActivity,
                         x.StatusColor,
                         x.Marks,
                         x.Description,
@@ -805,6 +924,53 @@ namespace HemFoundation.Controllers.Api
                         u => $"{u.FirstName ?? ""} {u.LastName ?? ""}".Trim()
                     );
 
+                // Fetch student standards mapping
+                var studentStandards = await _context.Set<WJ_Students>().AsNoTracking()
+                    .Where(s => s.StudentID != null && studentIds.Contains((int)s.StudentID))
+                    .Select(s => new { s.StudentID, s.Standard })
+                    .ToListAsync();
+                var studentStdDict = studentStandards.GroupBy(s => s.StudentID).ToDictionary(g => g.Key, g => g.FirstOrDefault()?.Standard ?? "");
+
+                var coursesListRaw = await _context.Set<Courses>().AsNoTracking()
+                    .Where(c => !string.IsNullOrEmpty(c.CourseName))
+                    .Select(c => new { c.CourseName, c.CourseID })
+                    .ToListAsync();
+
+                var courseNameToIdDict = coursesListRaw
+                    .GroupBy(c => c.CourseName.Trim().ToLower())
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault().CourseID);
+
+                var syllabusRaw = await _context.CourseSyllabuses.AsNoTracking()
+                    .Where(s => s.MainCourseId != null)
+                    .Select(s => new { CourseID = s.CourseId, MainCourseID = s.MainCourseId })
+                    .ToListAsync();
+
+                var courseIdToMainCourseId = syllabusRaw
+                    .GroupBy(s => s.CourseID)
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault().MainCourseID);
+
+                var mainCourseIdToCourseIds = syllabusRaw
+                    .GroupBy(s => s.MainCourseID)
+                    .ToDictionary(g => g.Key, g => g.Select(s => s.CourseID).ToList());
+
+                var masterItems = await _context.vw_valueitemmasters.AsNoTracking().ToListAsync();
+                var MpracticalFiles = masterItems.Where(x => x.MainCourseId != 0 && !string.IsNullOrEmpty(x.ActivityPdfUrl))
+                    .GroupBy(x => x.MainCourseId).ToDictionary(g => g.Key, g => g.First().ActivityPdfUrl);
+
+                var allowedCodesForEval = new List<string> { "G_E_01", "G_E_011", "G_E_010", "G_E_10" };
+                var practicalFilesRaw = await _context.Set<WJ_Practicals>().AsNoTracking()
+                    .Where(p => !string.IsNullOrEmpty(p.Resources) && allowedCodesForEval.Contains(p.Code))
+                    .Select(p => new { p.CourseID, p.Resources })
+                    .ToListAsync();
+
+                var practicalFiles = practicalFilesRaw
+                    .GroupBy(p => p.CourseID)
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault()?.Resources ?? "");
+
+                var groupSubmissions = await _context.creativityActivitiesSubmission2021s.AsNoTracking().ToDictionaryAsync(g => g.SubmissionID, g => g);
+                var individualProjects = await _context.Set<HfTblUploadIndividualProject>().AsNoTracking().ToDictionaryAsync(ind => ind.Id, ind => ind);
+                var anubhutiProjects = await _context.Set<HfUploadAnubhuti>().AsNoTracking().ToDictionaryAsync(a => a.Id, a => a);
+
                 var evaluations = await _context.ProjectEvaluations
                     .AsNoTracking()
                     .Where(x => (x.InstituteID != null && instituteIds.Contains(x.InstituteID.Value)) ||
@@ -826,6 +992,67 @@ namespace HemFoundation.Controllers.Api
                         if (string.IsNullOrEmpty(studentName)) studentName = "Unknown Student";
                     }
 
+                    string standard = "";
+                    string imageActivity = "";
+                    string videoActivity = "";
+                    string evaluationFileUrl = "";
+
+                    if (x.StudentID.HasValue && studentStdDict.ContainsKey(x.StudentID.Value))
+                    {
+                        standard = studentStdDict[x.StudentID.Value];
+                    }
+
+                    Func<string, string> getEvalFileUrlByCourse = (string cName) => {
+                        if (string.IsNullOrEmpty(cName)) return "";
+                        int cId = 0;
+                        string normName = cName.Trim().ToLower();
+                        if (courseNameToIdDict.TryGetValue(normName, out cId) ||
+                            (courseNameToIdDict.FirstOrDefault(c => c.Key.Contains(normName) || normName.Contains(c.Key)).Key != null))
+                        {
+                            if (cId == 0) cId = courseNameToIdDict.FirstOrDefault(c => c.Key.Contains(normName) || normName.Contains(c.Key)).Value;
+                        }
+
+                        if (cId != 0)
+                        {
+                            if (courseIdToMainCourseId.TryGetValue(cId, out int? mId) && mId.HasValue)
+                            {
+                                if (mainCourseIdToCourseIds.TryGetValue(mId.Value, out var relIds))
+                                {
+                                    foreach (var rId in relIds)
+                                    {
+                                        if (practicalFiles.TryGetValue(rId, out string res)) return FormatWebPath(res);
+                                    }
+                                }
+                                if (MpracticalFiles.TryGetValue(mId.Value, out string mRes)) return FormatWebPath(mRes);
+                            }
+                            if (practicalFiles.TryGetValue(cId, out string dRes)) return FormatWebPath(dRes);
+                        }
+                        return "";
+                    };
+
+                    if (x.ProjectType == "group-pbl" && groupSubmissions.ContainsKey(x.ProjectID))
+                    {
+                        var grp = groupSubmissions[x.ProjectID];
+                        imageActivity = FormatWebPath(grp.ImageActivity ?? "");
+                        videoActivity = FormatWebPath(grp.VideoActivity ?? "");
+                        if (grp.MainCourseID.HasValue && MpracticalFiles.ContainsKey(grp.MainCourseID.Value))
+                        {
+                            evaluationFileUrl = FormatWebPath(MpracticalFiles[grp.MainCourseID.Value]);
+                        }
+                    }
+                    else if (x.ProjectType == "individual-projects" && individualProjects.ContainsKey(x.ProjectID))
+                    {
+                        var ind = individualProjects[x.ProjectID];
+                        imageActivity = FormatWebPath(ind.FileLink ?? "");
+                        evaluationFileUrl = getEvalFileUrlByCourse(ind.CourseName ?? x.CourseName ?? "");
+                    }
+                    else if (x.ProjectType == "family-projects" && anubhutiProjects.ContainsKey(x.ProjectID))
+                    {
+                        var fam = anubhutiProjects[x.ProjectID];
+                        imageActivity = FormatWebPath(fam.FileLink ?? "");
+                        evaluationFileUrl = getEvalFileUrlByCourse(fam.CourseName ?? x.CourseName ?? "");
+                    }
+
                     return new
                     {
                         x.EvaluationID,
@@ -836,6 +1063,10 @@ namespace HemFoundation.Controllers.Api
                         StudentName = studentName,
                         SchoolName = schoolName,
                         x.CourseName,
+                        Standard = standard,
+                        EvaluationFileUrl = evaluationFileUrl,
+                        ImageActivity = imageActivity,
+                        VideoActivity = videoActivity,
                         x.StatusColor,
                         x.Marks,
                         x.Description,
@@ -851,6 +1082,187 @@ namespace HemFoundation.Controllers.Api
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+        //[HttpGet("school-history")]
+        //public async Task<IActionResult> GetSchoolEvaluatedHistory()
+        //{
+        //    try
+        //    {
+        //        string? userId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //        if (string.IsNullOrEmpty(userId))
+        //        {
+        //            return Unauthorized(new { success = false, message = "User not logged in." });
+        //        }
+
+        //        var currentUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.AspNetUserID == userId);
+        //        if (currentUser == null)
+        //        {
+        //            return NotFound(new { success = false, message = "User profile not found." });
+        //        }
+
+        //        long instituteId = currentUser.UserID;
+
+        //        var evaluations = await _context.ProjectEvaluations
+        //            .AsNoTracking()
+        //            .Where(x => x.InstituteID == instituteId)
+        //            .OrderByDescending(x => x.EvaluatedDate)
+        //            .ToListAsync();
+
+        //        var studentIds = evaluations
+        //            .Where(x => x.StudentID.HasValue)
+        //            .Select(x => x.StudentID.Value)
+        //            .Distinct()
+        //            .ToList();
+
+        //        var studentDict = await _context.Users
+        //            .AsNoTracking()
+        //            .Where(u => studentIds.Contains(u.UserID))
+        //            .ToDictionaryAsync(
+        //                u => u.UserID,
+        //                u => $"{u.FirstName ?? ""} {u.LastName ?? ""}".Trim()
+        //            );
+
+        //        string schoolName = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
+
+        //        var resultList = evaluations.Select(x => {
+        //            string studentName = "Group / Team Project";
+        //            if (x.StudentID.HasValue && studentDict.ContainsKey(x.StudentID.Value))
+        //            {
+        //                studentName = studentDict[x.StudentID.Value];
+        //                if (string.IsNullOrEmpty(studentName)) studentName = "Unknown Student";
+        //            }
+
+        //            return new
+        //            {
+        //                x.EvaluationID,
+        //                x.ProjectID,
+        //                x.ProjectType,
+        //                x.StudentID,
+        //                x.InstituteID,
+        //                StudentName = studentName,
+        //                SchoolName = schoolName,
+        //                x.CourseName,
+        //                x.StatusColor,
+        //                x.Marks,
+        //                x.Description,
+        //                x.EvaluatedByUserId,
+        //                x.EvaluatedDate
+        //            };
+        //        }).ToList();
+
+        //        return Ok(new { success = true, data = resultList });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { success = false, message = ex.Message });
+        //    }
+        //}
+
+        //[HttpGet("affiliate-history")]
+        //public async Task<IActionResult> GetStudentEvaluatedHistory()
+        //{
+        //    try
+        //    {
+        //        string? userId = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //        if (string.IsNullOrEmpty(userId))
+        //        {
+        //            return Unauthorized(new { success = false, message = "User not logged in." });
+        //        }
+
+        //        var affiliateUser = await _context.Users
+        //            .AsNoTracking()
+        //            .FirstOrDefaultAsync(s => s.AspNetUserID == userId);
+
+        //        if (affiliateUser == null)
+        //        {
+        //            return NotFound(new { success = false, message = "Affiliate profile not found." });
+        //        }
+
+        //        int affiliateUserId = affiliateUser.UserID;
+
+        //        var referralCodeRecord = await _context.Set<WJ_ReferralCodes>()
+        //            .AsNoTracking()
+        //            .FirstOrDefaultAsync(r => r.UserID == affiliateUserId);
+
+        //        if (referralCodeRecord == null || string.IsNullOrEmpty(referralCodeRecord.ReferralCode))
+        //        {
+        //            return Ok(new { success = true, data = new List<object>() });
+        //        }
+
+        //        string referralCode = referralCodeRecord.ReferralCode;
+
+        //        var instituteDict = await _context.Set<WJ_Institutes>()
+        //            .AsNoTracking()
+        //            .Where(i => i.ReferralCode == referralCode)
+        //            .ToDictionaryAsync(i => (int)i.InstituteID, i => i.Name ?? "Unknown School");
+
+        //        var instituteIds = instituteDict.Keys.ToList();
+
+        //        if (!instituteIds.Any())
+        //        {
+        //            return Ok(new { success = true, data = new List<object>() });
+        //        }
+
+        //        var studentIds = await _context.Set<WJ_StudentAssociates>()
+        //            .AsNoTracking()
+        //            .Where(s => instituteIds.Contains(s.InstituteID))
+        //            .Select(s => s.StudentID)
+        //            .Distinct()
+        //            .ToListAsync();
+
+        //        var studentDict = await _context.Users
+        //            .AsNoTracking()
+        //            .Where(u => studentIds.Contains(u.UserID))
+        //            .ToDictionaryAsync(
+        //                u => u.UserID,
+        //                u => $"{u.FirstName ?? ""} {u.LastName ?? ""}".Trim()
+        //            );
+
+        //        var evaluations = await _context.ProjectEvaluations
+        //            .AsNoTracking()
+        //            .Where(x => (x.InstituteID != null && instituteIds.Contains(x.InstituteID.Value)) ||
+        //                        (x.StudentID != null && studentIds.Contains(x.StudentID.Value)))
+        //            .OrderByDescending(x => x.EvaluatedDate)
+        //            .ToListAsync();
+
+        //        var resultList = evaluations.Select(x => {
+        //            string schoolName = "N/A";
+        //            if (x.InstituteID.HasValue && instituteDict.ContainsKey(x.InstituteID.Value))
+        //            {
+        //                schoolName = instituteDict[x.InstituteID.Value];
+        //            }
+
+        //            string studentName = "Group / Team Project";
+        //            if (x.StudentID.HasValue && studentDict.ContainsKey(x.StudentID.Value))
+        //            {
+        //                studentName = studentDict[x.StudentID.Value];
+        //                if (string.IsNullOrEmpty(studentName)) studentName = "Unknown Student";
+        //            }
+
+        //            return new
+        //            {
+        //                x.EvaluationID,
+        //                x.ProjectID,
+        //                x.ProjectType,
+        //                x.StudentID,
+        //                x.InstituteID,
+        //                StudentName = studentName,
+        //                SchoolName = schoolName,
+        //                x.CourseName,
+        //                x.StatusColor,
+        //                x.Marks,
+        //                x.Description,
+        //                x.EvaluatedByUserId,
+        //                x.EvaluatedDate
+        //            };
+        //        }).ToList();
+
+        //        return Ok(new { success = true, data = resultList });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { success = false, message = ex.Message });
+        //    }
+        //}
 
         [HttpGet("teacher-history")]
         public async Task<IActionResult> GetTeacherEvaluatedHistory()
