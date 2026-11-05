@@ -233,7 +233,6 @@ namespace HemFoundation.Controllers
             }
         }
 
-        // 3. Save / Create Visit Plan
         [HttpPost("save")]
         public async Task<IActionResult> SavePlan([FromBody] VolunteerVisitPlan model)
         {
@@ -346,19 +345,16 @@ namespace HemFoundation.Controllers
                 .AsNoTracking()
                 .Where(p => p.VolunteerId == volunteer.Id && !p.IsDeleted);
 
-            // Status filter
             if (!string.IsNullOrEmpty(status))
             {
                 query = query.Where(p => p.Status.ToLower() == status.ToLower());
             }
 
-            // From Date filter
             if (fromDate.HasValue)
             {
                 query = query.Where(p => p.ScheduleDate >= fromDate.Value.Date);
             }
 
-            // To Date filter
             if (toDate.HasValue)
             {
                 var endDate = toDate.Value.Date.AddDays(1).AddTicks(-1);

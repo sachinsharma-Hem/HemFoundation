@@ -25,7 +25,7 @@ namespace HemFoundation.Controllers.Api
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IWebHostEnvironment _env;
-        private readonly SMSManager _smsManager;
+        private readonly SMSManager _smsManager;                                                                                        
 
         private readonly IConfiguration _configuration;
 
@@ -127,7 +127,6 @@ namespace HemFoundation.Controllers.Api
             });
         }
 
-        // 8. GET VOLUNTEER STATS FOR CARDS
         [HttpGet("stats")]
         public async Task<IActionResult> GetVolunteerStats()
         {
