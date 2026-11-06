@@ -1,6 +1,20 @@
-﻿@{
-    ViewData["Title"] = "Affiliate Performance";
+﻿@* @{
+  
     Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+} *@
+@using Microsoft.AspNetCore.Http
+@{
+    ViewData["Title"] = "Affiliate Performance";
+    var userRole = Context.Session.GetString("UserRole") ?? "";
+
+    bool isSuperAffiliate = userRole.Equals(
+        "WJ_Affiliate",
+        StringComparison.OrdinalIgnoreCase
+    );
+
+    Layout = isSuperAffiliate
+        ? "~/Views/Shared/Layouts/_TeacherLayout.cshtml"
+        : "~/Views/Shared/Layouts/_AdminLayout.cshtml";
 }
 
 <div class="container-fluid py-3 affiliate-dashboard">

@@ -1,6 +1,8 @@
-﻿using ClosedXML.Excel;
+﻿
+using ClosedXML.Excel;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Npgsql;
 using System.Globalization;
 using System.Text;
@@ -16,12 +18,35 @@ namespace HemFoundation.Controllers
 
         public AffiliatePerformanceController(IConfiguration configuration)
         {
-            _connectionString = configuration.GetConnectionString("DefaultConnection")
+            _connectionString =
+                configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException(
                     "Connection string 'DefaultConnection' was not configured.");
 
             QuestPDF.Settings.License = LicenseType.Community;
         }
+
+        // =========================================================
+        // CONFIGURATION
+        // =========================================================
+
+        private const string UserIdSessionKey = "UserID";
+
+        // Actual Super Affiliate role
+        private const string SuperAffiliateRole = "WJ_Affiliate";
+
+        // Keep these aligned with your application's Admin roles.
+        private static readonly string[] AdminRoles =
+        {
+            "WJ_Admin",
+            "Admin",
+            "Management"
+        };
+
+        // =========================================================
+        // BASE SQL
+        // Password is intentionally retained as requested.
+        // =========================================================
 
         private const string BaseSql = @"
             SELECT
@@ -42,24 +67,157 @@ namespace HemFoundation.Controllers
                 COALESCE(""Family Project"", 0)::bigint AS ""FamilyProjects"",
                 COALESCE(""Individual Project"", 0)::bigint AS ""IndividualProjects"",
                 COALESCE(""Group Project"", 0)::bigint AS ""GroupPbl""
-            FROM public.hf_view_Affiliate_PerformanceReport";
+            FROM public.hf_view_affiliate_performancereport";
 
-        [HttpGet]
-        public IActionResult Index()
+        // =========================================================
+        // SESSION
+        // =========================================================
+
+        private long? GetLoggedInInstituteId()
         {
-            return View();
+            // Session.SetInt32("UserID", instituteId)
+            int? id = HttpContext.Session.GetInt32(UserIdSessionKey);
+
+            if (id.HasValue && id.Value > 0)
+                return id.Value;
+
+            // Session.SetString("UserID", instituteId.ToString())
+            string? stringId =
+                HttpContext.Session.GetString(UserIdSessionKey);
+
+            if (long.TryParse(stringId, out long instituteId)
+                && instituteId > 0)
+            {
+                return instituteId;
+            }
+
+            return null;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAffiliateData(CancellationToken cancellationToken = default)
+        private string GetLoggedInRole()
         {
-            await using var connection = new NpgsqlConnection(_connectionString);
-            await connection.OpenAsync(cancellationToken);
+            // Supports the application's Role session key.
+            // UserRole is retained as a fallback.
+            return
+                HttpContext.Session.GetString("Role")
+                ?? HttpContext.Session.GetString("UserRole")
+                ?? "";
+        }
 
-            var rows = (await connection.QueryAsync<AffiliatePerformanceRow>(
-                new CommandDefinition(BaseSql + " ORDER BY \"Name\" ASC", cancellationToken: cancellationToken))).ToList();
+        private bool IsAdmin()
+        {
+            string role = GetLoggedInRole().Trim();
 
-            var summary = new AffiliatePerformanceSummary
+            return AdminRoles.Contains(
+                role,
+                StringComparer.OrdinalIgnoreCase);
+        }
+
+        private bool IsSuperAffiliate()
+        {
+            return string.Equals(
+                GetLoggedInRole().Trim(),
+                SuperAffiliateRole,
+                StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool HasReportAccess()
+        {
+            return IsAdmin() || IsSuperAffiliate();
+        }
+
+        // =========================================================
+        // GET LOGGED-IN SUPER AFFILIATE REFERRAL CODE
+        // =========================================================
+
+        private async Task<string?> GetSuperAffiliateReferralCode(
+            NpgsqlConnection connection,
+            long instituteId,
+            CancellationToken cancellationToken)
+        {
+            const string sql = @"
+                SELECT NULLIF(TRIM(referralcode), '')
+                FROM public.view_hf_affiliate
+                WHERE instituteid = @InstituteId
+                LIMIT 1;";
+
+            return await connection.QueryFirstOrDefaultAsync<string>(
+                new CommandDefinition(
+                    sql,
+                    new { InstituteId = instituteId },
+                    cancellationToken: cancellationToken));
+        }
+
+        // =========================================================
+        // GET FILTERED AFFILIATE DATA
+        // =========================================================
+
+        private async Task<List<AffiliatePerformanceRow>> GetAffiliateRows(
+            NpgsqlConnection connection,
+            CancellationToken cancellationToken)
+        {
+            // ADMIN: All affiliates
+            if (IsAdmin())
+            {
+                var adminRows =
+                    await connection.QueryAsync<AffiliatePerformanceRow>(
+                        new CommandDefinition(
+                            BaseSql + @" ORDER BY ""Name"" ASC",
+                            cancellationToken: cancellationToken));
+
+                return adminRows.ToList();
+            }
+
+            // SUPER AFFILIATE: Only own sub-affiliates
+            if (IsSuperAffiliate())
+            {
+                long? instituteId = GetLoggedInInstituteId();
+
+                if (!instituteId.HasValue)
+                {
+                    throw new UnauthorizedAccessException(
+                        "Affiliate session is missing or expired.");
+                }
+
+                string? referralCode =
+                    await GetSuperAffiliateReferralCode(
+                        connection,
+                        instituteId.Value,
+                        cancellationToken);
+
+                if (string.IsNullOrWhiteSpace(referralCode))
+                    return new List<AffiliatePerformanceRow>();
+
+                const string filterSql = @"
+                    WHERE LOWER(TRIM(COALESCE(r.""ReferredBy"", '')))
+                        = LOWER(TRIM(@ReferralCode))
+                    ORDER BY r.""Name"" ASC;";
+
+                var rows =
+                    await connection.QueryAsync<AffiliatePerformanceRow>(
+                        new CommandDefinition(
+                            BaseSql.Replace(
+                                "FROM public.hf_view_affiliate_performancereport",
+                                "FROM public.hf_view_affiliate_performancereport r")
+                            + filterSql,
+                            new { ReferralCode = referralCode },
+                            cancellationToken: cancellationToken));
+
+                return rows.ToList();
+            }
+
+            throw new UnauthorizedAccessException(
+                "You are not authorized to access this report.");
+        }
+
+        // =========================================================
+        // SUMMARY
+        // =========================================================
+
+        private static AffiliatePerformanceSummary BuildSummary(
+            List<AffiliatePerformanceRow> rows)
+        {
+            return new AffiliatePerformanceSummary
             {
                 TotalAffiliates = rows.Count,
                 TotalSchools = rows.Sum(x => x.TotalSchools),
@@ -72,160 +230,280 @@ namespace HemFoundation.Controllers
                 IndividualProjects = rows.Sum(x => x.IndividualProjects),
                 GroupPbl = rows.Sum(x => x.GroupPbl)
             };
-
-            var responseDto = new AffiliateApiResponse
-            {
-                Rows = rows,
-                Summary = summary
-            };
-
-            return Json(responseDto);
         }
+
+        // =========================================================
+        // INDEX
+        // =========================================================
+
+        [HttpGet]
+        public IActionResult Index()
+        {
+            if (!HasReportAccess())
+                return Forbid();
+
+            // No frontend changes required.
+            return View();
+        }
+
+        // =========================================================
+        // GET AFFILIATE DATA
+        // =========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> GetAffiliateData(
+            CancellationToken cancellationToken = default)
+        {
+            if (!HasReportAccess())
+                return Forbid();
+
+            try
+            {
+                await using var connection =
+                    new NpgsqlConnection(_connectionString);
+
+                await connection.OpenAsync(cancellationToken);
+
+                var rows = await GetAffiliateRows(
+                    connection,
+                    cancellationToken);
+
+                var response = new AffiliateApiResponse
+                {
+                    Rows = rows,
+                    Summary = BuildSummary(rows)
+                };
+
+                return Json(response);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Unable to load affiliate performance data."
+                });
+            }
+        }
+
+        // =========================================================
+        // EXPORT
+        // =========================================================
 
         [HttpGet]
         public async Task<IActionResult> Export(
             string format,
             CancellationToken cancellationToken = default)
         {
+            if (!HasReportAccess())
+                return Forbid();
+
             format = format?.Trim().ToLowerInvariant() ?? "";
 
             if (format is not ("xlsx" or "csv" or "pdf"))
-                return BadRequest("Supported formats are xlsx, csv and pdf.");
-
-            await using var connection = new NpgsqlConnection(_connectionString);
-            var rows = (await connection.QueryAsync<AffiliatePerformanceRow>(
-                new CommandDefinition(BaseSql + " ORDER BY \"Name\" ASC", cancellationToken: cancellationToken))).ToList();
-
-            if (format == "csv")
             {
-                var csv = BuildCsv(rows);
-                return File(
-                    new UTF8Encoding(true).GetBytes(csv),
-                    "text/csv; charset=utf-8",
-                    $"affiliate-performance-{DateTime.UtcNow:yyyyMMddHHmmss}.csv");
+                return BadRequest(
+                    "Supported formats are xlsx, csv and pdf.");
             }
 
-            if (format == "xlsx")
+            try
             {
-                using var workbook = new XLWorkbook();
-                var worksheet = workbook.Worksheets.Add("Affiliate Performance");
+                await using var connection =
+                    new NpgsqlConnection(_connectionString);
 
-                worksheet.Cell(1, 1).InsertTable(rows.Select(x => new
+                await connection.OpenAsync(cancellationToken);
+
+                var rows = await GetAffiliateRows(
+                    connection,
+                    cancellationToken);
+
+                string fileName =
+                    $"affiliate-performance-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+                // CSV
+                if (format == "csv")
                 {
-                    x.AffiliateId,
-                    x.Name,
-                    x.ReferralCode,
-                    x.MobileNo,
-                    x.UserName,
-                    x.Password,
-                    x.EmailId,
-                    x.CityName,
-                    x.TotalSchools,
-                    x.TotalStudents,
-                    x.ActiveStudents,
-                    x.TotalTeachers,
-                    x.ActiveTeachers,
-                    x.TotalSelectedProjects,
-                    x.FamilyProjects,
-                    x.IndividualProjects,
-                    x.GroupPbl
-                }));
+                    string csv = BuildCsv(rows);
 
-                worksheet.Columns().AdjustToContents();
-                worksheet.SheetView.FreezeRows(1);
+                    return File(
+                        new UTF8Encoding(true).GetBytes(csv),
+                        "text/csv; charset=utf-8",
+                        fileName + ".csv");
+                }
 
-                using var stream = new MemoryStream();
-                workbook.SaveAs(stream);
-
-                return File(
-                    stream.ToArray(),
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    $"affiliate-performance-{DateTime.UtcNow:yyyyMMddHHmmss}.xlsx");
-            }
-
-            var pdf = Document.Create(container =>
-            {
-                container.Page(page =>
+                // EXCEL
+                if (format == "xlsx")
                 {
-                    page.Size(PageSizes.A4.Landscape());
-                    page.Margin(15);
-                    page.DefaultTextStyle(x => x.FontSize(7));
+                    using var workbook = new XLWorkbook();
 
-                    page.Header()
-                        .Text("Affiliate Performance Report")
-                        .FontSize(16)
-                        .Bold();
+                    var worksheet =
+                        workbook.Worksheets.Add("Affiliate Performance");
 
-                    page.Content().Table(table =>
+                    worksheet.Cell(1, 1).InsertTable(
+                        rows.Select(x => new
+                        {
+                            x.AffiliateId,
+                            x.Name,
+                            x.ReferralCode,
+                            x.MobileNo,
+                            x.UserName,
+                            x.Password,
+                            x.EmailId,
+                            x.CityName,
+                            x.TotalSchools,
+                            x.TotalStudents,
+                            x.ActiveStudents,
+                            x.TotalTeachers,
+                            x.ActiveTeachers,
+                            x.TotalSelectedProjects,
+                            x.FamilyProjects,
+                            x.IndividualProjects,
+                            x.GroupPbl
+                        }));
+
+                    worksheet.Columns().AdjustToContents();
+                    worksheet.SheetView.FreezeRows(1);
+
+                    using var stream = new MemoryStream();
+
+                    workbook.SaveAs(stream);
+
+                    return File(
+                        stream.ToArray(),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        fileName + ".xlsx");
+                }
+
+                // PDF
+                var pdf = Document.Create(container =>
+                {
+                    container.Page(page =>
                     {
-                        table.ColumnsDefinition(columns =>
-                        {
-                            for (int i = 0; i < 17; i++)
-                                columns.RelativeColumn();
-                        });
+                        page.Size(PageSizes.A4.Landscape());
+                        page.Margin(15);
+                        page.DefaultTextStyle(x => x.FontSize(7));
 
-                        string[] headers =
-                        {
-                            "ID", "Affiliate", "Referral", "Mobile", "User", "Pass", "Email", "City",
-                            "Schools", "Students", "Active S.", "Teachers", "Active T.",
-                            "Projects", "Family", "Indiv.", "PBL"
-                        };
+                        page.Header()
+                            .Text("Affiliate Performance Report")
+                            .FontSize(16)
+                            .Bold();
 
-                        table.Header(header =>
+                        page.Content().Table(table =>
                         {
-                            foreach (var heading in headers)
+                            table.ColumnsDefinition(columns =>
                             {
-                                header.Cell()
-                                    .Background(Colors.Grey.Lighten2)
-                                    .Padding(2)
-                                    .Text(heading).Bold();
-                            }
-                        });
+                                for (int i = 0; i < 17; i++)
+                                    columns.RelativeColumn();
+                            });
 
-                        foreach (var row in rows)
-                        {
-                            object[] values =
+                            string[] headers =
                             {
-                                row.AffiliateId, row.Name, row.ReferralCode, row.MobileNo,
-                                row.UserName, row.Password, row.EmailId, row.CityName,
-                                row.TotalSchools, row.TotalStudents, row.ActiveStudents,
-                                row.TotalTeachers, row.ActiveTeachers,
-                                row.TotalSelectedProjects, row.FamilyProjects,
-                                row.IndividualProjects, row.GroupPbl
+                                "ID", "Affiliate", "Referral", "Mobile",
+                                "User", "Pass", "Email", "City",
+                                "Schools", "Students", "Active S.",
+                                "Teachers", "Active T.", "Projects",
+                                "Family", "Indiv.", "PBL"
                             };
 
-                            foreach (var value in values)
+                            table.Header(header =>
                             {
-                                table.Cell().Padding(2)
-                                    .Text(Convert.ToString(value, CultureInfo.InvariantCulture) ?? "");
+                                foreach (var heading in headers)
+                                {
+                                    header.Cell()
+                                        .Background(Colors.Grey.Lighten2)
+                                        .Padding(2)
+                                        .Text(heading)
+                                        .Bold();
+                                }
+                            });
+
+                            foreach (var row in rows)
+                            {
+                                object[] values =
+                                {
+                                    row.AffiliateId,
+                                    row.Name,
+                                    row.ReferralCode,
+                                    row.MobileNo,
+                                    row.UserName,
+                                    row.Password,
+                                    row.EmailId,
+                                    row.CityName,
+                                    row.TotalSchools,
+                                    row.TotalStudents,
+                                    row.ActiveStudents,
+                                    row.TotalTeachers,
+                                    row.ActiveTeachers,
+                                    row.TotalSelectedProjects,
+                                    row.FamilyProjects,
+                                    row.IndividualProjects,
+                                    row.GroupPbl
+                                };
+
+                                foreach (var value in values)
+                                {
+                                    table.Cell()
+                                        .Padding(2)
+                                        .Text(Convert.ToString(
+                                            value,
+                                            CultureInfo.InvariantCulture) ?? "");
+                                }
                             }
-                        }
+                        });
+
+                        page.Footer()
+                            .AlignRight()
+                            .Text(
+                                $"Generated {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC");
                     });
+                }).GeneratePdf();
 
-                    page.Footer().AlignRight()
-                        .Text($"Generated {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC");
-                });
-            }).GeneratePdf();
-
-            return File(
-                pdf,
-                "application/pdf",
-                $"affiliate-performance-{DateTime.UtcNow:yyyyMMddHHmmss}.pdf");
+                return File(
+                    pdf,
+                    "application/pdf",
+                    fileName + ".pdf");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
-        private static string BuildCsv(IEnumerable<AffiliatePerformanceRow> rows)
+        // =========================================================
+        // CSV BUILDER
+        // =========================================================
+
+        private static string BuildCsv(
+            IEnumerable<AffiliatePerformanceRow> rows)
         {
             var builder = new StringBuilder();
+
             var headers = new[]
             {
-                "Affiliate ID", "Name", "Referral Code", "Mobile No", "User Name",
-                "Password", "Email Id", "City Name", "Total Schools",
-                "Total Students", "Active Students", "Total Teachers",
-                "Active Teachers", "Total Selected Projects", "Family Projects",
-                "Individual Projects", "Group PBL"
+                "Affiliate ID",
+                "Name",
+                "Referral Code",
+                "Mobile No",
+                "User Name",
+                "Password",
+                "Email Id",
+                "City Name",
+                "Total Schools",
+                "Total Students",
+                "Active Students",
+                "Total Teachers",
+                "Active Teachers",
+                "Total Selected Projects",
+                "Family Projects",
+                "Individual Projects",
+                "Group PBL"
             };
 
-            builder.AppendLine(string.Join(",", headers.Select(CsvEscape)));
+            builder.AppendLine(
+                string.Join(",", headers.Select(CsvEscape)));
 
             foreach (var row in rows)
             {
@@ -250,7 +528,8 @@ namespace HemFoundation.Controllers
                     row.GroupPbl.ToString(CultureInfo.InvariantCulture)
                 };
 
-                builder.AppendLine(string.Join(",", values.Select(CsvEscape)));
+                builder.AppendLine(
+                    string.Join(",", values.Select(CsvEscape)));
             }
 
             return builder.ToString();
@@ -259,15 +538,25 @@ namespace HemFoundation.Controllers
         private static string CsvEscape(string? value)
         {
             value ??= "";
-            if (value.Length > 0 && "=+-@".Contains(value[0]))
+
+            if (value.Length > 0 &&
+                "=+-@".Contains(value[0]))
+            {
                 value = "'" + value;
+            }
+
             return "\"" + value.Replace("\"", "\"\"") + "\"";
         }
     }
 
+    // =============================================================
+    // DTO
+    // =============================================================
+
     public sealed class AffiliatePerformanceRow
     {
         public long AffiliateId { get; set; }
+
         public string Name { get; set; } = "";
         public string ReferralCode { get; set; } = "";
         public string MobileNo { get; set; } = "";
@@ -275,6 +564,7 @@ namespace HemFoundation.Controllers
         public string Password { get; set; } = "";
         public string EmailId { get; set; } = "";
         public string CityName { get; set; } = "";
+
         public long TotalSchools { get; set; }
         public long TotalStudents { get; set; }
         public long ActiveStudents { get; set; }
