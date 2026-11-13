@@ -1,0 +1,293 @@
+﻿@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+@{
+    ViewBag.Title = "Project Submission Workflow";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-8">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-header bg-primary text-white text-center py-3 rounded-top-4">
+                <h4 class="mb-0 text-uppercase fw-bold"><i class="fas fa-project-diagram me-2"></i>Higher Standard Project Workflow</h4>
+            </div>
+            <div class="card-body p-4">
+
+                <!-- STAGE 1: Project Creation Tab -->
+                <div id="sectionProjectCreate" class="@(ViewBag.IsProjectCreated == true ? "d-none" : "")">
+                    <div class="alert alert-info border-0 shadow-sm mb-4">
+                        <i class="fas fa-info-circle me-2"></i> <strong>Step 1:</strong> Start by entering your project name and description.
+                    </div>
+                    @using (Html.BeginForm("CreateProjectDetails", "HEProject", FormMethod.Post, new { id = "CreateForm" }))
+                    {
+                        <input type="hidden" name="MCID" value="@ViewBag.MCID" />
+                        <input type="hidden" name="PractID" value="@ViewBag.PractID" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-heading text-primary me-2"></i>Project Name</label>
+                            <input type="text" class="form-control" id="projectName" name="projectName" placeholder="Enter project title" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-pencil-alt text-primary me-2"></i>Project Description</label>
+                            <textarea class="form-control" id="experienceText" name="SuggestionComment" rows="3" placeholder="Write about your project goal..." required></textarea>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary fw-semibold"><i class="fas fa-check-circle me-2"></i>Save Project Details</button>
+                        </div>
+                    }
+                </div>
+
+                <!-- STAGE 2: Invite Colleagues from Student List -->
+                <div id="sectionInviteColleague" class="@(ViewBag.IsProjectCreated == true && ViewBag.IsUploaded != true ? "" : "d-none")">
+                    <div class="alert alert-warning border-0 shadow-sm mb-4">
+                        <i class="fas fa-users me-2"></i> <strong>Step 2:</strong> Select colleague(s) from your standard to invite. Uploading will unlock once at least one invite is accepted.
+                    </div>
+
+                    @using (Html.BeginForm("SendSelectedProjectInvitations", "HEProject", FormMethod.Post))
+                    {
+                        <input type="hidden" name="MCID" value="@ViewBag.MCID" />
+                        <input type="hidden" name="PractID" value="@ViewBag.PractID" />
+
+                        <div class="table-responsive mb-3 border rounded-3" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-striped table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="width: 50px;" class="text-center align-middle">
+                                            <input type="checkbox" id="selectAllStudents" class="form-check-input m-0">
+                                        </th>
+                                        <th class="align-middle">Student Name</th>
+                                        <th class="align-middle">Email</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (ViewBag.AvailableStudents != null && ((List<HemFoundation.Models.StudentSelectionDto>)ViewBag.AvailableStudents).Any())
+                                    {
+                                        foreach (var student in (List<HemFoundation.Models.StudentSelectionDto>)ViewBag.AvailableStudents)
+                                        {
+                                            <tr>
+                                                <td class="text-center align-middle">
+                                                    <input type="checkbox" name="SelectedStudentIDs" value="@student.StudentID" class="form-check-input student-checkbox m-0">
+                                                </td>
+                                                <td class="fw-semibold align-middle">@student.StudentName</td>
+                                                <td class="text-muted align-middle">@student.Email</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted py-3">No other students found in your standard.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+                                <i class="fas fa-paper-plane me-2"></i>Send Invite to Selected
+                            </button>
+                        </div>
+                    }
+
+                    <div class="mt-4">
+                        <h6 class="fw-bold text-secondary mb-3">Invited Colleagues Status:</h6>
+                        <div class="table-responsive border rounded-3">
+                            <table class="table table-bordered align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Student Name</th>
+                                        <th>Email</th>
+                                        <th style="width: 120px;" class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (ViewBag.InvitedList != null && ((List<HemFoundation.Models.InvitationStatusDto>)ViewBag.InvitedList).Any())
+                                    {
+                                        foreach (var invite in (List<HemFoundation.Models.InvitationStatusDto>)ViewBag.InvitedList)
+                                        {
+                                            <tr>
+                                                <td class="fw-semibold">@invite.StudentsName</td>
+                                                <td class="text-muted">@invite.Email</td>
+                                                <td class="text-center">
+                                                    @if (invite.IsAccepted)
+                                                    {
+                                                        <span class="badge bg-success px-3 py-2">Accepted</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted py-3">No colleagues invited yet.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STAGE 3: Flexible Video / Document Media Upload Section -->
+                <div id="sectionUploadMedia" class="@(ViewBag.CanUpload == true && ViewBag.IsUploaded != true ? "" : "d-none")">
+                    <div class="alert alert-success border-0 shadow-sm mb-4 mt-4">
+                        <i class="fas fa-unlock me-2"></i> <strong>Step 3:</strong> Your colleague has accepted the invite! You can now upload your final media files or provide a cloud link.
+                    </div>
+
+                    <form id="UploadForm" enctype="multipart/form-data">
+                        <input type="hidden" name="MCID" value="@ViewBag.MCID" />
+                        <input type="hidden" name="PractID" value="@ViewBag.PractID" />
+
+                        <!-- Flexible Video Submission Switcher -->
+                        <div class="mb-3 bg-light p-3 rounded-3 border">
+                            <label class="small fw-bold text-dark mb-2">Video Activity Submission Option</label>
+                            <select id="videoSubmissionType" class="form-select mb-3 shadow-none">
+                                <option value="file">Upload Video (Max 100 MB)</option>
+                                <option value="drive">Choose from Google Drive</option>
+                                <option value="link">Enter Manual Cloud Link</option>
+                            </select>
+
+                            <!-- Option A: Direct File Upload -->
+                            <div id="videoFileContainer">
+                                <input type="file" class="form-control" name="VideoFile" id="VideoFile" accept="video/mp4,video/quicktime,video/webm" />
+                                <small class="text-muted">Upload an MP4, MOV, or WEBM video directly via FTPS. Maximum file size: 100 MB.</small>
+                                <div id="videoSizeError" class="text-danger small mt-2 d-none"></div>
+                            </div>
+
+                            <!-- Option B: Google Drive Picker -->
+                            <div id="videoDriveContainer" class="d-none">
+                                <button type="button" id="btnChooseDriveVideo" class="btn btn-outline-primary">
+                                    <i class="bi bi-google me-1"></i> Choose Video from Google Drive
+                                </button>
+                                <input type="hidden" id="VideoDriveFileId" name="VideoDriveFileId" disabled />
+                                <div id="selectedDriveVideo" class="alert alert-success mt-3 mb-0 d-none">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Selected: <span id="selectedDriveVideoName"></span>
+                                    <button type="button" id="btnRemoveDriveVideo" class="btn btn-sm btn-outline-danger ms-2">Remove</button>
+                                </div>
+                            </div>
+
+                            <!-- Option C: Manual Cloud URL Link -->
+                            <div id="videoLinkContainer" class="d-none">
+                                <label for="VideoCloudUrl" class="form-label small fw-bold">Video Link URL</label>
+                                <input type="url" class="form-control" id="VideoCloudUrl" name="VideoCloudUrl" placeholder="https://drive.google.com/... or https://onedrive.live.com/..." disabled />
+                                <small class="text-muted d-block mt-2">Paste a secure shareable cloud URL link.</small>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-success btn-lg shadow-sm"><i class="fas fa-cloud-upload-alt me-2"></i>Finalize & Submit Project</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Completed State Message -->
+                @if (ViewBag.IsUploaded == true)
+                {
+                    <div class="text-center py-4">
+                        <div class="text-success mb-3" style="font-size: 50px;"><i class="fas fa-check-circle"></i></div>
+                        <h3 class="fw-bold text-dark">Project Fully Submitted!</h3>
+                        <p class="text-muted">Your group project has been successfully uploaded and processed.</p>
+                        <a href="/Learn/index" class="btn btn-outline-danger btn-lg rounded-pill px-5">
+                            <i class="fas fa-tachometer-alt me-2"></i> Return to Dashboard
+                        </a>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
+
+        $(document).ready(function () {
+            $('#videoSubmissionType').trigger('change');
+
+            $('#selectAllStudents').on('change', function () {
+                $('.student-checkbox').prop('checked', $(this).prop('checked'));
+            });
+
+            $('.student-checkbox').on('change', function () {
+                if (!$(this).prop('checked')) {
+                    $('#selectAllStudents').prop('checked', false);
+                } else if ($('.student-checkbox:checked').length === $('.student-checkbox').length) {
+                    $('#selectAllStudents').prop('checked', true);
+                }
+            });
+        });
+
+        $('#videoSubmissionType').on('change', function () {
+            const type = this.value;
+            $('#videoFileContainer').toggleClass('d-none', type !== 'file');
+            $('#videoDriveContainer').toggleClass('d-none', type !== 'drive');
+            $('#videoLinkContainer').toggleClass('d-none', type !== 'link');
+
+            $('#VideoFile').prop('disabled', type !== 'file');
+            $('#VideoDriveFileId').prop('disabled', type !== 'drive');
+            $('#VideoCloudUrl').prop('disabled', type !== 'link');
+
+            if (type !== 'file') { $('#VideoFile').val(''); $('#videoSizeError').addClass('d-none').text(''); }
+            if (type !== 'drive') { $('#VideoDriveFileId').val(''); $('#selectedDriveVideo').addClass('d-none'); }
+            if (type !== 'link') { $('#VideoCloudUrl').val(''); }
+        });
+
+        $('#VideoFile').on('change', function () {
+            const file = this.files && this.files[0];
+            if (file && file.size > MAX_VIDEO_SIZE) {
+                $('#videoSizeError').text('Video exceeds 100 MB limit. Please use Google Drive or a cloud link instead.').removeClass('d-none');
+                this.value = '';
+            } else {
+                $('#videoSizeError').addClass('d-none').text('');
+            }
+        });
+
+        // AJAX Submission Handler for Finalize Project Upload
+        $('#UploadForm').on('submit', function (e) {
+            e.preventDefault();
+            const videoType = $('#videoSubmissionType').val();
+            const file = $('#VideoFile')[0].files?.[0];
+            const $btn = $(this).find('button[type="submit"]');
+            const originalText = $btn.html();
+
+            if (videoType === 'file' && !file) { alert('Please select a video file.'); return; }
+            if (videoType === 'file' && file && file.size > MAX_VIDEO_SIZE) { alert('Video size cannot exceed 100 MB.'); return; }
+            if (videoType === 'drive' && !$('#VideoDriveFileId').val()) { alert('Please select a video from Google Drive.'); return; }
+            if (videoType === 'link' && !$('#VideoCloudUrl').val().trim()) { alert('Please enter a cloud video URL link.'); return; }
+
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Submitting...');
+
+            $.ajax({
+                url: '/final-project-upload',
+                type: 'POST',
+                data: new FormData(this),
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    alert(res.message || 'Project submitted successfully.');
+                    if (res.success) { window.location.reload(); }
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.message || (xhr.status === 413 ? 'The upload is too large. Please use a smaller video or cloud link.' : 'Unable to submit. Please try again.');
+                    alert(message);
+                },
+                complete: function () { $btn.prop('disabled', false).html(originalText); }
+            });
+        });
+    </script>
+
+    <!-- Google Drive Picker Scripts -->
+    <script const googlePickerConfig=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { apiKey = Configuration["GoogleDrivePicker:ApiKey"] ?? "", clientId = Configuration["GoogleDrivePicker:ClientId"] ?? "", appId = Configuration["GoogleDrivePicker:AppId"] ?? "" }))></script>
+    <script async defer src="https://apis.google.com/js/api.js"></script>
+    <script async defer src="https://accounts.google.com/gsi/client"></script>
+}

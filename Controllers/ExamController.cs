@@ -629,7 +629,7 @@ namespace HemFoundation.Controllers
                         await conn.OpenAsync();
 
                         // In Npgsql, calling procedures with OUT parameters uses the CALL keyword syntax
-                        using (var cmd = new NpgsqlCommand("CALL public.hf_sp_gethigherstandardcompletion(@p_students_id, @p_status)", conn))
+                        using (var cmd = new NpgsqlCommand("CALL public.hf_sp_gethigherstandardcompletion(@p_students_id, NULL)", conn))
                         {
                             cmd.CommandType = CommandType.Text;
 

@@ -1,0 +1,100 @@
+﻿@{
+    ViewBag.Title = "Submission Successful";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title</title>
+    <!-- Explicitly load Bootstrap and FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center min-vh-100 m-0">
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden text-center bg-white">
+
+                    <!-- Header Banner -->
+                    <div class="card-header bg-success text-white py-4 border-0">
+                        <div class="mb-2" style="font-size: 50px;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h4 class="mb-0 text-uppercase fw-bold text-white">Success!</h4>
+                    </div>
+
+                    <!-- Body Message -->
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-dark mb-3">Action Completed Successfully</h5>
+                        <p class="text-muted small mb-4">
+                            Your project collaboration invitation has been accepted successfully. Thank you for participating in the academic workflow.
+                        </p>
+
+                        @if (ViewBag.CourseName != null)
+                        {
+                            <div class="alert alert-light border rounded-3 p-3 mb-4 text-start">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-book-reader text-primary fs-4 me-3"></i>
+                                    <div>
+                                        <small class="text-muted d-block" style="font-size: 11px;">Associated Course / Module</small>
+                                        <span class="fw-bold text-dark fs-6">@ViewBag.CourseName</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Action Navigation Button -->
+                        <div class="d-grid">
+                            <a href="@ViewBag.returnpath" class="btn btn-primary fw-semibold rounded-pill py-2 shadow-sm">
+                                <i class="fas fa-sign-in-alt me-2"></i>Proceed to Portal
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Footer Note -->
+                    <div class="card-footer bg-white text-muted py-3 small border-0">
+                        <i class="fas fa-shield-alt text-success me-1"></i> HemVirtues Academic Secure Gateway
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+            @if (TempData["Success"] != null)
+                {
+                    <text>
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: '@Html.Raw(TempData["Success"])',
+                            confirmButtonColor: '#198754',
+                            timer: 3500,
+                            timerProgressBar: true
+                        });
+                </text>
+            }
+
+                @if (TempData["Error"] != null)
+                {
+                    <text>
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Notice',
+                            text: '@Html.Raw(TempData["Error"])',
+                            confirmButtonColor: '#0d6efd'
+                        });
+                </text>
+            }
+    </script>
+</body>
+</html>
