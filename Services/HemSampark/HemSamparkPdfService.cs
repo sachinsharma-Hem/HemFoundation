@@ -5,12 +5,52 @@ using PuppeteerSharp.Media;
 namespace HemFoundation.Services.HemSampark
 {
     /// <summary>
+    /// The publication cannot be laid out on a single page at a readable size.
+    /// The message is written for the admin and is safe to show as-is.
+    /// </summary>
+    public class HemSamparkPdfLayoutException : Exception
+    {
+        public HemSamparkPdfLayoutException(string message) : base(message) { }
+    }
+
+    /// <summary>
     /// Renders a HEM Sampark publication to PDF (plus a PNG preview used by the
     /// mobile-friendly reader) and owns where those files live on disk.
     /// </summary>
     public class HemSamparkPdfService
     {
         private const string LegacyWebFolder = "generateHemPdf";
+
+        // ---- One-page layout -------------------------------------------------
+        // The page is 140mm x 297mm. Every pixel size in the template is
+        // multiplied by a single scale factor (--s). The generator picks the
+        // largest scale at which everything fits on that one page: long issues
+        // are tightened, short issues are enlarged so the page is not left
+        // half empty. Nothing is ever cropped or hidden.
+        private const double PageHeightPx = 297 * 96 / 25.4;   // 297mm in CSS pixels
+        private const double FitSafetyPx = 3;                  // keeps clear of a spill onto page 2
+        private const double MinScale = 0.75;                  // below this the text is too small to read (about 6pt)
+        private const double MaxScale = 1.30;
+
+        private static readonly System.Text.RegularExpressions.Regex StyleBlock =
+            new(@"<style>(.*?)</style>", System.Text.RegularExpressions.RegexOptions.Singleline);
+
+        private static readonly System.Text.RegularExpressions.Regex PixelValue =
+            new(@"(?<![\w.])(\d+(?:\.\d+)?)px");
+
+        /// <summary>Rewrites "12px" in the template's stylesheet as "calc(12px * var(--s))".</summary>
+        private static string MakeStylesScalable(string html) =>
+            StyleBlock.Replace(html, match =>
+                "<style>:root { --s: 1; }" +
+                PixelValue.Replace(match.Groups[1].Value, "calc($1px * var(--s))") +
+                "</style>", 1);
+
+        private static int CountPdfPages(string filePath)
+        {
+            // Chromium writes page objects uncompressed, so a plain scan is enough.
+            var text = System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(filePath));
+            return System.Text.RegularExpressions.Regex.Matches(text, @"/Type\s*/Page(?![a-zA-Z])").Count;
+        }
 
         private readonly IWebHostEnvironment _env;
         private readonly IConfiguration _config;
@@ -574,6 +614,8 @@ namespace HemFoundation.Services.HemSampark
 </html>";
 
 
+            htmlContent = MakeStylesScalable(htmlContent);
+
             // Unguessable, collision-free file name; never reuses an old file.
             string fileName =
                 $"HemSampark_{entry.Id}_{_clock.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}.pdf";
@@ -625,25 +667,51 @@ namespace HemFoundation.Services.HemSampark
 
             await page.EmulateMediaTypeAsync(MediaType.Print);
 
-            // Tighten spacing slightly when the content is longer than one page.
-            bool fitsOnOnePage = await page.EvaluateExpressionAsync<bool>(
-                "document.querySelector('.page').scrollHeight <= " +
-                "document.querySelector('.page').clientHeight + 1");
+            // ---- Fit everything on one page ----
+            // Height of the content at a given scale, measured without the
+            // "fill the page" minimum height.
+            async Task<double> ContentHeightAsync(double scale) =>
+                await page.EvaluateFunctionAsync<double>(
+                    @"s => {
+                        const root = document.documentElement;
+                        const el = document.querySelector('.page');
+                        root.style.setProperty('--s', s);
+                        el.style.minHeight = '0';
+                        const h = el.getBoundingClientRect().height;
+                        el.style.minHeight = '';
+                        return h;
+                    }", scale);
 
-            if (!fitsOnOnePage)
+            double limit = PageHeightPx - FitSafetyPx;
+            double heightAtMin = await ContentHeightAsync(MinScale);
+
+            if (heightAtMin > limit)
             {
-                await page.AddStyleTagAsync(new AddTagOptions
-                {
-                    Content = @"
-                .page { height: auto !important; min-height: 297mm; }
-                .content-text { font-size: 10.5px; line-height: 1.25; margin-bottom: 4px; }
-                .question { font-size: 10px; line-height: 1.25; margin-bottom: 3px; }
-                .mantra-box { padding: 5px 7px; margin-bottom: 4px; }
-                .challenge-box { padding: 5px 7px; margin: 3px 0 4px; }
-                .values-box { padding: 5px 7px; }
-                .footer-box { margin-top: 8px; }"
-                });
+                int over = (int)Math.Ceiling((heightAtMin / limit - 1) * 100);
+
+                throw new HemSamparkPdfLayoutException(
+                    "The content is too long to fit on one page at a readable size " +
+                    $"(about {Math.Max(1, over)}% too long even at the smallest text size). " +
+                    "Please shorten the English or Hindi content, or the quiz questions, and generate again.");
             }
+
+            double low = MinScale, high = MaxScale;
+
+            if (await ContentHeightAsync(MaxScale) <= limit)
+            {
+                low = MaxScale;
+            }
+            else
+            {
+                for (int i = 0; i < 12 && high - low > 0.004; i++)
+                {
+                    double mid = (low + high) / 2;
+                    if (await ContentHeightAsync(mid) <= limit) low = mid; else high = mid;
+                }
+            }
+
+            double finalScale = Math.Floor(low * 200) / 200;   // round down to 0.005
+            await ContentHeightAsync(Math.Max(MinScale, finalScale));
 
             await page.PdfAsync(filePath, new PdfOptions
             {
@@ -659,6 +727,15 @@ namespace HemFoundation.Services.HemSampark
                     Right = "0"
                 }
             });
+
+            // Safety net: never hand out a PDF that spilled onto a second page.
+            if (CountPdfPages(filePath) > 1)
+            {
+                File.Delete(filePath);
+                throw new HemSamparkPdfLayoutException(
+                    "The content could not be fitted on one page. " +
+                    "Please shorten the content slightly and generate again.");
+            }
 
             // PNG copy of the same layout: phones cannot show PDFs inline, so
             // the reader displays this image and links to the PDF.

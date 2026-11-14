@@ -39,6 +39,12 @@ namespace HemFoundation.Models.HemSampark
 
         /// <summary>Generate (or regenerate) the PDF right after saving.</summary>
         public bool GeneratePdf { get; set; }
+
+        /// <summary>
+        /// The admin has confirmed moving a publication that is published or
+        /// already has quiz attempts to another date.
+        /// </summary>
+        public bool ConfirmDateChange { get; set; }
     }
 
     // ---------- User: quiz submission ----------
