@@ -2,59 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#5b3fd6" />
     <title>@ViewData["Title"] - HEM Sampark</title>
-    <!-- Bootstrap 5 & Icons CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="icon" href="~/favicon.ico" />
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/hem-sampark.css" asp-append-version="true" />
 </head>
-<body class="bg-light">
-
-    <!-- Custom Top Header Bar with Logout Button -->
-    <div class="container-fluid bg-white shadow-sm py-2 px-4 mb-3">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-3">
-                <h4 class="fw-bold m-0" style="color: #29266f;">HEM Sampark</h4>
-                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold d-none d-md-inline-block">Values for a Brighter Tomorrow</span>
+<body>
+    <div class="hs-app">
+        <header class="hs-top">
+            <div class="hs-top-in">
+                <a class="hs-brand" href="/HemSampark/SamparkDashboard" aria-label="HEM Sampark home">
+                    <img src="~/images/homepage/Hem Sampark.png" alt="" />
+                    <span>
+                        <span class="hs-brand-name">HEM Sampark</span>
+                        <span class="hs-brand-tag">Values for a Brighter Tomorrow</span>
+                    </span>
+                </a>
+                <div class="hs-user">
+                    <span class="hs-avatar" id="hsAvatar" aria-hidden="true"><i class="bi bi-person-fill"></i></span>
+                    <span class="hs-user-name" id="hsUserName"></span>
+                    <button type="button" class="hs-logout" id="hsLogout" aria-label="Log out">
+                        <i class="bi bi-box-arrow-right"></i><span>Log Out</span>
+                    </button>
+                </div>
             </div>
+            @await RenderSectionAsync("Nav", required: false)
+        </header>
 
-            <div class="d-flex align-items-center">
-                <button type="button" onclick="logoutAdmin()" class="btn btn-outline-danger btn-sm rounded-pill px-2 py-1 d-flex align-items-center gap-1" style="font-size: 0.8rem;">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Log Out</span>
-                </button>
-            </div>
-        </div>
+        <main class="hs-main">
+            @RenderBody()
+        </main>
+
+        <footer class="hs-foot">
+            <b>HEM Sampark</b> · Read. Think. Feel. Act. Every day.
+        </footer>
     </div>
 
-    <!-- Main Body Content Render -->
-    <div class="container-fluid px-3 px-md-4">
-        @RenderBody()
-    </div>
-
-    <!-- jQuery CDN (Added to fix $.ajax error) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="~/lib/jquery/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script>
-            function performCleanupAndRedirect() {
-                // Local storage ya session clear karke login page ya home par redirect karein
-                localStorage.removeItem("jwtToken");
-                window.location.href = '/';
-            }
+        function performCleanupAndRedirect() {
+            localStorage.removeItem("jwtToken");
+            window.location.href = '/';
+        }
 
-            function logoutAdmin() {
-                $.ajax({
-                    url: '/api/auth/logout',
-                    type: 'POST',
-                    success: function() {
-                        performCleanupAndRedirect();
-                    },
-                    error: function() {
-                        performCleanupAndRedirect();
-                    }
-                });
-            }
+        function logoutAdmin() {
+            $.ajax({ url: '/api/auth/logout', type: 'POST' }).always(performCleanupAndRedirect);
+        }
+
+        document.getElementById('hsLogout').addEventListener('click', logoutAdmin);
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)

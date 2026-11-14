@@ -25,6 +25,17 @@ namespace HemFoundation.Models.HemSampark
     }
 
 
+    public static class HemSamparkStatus
+    {
+        public const string Draft = "Draft";
+        public const string Generated = "Generated";
+        public const string Published = "Published";
+        public const string Archived = "Archived";
+
+        public static readonly string[] All = { Draft, Generated, Published, Archived };
+    }
+
+
     // ============================
     // MASTER SETTINGS
     // ============================
@@ -91,9 +102,50 @@ namespace HemFoundation.Models.HemSampark
 
         [Column("celebrationcontenthi")]
         public string? CelebrationContentHi { get; set; }
+        // Working (draft) PDF. Legacy values are web paths such as
+        // "/generateHemPdf/x.pdf"; new values are bare file names stored in
+        // the private HEM Sampark storage folder.
         [Column("pdfurl")]
-
         public string? PdfUrl { get; set; }
+
+        [Column("title")]
+        public string? Title { get; set; }
+
+        // Draft | Generated | Published | Archived (see HemSamparkStatus)
+        [Column("status")]
+        public string Status { get; set; } = HemSamparkStatus.Draft;
+
+        // The PDF users actually see. Only changes when the admin publishes.
+        [Column("publishedpdfurl")]
+        public string? PublishedPdfUrl { get; set; }
+
+        [Column("pdfgeneratedat")]
+        public DateTime? PdfGeneratedAt { get; set; }
+
+        [Column("publishedat")]
+        public DateTime? PublishedAt { get; set; }
+
+        // Last time content or quiz changed; a PDF older than this is outdated.
+        [Column("contentupdatedat")]
+        public DateTime? ContentUpdatedAt { get; set; }
+
+        // JSON copy of the content + quiz taken at publish time. Users are
+        // served from this, so later draft edits stay invisible until republish.
+        [Column("publishedsnapshot")]
+        public string? PublishedSnapshot { get; set; }
+
+        // Optional per-publication overrides of the master defaults.
+        [Column("morningmantraen")]
+        public string? MorningMantraEn { get; set; }
+
+        [Column("morningmantrahi")]
+        public string? MorningMantraHi { get; set; }
+
+        [Column("valuesinfocusen")]
+        public string? ValuesInFocusEn { get; set; }
+
+        [Column("valuesinfocushi")]
+        public string? ValuesInFocusHi { get; set; }
 
         // Navigation property
         public List<DailyQuestion> Questions { get; set; }
@@ -127,6 +179,15 @@ namespace HemFoundation.Models.HemSampark
 
         [Column("correctoption")]
         public int CorrectOption { get; set; }
+
+        [Column("explanation")]
+        public string? Explanation { get; set; }
+
+        [Column("displayorder")]
+        public int DisplayOrder { get; set; }
+
+        [Column("isactive")]
+        public bool IsActive { get; set; } = true;
 
 
         // Navigation property

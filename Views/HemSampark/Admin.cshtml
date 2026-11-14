@@ -3,378 +3,353 @@
     Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
 }
 
-<div class="container-fluid py-4 px-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+@section Styles {
+    <link rel="stylesheet" href="~/css/hem-sampark-admin.css" asp-append-version="true" />
+}
+
+<div class="hsa-root" id="hsaRoot">
+
+    <div class="hsa-head">
         <div>
-            <h2 class="text-dark fw-bold mb-1"><i class="fas fa-newspaper text-primary me-2"></i> Hem Sampark Admin Control Panel</h2>
-            <p class="text-muted mb-0">Manage Master Settings, Daily PDF Content, Quizzes, and Previews.</p>
+            <h2><i class="bi bi-newspaper me-2" style="color:var(--hsa-primary)"></i>HEM Sampark Admin</h2>
+            <p>Create, review and publish the daily publication and its quiz. <span id="hsaBusinessDate"></span></p>
         </div>
+        <button type="button" class="btn hsa-btn hsa-btn-primary" id="hsaNewBtn">
+            <i class="bi bi-plus-lg"></i> New Publication
+        </button>
     </div>
 
-    <!-- Nav tabs -->
-    <ul class="nav nav-pills mb-4 shadow-sm p-2 bg-white rounded" id="adminTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-semibold px-4" id="master-tab" data-bs-toggle="pill" data-bs-target="#master" type="button" role="tab">
-                <i class="fas fa-cogs me-2"></i>Master Settings & Logos
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link fw-semibold px-4" id="daily-tab" data-bs-toggle="pill" data-bs-target="#daily" type="button" role="tab">
-                <i class="fas fa-calendar-day me-2"></i>Daily Entry & Quiz
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link fw-semibold px-4" id="list-tab" data-bs-toggle="pill" data-bs-target="#list" type="button" role="tab">
-                <i class="fas fa-list-alt me-2"></i>Entries List & PDF Preview
-            </button>
-        </li>
-    </ul>
+    <div class="hsa-tabs" role="tablist">
+        <button type="button" class="hsa-tab active" data-hsa-tab="dashboard"><i class="bi bi-grid-1x2"></i> Dashboard</button>
+        <button type="button" class="hsa-tab" data-hsa-tab="publications"><i class="bi bi-file-earmark-pdf"></i> Publications</button>
+        <button type="button" class="hsa-tab" data-hsa-tab="master"><i class="bi bi-sliders"></i> Master Settings</button>
+        <button type="button" class="hsa-tab" data-hsa-tab="reports"><i class="bi bi-bar-chart-line"></i> User Performance</button>
+    </div>
 
-    <div class="tab-content" id="adminTabsContent">
+    <!-- ===================== DASHBOARD ===================== -->
+    <section class="hsa-panel active" data-hsa-panel="dashboard">
+        <div class="hsa-stats" id="hsaStats"></div>
 
-        <!-- 1. MASTER FORM TAB -->
-        <div class="tab-pane fade show active" id="master" role="tabpanel">
-            <div class="row">
-                <!-- Form Column -->
-                <div class="col-lg-8 mb-4">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-                        <h4 class="text-primary fw-bold mb-3 border-bottom pb-2">Master Configuration (One-Time Setup)</h4>
-                        <form id="masterForm" enctype="multipart/form-data">
-
-                            <h6 class="text-secondary fw-bold mt-3 mb-2">Upload Logos (PNG supported)</h6>
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">Logo (RR Global)</label>
-                                    <input type="file" class="form-control form-control-sm" id="Logo1File" accept="image/png, image/jpeg">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">Logo(Hem Sampark)</label>
-                                    <input type="file" class="form-control form-control-sm" id="Logo2File" accept="image/png, image/jpeg">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">Logo (Hema Foundation)</label>
-                                    <input type="file" class="form-control form-control-sm" id="Logo3File" accept="image/png, image/jpeg">
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Morning Mantra (English)</label>
-                                    <textarea class="form-control" id="MorningMantraEn" rows="3" required></textarea>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Morning Mantra (Hindi)</label>
-                                    <textarea class="form-control" id="MorningMantraHi" rows="3" required></textarea>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Values in Focus (English)</label>
-                                    <textarea class="form-control" id="ValuesInFocusEn" rows="2" required></textarea>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Values in Focus (Hindi)</label>
-                                    <textarea class="form-control" id="ValuesInFocusHi" rows="2" required></textarea>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Footer Text</label>
-                                    <input type="text" class="form-control" id="FooterText" value="Please participate by visiting the above link" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Footer Link</label>
-                                    <input type="text" class="form-control" id="FooterLink" value="www.hemafoundation.org/hem-sampark" required>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary px-4 py-2 fw-bold shadow-sm">
-                                <i class="fas fa-save me-2"></i> Save Master Settings
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Live View Master Data Column -->
-                <div class="col-lg-4 mb-4">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
-                        <h5 class="text-dark fw-bold mb-3"><i class="fas.fa-eye me-2"></i> Current Master Data View</h5>
-                        <div id="masterDataDisplay">
-                            <p class="text-muted small">Loading saved master settings...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="hsa-card mb-3">
+            <h3 class="hsa-card-title"><i class="bi bi-calendar-check"></i> Today's publication</h3>
+            <div id="hsaToday" class="hsa-loading"><span class="hsa-spin"></span></div>
         </div>
 
-        <!-- 2. DAILY ENTRY TAB -->
-        <div class="tab-pane fade" id="daily" role="tabpanel">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-                <h4 class="text-primary fw-bold mb-3 border-bottom pb-2">Date-wise Content & Quiz Entry Form</h4>
-                <form id="dailyForm">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Select Date</label>
-                            <input type="date" class="form-control" id="EntryDate" required>
+        <div class="hsa-card">
+            <h3 class="hsa-card-title"><i class="bi bi-signpost-split"></i> How publishing works</h3>
+            <div class="hsa-steps">
+                <div class="hsa-step"><b>Create</b>Pick the date, add the content and the quiz. It is saved as a draft.</div>
+                <div class="hsa-step"><b>Generate PDF</b>The PDF is built from your content and the master settings.</div>
+                <div class="hsa-step"><b>Review</b>Preview the PDF. If you edit anything, regenerate it.</div>
+                <div class="hsa-step"><b>Publish</b>Users see only the published PDF, on its publication date.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== PUBLICATIONS ===================== -->
+    <section class="hsa-panel" data-hsa-panel="publications">
+        <div class="hsa-card">
+            <div class="hsa-filters">
+                <div>
+                    <label for="hsaSearch">Search</label>
+                    <input type="search" class="form-control" id="hsaSearch" placeholder="Title, heading or issue number" autocomplete="off">
+                </div>
+                <div>
+                    <label for="hsaStatus">Status</label>
+                    <select class="form-select" id="hsaStatus">
+                        <option value="">All active</option>
+                        <option value="Draft">Draft</option>
+                        <option value="Generated">Generated</option>
+                        <option value="Published">Published</option>
+                        <option value="Scheduled">Scheduled (upcoming)</option>
+                        <option value="Archived">Archived</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="hsaFrom">From date</label>
+                    <input type="date" class="form-control" id="hsaFrom">
+                </div>
+                <div>
+                    <label for="hsaTo">To date</label>
+                    <input type="date" class="form-control" id="hsaTo">
+                </div>
+                <div>
+                    <button type="button" class="btn hsa-btn hsa-btn-light w-100" id="hsaReset"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+                </div>
+            </div>
+
+            <div class="hsa-table-wrap">
+                <table class="hsa-table">
+                    <thead>
+                        <tr>
+                            <th>Publication</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Last generated</th>
+                            <th>Last published</th>
+                            <th class="text-center">Quiz</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hsaPubRows"></tbody>
+                </table>
+            </div>
+            <div class="hsa-pager" id="hsaPubPager"></div>
+        </div>
+    </section>
+
+    <!-- ===================== MASTER SETTINGS ===================== -->
+    <section class="hsa-panel" data-hsa-panel="master">
+        <form id="hsaMasterForm" class="hsa-form" novalidate>
+            <div class="hsa-card mb-3">
+                <h3 class="hsa-card-title"><i class="bi bi-images"></i> Logos shown at the top of every PDF</h3>
+                <div class="hsa-logos">
+                    <div class="hsa-logo-box">
+                        <div data-hsa-logo="1"></div>
+                        <label for="hsaLogo1">RR Global</label>
+                        <input type="file" class="form-control form-control-sm" id="hsaLogo1" accept=".png,.jpg,.jpeg,.webp">
+                    </div>
+                    <div class="hsa-logo-box">
+                        <div data-hsa-logo="2"></div>
+                        <label for="hsaLogo2">HEM Sampark</label>
+                        <input type="file" class="form-control form-control-sm" id="hsaLogo2" accept=".png,.jpg,.jpeg,.webp">
+                    </div>
+                    <div class="hsa-logo-box">
+                        <div data-hsa-logo="3"></div>
+                        <label for="hsaLogo3">Hema Foundation</label>
+                        <input type="file" class="form-control form-control-sm" id="hsaLogo3" accept=".png,.jpg,.jpeg,.webp">
+                    </div>
+                </div>
+                <div class="hsa-hint">PNG, JPG or WEBP, up to 2 MB each. Leave empty to keep the current logo.</div>
+            </div>
+
+            <div class="hsa-card mb-3">
+                <h3 class="hsa-card-title"><i class="bi bi-chat-quote"></i> Default text</h3>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="hsaMMantraEn">Morning Mantra (English)</label>
+                        <textarea class="form-control" id="hsaMMantraEn" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="hsaMMantraHi">Morning Mantra (Hindi)</label>
+                        <textarea class="form-control" id="hsaMMantraHi" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="hsaMValuesEn">Values in Focus (English)</label>
+                        <textarea class="form-control" id="hsaMValuesEn" rows="2"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="hsaMValuesHi">Values in Focus (Hindi)</label>
+                        <textarea class="form-control" id="hsaMValuesHi" rows="2"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="hsaMFooterText">Footer text</label>
+                        <input type="text" class="form-control" id="hsaMFooterText">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="hsaMFooterLink">Footer link</label>
+                        <input type="text" class="form-control" id="hsaMFooterLink">
+                    </div>
+                </div>
+                <div class="hsa-hint">
+                    Used by every publication unless it sets its own Morning Mantra / Values in Focus.
+                    Published PDFs do not change; today's and upcoming publications are marked "PDF outdated" until regenerated.
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <button type="submit" class="btn hsa-btn hsa-btn-primary" id="hsaMasterSave"><i class="bi bi-check2"></i> Save Master Settings</button>
+                <span class="hsa-sub" id="hsaMasterUpdated"></span>
+            </div>
+        </form>
+    </section>
+
+    <!-- ===================== REPORTS ===================== -->
+    <section class="hsa-panel" data-hsa-panel="reports">
+        <div class="hsa-card">
+            <div class="hsa-filters">
+                <div>
+                    <label for="hsaRSearch">Search user</label>
+                    <input type="search" class="form-control" id="hsaRSearch" placeholder="Name, mobile, user code or user ID" autocomplete="off">
+                </div>
+                <div>
+                    <label for="hsaRFrom">Publication from</label>
+                    <input type="date" class="form-control" id="hsaRFrom">
+                </div>
+                <div>
+                    <label for="hsaRTo">Publication to</label>
+                    <input type="date" class="form-control" id="hsaRTo">
+                </div>
+                <div>
+                    <button type="button" class="btn hsa-btn hsa-btn-light w-100" id="hsaRReset"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+                </div>
+                <div>
+                    <button type="button" class="btn hsa-btn hsa-btn-primary w-100" id="hsaRExport"><i class="bi bi-download"></i> Export CSV</button>
+                </div>
+            </div>
+
+            <div class="hsa-summary" id="hsaRSummary"></div>
+
+            <div class="hsa-table-wrap">
+                <table class="hsa-table" style="min-width:1020px">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>User ID</th>
+                            <th>Publication</th>
+                            <th class="text-center">Attempts</th>
+                            <th class="text-center">Correct</th>
+                            <th class="text-center">Incorrect</th>
+                            <th class="text-center">Unanswered</th>
+                            <th>Score</th>
+                            <th>Result</th>
+                            <th>Completed</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hsaRRows"></tbody>
+                </table>
+            </div>
+            <div class="hsa-pager" id="hsaRPager"></div>
+        </div>
+    </section>
+</div>
+
+<!-- ===================== EDITOR ===================== -->
+<div class="modal fade hsa-modal" id="hsaEditor" tabindex="-1" data-bs-backdrop="static" aria-labelledby="hsaEditorTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-fullscreen-lg-down modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="hsaEditorTitle">New Publication</h5>
+                <button type="button" class="btn-close" id="hsaEditorClose" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="hsaEditorState"></div>
+
+                <div class="hsa-subtabs">
+                    <button type="button" class="hsa-subtab active" data-hsa-sub="content">Details &amp; Content</button>
+                    <button type="button" class="hsa-subtab" data-hsa-sub="quiz">Quiz <span id="hsaQCount"></span></button>
+                    <button type="button" class="hsa-subtab" data-hsa-sub="mantra">Mantra &amp; Values</button>
+                </div>
+
+                <form id="hsaEditorForm" class="hsa-form" novalidate autocomplete="off">
+                    <div class="hsa-subpanel active" data-hsa-subpanel="content">
+                        <div class="hsa-card">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="hsaTitle">Publication title</label>
+                                    <input type="text" class="form-control" id="hsaTitle" maxlength="250" placeholder="Defaults to the English heading">
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label for="hsaDate" class="hsa-req">Publication date</label>
+                                    <input type="date" class="form-control" id="hsaDate" required>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label for="hsaIssue" class="hsa-req">Issue number</label>
+                                    <input type="number" class="form-control" id="hsaIssue" min="0" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="hsaDayHi">Day (Hindi)</label>
+                                    <input type="text" class="form-control" id="hsaDayHi" placeholder="Filled from the date if left empty">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="hsaSamvat">Vikram Samvat / details</label>
+                                    <input type="text" class="form-control" id="hsaSamvat" placeholder="Vikram Samvat 2083">
+                                </div>
+                            </div>
+                            <div class="hsa-hint">Users see this publication only on its publication date, and only after it is published.</div>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Day (Hindi - e.g. शुक्रवार)</label>
-                            <input type="text" class="form-control" id="DayHindi" placeholder="शुक्रवार" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Issue Number</label>
-                            <input type="number" class="form-control" id="IssueNumber" placeholder="2043" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Vikram Samvat / Details</label>
-                            <input type="text" class="form-control" id="VikramSamvat" value="Vikram Samvat 2083" required>
+
+                        <div class="hsa-card">
+                            <h3 class="hsa-card-title"><i class="bi bi-stars"></i> Celebrations Today</h3>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="hsaHeadEn" class="hsa-req">Heading (English)</label>
+                                    <input type="text" class="form-control" id="hsaHeadEn" placeholder="WORLD WATER MONITORING DAY" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="hsaHeadHi">Heading (Hindi)</label>
+                                    <input type="text" class="form-control" id="hsaHeadHi" placeholder="विश्व जल निगरानी दिवस">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="hsaContentEn" class="hsa-req">Content (English)</label>
+                                    <textarea class="form-control" id="hsaContentEn" rows="9" required></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="hsaContentHi">Content (Hindi)</label>
+                                    <textarea class="form-control" id="hsaContentHi" rows="9"></textarea>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <h5 class="text-dark fw-bold mt-4 mb-3"><i class="fas fa-star text-warning me-2"></i> Celebrations Today Section</h5>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Heading (English)</label>
-                            <input type="text" class="form-control" id="CelebrationHeadingEn" placeholder="WORLD WATER MONITORING DAY" required>
+                    <div class="hsa-subpanel" data-hsa-subpanel="quiz">
+                        <div class="hsa-alert hsa-alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <div>The question text is printed in the PDF under "Day's Challenge". Options, the correct answer and the explanation are used only in the online quiz. Select the radio button next to the correct option.</div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Heading (Hindi)</label>
-                            <input type="text" class="form-control" id="CelebrationHeadingHi" placeholder="विश्व जल निगरानी दिवस" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Content (English)</label>
-                            <textarea class="form-control" id="CelebrationContentEn" rows="4" placeholder="Detailed English paragraphs..." required></textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Content (Hindi)</label>
-                            <textarea class="form-control" id="CelebrationContentHi" rows="4" placeholder="विस्तृत हिंदी अनुच्छेद..." required></textarea>
-                        </div>
+                        <div id="hsaQuestions"></div>
+                        <button type="button" class="btn hsa-btn hsa-btn-light" id="hsaAddQ"><i class="bi bi-plus-lg"></i> Add question</button>
                     </div>
 
-                    <h5 class="text-dark fw-bold mt-4 mb-3"><i class="fas fa-question-circle text-success me-2"></i> Day's Challenge / 4 Questions</h5>
-                    <div id="questionsContainer">
-                        <!-- Dynamic questions injected here -->
+                    <div class="hsa-subpanel" data-hsa-subpanel="mantra">
+                        <div class="hsa-alert hsa-alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <div>Optional. Leave a field empty to use the default from Master Settings for this publication.</div>
+                        </div>
+                        <div class="hsa-card">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="hsaMantraEn">Morning Mantra (English)</label>
+                                    <textarea class="form-control" id="hsaMantraEn" rows="3"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="hsaMantraHi">Morning Mantra (Hindi)</label>
+                                    <textarea class="form-control" id="hsaMantraHi" rows="3"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="hsaValuesEn">Values in Focus (English)</label>
+                                    <textarea class="form-control" id="hsaValuesEn" rows="2"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="hsaValuesHi">Values in Focus (Hindi)</label>
+                                    <textarea class="form-control" id="hsaValuesHi" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-                    <button type="submit" class="btn btn-success px-5 py-2 fw-bold shadow-sm mt-3">
-                        <i class="fas fa-paper-plane me-2"></i> Submit Daily Entry & Questions
-                    </button>
                 </form>
             </div>
-        </div>
-
-        <!-- 3. LIST & PREVIEW TAB -->
-        <div class="tab-pane fade" id="list" role="tabpanel">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-                <h4 class="text-primary fw-bold mb-3 border-bottom pb-2">Submitted Entries History</h4>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle" id="entriesTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th>ID</th>
-                                <th>Date</th>
-                                <th>Day (Hindi)</th>
-                                <th>Issue No.</th>
-                                <th>Heading</th>
-                                <th class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Dynamically loaded -->
-                        </tbody>
-                    </table>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn hsa-btn hsa-btn-light me-auto" id="hsaPreviewFromEditor"><i class="bi bi-eye"></i> Preview PDF</button>
+                <button type="button" class="btn hsa-btn hsa-btn-light" id="hsaSaveDraft"><i class="bi bi-save"></i> Save only</button>
+                <button type="button" class="btn hsa-btn hsa-btn-primary" id="hsaSaveGenerate"><i class="bi bi-file-earmark-pdf"></i> Save &amp; Generate PDF</button>
+                <button type="button" class="btn hsa-btn hsa-btn-green" id="hsaPublishFromEditor"><i class="bi bi-send-check"></i> Publish</button>
             </div>
         </div>
-
     </div>
 </div>
 
-<!-- PREVIEW MODAL -->
-<div class="modal fade" id="previewModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold"><i class="fas fa-file-pdf me-2"></i> PDF Layout Preview</h5>
-                <div>
-                    <button type="button" class="btn btn-sm btn-light fw-bold me-2" id="regenerateBtn">
-                        <i class="fas fa-sync-alt me-1"></i> Regenerate PDF
-                    </button>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
+<!-- ===================== PDF PREVIEW ===================== -->
+<div class="modal fade hsa-modal" id="hsaPreview" tabindex="-1" aria-labelledby="hsaPreviewTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-fullscreen-md-down">
+        <div class="modal-content">
+            <div class="modal-header gap-2 flex-wrap">
+                <h5 class="modal-title me-auto" id="hsaPreviewTitle">PDF Preview</h5>
+                <div class="hsa-preview-versions" id="hsaPreviewVersions"></div>
+                <button type="button" class="btn-close ms-1" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body bg-light p-2" id="pdfPreviewBody" style="height: 75vh;">
-                <!-- PDF Iframe loaded here -->
+            <div id="hsaPreviewState" class="px-3 pt-3"></div>
+            <div class="modal-body hsa-preview-body" id="hsaPreviewBody"></div>
+            <div class="modal-footer">
+                <a class="btn hsa-btn hsa-btn-light me-auto" id="hsaPreviewDownload" href="#"><i class="bi bi-download"></i> Download</a>
+                <button type="button" class="btn hsa-btn hsa-btn-light" id="hsaPreviewEdit"><i class="bi bi-pencil"></i> Edit</button>
+                <button type="button" class="btn hsa-btn hsa-btn-primary" id="hsaPreviewRegenerate"><i class="bi bi-arrow-repeat"></i> Regenerate PDF</button>
+                <button type="button" class="btn hsa-btn hsa-btn-green" id="hsaPreviewPublish"><i class="bi bi-send-check"></i> Publish</button>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        let currentEntryId = 0;
-
-        $(document).ready(function() {
-            loadMasterSettings();
-            loadEntriesList();
-
-            // Generate 4 Question blocks dynamically
-            let qHtml = "";
-            for (let i = 1; i <= 4; i++) {
-                qHtml += `
-                        <div class="card border p-3 mb-3 bg-light rounded-3">
-                            <h6 class="fw-bold text-dark">Question ${i}</h6>
-                            <div class="mb-2">
-                                <input type="text" class="form-control q-text" placeholder="Enter Question ${i} text..." required>
-                            </div>
-                            <div class="row g-2 mb-2">
-                                <div class="col-md-3"><input type="text" class="form-control form-control-sm q-opt1" placeholder="Option 1" required></div>
-                                <div class="col-md-3"><input type="text" class="form-control form-control-sm q-opt2" placeholder="Option 2" required></div>
-                                <div class="col-md-3"><input type="text" class="form-control form-control-sm q-opt3" placeholder="Option 3" required></div>
-                                <div class="col-md-3"><input type="text" class="form-control form-control-sm q-opt4" placeholder="Option 4" required></div>
-                            </div>
-                            <div>
-                                <label class="form-label small fw-bold text-success">Correct Option:</label>
-                                <select class="form-select form-select-sm q-correct" style="width: 180px;" required>
-                                    <option value="1">Option 1</option>
-                                    <option value="2">Option 2</option>
-                                    <option value="3">Option 3</option>
-                                    <option value="4">Option 4</option>
-                                </select>
-                            </div>
-                        </div>`;
-            }
-            $("#questionsContainer").html(qHtml);
-
-            // Submit Master Form
-            $("#masterForm").submit(function(e) {
-                e.preventDefault();
-                let formData = new FormData();
-                let logo1 = $("#Logo1File")[0].files[0];
-                let logo2 = $("#Logo2File")[0].files[0];
-                let logo3 = $("#Logo3File")[0].files[0];
-
-                if (logo1) formData.append("logo1File", logo1);
-                if (logo2) formData.append("logo2File", logo2);
-                if (logo3) formData.append("logo3File", logo3);
-
-                formData.append("morningMantraEn", $("#MorningMantraEn").val());
-                formData.append("morningMantraHi", $("#MorningMantraHi").val());
-                formData.append("valuesInFocusEn", $("#ValuesInFocusEn").val());
-                formData.append("valuesInFocusHi", $("#ValuesInFocusHi").val());
-                formData.append("footerText", $("#FooterText").val());
-                formData.append("footerLink", $("#FooterLink").val());
-
-                $.ajax({
-                    url: '/api/hem-sampark/master',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(res) {
-                        alert(res.message);
-                        loadMasterSettings();
-                    }
-                });
-            });
-
-            // Submit Daily Form
-            $("#dailyForm").submit(function(e) {
-                e.preventDefault();
-                let questions = [];
-                $("#questionsContainer .card").each(function() {
-                    let q = {
-                        QuestionText: $(this).find(".q-text").val(),
-                        Option1: $(this).find(".q-opt1").val(),
-                        Option2: $(this).find(".q-opt2").val(),
-                        Option3: $(this).find(".q-opt3").val(),
-                        Option4: $(this).find(".q-opt4").val(),
-                        CorrectOption: parseInt($(this).find(".q-correct").val())
-                    };
-                    questions.push(q);
-                });
-
-                let dailyData = {
-                    EntryDate: $("#EntryDate").val(),
-                    DayHindi: $("#DayHindi").val(),
-                    IssueNumber: parseInt($("#IssueNumber").val()),
-                    VikramSamvat: $("#VikramSamvat").val(),
-                    CelebrationHeadingEn: $("#CelebrationHeadingEn").val(),
-                    CelebrationContentEn: $("#CelebrationContentEn").val(),
-                    CelebrationHeadingHi: $("#CelebrationHeadingHi").val(),
-                    CelebrationContentHi: $("#CelebrationContentHi").val(),
-                    Questions: questions
-                };
-
-                $.ajax({
-                    url: '/api/hem-sampark/daily-entry',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(dailyData),
-                    success: function(res) {
-                        alert(res.message);
-                        $("#dailyForm")[0].reset();
-                        loadEntriesList();
-                    }
-                });
-            });
-
-            // Regenerate Button Click Handler
-            $("#regenerateBtn").click(function() {
-                if (currentEntryId > 0) {
-                    previewPdf(currentEntryId, true);
-                }
-            });
-        });
-
-        function loadMasterSettings() {
-            $.get('/api/hem-sampark/master', function(data) {
-                if (data) {
-                    $("#MorningMantraEn").val(data.morningMantraEn);
-                    $("#MorningMantraHi").val(data.morningMantraHi);
-                    $("#ValuesInFocusEn").val(data.valuesInFocusEn);
-                    $("#ValuesInFocusHi").val(data.valuesInFocusHi);
-                    $("#FooterText").val(data.footerText);
-                    $("#FooterLink").val(data.footerLink);
-                }
-            });
-        }
-
-        function loadEntriesList() {
-            $.get('/api/hem-sampark/entries-list', function(data) {
-                let rows = "";
-                $.each(data, function(i, item) {
-                    rows += `<tr>
-                            <td>${item.id}</td>
-                            <td>${item.entryDate}</td>
-                            <td><span class="badge bg-secondary">${item.dayHindi}</span></td>
-                            <td>${item.issueNumber}</td>
-                            <td>${item.celebrationHeadingEn}</td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-primary fw-bold px-3" onclick="previewPdf(${item.id}, false)">
-                                    <i class="fas fa-eye me-1"></i> Preview PDF
-                                </button>
-                            </td>
-                        </tr>`;
-                });
-                $("#entriesTable tbody").html(rows);
-            });
-        }
-
-        function previewPdf(id, regenerate = false) {
-            currentEntryId = id;
-            $.get(`/api/hem-sampark/preview/${id}/${regenerate}`, function(res) {
-                if (res.success && res.pdfUrl) {
-                    let iframeHtml = `<iframe src="${res.pdfUrl}" width="100%" height="100%" style="border:none;"></iframe>`;
-                    $("#pdfPreviewBody").html(iframeHtml);
-                    $("#previewModal").modal('show');
-                } else {
-                    alert("Could not load PDF preview.");
-                }
-            });
-        }
-    </script>
+    <script src="~/js/hem-sampark-admin.js" asp-append-version="true"></script>
 }

@@ -117,6 +117,11 @@ builder.Services.AddScoped<IFileStorageService,
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ExceptionLoggerService>();
 
+// HEM Sampark: business clock, PDF generation, access checks
+builder.Services.AddSingleton<HemFoundation.Services.HemSampark.HemSamparkClock>();
+builder.Services.AddScoped<HemFoundation.Services.HemSampark.HemSamparkPdfService>();
+builder.Services.AddScoped<HemFoundation.Services.HemSampark.HemSamparkAccess>();
+
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(
     options =>
     {

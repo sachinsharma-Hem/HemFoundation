@@ -17,72 +17,7 @@
 
 <body>
     <!-- HEM Sampark Login Modal -->
-    <div class="modal fade" id="hemSamparkLoginModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-                <div class="modal-header bg-success text-white px-4 py-3 border-0">
-                    <h5 class="modal-title fw-bold d-flex align-items-center gap-2 m-0">
-                        <i class="bi bi-box-arrow-in-right fs-4"></i>
-                        <span>HEM Sampark Login</span>
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4 bg-light">
-                    <form id="hemSamparkLoginForm">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-dark">Username / Email / Mobile</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person"></i></span>
-                                <input type="text" id="samparkUsername" class="form-control bg-white border-start-0 py-2" placeholder="Enter username or email" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-dark">Password</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-lock"></i></span>
-                                <input type="password" id="samparkPassword" class="form-control bg-white border-start-0 py-2" placeholder="Enter password" required>
-                            </div>
-                        </div>
-                        <div id="samparkLoginError" class="alert alert-danger d-none py-2 small" role="alert"></div>
-                        <button type="submit" class="btn btn-success w-100 py-3 rounded-pill fw-bold shadow-sm border-0">
-                            Login to Hem Sampark
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-            document.getElementById("hemSamparkLoginForm").addEventListener("submit", async function(e) {
-                e.preventDefault();
-                const email = document.getElementById("samparkUsername").value;
-                const password = document.getElementById("samparkPassword").value;
-                const errorDiv = document.getElementById("samparkLoginError");
-
-                errorDiv.classList.add("d-none");
-
-                try {
-                    let response = await fetch('/api/auth/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: email, password: password, rememberMe: true })
-                    });
-
-                    let result = await response.json();
-                    if (result.success) {
-                        localStorage.setItem("jwtToken", result.token);
-                        window.location.href = '/hem-sampark/dashboard';
-                    } else {
-                        errorDiv.textContent = result.message || "Invalid credentials!";
-                        errorDiv.classList.remove("d-none");
-                    }
-                } catch (err) {
-                    errorDiv.textContent = "An error occurred during login. Please try again.";
-                    errorDiv.classList.remove("d-none");
-                }
-            });
-    </script>
+    <partial name="~/Views/Shared/Partials/_HemSamparkLoginModal.cshtml" />
 
     <partial name="~/Views/Shared/Partials/_Header.cshtml" />
 
