@@ -678,27 +678,93 @@ namespace HemFoundation.Controllers
                 if (entry.Status == HemSamparkStatus.Archived)
                     return Fail(400, "This publication is archived. Restore it before editing.");
 
-                if (entry.Status == HemSamparkStatus.Published && entry.EntryDate.Date != entryDate)
-                    return Fail(400,
-                        "The date of a published publication cannot be changed. Unpublish it first.");
             }
 
             // One publication per date (archived ones do not count).
             var dayEnd = entryDate.AddDays(1);
-            bool dateTaken = await _context.dailysamparkentries.AnyAsync(x =>
-                x.Id != model.Id &&
-                x.Status != HemSamparkStatus.Archived &&
-                x.EntryDate >= entryDate && x.EntryDate < dayEnd);
+            var clash = await _context.dailysamparkentries.AsNoTracking()
+                .Where(x => x.Id != model.Id &&
+                            x.Status != HemSamparkStatus.Archived &&
+                            x.EntryDate >= entryDate && x.EntryDate < dayEnd)
+                .Select(x => new { x.Title, x.CelebrationHeadingEn, x.Status })
+                .FirstOrDefaultAsync();
 
-            if (dateTaken)
-                return Fail(409,
-                    $"A publication already exists for {entryDate:dd MMM yyyy}. Edit that one instead.");
+            if (clash != null)
+            {
+                string clashTitle = !string.IsNullOrWhiteSpace(clash.Title) ? clash.Title!
+                    : clash.CelebrationHeadingEn ?? "another publication";
+
+                return StatusCode(409, new
+                {
+                    success = false,
+                    dateConflict = true,
+                    message = $"{entryDate:dd MMM yyyy} already has a publication: \"{clashTitle}\" " +
+                              $"({clash.Status}). Only one publication is allowed per date. " +
+                              "Choose another date, or archive or re-date that publication first."
+                });
+            }
+
+            // ---- Moving an existing publication to another date ----
+            // The record (and so its quiz questions and every saved quiz
+            // result) stays the same; only its date changes. A published
+            // publication is taken offline first, so users never see it under
+            // a date its PDF was not generated and approved for.
+            DateTime? previousDate = null;
+            string? dateNotice = null;
+
+            if (!isNew && entry.EntryDate.Date != entryDate)
+            {
+                previousDate = entry.EntryDate.Date;
+                bool wasPublished = entry.Status == HemSamparkStatus.Published;
+
+                int attempts = await _context.hemsampark_quiz_submissions
+                    .CountAsync(s => s.DailyEntryId == entry.Id);
+
+                if ((wasPublished || attempts > 0) && !model.ConfirmDateChange)
+                {
+                    var parts = new List<string>();
+
+                    if (wasPublished)
+                        parts.Add("This publication is published. Changing its date will unpublish it; " +
+                                  "users will not see it until you regenerate the PDF and publish it again.");
+
+                    if (attempts > 0)
+                        parts.Add($"{attempts} user(s) already took its quiz. Their results are kept and stay " +
+                                  "linked to this publication (shown under the new date), and they cannot take it again.");
+
+                    return StatusCode(409, new
+                    {
+                        success = false,
+                        requiresDateConfirmation = true,
+                        isPublished = wasPublished,
+                        attempts,
+                        fromDate = previousDate.Value.ToString("dd MMM yyyy"),
+                        toDate = entryDate.ToString("dd MMM yyyy"),
+                        message = string.Join(" ", parts)
+                    });
+                }
+
+                if (wasPublished)
+                {
+                    WithdrawFromUsers(entry);
+                    entry.Status = string.IsNullOrEmpty(entry.PdfUrl)
+                        ? HemSamparkStatus.Draft
+                        : HemSamparkStatus.Generated;
+                    entry.PublishedAt = null;
+
+                    dateNotice = "The publication was unpublished because its date changed. " +
+                                 "Review the regenerated PDF and publish it again.";
+                }
+            }
 
             string before = isNew ? "" : Fingerprint(entry);
 
             entry.Title = Clean(model.Title);
             entry.EntryDate = entryDate;
-            entry.DayHindi = Clean(model.DayHindi) ?? HindiDays[(int)entryDate.DayOfWeek];
+            var dayHindi = Clean(model.DayHindi);
+            if (previousDate != null && dayHindi == HindiDays[(int)previousDate.Value.DayOfWeek])
+                dayHindi = null;   // it was the old date's weekday: follow the new date
+            entry.DayHindi = dayHindi ?? HindiDays[(int)entryDate.DayOfWeek];
             entry.IssueNumber = model.IssueNumber;
             entry.VikramSamvat = Clean(model.VikramSamvat);
             entry.CelebrationHeadingEn = Clean(model.CelebrationHeadingEn);
@@ -810,6 +876,10 @@ namespace HemFoundation.Controllers
                 {
                     await GeneratePdfAsync(entry);
                 }
+                catch (HemSamparkPdfLayoutException ex)
+                {
+                    pdfError = "Saved, but the PDF was not generated. " + ex.Message;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "HEM Sampark: PDF generation failed for {Id}", entry.Id);
@@ -825,6 +895,8 @@ namespace HemFoundation.Controllers
 
             if (pdfError == null && entry.Status == HemSamparkStatus.Published && changed)
                 message += " Users still see the previously published version until you republish.";
+
+            if (dateNotice != null) notice = notice == null ? dateNotice : dateNotice + " " + notice;
 
             return Ok(new
             {
@@ -857,6 +929,10 @@ namespace HemFoundation.Controllers
             try
             {
                 await GeneratePdfAsync(entry);
+            }
+            catch (HemSamparkPdfLayoutException ex)
+            {
+                return Fail(400, ex.Message);
             }
             catch (Exception ex)
             {

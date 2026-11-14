@@ -67,7 +67,7 @@
                     ? 'Could not reach the server. Check your connection and try again.'
                     : 'Something went wrong (error ' + xhr.status + '). Please try again.';
             }
-            return $.Deferred().reject(message);
+            return $.Deferred().reject(message, xhr.responseJSON || {});
         });
     }
 
@@ -404,6 +404,15 @@
         };
     }
 
+    var HINDI_DAYS = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
+
+    function hindiDay(isoDate) {
+        var parts = String(isoDate || '').split('-');
+        if (parts.length !== 3) return '';
+        var day = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getDay();
+        return isNaN(day) ? '' : HINDI_DAYS[day];
+    }
+
     function isDirty() {
         return JSON.stringify(collectForm()) !== state.cleanForm;
     }
@@ -450,7 +459,7 @@
 
         $('#hsaEditorTitle').text(p && p.id ? 'Edit Publication' : 'New Publication');
         $('#hsaTitle').val(p.title || '');
-        $('#hsaDate').val(p.entryDate || '').prop('disabled', p.status === 'Published');
+        $('#hsaDate').val(p.entryDate || '').data('auto-day', hindiDay(p.entryDate));
         $('#hsaIssue').val(p.issueNumber != null ? p.issueNumber : '');
         $('#hsaDayHi').val(p.dayHindi || '');
         $('#hsaSamvat').val(p.vikramSamvat || '');
@@ -515,7 +524,7 @@
         return null;
     }
 
-    function saveEditor(generatePdf, $button) {
+    function saveEditor(generatePdf, $button, confirmDateChange) {
         var form = collectForm();
         var problem = validateForm(form);
 
@@ -527,9 +536,28 @@
         }
 
         form.generatePdf = generatePdf;
+        form.confirmDateChange = !!confirmDateChange;
         busy($button, true);
 
-        return api('POST', 'publications', form).then(function (res) {
+        return api('POST', 'publications', form).then(null, function (message, extra) {
+            // Moving a published / already attempted publication needs an
+            // explicit go-ahead; ask, then send the same save again.
+            if (!extra || !extra.requiresDateConfirmation) return $.Deferred().reject(message);
+
+            busy($button, false);
+
+            return confirmAction(
+                'Move this publication to ' + extra.toDate + '?',
+                message,
+                extra.isPublished ? 'Unpublish and change date' : 'Change date',
+                'warning'
+            ).then(function (yes) {
+                if (!yes) return $.Deferred().reject(null);
+                form.confirmDateChange = true;
+                busy($button, true);
+                return api('POST', 'publications', form);
+            });
+        }).then(function (res) {
             busy($button, false);
             fillEditor(res.publication);
             refreshLists();
@@ -541,7 +569,7 @@
             return res;
         }, function (message) {
             busy($button, false);
-            showError(message);
+            if (message) showError(message);   // null = the admin cancelled
             return $.Deferred().reject();
         });
     }
@@ -711,6 +739,16 @@
         $('.hsa-tab').on('click', function () { showTab($(this).data('hsa-tab')); });
         $('.hsa-subtab').on('click', function () { showSubTab($(this).data('hsa-sub')); });
         $('#hsaNewBtn').on('click', function () { openEditor(0); });
+
+        // Day (Hindi) follows the date unless the admin typed their own value.
+        $('#hsaDate').on('change', function () {
+            var $day = $('#hsaDayHi');
+            var previousAuto = $(this).data('auto-day') || '';
+            var next = hindiDay(this.value);
+
+            if (!$.trim($day.val()) || $day.val() === previousAuto) $day.val(next);
+            $(this).data('auto-day', next);
+        });
 
         // Publication filters
         var reloadPubs = function () { state.pubPage = 1; loadPublications(); };
