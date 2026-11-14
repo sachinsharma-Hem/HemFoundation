@@ -71,3 +71,6 @@ Properties/launchSettings.json
 /.vs
 Properties/launchSettings.json
 Properties/launchSettings.json
+
+# HEM Sampark generated PDFs (private storage)
+App_Data/HemSampark/

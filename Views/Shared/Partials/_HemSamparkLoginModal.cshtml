@@ -1,0 +1,187 @@
+﻿@* HEM Sampark login. Opened by the HEM SAMPARK card on the home page.
+   Uses the existing /api/auth/login endpoint; styles are scoped to the modal. *@
+<style>
+    #hemSamparkLoginModal .hsl-content { border: 0; border-radius: 22px; overflow: hidden; box-shadow: 0 24px 60px rgba(31, 27, 58, .28); font-family: 'Poppins', system-ui, sans-serif; }
+    #hemSamparkLoginModal .hsl-head { background: linear-gradient(135deg, #5b3fd6 0%, #7c5cf0 55%, #9b7bff 100%); color: #fff; padding: 26px 26px 22px; text-align: center; position: relative; }
+    #hemSamparkLoginModal .hsl-close { position: absolute; top: 14px; right: 14px; filter: invert(1) grayscale(100%) brightness(200%); opacity: .85; }
+    #hemSamparkLoginModal .hsl-logo { width: 74px; height: 74px; border-radius: 50%; background: #fff; display: grid; place-items: center; margin: 0 auto 10px; box-shadow: 0 6px 18px rgba(0, 0, 0, .18); }
+    #hemSamparkLoginModal .hsl-logo img { max-width: 56px; max-height: 56px; }
+    #hemSamparkLoginModal .hsl-head h5 { font-weight: 700; font-size: 1.3rem; margin: 0; color: #fff; }
+    #hemSamparkLoginModal .hsl-head p { margin: 4px 0 0; font-size: .85rem; opacity: .92; color: #fff; }
+    #hemSamparkLoginModal .hsl-body { padding: 24px 26px 26px; background: #fff; }
+    #hemSamparkLoginModal .hsl-label { font-size: .8rem; font-weight: 600; color: #1f1b3a; margin-bottom: 6px; display: block; }
+    #hemSamparkLoginModal .hsl-field { position: relative; }
+    #hemSamparkLoginModal .hsl-field > i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #8a86a3; font-size: 1.05rem; pointer-events: none; }
+    #hemSamparkLoginModal .hsl-input { width: 100%; height: 50px; border: 1.5px solid #e6e2f3; border-radius: 14px; padding: 0 46px 0 42px; font-size: .95rem; color: #1f1b3a; background: #faf9fe; outline: none; transition: border-color .15s ease, box-shadow .15s ease; }
+    #hemSamparkLoginModal .hsl-input:focus { border-color: #5b3fd6; background: #fff; box-shadow: 0 0 0 4px rgba(91, 63, 214, .14); }
+    #hemSamparkLoginModal .hsl-input.is-bad { border-color: #e0484d; }
+    #hemSamparkLoginModal .hsl-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border: 0; background: none; color: #6b6884; border-radius: 10px; font-size: 1.1rem; }
+    #hemSamparkLoginModal .hsl-eye:hover { color: #5b3fd6; background: #efeafd; }
+    #hemSamparkLoginModal .hsl-msg { color: #c0392b; font-size: .78rem; margin-top: 5px; min-height: 0; }
+    #hemSamparkLoginModal .hsl-error { background: #fdecec; color: #a52b30; border: 1px solid #f6c9cb; border-radius: 12px; padding: 10px 12px; font-size: .85rem; margin-bottom: 14px; display: flex; gap: 8px; align-items: flex-start; }
+    #hemSamparkLoginModal .hsl-submit { width: 100%; height: 52px; border: 0; border-radius: 14px; background: #5b3fd6; color: #fff; font-weight: 600; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(91, 63, 214, .3); transition: background .15s ease; }
+    #hemSamparkLoginModal .hsl-submit:hover:not(:disabled) { background: #4830b4; }
+    #hemSamparkLoginModal .hsl-submit:disabled { opacity: .75; cursor: wait; }
+    #hemSamparkLoginModal .hsl-note { text-align: center; font-size: .78rem; color: #6b6884; margin: 14px 0 0; }
+    @@media (max-width: 575.98px) {
+        #hemSamparkLoginModal .modal-dialog { margin: 12px; }
+        #hemSamparkLoginModal .hsl-head { padding: 22px 18px 18px; }
+        #hemSamparkLoginModal .hsl-body { padding: 20px 18px 22px; }
+    }
+</style>
+
+<div class="modal fade" id="hemSamparkLoginModal" tabindex="-1" aria-labelledby="hemSamparkLoginTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 430px;">
+        <div class="modal-content hsl-content">
+            <div class="hsl-head">
+                <button type="button" class="btn-close hsl-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="hsl-logo"><img src="~/images/homepage/Hem Sampark.png" alt="HEM Sampark"></div>
+                <h5 id="hemSamparkLoginTitle">HEM Sampark Login</h5>
+                <p>Read. Think. Feel. Act. &mdash; every day.</p>
+            </div>
+            <div class="hsl-body">
+                <form id="hemSamparkLoginForm" novalidate>
+                    <div id="samparkLoginError" class="hsl-error d-none" role="alert">
+                        <i class="bi bi-exclamation-circle-fill"></i><span></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="hsl-label" for="samparkUsername">Username / Email / Mobile</label>
+                        <div class="hsl-field">
+                            <i class="bi bi-person"></i>
+                            <input type="text" id="samparkUsername" class="hsl-input" placeholder="Enter your username, email or mobile"
+                                   autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="256">
+                        </div>
+                        <div class="hsl-msg" id="samparkUsernameMsg"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="hsl-label" for="samparkPassword">Password</label>
+                        <div class="hsl-field">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" id="samparkPassword" class="hsl-input" placeholder="Enter your password"
+                                   autocomplete="current-password" maxlength="128">
+                            <button type="button" class="hsl-eye" id="samparkTogglePassword" aria-label="Show password" aria-pressed="false">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="hsl-msg" id="samparkPasswordMsg"></div>
+                    </div>
+
+                    <button type="submit" class="hsl-submit" id="samparkLoginBtn">
+                        <i class="bi bi-box-arrow-in-right"></i><span>Login to HEM Sampark</span>
+                    </button>
+
+                    <p class="hsl-note">Use the same username and password as your HEM Virtues account.</p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var form = document.getElementById("hemSamparkLoginForm");
+        if (!form) return;
+
+        var modalEl = document.getElementById("hemSamparkLoginModal");
+        var username = document.getElementById("samparkUsername");
+        var password = document.getElementById("samparkPassword");
+        var errorBox = document.getElementById("samparkLoginError");
+        var button = document.getElementById("samparkLoginBtn");
+        var toggle = document.getElementById("samparkTogglePassword");
+        var buttonHtml = button.innerHTML;
+        var busy = false;
+
+        function fieldError(input, messageId, message) {
+            input.classList.toggle("is-bad", !!message);
+            document.getElementById(messageId).textContent = message || "";
+            return !message;
+        }
+
+        function showError(message) {
+            errorBox.querySelector("span").textContent = message;
+            errorBox.classList.toggle("d-none", !message);
+        }
+
+        function setBusy(on) {
+            busy = on;
+            button.disabled = on;
+            button.innerHTML = on
+                ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>Signing in…</span>'
+                : buttonHtml;
+        }
+
+        toggle.addEventListener("click", function () {
+            var show = password.type === "password";
+            password.type = show ? "text" : "password";
+            toggle.setAttribute("aria-pressed", String(show));
+            toggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
+            toggle.innerHTML = '<i class="bi ' + (show ? "bi-eye-slash" : "bi-eye") + '"></i>';
+        });
+
+        username.addEventListener("input", function () { fieldError(username, "samparkUsernameMsg", ""); });
+        password.addEventListener("input", function () { fieldError(password, "samparkPasswordMsg", ""); });
+
+        form.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            if (busy) return;
+
+            showError("");
+
+            var user = username.value.trim();
+            var okUser = fieldError(username, "samparkUsernameMsg", user ? "" : "Please enter your username, email or mobile number.");
+            var okPass = fieldError(password, "samparkPasswordMsg", password.value ? "" : "Please enter your password.");
+
+            if (!okUser) { username.focus(); return; }
+            if (!okPass) { password.focus(); return; }
+
+            setBusy(true);
+
+            try {
+                var response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ email: user, password: password.value, rememberMe: true })
+                });
+
+                var result = {};
+                try { result = await response.json(); } catch (parseError) { result = {}; }
+
+                if (response.ok && result.success) {
+                    localStorage.setItem("jwtToken", result.token);
+                    window.location.href = '/HemSampark/SamparkDashboard';
+                    return; // keep the button in its loading state while the page changes
+                }
+
+                showError(result.message ||
+                    (response.status >= 500
+                        ? "The server could not process your login. Please try again in a moment."
+                        : "Invalid username or password."));
+                password.focus();
+                password.select();
+            } catch (err) {
+                showError("Could not reach the server. Please check your internet connection and try again.");
+            }
+
+            setBusy(false);
+        });
+
+        modalEl.addEventListener("shown.bs.modal", function () { username.focus(); });
+        modalEl.addEventListener("hidden.bs.modal", function () {
+            showError("");
+            fieldError(username, "samparkUsernameMsg", "");
+            fieldError(password, "samparkPasswordMsg", "");
+            password.value = "";
+        });
+
+        // /?samparkLogin=1 (sent by the HEM Sampark pages when the session has
+        // expired) opens this login straight away.
+        if (new URLSearchParams(window.location.search).get("samparkLogin") === "1") {
+            window.addEventListener("load", function () {
+                if (window.bootstrap) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            });
+        }
+    })();
+</script>

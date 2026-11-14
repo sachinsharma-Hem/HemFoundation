@@ -1,990 +1,600 @@
 ﻿using HemFoundation.Data;
 using HemFoundation.Models;
 using HemFoundation.Models.HemSampark;
-using Microsoft.AspNetCore.Authorization;
+using HemFoundation.Services.HemSampark;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PuppeteerSharp;
-using PuppeteerSharp.Media;
-using System.Security.Claims;
+using System.Globalization;
 
 namespace HemFoundation.Controllers
 {
+    /// <summary>
+    /// HEM Sampark for logged-in users: today's published publication, its
+    /// quiz, and the user's own results. Admin endpoints live in
+    /// HemSamparkAdminApiController.
+    /// </summary>
     [Route("api/hem-sampark")]
     [ApiController]
+    [HemSamparkUser]
     public class HemSamparkApiController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private const string DateTimeDisplay = "dd MMM yyyy, hh:mm tt";
 
-        public HemSamparkApiController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        private readonly ApplicationDbContext _context;
+        private readonly HemSamparkPdfService _pdf;
+        private readonly HemSamparkClock _clock;
+        private readonly HemSamparkAccess _access;
+        private readonly IConfiguration _config;
+        private readonly ILogger<HemSamparkApiController> _logger;
+
+        public HemSamparkApiController(
+            ApplicationDbContext context,
+            HemSamparkPdfService pdf,
+            HemSamparkClock clock,
+            HemSamparkAccess access,
+            IConfiguration config,
+            ILogger<HemSamparkApiController> logger)
         {
             _context = context;
-            _webHostEnvironment = webHostEnvironment;
+            _pdf = pdf;
+            _clock = clock;
+            _access = access;
+            _config = config;
+            _logger = logger;
         }
 
-        private async Task<string> SaveLogoFileAsync(IFormFile file, string existingUrl)
+        // The [HemSamparkUser] filter guarantees a logged-in user.
+        private HemSamparkIdentity Me => _access.Current!;
+
+        private int PassPercentage =>
+            Math.Clamp(_config.GetValue<int?>("HemSampark:PassPercentage") ?? 50, 0, 100);
+
+        private IActionResult Fail(int statusCode, string message) =>
+            StatusCode(statusCode, new { success = false, message });
+
+        private static string LongDate(DateTime date) =>
+            date.ToString("dddd, dd MMMM yyyy", CultureInfo.InvariantCulture);
+
+        private Task<MasterSetting?> GetMasterAsync() =>
+            _context.mastersettings.AsNoTracking().OrderBy(x => x.Id).FirstOrDefaultAsync();
+
+        /// <summary>
+        /// The publication users may see for a business date: published, with
+        /// its published PDF. Drafts and archived items never match.
+        /// </summary>
+        private Task<DailySamparkEntry?> FindPublishedForDateAsync(DateTime date)
         {
-            if (file == null || file.Length == 0) return existingUrl;
+            var end = date.AddDays(1);
 
-            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "HemSampark");
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(fileStream);
-            }
-
-            return "/images/HemSampark/" + uniqueFileName;
+            return _context.dailysamparkentries.AsNoTracking()
+                .Include(x => x.Questions)
+                .Where(x => x.Status == HemSamparkStatus.Published
+                            && x.PublishedPdfUrl != null
+                            && x.EntryDate >= date && x.EntryDate < end)
+                .OrderByDescending(x => x.PublishedAt)
+                .FirstOrDefaultAsync();
         }
 
-        [HttpPost("master")]
-        public async Task<IActionResult> SaveMasterSettings(
-            [FromForm] IFormFile? logo1File,
-            [FromForm] IFormFile? logo2File,
-            [FromForm] IFormFile? logo3File,
-            [FromForm] string morningMantraEn,
-            [FromForm] string morningMantraHi,
-            [FromForm] string valuesInFocusEn,
-            [FromForm] string valuesInFocusHi,
-            [FromForm] string footerText,
-            [FromForm] string footerLink)
+        private static string PlainText(string? html, int maxLength)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "AdminUser";
-            var existing = await _context.mastersettings.FirstOrDefaultAsync();
+            if (string.IsNullOrWhiteSpace(html)) return "";
 
-            string logo1Url = existing?.Logo1Url;
-            string logo2Url = existing?.Logo2Url;
-            string logo3Url = existing?.Logo3Url;
+            var text = System.Text.RegularExpressions.Regex.Replace(html, "<[^>]+>", " ");
+            text = System.Net.WebUtility.HtmlDecode(text);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
 
-            if (logo1File != null) logo1Url = await SaveLogoFileAsync(logo1File, logo1Url);
-            if (logo2File != null) logo2Url = await SaveLogoFileAsync(logo2File, logo2Url);
-            if (logo3File != null) logo3Url = await SaveLogoFileAsync(logo3File, logo3Url);
-
-            if (existing == null)
-            {
-                var newMaster = new MasterSetting
-                {
-                    Logo1Url = logo1Url,
-                    Logo2Url = logo2Url,
-                    Logo3Url = logo3Url,
-                    MorningMantraEn = morningMantraEn,
-                    MorningMantraHi = morningMantraHi,
-                    ValuesInFocusEn = valuesInFocusEn,
-                    ValuesInFocusHi = valuesInFocusHi,
-                    FooterText = footerText,
-                    FooterLink = footerLink,
-                    CreatedByUserId = userId,
-                    CreatedAt = DateTime.Now
-                };
-                _context.mastersettings.Add(newMaster);
-            }
-            else
-            {
-                existing.Logo1Url = logo1Url;
-                existing.Logo2Url = logo2Url;
-                existing.Logo3Url = logo3Url;
-                existing.MorningMantraEn = morningMantraEn;
-                existing.MorningMantraHi = morningMantraHi;
-                existing.ValuesInFocusEn = valuesInFocusEn;
-                existing.ValuesInFocusHi = valuesInFocusHi;
-                existing.FooterText = footerText;
-                existing.FooterLink = footerLink;
-                existing.UpdatedAt = DateTime.Now;
-                existing.CreatedByUserId = userId;
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok(new { success = true, message = "Master settings and logos saved successfully!" });
+            return text.Length <= maxLength ? text : text[..maxLength].TrimEnd() + "…";
         }
 
-        [HttpGet("master")]
-        public async Task<IActionResult> GetMasterSettings()
+        /// <summary>Result of one submission, including the per-question review.</summary>
+        private async Task<object> BuildResultAsync(
+            hemsampark_quiz_submission submission, DailySamparkEntry entry, MasterSetting? master)
         {
-            var settings = await _context.mastersettings.FirstOrDefaultAsync();
-            return Ok(settings);
-        }
-
-        [HttpPost("daily-entry")]
-        public async Task<IActionResult> SaveDailyEntry([FromBody] DailySamparkEntry model)
-        {
-            ModelState.Remove("CreatedByUserId");
-            if (model.Questions != null)
-            {
-                for (int i = 0; i < model.Questions.Count; i++)
-                {
-                    ModelState.Remove($"Questions[{i}].CreatedByUserId");
-                }
-            }
-
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "AdminUser";
-            model.CreatedByUserId = userId;
-            model.CreatedAt = DateTime.Now;
-
-            if (model.Questions != null)
-            {
-                foreach (var q in model.Questions)
-                {
-                    q.CreatedByUserId = userId;
-                    q.CreatedAt = DateTime.Now;
-                }
-            }
-
-            _context.dailysamparkentries.Add(model);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { success = true, message = "Daily entry and questions saved successfully!" });
-        }
-
-        [HttpGet("entries-list")]
-        public async Task<IActionResult> GetEntriesList()
-        {
-            var list = await _context.dailysamparkentries
-                .OrderByDescending(x => x.EntryDate)
-                .Select(x => new {
-                    x.Id,
-                    EntryDate = x.EntryDate.ToString("yyyy-MM-dd"),
-                    x.DayHindi,
-                    x.IssueNumber,
-                    x.CelebrationHeadingEn,
-                    x.PdfUrl,
-                    x.CreatedAt
-                })
+            var answers = await _context.hemsampark_quiz_answers.AsNoTracking()
+                .Where(a => a.SubmissionId == submission.Id)
                 .ToListAsync();
 
-            return Ok(list);
-        }
+            var snapshot = HemSamparkSnapshot.Load(entry, master);
+            var byQuestion = answers
+                .GroupBy(a => a.QuestionId)
+                .ToDictionary(g => g.Key, g => g.First());
 
-        [HttpGet("preview/{id}/{regenerate?}")]
-        public async Task<IActionResult> GetPreviewData(int id, bool regenerate = false)
-        {
-            var entry = await _context.dailysamparkentries
-                .Include(x => x.Questions)
-                .FirstOrDefaultAsync(x => x.Id == id);
+            int total = submission.TotalQuestions;
+            int correct = submission.Score;
+            int answered = Math.Min(total, answers.Count);
+            double percentage = HemSamparkScore.Percentage(correct, total);
 
-            var master = await _context.mastersettings.FirstOrDefaultAsync();
-
-            if (entry == null) return NotFound(new { success = false, message = "Entry not found" });
-
-            if (string.IsNullOrEmpty(entry.PdfUrl) || regenerate)
-            {
-                entry.PdfUrl = await GenerateHemSamparkPdfAsync(entry, master);
-                await _context.SaveChangesAsync();
-            }
-
-            return Ok(new { success = true, pdfUrl = entry.PdfUrl });
-        }
-
-        private async Task<string> GenerateHemSamparkPdfAsync(
-            DailySamparkEntry entry,
-            MasterSetting master)
-        {
-            string E(string value) =>
-                System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
-
-            string GetBase64Image(string relativePath)
-            {
-                if (string.IsNullOrWhiteSpace(relativePath))
-                    return string.Empty;
-
-                try
+            // The review is revealed only after submission, so showing the
+            // correct option here is safe.
+            var review = snapshot.Questions
+                .Where(q => byQuestion.ContainsKey(q.Id) || snapshot.Questions.Count == total)
+                .Select((q, index) =>
                 {
-                    string cleanPath = relativePath
-                        .TrimStart('/', '\\')
-                        .Replace('/', Path.DirectorySeparatorChar);
+                    byQuestion.TryGetValue(q.Id, out var answer);
 
-                    string path = Path.Combine(
-                        _webHostEnvironment.WebRootPath,
-                        cleanPath);
-
-                    if (!System.IO.File.Exists(path))
-                        return string.Empty;
-
-                    byte[] bytes = System.IO.File.ReadAllBytes(path);
-                    string ext = Path.GetExtension(path).ToLowerInvariant();
-
-                    string mime = ext switch
+                    return new
                     {
-                        ".jpg" or ".jpeg" => "image/jpeg",
-                        ".svg" => "image/svg+xml",
-                        ".webp" => "image/webp",
-                        ".gif" => "image/gif",
-                        _ => "image/png"
+                        number = index + 1,
+                        text = q.Text,
+                        options = q.Options,
+                        selected = answer?.SelectedOption ?? 0,
+                        correct = q.Correct,
+                        isCorrect = answer?.IsCorrect ?? false,
+                        explanation = q.Explanation
                     };
+                })
+                .ToList();
 
-                    return $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
-                }
-                catch
-                {
-                    return string.Empty;
-                }
-            }
-
-            string GetLogo(string path, string fallback)
+            return new
             {
-                string image = GetBase64Image(path);
-
-                return string.IsNullOrEmpty(image)
-                    ? fallback
-                    : $"<img src='{image}' alt='Logo' />";
-            }
-
-            string logo1 = GetLogo(master?.Logo1Url ?? "", "<b>RR GLOBAL</b>");
-            string logo2 = GetLogo(master?.Logo2Url ?? "",
-                "<b class='hem-logo'>HEM सम्पर्क</b>");
-            string logo3 = GetLogo(master?.Logo3Url ?? "",
-                "<b>HEMA FOUNDATION</b>");
-
-            string date = E(entry.EntryDate.ToString(
-                "dddd, dd MMMM yyyy",
-                System.Globalization.CultureInfo.GetCultureInfo("en-IN")));
-
-            string samvat = E(Convert.ToString(entry.VikramSamvat) ?? "");
-            string dayHindi = E(Convert.ToString(entry.DayHindi) ?? "");
-            string issue = E(Convert.ToString(entry.IssueNumber) ?? "");
-
-            // Build question list without options.
-            var questionsBuilder = new System.Text.StringBuilder();
-
-            if (entry.Questions != null)
-            {
-                int index = 1;
-
-                foreach (var q in entry.Questions)
-                {
-                    questionsBuilder.Append($@"
-                <p class='question'>
-                    <b>Q{index}. {E(q.QuestionText ?? "")}</b>
-                </p>");
-
-                    index++;
-                }
-            }
-
-            string footerText = E(master?.FooterText ?? "");
-            string footerLink = E(master?.FooterLink ?? "");
-            string rawLink = (master?.FooterLink ?? "").Trim();
-
-            string footerLinkHtml = footerLink;
-
-            if (!string.IsNullOrWhiteSpace(rawLink))
-            {
-                string href =
-                    rawLink.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
-                    || rawLink.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-                        ? rawLink
-                        : "https://" + rawLink;
-
-                footerLinkHtml = $"<a href='{E(href)}'>{footerLink}</a>";
-            }
-
-            string htmlContent = $@"<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8' /><style>
-    @page {{
-        size: 140mm 297mm; /* Page size ko exact .page ki width ke barabar karein */
-        margin: 0;
-    }}
-    *, *:before, *:after {{
-        box-sizing: border-box;
-    }}
-    html, body {{
-        margin: 0;
-        padding: 0;
-        width: 140mm;
-        font-family: Arial, 'Noto Sans Devanagari', sans-serif;
-        color: #202020;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }}
-    body {{
-        background: #fff7f5;
-    }}
-    .page {{ 
-        width: 140mm;
-        min-height: 297mm;
-        padding: 3mm;
-        /* Yahan border-image se half color split kiya gaya hai */
-        border: 3mm solid;
-        border-image: linear-gradient(to right, #29266f 50%, #00b4ff 50%) 1;
-        background: #fff7f5;
-        display: flex;
-        flex-direction: column;
-    }}
-
-    /* Centered three-logo header */
-    .header-table {{
-        width: 100%;
-        table-layout: fixed;
-        border-collapse: collapse;
-        border-bottom: 2px solid #29266f;
-        margin-bottom: 5px;
-    }}
-
-    .header-table td {{
-        width: 33.333%;
-        text-align: center;
-        vertical-align: middle;
-        padding: 2px 3px 5px;
-        font-size: 11px;
-        font-weight: bold;
-    }}
-
-    .header-table img {{
-        max-width: 100%;
-        max-height: 42px;
-        object-fit: contain;
-    }}
-
-    .hem-logo {{
-        font-size: 17px;
-        color: #29266f;
-    }}
-
-    /* Date on left, Vikram Samvat / Friday / Issue on right */
-    .date-table {{
-        width: 100%;
-        table-layout: fixed;
-        border-collapse: collapse;
-        margin-bottom: 7px;
-        font-size: 10px;
-        font-weight: bold;
-        line-height: 1.25;
-    }}
-
-    .date-table td {{
-        vertical-align: top;
-        padding: 2px 0;
-    }}
-
-    /* Section heading strips */
-    .strip-heading {{
-        background: #ffd9d3;
-        color: #282020;
-        text-align: center;
-        font-family: Georgia, serif;
-        font-size: 17px;
-        font-style: italic;
-        font-weight: bold;
-        padding: 3px 5px;
-        margin: 4px 0;
-    }}
-
-    .mantra-box {{
-        background: #fce4ec;
-        border: 1px solid #efbfd0;
-        padding: 6px 8px;
-        margin-bottom: 6px;
-    }}
-
-    .mantra-title {{
-        background: #ffd9d3;
-        text-align: center;
-        font-family: Georgia, serif;
-        font-size: 17px;
-        font-weight: bold;
-        font-style: italic;
-        padding: 3px;
-        margin: -6px -8px 5px;
-    }}
-
-    .mantra-en {{
-        font-size: 11px;
-        font-weight: bold;
-        line-height: 1.3;
-        margin: 0 0 3px;
-    }}
-
-    .mantra-hi {{
-        color: #ad2456;
-        font-size: 11px;
-        font-weight: bold;
-        line-height: 1.3;
-        margin: 0;
-    }}
-
-    .celebration-heading {{
-        text-align: center;
-        font-size: 13px;
-        line-height: 1.25;
-        font-weight: 800;
-        color: #c52218;
-        margin: 3px 0;
-    }}
-
-    .content-text {{
-        width: 100%;
-    margin: 3px auto 8px;
-    font-size: 11.5px;
-    font-weight: 700;
-    line-height: 1.35;
-    text-align: justify;
-    overflow-wrap: anywhere;
-    }}
-
-    .content-hi {{
-        color: #ad2456;
-    font-weight: 700;
-    }}
-
-    /* Day's Challenge */
-    .challenge-box {{
-        background: #f0f9e9;
-        border: 1px solid #a8d79b;
-        padding: 6px 8px;
-        margin: 4px 0 6px;
-    }}
-
-    .challenge-title {{
-        background: #ffd9d3;
-        text-align: center;
-        font-family: Georgia, serif;
-        font-size: 17px;
-        font-style: italic;
-        font-weight: bold;
-        color: #282020;
-        padding: 3px;
-        margin: -6px -8px 5px;
-    }}
-
-    .question {{
-        font-size: 10.8px;
-        font-weight: 700;
-        line-height: 1.32;
-        margin: 0 0 5px;
-        overflow-wrap: anywhere;
-    }}
-
-    .question:last-child {{
-        margin-bottom: 0;
-    }}
-
-    /* Values in Focus */
-    .values-title {{
-        background: #ffd9d3;
-        text-align: center;
-        font-family: Georgia, serif;
-        font-size: 17px;
-        font-style: italic;
-        font-weight: bold;
-        padding: 3px;
-        margin: -6px -8px 5px;
-    }}
-
-    .values-box {{
-        background: #f0f9e9;
-        border: 1px solid #a8d79b;
-        padding: 6px 8px;
-        margin-top: 2px;
-    }}
-
-    .values-en {{
-        font-size: 10.5px;
-        font-weight: bold;
-        text-align: center;
-        line-height: 1.3;
-        margin: 0 0 3px;
-    }}
-
-    .values-hi {{
-        color: #ad2456;
-        font-size: 10.5px;
-        font-weight: bold;
-        text-align: center;
-        line-height: 1.3;
-        margin: 0;
-    }}
-
-    .footer-box {{
-        text-align: center;
-        margin-top: auto;
-        padding: 7px 0 0;
-        border-top: 1px solid #8d9fc6;
-        font-size: 11px;
-        font-weight: bold;
-    }}
-
-    .footer-box a {{
-        color: #202f83;
-        text-decoration: underline;
-        overflow-wrap: anywhere;
-    }}
-
-    .footer-box p {{
-        color: #c52218;
-        font-size: 11px;
-        font-weight: bold;
-        margin: 3px 0 0;
-    }}
-</style>
-</head>
-
-<body>
-<div class='page'>
-
-    <table class='header-table'>
-        <tr>
-            <td>{logo1}</td>
-            <td>{logo2}</td>
-            <td>{logo3}</td>
-        </tr>
-    </table>
-
-    <table class='date-table'>
-        <tr>
-            <td style='width:42%; text-align:left'>
-                {date}<br />Issue No: {issue}
-            </td>
-            <td style='width:22%; text-align:right'>
-                {samvat} 
-            </td>
-        </tr>
-    </table>
-
-    <div class='mantra-box'>
-        <div class='mantra-title'>Morning Mantra</div>
-        <p class='mantra-en'>
-            {E(master?.MorningMantraEn ?? "")}
-        </p>
-        <p class='mantra-hi'>
-            {E(master?.MorningMantraHi ?? "")}
-        </p>
-    </div>
-
-    <div class='strip-heading'>Celebrations Today</div>
-
-    <h4 class='celebration-heading'>
-        {E(entry.CelebrationHeadingEn ?? "")}
-    </h4>
-
-    <div class='content-text'>
-        {entry.CelebrationContentEn ?? ""}
-    </div>
-
-    <h4 class='strip-heading'>
-        {E(entry.CelebrationHeadingHi ?? "")}
-    </h4>
-
-    <div class='content-text content-hi'>
-        {entry.CelebrationContentHi ?? ""}
-    </div>
-
-    <div class='challenge-box'>
-        <div class='challenge-title'>Day's Challenge</div>
-        {questionsBuilder}
-    </div>
-
-    <div class='values-box'>
-        <div class='values-title'>Values in Focus</div>
-        <p class='values-en'>
-            {E(master?.ValuesInFocusEn ?? "")}
-        </p>
-        <p class='values-hi'>
-            {E(master?.ValuesInFocusHi ?? "")}
-        </p>
-    </div>
-
-    <div class='footer-box'>
-        {footerLinkHtml}
-        <p>{footerText}</p>
-    </div>
-
-</div>
-</body>
-</html>";
-
-            string folderName = "generateHemPdf";
-
-            string uploadDir = Path.Combine(
-                _webHostEnvironment.WebRootPath,
-                folderName);
-
-            if (!Directory.Exists(uploadDir))
-                Directory.CreateDirectory(uploadDir);
-
-            string fileName =
-                $"HemSampark_{entry.Id}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-
-            string filePath = Path.Combine(uploadDir, fileName);
-
-            using var browser = await Puppeteer.LaunchAsync(
-                new LaunchOptions
-                {
-                    Headless = true
-                });
-
-            using var page = await browser.NewPageAsync();
-
-            await page.SetViewportAsync(new ViewPortOptions
-            {
-                Width = 794,
-                Height = 1123,
-                DeviceScaleFactor = 1
-            });
-
-            await page.SetContentAsync(
-                htmlContent,
-                new NavigationOptions
-                {
-                    WaitUntil = new[]
-                    {
-                WaitUntilNavigation.Networkidle0
-                    }
-                });
-
-            await page.EmulateMediaTypeAsync(MediaType.Print);
-
-            // Fit content into one A4 page only when it can fit without clipping.
-            bool fitsOnOnePage = await page.EvaluateExpressionAsync<bool>(
-                "document.querySelector('.page').scrollHeight <= " +
-                "document.querySelector('.page').clientHeight + 1");
-
-            if (!fitsOnOnePage)
-            {
-                // Reduce spacing and typography slightly for longer daily content.
-                await page.AddStyleTagAsync(new AddTagOptions
-                {
-                    Content = @"
-                .page {
-                    height: auto !important;
-                    min-height: 297mm;
-                }
-
-                .content-text {
-                    font-size: 10.5px;
-                    line-height: 1.25;
-                    margin-bottom: 4px;
-                }
-
-                .question {
-                    font-size: 10px;
-                    line-height: 1.25;
-                    margin-bottom: 3px;
-                }
-
-                .mantra-box {
-                    padding: 5px 7px;
-                    margin-bottom: 4px;
-                }
-
-                .challenge-box {
-                    padding: 5px 7px;
-                    margin: 3px 0 4px;
-                }
-
-                .values-box {
-                    padding: 5px 7px;
-                }
-
-                .footer-box {
-                    margin-top: 8px;
-                }"
-                });
-            }
-
-            await page.PdfAsync(filePath, new PdfOptions
-            {
-                Format = PaperFormat.A4,
-                PrintBackground = true,
-                PreferCSSPageSize = true,
-                DisplayHeaderFooter = false,
-                MarginOptions = new MarginOptions
-                {
-                    Top = "0",
-                    Bottom = "0",
-                    Left = "0",
-                    Right = "0"
-                }
-            });
-
-            return $"/{folderName}/{fileName}";
+                submissionId = submission.Id,
+                publicationId = entry.Id,
+                publicationTitle = snapshot.Title,
+                publicationDate = LongDate(entry.EntryDate),
+                totalQuestions = total,
+                correct,
+                incorrect = Math.Max(0, answered - correct),
+                unanswered = Math.Max(0, total - answered),
+                score = $"{correct}/{total}",
+                percentage,
+                status = HemSamparkScore.Status(percentage, PassPercentage),
+                passed = percentage >= PassPercentage,
+                completedAt = submission.SubmittedAt.ToString(DateTimeDisplay, CultureInfo.InvariantCulture),
+                review
+            };
         }
 
+        // =====================================================================
+        // DASHBOARD: today's publication + the user's summary
+        // =====================================================================
 
-        [HttpGet("today-entry")]
-        public async Task<IActionResult> GetTodayEntry()
+        [HttpGet("today")]
+        public async Task<IActionResult> GetToday()
         {
-            try
+            var me = Me;
+            var now = _clock.Now;
+            var today = now.Date;
+
+            var master = await GetMasterAsync();
+            var entry = await FindPublishedForDateAsync(today);
+
+            object? publication = null;
+
+            if (entry != null)
             {
-                var today = DateTime.Now.Date;
+                var snapshot = HemSamparkSnapshot.Load(entry, master);
 
-                var entry = await _context.dailysamparkentries
-                    .Where(x => x.EntryDate.Date == today)
-                    .FirstOrDefaultAsync();
+                var submission = await _context.hemsampark_quiz_submissions.AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.DailyEntryId == entry.Id && s.UserId == me.Key);
 
-                if (entry == null)
+                bool pdfAvailable = _pdf.ResolvePdfPath(entry.PublishedPdfUrl) != null;
+                string version = (entry.PublishedAt?.Ticks ?? 0).ToString();
+                string baseUrl = $"/api/hem-sampark/publications/{entry.Id}";
+
+                publication = new
                 {
-                    return NotFound(new { success = false, message = "No entry found for today." });
-                }
-
-                // Get Current Logged-in User ID & Name
-                var userIdInt = HttpContext.Session.GetInt32("UserID") ?? 0;
-                string userId = userIdInt > 0 ? userIdInt.ToString() : (User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "StudentUser");
-
-                string fullName = "Champion";
-                var dbUser = userIdInt > 0
-                    ? await _context.Users.FirstOrDefaultAsync(u => u.UserID == userIdInt)
-                    : await _context.Users.FirstOrDefaultAsync(u => u.AspNetUserID == userId);
-
-                if (dbUser != null)
-                {
-                    fullName = $"{dbUser.FirstName} {dbUser.LastName}".Trim();
-                }
-
-                // Check if user already submitted quiz for today's entry
-                var existingSubmission = await _context.Set<hemsampark_quiz_submission>()
-                    .Where(s => s.DailyEntryId == entry.Id && s.UserId == userId)
-                    .FirstOrDefaultAsync();
-
-                var questions = await _context.Set<DailyQuestion>()
-    .Where(q => q.DailyEntryId == entry.Id)
-    .OrderBy(q => q.Id)
-    .Select(q => new
-    {
-        id = q.Id,
-        questionText = q.QuestionText,
-        option1 = q.Option1,
-        option2 = q.Option2,
-        option3 = q.Option3,
-        option4 = q.Option4
-    })
-    .ToListAsync();
-
-                object detailedAnswers = null;
-                if (existingSubmission != null)
-                {
-                    detailedAnswers = await _context.Set<hemsampark_quiz_answer>()
-                        .Where(a => a.SubmissionId == existingSubmission.Id)
-                        .ToListAsync();
-                }
-
-                return Ok(new
-                {
-                    success = true,
-                    userName = fullName,
-                    isSubmitted = existingSubmission != null,
-                    submissionDetails = existingSubmission != null ? new
+                    id = entry.Id,
+                    title = snapshot.Title,
+                    date = LongDate(entry.EntryDate),
+                    dayHindi = snapshot.DayHindi,
+                    issueNumber = snapshot.IssueNumber,
+                    headingEn = snapshot.HeadingEn,
+                    headingHi = snapshot.HeadingHi,
+                    summary = PlainText(snapshot.ContentEn, 260),
+                    morningMantra = snapshot.MorningMantraEn,
+                    valuesInFocus = snapshot.ValuesInFocusEn,
+                    pdfAvailable,
+                    pdfUrl = pdfAvailable ? $"{baseUrl}/pdf?v={version}" : null,
+                    downloadUrl = pdfAvailable ? $"{baseUrl}/pdf?download=true&v={version}" : null,
+                    imageUrl = _pdf.ResolvePreviewImagePath(entry.PublishedPdfUrl) != null
+                        ? $"{baseUrl}/image?v={version}"
+                        : null,
+                    quiz = new
                     {
-                        score = existingSubmission.Score,
-                        totalQuestions = existingSubmission.TotalQuestions,
-                        submittedAt = existingSubmission.SubmittedAt
-        .ToString("dd-MMM-yyyy hh:mm tt"),
-                        answers = detailedAnswers,
-                        correctAnswers = existingSubmission.Score,
-                        wrongAnswers = Math.Max(
-        0,
-        existingSubmission.TotalQuestions - existingSubmission.Score
-    )
-                    } : null,
-                    data = new
-                    {
-                        id = entry.Id,
-                        entryDate = entry.EntryDate.ToString("yyyy-MM-dd"),
-                        dayHindi = entry.DayHindi,
-                        issueNumber = entry.IssueNumber,
-                        vikramSamvat = entry.VikramSamvat,
-                        celebrationHeadingEn = entry.CelebrationHeadingEn,
-                        celebrationContentEn = entry.CelebrationContentEn,
-                        celebrationHeadingHi = entry.CelebrationHeadingHi,
-                        celebrationContentHi = entry.CelebrationContentHi,
-                        pdfUrl = entry.PdfUrl,
-                        questions = questions
+                        totalQuestions = snapshot.Questions.Count,
+                        available = snapshot.Questions.Count > 0,
+                        attempted = submission != null,
+                        result = submission == null
+                            ? null
+                            : await BuildResultAsync(submission, entry, master)
                     }
-                });
+                };
             }
-            catch (Exception ex)
+
+            return Ok(new
             {
-                return StatusCode(500, new { success = false, message = ex.Message });
+                success = true,
+                userName = string.IsNullOrWhiteSpace(me.DisplayName) ? "Champion" : me.DisplayName,
+                greeting = now.Hour < 12 ? "Good Morning" : now.Hour < 17 ? "Good Afternoon" : "Good Evening",
+                today = LongDate(today),
+                publication,
+                message = publication == null ? "Today's publication is not available yet." : null,
+                performance = await BuildPerformanceAsync(me.Key, today)
+            });
+        }
+
+        /// <summary>Totals, current streak and the last seven days for one user.</summary>
+        private async Task<object> BuildPerformanceAsync(string userKey, DateTime today)
+        {
+            var mine = _context.hemsampark_quiz_submissions.AsNoTracking()
+                .Where(s => s.UserId == userKey);
+
+            int attempts = await mine.CountAsync();
+
+            double average = attempts == 0
+                ? 0
+                : await mine.Where(s => s.TotalQuestions > 0)
+                      .Select(s => (double?)(s.Score * 100.0 / s.TotalQuestions))
+                      .AverageAsync() ?? 0;
+
+            double best = attempts == 0
+                ? 0
+                : await mine.Where(s => s.TotalQuestions > 0)
+                      .Select(s => (double?)(s.Score * 100.0 / s.TotalQuestions))
+                      .MaxAsync() ?? 0;
+
+            // Published days in the recent window, and which of them I completed.
+            var windowStart = today.AddDays(-60);
+            var windowEnd = today.AddDays(1);
+
+            var published = await _context.dailysamparkentries.AsNoTracking()
+                .Where(x => x.Status == HemSamparkStatus.Published
+                            && x.EntryDate >= windowStart && x.EntryDate < windowEnd)
+                .Select(x => new { x.Id, x.EntryDate })
+                .ToListAsync();
+
+            var publishedIds = published.Select(p => p.Id).ToList();
+
+            var doneIds = (await mine
+                    .Where(s => publishedIds.Contains(s.DailyEntryId))
+                    .Select(s => s.DailyEntryId)
+                    .ToListAsync())
+                .ToHashSet();
+
+            var byDate = published
+                .GroupBy(p => p.EntryDate.Date)
+                .ToDictionary(g => g.Key, g => g.Any(p => doneIds.Contains(p.Id)));
+
+            // Days without a publication neither add to nor break the streak;
+            // today only counts once it has been completed.
+            int streak = 0;
+            for (var day = today; day >= windowStart; day = day.AddDays(-1))
+            {
+                if (!byDate.TryGetValue(day, out var done)) continue;
+                if (done) { streak++; continue; }
+                if (day == today) continue;
+                break;
             }
+
+            var week = Enumerable.Range(0, 7)
+                .Select(offset => today.AddDays(offset - 6))
+                .Select(day => new
+                {
+                    label = day.ToString("ddd", CultureInfo.InvariantCulture),
+                    date = day.ToString("dd MMM", CultureInfo.InvariantCulture),
+                    state = !byDate.TryGetValue(day, out var done) ? "none"
+                        : done ? "done"
+                        : day == today ? "today"
+                        : "missed"
+                })
+                .ToList();
+
+            return new
+            {
+                attempts,
+                averagePercent = Math.Round(average, 1),
+                bestPercent = Math.Round(best, 1),
+                streak,
+                week
+            };
+        }
+
+        // =====================================================================
+        // PUBLISHED PDF (and its image preview)
+        // =====================================================================
+
+        /// <summary>
+        /// A user may open the published PDF of today's publication, or of a
+        /// past one they took the quiz for. Never a draft, never a future date.
+        /// </summary>
+        private async Task<DailySamparkEntry?> FindReadableAsync(int id)
+        {
+            var today = _clock.Today;
+            var tomorrow = today.AddDays(1);
+
+            var entry = await _context.dailysamparkentries.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id
+                                          && x.Status == HemSamparkStatus.Published
+                                          && x.PublishedPdfUrl != null
+                                          && x.EntryDate < tomorrow);
+
+            if (entry == null) return null;
+            if (entry.EntryDate.Date == today) return entry;
+
+            var key = Me.Key;
+            bool attempted = await _context.hemsampark_quiz_submissions
+                .AnyAsync(s => s.DailyEntryId == id && s.UserId == key);
+
+            return attempted ? entry : null;
+        }
+
+        [HttpGet("publications/{id:int}/pdf")]
+        public async Task<IActionResult> GetPdf(int id, [FromQuery] bool download = false)
+        {
+            var entry = await FindReadableAsync(id);
+            var path = entry == null ? null : _pdf.ResolvePdfPath(entry.PublishedPdfUrl);
+
+            if (path == null) return NotFound();
+
+            Response.Headers.CacheControl = "private, max-age=300";
+
+            return download
+                ? PhysicalFile(path, "application/pdf", $"HEM-Sampark-{entry!.EntryDate:yyyy-MM-dd}.pdf")
+                : PhysicalFile(path, "application/pdf");
+        }
+
+        [HttpGet("publications/{id:int}/image")]
+        public async Task<IActionResult> GetImage(int id)
+        {
+            var entry = await FindReadableAsync(id);
+            var path = entry == null ? null : _pdf.ResolvePreviewImagePath(entry.PublishedPdfUrl);
+
+            if (path == null) return NotFound();
+
+            Response.Headers.CacheControl = "private, max-age=300";
+            return PhysicalFile(path, "image/png");
+        }
+
+        // =====================================================================
+        // QUIZ
+        // =====================================================================
+
+        /// <summary>Today's questions. Correct answers are never sent.</summary>
+        [HttpGet("quiz")]
+        public async Task<IActionResult> GetQuiz()
+        {
+            var entry = await FindPublishedForDateAsync(_clock.Today);
+            if (entry == null) return Fail(404, "Today's publication is not available yet.");
+
+            var key = Me.Key;
+            bool attempted = await _context.hemsampark_quiz_submissions
+                .AnyAsync(s => s.DailyEntryId == entry.Id && s.UserId == key);
+
+            if (attempted)
+                return StatusCode(409, new
+                {
+                    success = false,
+                    alreadySubmitted = true,
+                    message = "You have already completed today's quiz."
+                });
+
+            var snapshot = HemSamparkSnapshot.Load(entry, await GetMasterAsync());
+
+            if (snapshot.Questions.Count == 0)
+                return Fail(404, "No quiz is available for today's publication.");
+
+            return Ok(new
+            {
+                success = true,
+                publicationId = entry.Id,
+                title = snapshot.Title,
+                questions = snapshot.Questions.Select(q => new
+                {
+                    id = q.Id,
+                    text = q.Text,
+                    options = q.Options
+                        .Select((text, index) => new { value = index + 1, text })
+                        .Where(o => !string.IsNullOrWhiteSpace(o.text))
+                })
+            });
         }
 
         [HttpPost("submit-quiz")]
-        public async Task<IActionResult> SubmitQuiz([FromBody] QuizSubmissionDto model)
+        public async Task<IActionResult> SubmitQuiz([FromBody] HemSamparkSubmitDto model)
         {
+            if (model == null || model.DailyEntryId <= 0)
+                return Fail(400, "Invalid quiz submission.");
+
+            var key = Me.Key;
+
+            // Only today's published publication can be attempted.
+            var entry = await FindPublishedForDateAsync(_clock.Today);
+
+            if (entry == null || entry.Id != model.DailyEntryId)
+                return Fail(400, "This quiz is no longer available. Please refresh the page.");
+
+            var master = await GetMasterAsync();
+            var snapshot = HemSamparkSnapshot.Load(entry, master);
+
+            if (snapshot.Questions.Count == 0)
+                return Fail(400, "No quiz is available for today's publication.");
+
+            var answers = model.Answers ?? new List<HemSamparkAnswerDto>();
+            var questions = snapshot.Questions.ToDictionary(q => q.Id);
+
+            if (answers.Count > questions.Count ||
+                answers.Select(a => a.QuestionId).Distinct().Count() != answers.Count)
+                return Fail(400, "Each question can be answered only once.");
+
+            foreach (var answer in answers)
+            {
+                if (!questions.TryGetValue(answer.QuestionId, out var question) ||
+                    answer.SelectedOption < 1 || answer.SelectedOption > 4 ||
+                    string.IsNullOrWhiteSpace(question.Options[answer.SelectedOption - 1]))
+                    return Fail(400, "Invalid question or selected option.");
+            }
+
+            async Task<IActionResult> AlreadySubmitted()
+            {
+                var existing = await _context.hemsampark_quiz_submissions.AsNoTracking()
+                    .FirstAsync(s => s.DailyEntryId == entry.Id && s.UserId == key);
+
+                return StatusCode(409, new
+                {
+                    success = false,
+                    alreadySubmitted = true,
+                    message = "You have already completed today's quiz.",
+                    result = await BuildResultAsync(existing, entry, master)
+                });
+            }
+
+            if (await _context.hemsampark_quiz_submissions
+                    .AnyAsync(s => s.DailyEntryId == entry.Id && s.UserId == key))
+                return await AlreadySubmitted();
+
+            // Score on the server, against the published answers.
+            int correctCount = answers.Count(a => questions[a.QuestionId].Correct == a.SelectedOption);
+
+            var submission = new hemsampark_quiz_submission
+            {
+                UserId = key,
+                DailyEntryId = entry.Id,
+                Score = correctCount,
+                TotalQuestions = questions.Count,
+                SubmittedAt = _clock.Now
+            };
+
             try
             {
-                if (model == null || model.DailyEntryId <= 0 ||
-                    model.Answers == null || model.Answers.Count == 0)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "Invalid quiz submission."
-                    });
-                }
+                await using var transaction = await _context.Database.BeginTransactionAsync();
 
-                var userIdInt = HttpContext.Session.GetInt32("UserID") ?? 0;
-
-                string userId = userIdInt > 0
-                    ? userIdInt.ToString()
-                    : (User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "StudentUser");
-
-                var today = DateTime.Today;
-
-                var entry = await _context.dailysamparkentries
-                    .FirstOrDefaultAsync(e =>
-                        e.Id == model.DailyEntryId &&
-                        e.EntryDate >= today &&
-                        e.EntryDate < today.AddDays(1));
-
-                if (entry == null)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "Today's challenge is not available."
-                    });
-                }
-
-                // Block repeat attempts
-                var alreadySubmitted = await _context
-                    .Set<hemsampark_quiz_submission>()
-                    .AnyAsync(s =>
-                        s.DailyEntryId == model.DailyEntryId &&
-                        s.UserId == userId);
-
-                if (alreadySubmitted)
-                {
-                    return Conflict(new
-                    {
-                        success = false,
-                        alreadySubmitted = true,
-                        message = "You have already completed today's challenge."
-                    });
-                }
-
-                // Fetch the actual questions belonging to this entry
-                var questions = await _context.Set<DailyQuestion>()
-                    .Where(q => q.DailyEntryId == model.DailyEntryId)
-                    .ToListAsync();
-
-                if (questions.Count == 0 ||
-                    model.Answers.Count != questions.Count ||
-                    model.Answers.Select(a => a.QuestionId).Distinct().Count()
-                        != model.Answers.Count)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "Please answer every question exactly once."
-                    });
-                }
-
-                var questionLookup = questions.ToDictionary(q => q.Id);
-
-                // Reject invalid question IDs or option numbers
-                foreach (var answer in model.Answers)
-                {
-                    if (!questionLookup.ContainsKey(answer.QuestionId) ||
-                        answer.SelectedOption < 1 ||
-                        answer.SelectedOption > 4)
-                    {
-                        return BadRequest(new
-                        {
-                            success = false,
-                            message = "Invalid question or selected option."
-                        });
-                    }
-                }
-
-                int correctCount = model.Answers.Count(a =>
-                    questionLookup[a.QuestionId].CorrectOption == a.SelectedOption);
-
-                int totalQuestions = questions.Count;
-
-                // Save submission and answers together
-                await using var transaction =
-                    await _context.Database.BeginTransactionAsync();
-
-                // Check again immediately before inserting
-                alreadySubmitted = await _context
-                    .Set<hemsampark_quiz_submission>()
-                    .AnyAsync(s =>
-                        s.DailyEntryId == model.DailyEntryId &&
-                        s.UserId == userId);
-
-                if (alreadySubmitted)
-                {
-                    await transaction.RollbackAsync();
-
-                    return Conflict(new
-                    {
-                        success = false,
-                        alreadySubmitted = true,
-                        message = "You have already completed today's challenge."
-                    });
-                }
-
-                var submission = new hemsampark_quiz_submission
-                {
-                    UserId = userId,
-                    DailyEntryId = model.DailyEntryId,
-                    Score = correctCount,
-                    TotalQuestions = totalQuestions,
-                    SubmittedAt = DateTime.Now
-                };
-
-                _context.Set<hemsampark_quiz_submission>().Add(submission);
-
+                _context.hemsampark_quiz_submissions.Add(submission);
                 await _context.SaveChangesAsync();
 
-                var answers = model.Answers.Select(a =>
-                    new hemsampark_quiz_answer
-                    {
-                        SubmissionId = submission.Id,
-                        QuestionId = a.QuestionId,
-                        SelectedOption = a.SelectedOption,
-                        IsCorrect =
-                            questionLookup[a.QuestionId].CorrectOption
-                            == a.SelectedOption
-                    }).ToList();
-
-                _context.Set<hemsampark_quiz_answer>().AddRange(answers);
+                _context.hemsampark_quiz_answers.AddRange(answers.Select(a => new hemsampark_quiz_answer
+                {
+                    SubmissionId = submission.Id,
+                    QuestionId = a.QuestionId,
+                    SelectedOption = a.SelectedOption,
+                    IsCorrect = questions[a.QuestionId].Correct == a.SelectedOption
+                }));
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
-
-                return Ok(new
-                {
-                    success = true,
-                    completed = true,
-                    score = correctCount,
-                    total = totalQuestions,
-                    correctAnswers = correctCount,
-                    wrongAnswers = totalQuestions - correctCount,
-                    submittedAt = submission.SubmittedAt
-                        .ToString("dd-MMM-yyyy hh:mm tt"),
-                    message = "Today's challenge completed successfully!"
-                });
             }
-            catch (Exception ex)
+            catch (DbUpdateException ex)
             {
-                // Log the actual exception on the server
-                Console.Error.WriteLine(
-                    $"SubmitQuiz failed: {ex}");
+                _context.ChangeTracker.Clear();
 
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "Unable to submit the quiz. Please check the server logs."
-                });
+                // A double click / second tab lost the race on the unique
+                // (daily_entry_id, user_id) index: report the saved result.
+                if (await _context.hemsampark_quiz_submissions
+                        .AnyAsync(s => s.DailyEntryId == entry.Id && s.UserId == key))
+                    return await AlreadySubmitted();
+
+                _logger.LogError(ex, "HEM Sampark: quiz submission failed for entry {Id}", entry.Id);
+                return Fail(500, "Unable to submit the quiz. Please try again.");
             }
+
+            return Ok(new
+            {
+                success = true,
+                message = "Quiz submitted successfully!",
+                result = await BuildResultAsync(submission, entry, master)
+            });
         }
 
-        public class QuizAnswerDto
+        // =====================================================================
+        // MY PERFORMANCE / HISTORY (always scoped to the logged-in user)
+        // =====================================================================
+
+        [HttpGet("history")]
+        public async Task<IActionResult> GetHistory([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            public int QuestionId { get; set; }
-            public int SelectedOption { get; set; }
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 5, 50);
+
+            var key = Me.Key;
+
+            var query =
+                from s in _context.hemsampark_quiz_submissions.AsNoTracking()
+                join e in _context.dailysamparkentries.AsNoTracking() on s.DailyEntryId equals e.Id
+                where s.UserId == key
+                select new
+                {
+                    s.Id,
+                    s.Score,
+                    s.TotalQuestions,
+                    s.SubmittedAt,
+                    e.EntryDate,
+                    e.Title,
+                    e.CelebrationHeadingEn
+                };
+
+            int total = await query.CountAsync();
+
+            var rows = await query
+                .OrderByDescending(x => x.SubmittedAt)
+                .ThenByDescending(x => x.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var ids = rows.Select(r => r.Id).ToList();
+
+            var answered = await _context.hemsampark_quiz_answers
+                .Where(a => ids.Contains(a.SubmissionId))
+                .GroupBy(a => a.SubmissionId)
+                .Select(g => new { g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Key, x => x.Count);
+
+            int pass = PassPercentage;
+
+            var items = rows.Select(r =>
+            {
+                int answeredCount = Math.Min(r.TotalQuestions, answered.GetValueOrDefault(r.Id, r.TotalQuestions));
+                double percentage = HemSamparkScore.Percentage(r.Score, r.TotalQuestions);
+
+                return new
+                {
+                    submissionId = r.Id,
+                    publicationDate = r.EntryDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture),
+                    publicationTitle = !string.IsNullOrWhiteSpace(r.Title) ? r.Title
+                        : !string.IsNullOrWhiteSpace(r.CelebrationHeadingEn) ? r.CelebrationHeadingEn
+                        : "HEM Sampark",
+                    attemptDate = r.SubmittedAt.ToString(DateTimeDisplay, CultureInfo.InvariantCulture),
+                    totalQuestions = r.TotalQuestions,
+                    correct = r.Score,
+                    incorrect = Math.Max(0, answeredCount - r.Score),
+                    unanswered = Math.Max(0, r.TotalQuestions - answeredCount),
+                    score = $"{r.Score}/{r.TotalQuestions}",
+                    percentage,
+                    status = HemSamparkScore.Status(percentage, pass),
+                    passed = percentage >= pass
+                };
+            });
+
+            return Ok(new { success = true, total, page, pageSize, items });
         }
 
-        public class QuizSubmissionDto
+        [HttpGet("results/{submissionId:int}")]
+        public async Task<IActionResult> GetResult(int submissionId)
         {
-            public int DailyEntryId { get; set; }
-            public List<QuizAnswerDto> Answers { get; set; }
+            var key = Me.Key;
+
+            // Filtering by the owner makes other users' results look non-existent.
+            var submission = await _context.hemsampark_quiz_submissions.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == submissionId && s.UserId == key);
+
+            if (submission == null) return Fail(404, "Result not found.");
+
+            var entry = await _context.dailysamparkentries.AsNoTracking()
+                .Include(x => x.Questions)
+                .FirstOrDefaultAsync(x => x.Id == submission.DailyEntryId);
+
+            if (entry == null) return Fail(404, "Result not found.");
+
+            bool readable = entry.Status == HemSamparkStatus.Published
+                            && _pdf.ResolvePdfPath(entry.PublishedPdfUrl) != null;
+
+            return Ok(new
+            {
+                success = true,
+                result = await BuildResultAsync(submission, entry, await GetMasterAsync()),
+                pdfUrl = readable
+                    ? $"/api/hem-sampark/publications/{entry.Id}/pdf?v={entry.PublishedAt?.Ticks ?? 0}"
+                    : null
+            });
         }
-
-      
-
     }
 }
