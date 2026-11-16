@@ -141,7 +141,7 @@ namespace HemFoundation.Controllers.Api
                         yellow = AffiliateIncentiveService.YellowRate,
                         red = AffiliateIncentiveService.RedRate
                     },
-                    diagnostics = new { databaseCalls = _incentives.DatabaseCalls, functionCalls = _incentives.FunctionCalls, elapsedMs = timer.ElapsedMilliseconds }
+                    diagnostics = new { databaseCalls = _incentives.DatabaseCalls, functionCalls = _incentives.FunctionCalls, rangeCalls = _incentives.RangeCalls, elapsedMs = timer.ElapsedMilliseconds }
                 });
             }
             catch (Exception ex)
@@ -453,7 +453,7 @@ namespace HemFoundation.Controllers.Api
                     page,
                     pageSize,
                     items = items.ToList(),
-                    diagnostics = new { databaseCalls = _incentives.DatabaseCalls, functionCalls = _incentives.FunctionCalls, elapsedMs = timer.ElapsedMilliseconds }
+                    diagnostics = new { databaseCalls = _incentives.DatabaseCalls, functionCalls = _incentives.FunctionCalls, rangeCalls = _incentives.RangeCalls, elapsedMs = timer.ElapsedMilliseconds }
                 });
             }
             catch (Exception ex)

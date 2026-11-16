@@ -221,6 +221,14 @@ namespace HemFoundation.Services.AffiliateIncentive
                 ? new Dictionary<(string, int, int), string>()
                 : await ReadStoredMonthsAsync(affiliates);
 
+            // 1b. Months that are not stored, not final or not fresh (or
+            //     everything, on a refresh): one pass per affiliate through
+            //     refresh_incentive_dashboard_range, when that function is
+            //     installed. It gives the same figures as the per-month
+            //     function without rescanning the activity logs for each month.
+            if (await BackfillClosedMonthsAsync(affiliates, stored, currentMonth, refresh))
+                stored = await ReadStoredMonthsAsync(affiliates);
+
             var result = new Dictionary<int, List<MonthlyIncentive>>();
             var toCompute = new List<(AffiliateInfo Affiliate, int Year, int Month)>();
 
@@ -286,11 +294,111 @@ namespace HemFoundation.Services.AffiliateIncentive
         /// <summary>(affiliate, month) pairs that had to go through the database function.</summary>
         public int FunctionCalls { get; private set; }
 
+        /// <summary>Affiliates whose missing months were calculated in one pass.</summary>
+        public int RangeCalls { get; private set; }
+
+        // Whether refresh_incentive_dashboard_range exists in this database.
+        // Remembered once found; re-checked occasionally while it is absent.
+        private static bool _rangeFunctionAvailable;
+        private static DateTime _rangeFunctionCheckedAt = DateTime.MinValue;
+
+        private async Task<bool> RangeFunctionAvailableAsync()
+        {
+            if (_rangeFunctionAvailable) return true;
+            if (DateTime.UtcNow - _rangeFunctionCheckedAt < TimeSpan.FromMinutes(5)) return false;
+
+            _rangeFunctionCheckedAt = DateTime.UtcNow;
+
+            try
+            {
+                await using var conn = new NpgsqlConnection(ConnectionString);
+                await conn.OpenAsync();
+
+                await using var cmd = new NpgsqlCommand(
+                    "SELECT to_regprocedure('public.refresh_incentive_dashboard_range(text,date,date,boolean)') IS NOT NULL",
+                    conn);
+
+                DatabaseCalls++;
+                _rangeFunctionAvailable = (bool)(await cmd.ExecuteScalarAsync() ?? false);
+            }
+            catch (PostgresException ex)
+            {
+                _logger.LogWarning(ex, "Affiliate incentive: could not check for the range function");
+            }
+
+            return _rangeFunctionAvailable;
+        }
+
+        /// <summary>
+        /// Calculates each affiliate's missing or stale months in a single pass.
+        /// Returns true when anything was written (the caller then re-reads
+        /// the stored months). Does nothing when the optional database
+        /// function is not installed: the per-month function is used instead.
+        /// </summary>
+        private async Task<bool> BackfillClosedMonthsAsync(
+            IReadOnlyCollection<AffiliateInfo> affiliates,
+            Dictionary<(string, int, int), string> stored,
+            DateTime currentMonth,
+            bool overwrite)
+        {
+            var ranges = new List<(string Uid, DateTime From, DateTime To)>();
+
+            foreach (var affiliate in affiliates)
+            {
+                DateTime? from = null, to = null;
+
+                // Includes the current month when its stored row is not fresh.
+                for (var m = FirstMonth(affiliate, currentMonth); m <= currentMonth; m = m.AddMonths(1))
+                {
+                    if (!overwrite && stored.ContainsKey((affiliate.AspNetUserId, m.Year, m.Month))) continue;
+                    from ??= m;
+                    to = m;
+                }
+
+                if (from != null) ranges.Add((affiliate.AspNetUserId, from.Value, to!.Value));
+            }
+
+            if (ranges.Count == 0 || !await RangeFunctionAvailableAsync()) return false;
+
+            const string sql = """
+                SELECT public.refresh_incentive_dashboard_range(t.uid, t.f, t.t, @overwrite)
+                FROM unnest(@uids, @froms, @tos) AS t(uid, f, t)
+                """;
+
+            var batches = ranges.Chunk(10).ToList();
+            int timeout = Math.Clamp(_config.GetValue<int?>("AffiliateIncentive:CommandTimeoutSeconds") ?? 180, 30, 900);
+
+            await Parallel.ForEachAsync(
+                batches,
+                new ParallelOptions { MaxDegreeOfParallelism = MaxParallel },
+                async (batch, cancel) =>
+                {
+                    await using var conn = new NpgsqlConnection(ConnectionString);
+                    await conn.OpenAsync(cancel);
+
+                    await using var cmd = new NpgsqlCommand(sql, conn) { CommandTimeout = timeout };
+                    cmd.Parameters.AddWithValue("overwrite", overwrite);
+                    cmd.Parameters.AddWithValue("uids", batch.Select(r => r.Uid).ToArray());
+                    cmd.Parameters.Add(new NpgsqlParameter("froms", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Date)
+                        { Value = batch.Select(r => DateOnly.FromDateTime(r.From)).ToArray() });
+                    cmd.Parameters.Add(new NpgsqlParameter("tos", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Date)
+                        { Value = batch.Select(r => DateOnly.FromDateTime(r.To)).ToArray() });
+
+                    await cmd.ExecuteNonQueryAsync(cancel);
+                });
+
+            DatabaseCalls += batches.Count;
+            RangeCalls = ranges.Count;
+            return true;
+        }
+
         /// <summary>
         /// Reads incentive_dashboard_cache for all the affiliates in one query
-        /// and returns the rows that are final: closed months whose row was
-        /// written after the month ended. A row written during its own month
-        /// only holds part of the month, so it is recalculated instead.
+        /// and returns the rows that can be used as they are: closed months
+        /// whose row was written after the month ended (final), and any row
+        /// written in the last 10 minutes (the same freshness rule
+        /// get_incentive_dashboard_fast applies). An older row written during
+        /// its own month only holds part of the month, so it is recalculated.
         /// The row is returned in the same JSON shape as the function.
         /// </summary>
         private async Task<Dictionary<(string, int, int), string>> ReadStoredMonthsAsync(
@@ -318,7 +426,8 @@ namespace HemFoundation.Services.AffiliateIncentive
                 FROM public.incentive_dashboard_cache c
                 WHERE c.aspnet_user_id = ANY(@uids)
                   AND c.month BETWEEN 1 AND 12
-                  AND c.updated_at >= (make_date(c.year, c.month, 1) + interval '1 month')
+                  AND (c.updated_at >= (make_date(c.year, c.month, 1) + interval '1 month')
+                       OR c.updated_at >= now() - interval '10 minutes')
                 """;
 
             try
@@ -435,7 +544,16 @@ namespace HemFoundation.Services.AffiliateIncentive
                 decimal total = target.StudentIncentive + target.SchoolIncentive +
                                 target.TeacherIncentive + target.CertificateIncentive;
 
-                if (data.TryGetProperty("history", out var history) &&
+                // The database function reports two different totals for a
+                // month: "totalIncentive" includes the school incentive, the
+                // last "history" entry does not. The incentive page has always
+                // shown the history figure, so that stays the default; set
+                // AffiliateIncentive:IncludeSchoolIncentiveInTotal = true to
+                // count the school incentive in monthly and lifetime totals.
+                bool includeSchools = _config.GetValue<bool>("AffiliateIncentive:IncludeSchoolIncentiveInTotal");
+
+                if (!includeSchools &&
+                    data.TryGetProperty("history", out var history) &&
                     history.ValueKind == JsonValueKind.Array && history.GetArrayLength() > 0)
                 {
                     var last = history[history.GetArrayLength() - 1];

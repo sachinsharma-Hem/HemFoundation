@@ -48,15 +48,9 @@ ANALYZE wj_institutes;
 ANALYZE wj_studentassociates;
 
 -- =============================================================================
--- STEP 3 (to finish the performance work) - the slow part is the calculation
--- itself, public.calculate_incentive_dashboard, which was not available when
--- this was written. Please send the output of:
---
---   SELECT pg_get_functiondef('public.calculate_incentive_dashboard(text,integer,integer)'::regprocedure);
---
--- and, to see how long one calculation takes (replace the id with a real
--- affiliate's AspNetUserID):
---
---   EXPLAIN (ANALYZE, BUFFERS)
---   SELECT public.calculate_incentive_dashboard('<aspnet-user-id>', 2026, 10);
+-- NOTE - the incentive calculation itself reads the views
+-- hf_view_studentactivitylog, hf_view_teacheractivitylog and
+-- vw_school_profile_details. Views cannot be indexed directly; the big saving
+-- there comes from Data/Scripts/AffiliateIncentive_RangeFunction.sql, which
+-- reads each of them once per affiliate instead of once per month.
 -- =============================================================================
