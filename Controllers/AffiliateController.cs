@@ -123,5 +123,22 @@ namespace HemFoundation.Controllers
 
             return View("~/Views/Affiliate/AffiliateIncentive.cshtml");
         }
+
+        // Admin report: incentive of every affiliate, month by month.
+        public async Task<IActionResult> AdminIncentiveReport()
+        {
+            var isLoggedIn = HttpContext.Session.GetString("IsAdminLoggedIn");
+            if (string.IsNullOrEmpty(isLoggedIn) || isLoggedIn != "true")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (!await HemFoundation.Services.AffiliateIncentive.AffiliateIncentiveAccess.IsAdminAsync(HttpContext, _context))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View("~/Views/Affiliate/AdminIncentiveReport.cshtml");
+        }
     }
 }

@@ -1,0 +1,160 @@
+@{
+    ViewData["Title"] = "Affiliate Incentive Report";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/affiliate-incentive.css" asp-append-version="true" />
+}
+
+<div class="afi" id="afiAdmin">
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+        <div>
+            <h2 class="fw-bold m-0" style="font-size:1.4rem;color:var(--afi-text)">
+                <i class="bi bi-cash-coin me-2" style="color:var(--afi-green)"></i>Affiliate Incentive Report
+            </h2>
+            <p class="m-0 mt-1" style="font-size:.88rem;color:var(--afi-muted)">
+                Incentive earned by every affiliate, month by month. <span id="afiAsOf"></span>
+            </p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="button" class="afi-btn" id="afiRefresh" title="Recalculate from the latest activity">
+                <i class="bi bi-arrow-repeat"></i> Refresh data
+            </button>
+            <button type="button" class="afi-btn afi-btn-primary" id="afiExport">
+                <i class="bi bi-download"></i> Export CSV
+            </button>
+        </div>
+    </div>
+
+    <div id="afiError" class="afi-error" hidden>
+        <span><i class="bi bi-exclamation-triangle me-1"></i> <span id="afiErrorText"></span></span>
+        <button type="button" class="afi-btn afi-btn-sm" id="afiRetry"><i class="bi bi-arrow-clockwise"></i> Try again</button>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="afi-summary afi-cols-5">
+        <div class="afi-stat is-hero">
+            <div class="afi-stat-top">
+                <span class="afi-stat-icon"><i class="bi bi-trophy-fill"></i></span>
+                <span class="afi-stat-label">Total Incentive Earned</span>
+            </div>
+            <div class="afi-stat-value" id="afiCardLifetime"><span class="afi-skeleton"></span></div>
+            <div class="afi-stat-sub">All affiliates, all months</div>
+        </div>
+        <div class="afi-stat">
+            <div class="afi-stat-top">
+                <span class="afi-stat-icon"><i class="bi bi-people-fill"></i></span>
+                <span class="afi-stat-label">Total Affiliates</span>
+            </div>
+            <div class="afi-stat-value" id="afiCardAffiliates"><span class="afi-skeleton"></span></div>
+            <div class="afi-stat-sub" id="afiCardEarning">&nbsp;</div>
+        </div>
+        <div class="afi-stat is-green">
+            <div class="afi-stat-top">
+                <span class="afi-stat-icon"><i class="bi bi-calendar-check"></i></span>
+                <span class="afi-stat-label">Current Month</span>
+            </div>
+            <div class="afi-stat-value" id="afiCardCurrent"><span class="afi-skeleton"></span></div>
+            <div class="afi-stat-sub" id="afiCardCurrentLabel">&nbsp;</div>
+        </div>
+        <div class="afi-stat is-amber">
+            <div class="afi-stat-top">
+                <span class="afi-stat-icon"><i class="bi bi-calendar-minus"></i></span>
+                <span class="afi-stat-label">Previous Month</span>
+            </div>
+            <div class="afi-stat-value" id="afiCardPrevious"><span class="afi-skeleton"></span></div>
+            <div class="afi-stat-sub" id="afiCardPreviousLabel">&nbsp;</div>
+        </div>
+        <div class="afi-stat is-purple">
+            <div class="afi-stat-top">
+                <span class="afi-stat-icon"><i class="bi bi-clipboard-data"></i></span>
+                <span class="afi-stat-label">Eligible Activity (this month)</span>
+            </div>
+            <div class="afi-chips" id="afiCardEligible" style="margin-top:4px"><span class="afi-skeleton"></span></div>
+        </div>
+    </div>
+
+    <!-- Report -->
+    <div class="afi-panel">
+        <div class="afi-panel-head">
+            <div class="afi-tabs" role="tablist" aria-label="Report view">
+                <button type="button" class="active" data-view="affiliates">Affiliate totals</button>
+                <button type="button" data-view="monthly">Month-wise</button>
+            </div>
+            <span class="afi-sub" id="afiFilteredTotal"></span>
+        </div>
+
+        <div class="afi-filters mb-3">
+            <div class="afi-field is-wide">
+                <label for="afiSearch">Search affiliate</label>
+                <input type="search" id="afiSearch" class="afi-input" placeholder="Name, affiliate ID, code or mobile" autocomplete="off">
+            </div>
+            <div class="afi-field">
+                <label for="afiYear">Year</label>
+                <select id="afiYear" class="afi-input"><option value="">All years</option></select>
+            </div>
+            <div class="afi-field">
+                <label for="afiMonth">Month</label>
+                <select id="afiMonth" class="afi-input">
+                    <option value="">All months</option>
+                    <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+                    <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+                    <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+                    <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                </select>
+            </div>
+            <div class="afi-field">
+                <label for="afiFrom">From month</label>
+                <input type="month" id="afiFrom" class="afi-input">
+            </div>
+            <div class="afi-field">
+                <label for="afiTo">To month</label>
+                <input type="month" id="afiTo" class="afi-input">
+            </div>
+            <div class="afi-field">
+                <label for="afiStatus">Status</label>
+                <select id="afiStatus" class="afi-input">
+                    <option value="">All</option>
+                    <option value="In progress">In progress</option>
+                    <option value="Closed">Closed</option>
+                </select>
+            </div>
+            <div class="afi-field" style="min-width:auto">
+                <label>&nbsp;</label>
+                <button type="button" class="afi-btn" id="afiReset"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+            </div>
+        </div>
+
+        <div class="afi-table-wrap">
+            <table class="afi-table">
+                <thead id="afiHead"></thead>
+                <tbody id="afiRows">
+                    <tr><td><div class="afi-empty"><span class="afi-skeleton" style="width:200px"></span></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="afi-pager" id="afiPager"></div>
+    </div>
+</div>
+
+<!-- Affiliate detail -->
+<div class="modal fade afi afi-modal" id="afiDetailModal" tabindex="-1" aria-labelledby="afiDetailTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="afiDetailTitle">Affiliate <small id="afiDetailSub"></small></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="afiDetailBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="afi-btn" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/affiliate-incentive-admin.js" asp-append-version="true"></script>
+}

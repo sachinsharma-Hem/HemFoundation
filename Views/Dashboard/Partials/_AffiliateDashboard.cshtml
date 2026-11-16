@@ -2,13 +2,16 @@
     // Affiliate Dashboard Main Hub Component
 }
 
+<link rel="stylesheet" href="~/css/affiliate-incentive.css" asp-append-version="true" />
+
 <div class="container-fluid px-0">
 
     <partial name="~/Views/Affiliate/Partials/_AttendanceWidget.cshtml" />
 
     <div class="row g-4 mb-4 align-items-stretch">
         <div class="col-lg-4 d-flex align-items-stretch">
-            <div class="card shadow-sm rounded-4 bg-white p-4 w-100 d-flex flex-column justify-content-between position-relative overflow-hidden" style="border: 1px solid #d9dfe5 !important; height: 91%;">
+            <div class="afi afi-workspace card shadow-sm rounded-4 bg-white p-4 w-100 d-flex flex-column justify-content-between position-relative overflow-hidden" style="border: 1px solid #d9dfe5 !important; height: 91%;"
+                 id="afiWorkspaceCard" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Affiliate Workspace: view this month's incentive">
                 <div class="position-absolute top-0 end-0 translate-middle-y opacity-10 pe-none" style="margin-right: -20px; margin-top: -20px;">
                     <i class="bi bi-shield-check text-success" style="font-size: 10rem;"></i>
                 </div>
@@ -22,6 +25,14 @@
                     <p class="text-muted small mb-2" id="dynamicGreeting" style="line-height: 1.5;">
                         Welcome back! Track your Workspace real-time.
                     </p>
+                </div>
+                <div class="afi-ws-box mb-2">
+                    <div>
+                        <div class="afi-ws-label">Current Month Incentive</div>
+                        <div class="afi-ws-amount" id="afiWsAmount"><span class="afi-skeleton"></span></div>
+                        <div class="afi-ws-meta" id="afiWsMeta">Loading…</div>
+                    </div>
+                    <span class="afi-ws-go" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
                 </div>
                 <div class="pt-2 border-top mt-2">
                     <div class="d-flex align-items-center justify-content-between mb-2 px-1">
@@ -480,5 +491,130 @@
                 });
             });
         }
+    });
+</script>
+
+<!-- Affiliate Workspace: current month incentive popup -->
+<div class="modal fade afi afi-modal" id="afiIncentiveModal" tabindex="-1" aria-labelledby="afiIncentiveModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="afiIncentiveModalTitle">
+                    My Incentive
+                    <small id="afiModalMonth">Current month</small>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="afiModalBody">
+                <div class="afi-empty"><span class="afi-skeleton" style="width:180px"></span></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="afi-btn" data-bs-dismiss="modal">Close</button>
+                <a class="afi-btn afi-btn-primary" href="/Affiliate/AffiliateIncentive">
+                    View Full Incentive Details <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Affiliate Workspace card: shows this month's incentive and opens a
+    // popup with the details. One request, made once after the page loads.
+    document.addEventListener("DOMContentLoaded", function () {
+        const card = document.getElementById("afiWorkspaceCard");
+        const modalEl = document.getElementById("afiIncentiveModal");
+        if (!card || !modalEl) return;
+
+        let data = null;
+        let failed = false;
+
+        const rupees = v => "₹" + (Number(v) || 0).toLocaleString("en-IN");
+        const count = v => (Number(v) || 0).toLocaleString("en-IN");
+        const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g,
+            c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+        function renderCard() {
+            const amount = document.getElementById("afiWsAmount");
+            const meta = document.getElementById("afiWsMeta");
+
+            if (failed || !data) {
+                amount.textContent = "—";
+                meta.textContent = failed ? "Incentive not available right now" : "Loading…";
+                return;
+            }
+
+            amount.textContent = rupees(data.summary.currentMonthIncentive);
+            meta.textContent = data.summary.currentMonthLabel + " · tap for details";
+        }
+
+        function renderModal() {
+            const body = document.getElementById("afiModalBody");
+
+            if (failed || !data) {
+                body.innerHTML = '<div class="afi-empty"><i class="bi bi-exclamation-circle"></i>' +
+                    (failed ? "Your incentive could not be loaded. Please open the full incentive page."
+                            : "Loading your incentive…") + "</div>";
+                return;
+            }
+
+            const s = data.summary;
+            const m = (data.months || []).find(x => x.isCurrent) || {};
+            const recent = (data.months || []).slice(0, 6);
+
+            document.getElementById("afiModalMonth").textContent = s.currentMonthLabel;
+
+            body.innerHTML =
+                '<div class="afi-mini">' +
+                    '<div class="is-main"><span>Current month</span><b>' + rupees(s.currentMonthIncentive) + "</b></div>" +
+                    "<div><span>Previous month</span><b>" + rupees(s.previousMonthIncentive) + "</b></div>" +
+                    "<div><span>Earned till date</span><b>" + rupees(s.lifetimeIncentive) + "</b></div>" +
+                "</div>" +
+
+                '<p class="afi-section-title">' + esc(s.currentMonthLabel) + " breakdown</p>" +
+                '<div class="afi-lines">' +
+                    '<div class="afi-line"><div>Active Students<small>' + count(m.activeStudents) + " eligible</small></div><b>" + rupees(m.studentIncentive) + "</b></div>" +
+                    '<div class="afi-line"><div>Active Schools<small>' + count(m.activeSchools) + " fully active</small></div><b>" + rupees(m.schoolIncentive) + "</b></div>" +
+                    '<div class="afi-line"><div>Active Teachers<small>' + count(m.activeTeachers) + " active</small></div><b>" + rupees(m.teacherIncentive) + "</b></div>" +
+                    '<div class="afi-line"><div>Value Certifications<small>' + count(m.totalCertificates) + " certificates</small></div><b>" + rupees(m.certificateIncentive) + "</b></div>" +
+                    '<div class="afi-line"><div>Evaluated Projects<small>' + count(m.evaluatedProjects) + " evaluated</small></div><b>" + rupees(m.projectIncentive) + "</b></div>" +
+                    '<div class="afi-line is-total"><div>Total this month</div><b>' + rupees(m.totalIncentive) + "</b></div>" +
+                "</div>" +
+
+                '<p class="afi-section-title">Recent months</p>' +
+                '<div class="afi-lines">' +
+                    recent.map(x => '<div class="afi-line"><div>' + esc(x.label) +
+                        (x.isCurrent ? ' <span class="afi-badge afi-badge-progress">In progress</span>' : "") +
+                        "</div><b>" + rupees(x.totalIncentive) + "</b></div>").join("") +
+                "</div>";
+        }
+
+        function openModal() {
+            renderModal();
+            if (window.bootstrap) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+
+        card.addEventListener("click", openModal);
+        card.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(); }
+        });
+
+        (async function load() {
+            try {
+                const token = localStorage.getItem("jwt_token") || sessionStorage.getItem("jwt_token") || "";
+                const response = await fetch("/api/affiliate-incentive/my", {
+                    headers: { "Accept": "application/json", "Authorization": "Bearer " + token },
+                    credentials: "same-origin", cache: "no-store"
+                });
+                const json = await response.json().catch(() => null);
+                if (!response.ok || !json || json.success !== true) throw new Error("load failed");
+                data = json;
+            } catch (e) {
+                failed = true;
+            }
+
+            renderCard();
+            if (modalEl.classList.contains("show")) renderModal();
+        })();
     });
 </script>
