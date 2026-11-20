@@ -29,8 +29,11 @@ namespace HemFoundation.Services.HemSampark
         // half empty. Nothing is ever cropped or hidden.
         private const double PageHeightPx = 297 * 96 / 25.4;   // 297mm in CSS pixels
         private const double FitSafetyPx = 3;                  // keeps clear of a spill onto page 2
-        private const double MinScale = 0.75;                  // below this the text is too small to read (about 6pt)
+        // Text is never made smaller than this. When the content does not fit
+        // on 297mm at this size, the (single) page is made taller instead.
+        private const double MinScale = 0.90;
         private const double MaxScale = 1.30;
+        private const double PxPerMm = 96 / 25.4;
 
         private static readonly System.Text.RegularExpressions.Regex StyleBlock =
             new(@"<style>(.*?)</style>", System.Text.RegularExpressions.RegexOptions.Singleline);
@@ -262,8 +265,27 @@ namespace HemFoundation.Services.HemSampark
             string samvat = E(entry.VikramSamvat);
             string issue = E(entry.IssueNumber.ToString());
 
-            string mantraEn = First(entry.MorningMantraEn, master?.MorningMantraEn);
-            string mantraHi = First(entry.MorningMantraHi, master?.MorningMantraHi);
+            // The Morning Mantra is written for each publication (no master default).
+            string mantraEn = entry.MorningMantraEn?.Trim() ?? "";
+            string mantraHi = entry.MorningMantraHi?.Trim() ?? "";
+
+            string mantraHtml = mantraEn.Length == 0 && mantraHi.Length == 0
+                ? ""
+                : $@"<div class='mantra-box'>
+        <div class='mantra-title'>Morning Mantra</div>
+        {(mantraEn.Length > 0 ? $"<p class='mantra-en'>{E(mantraEn)}</p>" : "")}
+        {(mantraHi.Length > 0 ? $"<p class='mantra-hi'>{E(mantraHi)}</p>" : "")}
+    </div>";
+
+            // Optional small picture at the right of the English celebration text.
+            string celebrationImage = GetBase64Image(entry.CelebrationImageUrl ?? "");
+            string celebrationImageHtml = string.IsNullOrEmpty(celebrationImage)
+                ? ""
+                : $"<img class='celebration-img' src='{celebrationImage}' alt='' />";
+
+            string hindiHeadingClass = master?.HindiHeadingBackground == true
+                ? "celebration-heading-hi with-bg"
+                : "celebration-heading-hi";
             string valuesEn = First(entry.ValuesInFocusEn, master?.ValuesInFocusEn);
             string valuesHi = First(entry.ValuesInFocusHi, master?.ValuesInFocusHi);
 
@@ -442,6 +464,40 @@ namespace HemFoundation.Services.HemSampark
     overflow-wrap: anywhere;
     }}
 
+    /* Hindi celebration heading: same weight and colour family as the
+       English heading, larger, no background unless enabled in Master Settings. */
+    .celebration-heading-hi {{
+        text-align: center;
+        font-family: Arial, 'Noto Sans Devanagari', sans-serif;
+        font-size: 17px;
+        line-height: 1.3;
+        font-weight: 800;
+        color: #ad2456;
+        margin: 6px 0 3px;
+        padding: 0;
+    }}
+
+    .celebration-heading-hi.with-bg {{
+        background: #ffd9d3;
+        padding: 3px 5px;
+    }}
+
+    .celebration-img {{
+        float: right;
+        width: 34mm;
+        max-height: 42mm;
+        object-fit: cover;
+        margin: 2px 0 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #efc9c0;
+    }}
+
+    .content-text::after {{
+        content: '';
+        display: block;
+        clear: both;
+    }}
+
     .content-hi {{
         color: #ad2456;
     font-weight: 700;
@@ -561,15 +617,7 @@ namespace HemFoundation.Services.HemSampark
         </tr>
     </table>
 
-    <div class='mantra-box'>
-        <div class='mantra-title'>Morning Mantra</div>
-        <p class='mantra-en'>
-            {E(mantraEn)}
-        </p>
-        <p class='mantra-hi'>
-            {E(mantraHi)}
-        </p>
-    </div>
+    {mantraHtml}
 
     <div class='strip-heading'>Celebrations Today</div>
 
@@ -578,10 +626,10 @@ namespace HemFoundation.Services.HemSampark
     </h4>
 
     <div class='content-text'>
-        {Rich(entry.CelebrationContentEn)}
+        {celebrationImageHtml}{Rich(entry.CelebrationContentEn)}
     </div>
 
-    <h4 class='strip-heading'>
+    <h4 class='{hindiHeadingClass}'>
         {E(entry.CelebrationHeadingHi ?? "")}
     </h4>
 
@@ -683,23 +731,19 @@ namespace HemFoundation.Services.HemSampark
                     }", scale);
 
             double limit = PageHeightPx - FitSafetyPx;
-            double heightAtMin = await ContentHeightAsync(MinScale);
-
-            if (heightAtMin > limit)
-            {
-                int over = (int)Math.Ceiling((heightAtMin / limit - 1) * 100);
-
-                throw new HemSamparkPdfLayoutException(
-                    "The content is too long to fit on one page at a readable size " +
-                    $"(about {Math.Max(1, over)}% too long even at the smallest text size). " +
-                    "Please shorten the English or Hindi content, or the quiz questions, and generate again.");
-            }
+            double pageHeightMm = 297;
 
             double low = MinScale, high = MaxScale;
 
             if (await ContentHeightAsync(MaxScale) <= limit)
             {
                 low = MaxScale;
+            }
+            else if (await ContentHeightAsync(MinScale) > limit)
+            {
+                // Too much content for 297mm at a comfortable size: keep the
+                // size and make the single page as tall as the content.
+                low = MinScale;
             }
             else
             {
@@ -710,31 +754,54 @@ namespace HemFoundation.Services.HemSampark
                 }
             }
 
-            double finalScale = Math.Floor(low * 200) / 200;   // round down to 0.005
-            await ContentHeightAsync(Math.Max(MinScale, finalScale));
+            double finalScale = Math.Max(MinScale, Math.Floor(low * 200) / 200);   // round down to 0.005
+            double contentPx = await ContentHeightAsync(finalScale);
 
-            await page.PdfAsync(filePath, new PdfOptions
+            if (contentPx > limit)
+                pageHeightMm = Math.Ceiling((contentPx + FitSafetyPx) / PxPerMm) + 2;
+
+            for (int attempt = 0; attempt < 3; attempt++)
             {
-                Format = PaperFormat.A4,
-                PrintBackground = true,
-                PreferCSSPageSize = true,
-                DisplayHeaderFooter = false,
-                MarginOptions = new MarginOptions
+                // One page, exactly this size; the coloured frame fills it.
+                await page.EvaluateFunctionAsync(
+                    @"h => {
+                        let tag = document.getElementById('hs-page-size');
+                        if (!tag) {
+                            tag = document.createElement('style');
+                            tag.id = 'hs-page-size';
+                            document.head.appendChild(tag);
+                        }
+                        tag.textContent = '@page { size: 140mm ' + h + 'mm; margin: 0; } ' +
+                                          '.page { min-height: ' + h + 'mm !important; }';
+                    }", pageHeightMm);
+
+                await page.PdfAsync(filePath, new PdfOptions
                 {
-                    Top = "0",
-                    Bottom = "0",
-                    Left = "0",
-                    Right = "0"
-                }
-            });
+                    Width = "140mm",
+                    Height = $"{pageHeightMm.ToString(System.Globalization.CultureInfo.InvariantCulture)}mm",
+                    PrintBackground = true,
+                    PreferCSSPageSize = true,
+                    DisplayHeaderFooter = false,
+                    MarginOptions = new MarginOptions
+                    {
+                        Top = "0",
+                        Bottom = "0",
+                        Left = "0",
+                        Right = "0"
+                    }
+                });
 
-            // Safety net: never hand out a PDF that spilled onto a second page.
-            if (CountPdfPages(filePath) > 1)
-            {
-                File.Delete(filePath);
-                throw new HemSamparkPdfLayoutException(
-                    "The content could not be fitted on one page. " +
-                    "Please shorten the content slightly and generate again.");
+                if (CountPdfPages(filePath) <= 1) break;
+
+                // Rounding spilled a line onto a second page: allow a little more room.
+                if (attempt == 2)
+                {
+                    File.Delete(filePath);
+                    throw new HemSamparkPdfLayoutException(
+                        "The PDF could not be laid out on a single page. Please try again.");
+                }
+
+                pageHeightMm += 6;
             }
 
             // PNG copy of the same layout: phones cannot show PDFs inline, so

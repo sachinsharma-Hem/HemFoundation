@@ -19,6 +19,9 @@
             </p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
+            <button type="button" class="afi-btn" id="afiSettings">
+                <i class="bi bi-sliders"></i> Incentive settings
+            </button>
             <button type="button" class="afi-btn" id="afiRefresh" title="Recalculate from the latest activity">
                 <i class="bi bi-arrow-repeat"></i> Refresh data
             </button>
@@ -151,6 +154,43 @@
             <div class="modal-footer">
                 <button type="button" class="afi-btn" data-bs-dismiss="modal">Close</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Incentive settings -->
+<div class="modal fade afi afi-modal" id="afiSettingsModal" tabindex="-1" aria-labelledby="afiSettingsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="afiSettingsForm" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="afiSettingsTitle">Incentive settings <small>Applies to every affiliate</small></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="afi-field" style="min-width:0">
+                        <label for="afiSchoolRate">Incentive per school (₹)</label>
+                        <input type="number" id="afiSchoolRate" class="afi-input" min="0" max="100000" step="1" required>
+                    </div>
+                    <p class="afi-sub mt-2 mb-3">
+                        Paid once for each school, in the month it became fully active
+                        (all its students and teachers active). Changing this updates every month,
+                        including past months, on all incentive screens.
+                    </p>
+                    <p class="afi-section-title">Fixed rates (set in the database calculation)</p>
+                    <div class="afi-chips">
+                        <span class="afi-chip">Student <b>₹5</b></span>
+                        <span class="afi-chip">Teacher <b>₹2</b></span>
+                        <span class="afi-chip">Certificate <b>₹10</b></span>
+                        <span class="afi-chip">Projects <b>G ₹20 · O ₹10 · B ₹10 · Y ₹5</b></span>
+                    </div>
+                    <div id="afiSettingsError" class="afi-error mt-3 mb-0" hidden></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="afi-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="afi-btn afi-btn-primary" id="afiSettingsSave"><i class="bi bi-check2"></i> Save</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

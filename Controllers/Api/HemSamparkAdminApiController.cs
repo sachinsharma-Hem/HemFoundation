@@ -1,4 +1,4 @@
-using HemFoundation.Data;
+﻿using HemFoundation.Data;
 using HemFoundation.Models;
 using HemFoundation.Models.HemSampark;
 using HemFoundation.Services.HemSampark;
@@ -127,12 +127,11 @@ namespace HemFoundation.Controllers
                 settings.Logo1Url,
                 settings.Logo2Url,
                 settings.Logo3Url,
-                settings.MorningMantraEn,
-                settings.MorningMantraHi,
                 settings.ValuesInFocusEn,
                 settings.ValuesInFocusHi,
                 settings.FooterText,
                 settings.FooterLink,
+                settings.HindiHeadingBackground,
                 updatedAt = Display(settings.UpdatedAt ?? settings.CreatedAt)
             });
         }
@@ -142,12 +141,11 @@ namespace HemFoundation.Controllers
             [FromForm] IFormFile? logo1File,
             [FromForm] IFormFile? logo2File,
             [FromForm] IFormFile? logo3File,
-            [FromForm] string? morningMantraEn,
-            [FromForm] string? morningMantraHi,
             [FromForm] string? valuesInFocusEn,
             [FromForm] string? valuesInFocusHi,
             [FromForm] string? footerText,
-            [FromForm] string? footerLink)
+            [FromForm] string? footerLink,
+            [FromForm] bool hindiHeadingBackground = false)
         {
             var logoError = ValidateLogo(logo1File, "RR Global logo")
                             ?? ValidateLogo(logo2File, "HEM Sampark logo")
@@ -166,9 +164,8 @@ namespace HemFoundation.Controllers
 
             string Snapshot() => string.Join('\u001f',
                 existing.Logo1Url, existing.Logo2Url, existing.Logo3Url,
-                existing.MorningMantraEn, existing.MorningMantraHi,
                 existing.ValuesInFocusEn, existing.ValuesInFocusHi,
-                existing.FooterText, existing.FooterLink);
+                existing.FooterText, existing.FooterLink, existing.HindiHeadingBackground);
 
             string before = Snapshot();
 
@@ -176,12 +173,13 @@ namespace HemFoundation.Controllers
             if (logo2File is { Length: > 0 }) existing.Logo2Url = await SaveLogoFileAsync(logo2File);
             if (logo3File is { Length: > 0 }) existing.Logo3Url = await SaveLogoFileAsync(logo3File);
 
-            existing.MorningMantraEn = Clean(morningMantraEn);
-            existing.MorningMantraHi = Clean(morningMantraHi);
+            // The Morning Mantra is no longer a master setting: it is entered
+            // for every publication. The old master value is left untouched.
             existing.ValuesInFocusEn = Clean(valuesInFocusEn);
             existing.ValuesInFocusHi = Clean(valuesInFocusHi);
             existing.FooterText = Clean(footerText);
             existing.FooterLink = Clean(footerLink);
+            existing.HindiHeadingBackground = hindiHeadingBackground;
 
             // Only a real change marks today's and upcoming PDFs as outdated.
             if (!isNew && before == Snapshot())
@@ -244,6 +242,7 @@ namespace HemFoundation.Controllers
             Add(e.CelebrationHeadingHi); Add(e.CelebrationContentHi);
             Add(e.MorningMantraEn); Add(e.MorningMantraHi);
             Add(e.ValuesInFocusEn); Add(e.ValuesInFocusHi);
+            Add(e.CelebrationImageUrl);
 
             foreach (var q in e.Questions.OrderBy(q => q.DisplayOrder).ThenBy(q => q.Id))
             {
@@ -316,6 +315,7 @@ namespace HemFoundation.Controllers
                 e.MorningMantraHi,
                 e.ValuesInFocusEn,
                 e.ValuesInFocusHi,
+                celebrationImageUrl = e.CelebrationImageUrl,
                 e.Status,
                 hasPdf = !string.IsNullOrEmpty(e.PdfUrl),
                 pdfOutdated = outdated,
@@ -805,7 +805,8 @@ namespace HemFoundation.Controllers
                 question.Option3 = Clean(dto.Option3);
                 question.Option4 = Clean(dto.Option4);
                 question.CorrectOption = dto.CorrectOption;
-                question.Explanation = Clean(dto.Explanation);
+                // The editor no longer has an explanation field; keep any stored value.
+                if (dto.Explanation != null) question.Explanation = Clean(dto.Explanation);
                 question.IsActive = dto.IsActive;
                 question.DisplayOrder = i + 1;
             }
@@ -916,6 +917,64 @@ namespace HemFoundation.Controllers
             _context.dailysamparkentries
                 .Include(x => x.Questions)
                 .FirstOrDefaultAsync(x => x.Id == id);
+
+        // =====================================================================
+        // CELEBRATIONS TODAY IMAGE (optional, shown at the right of the text)
+        // =====================================================================
+
+        [HttpPost("publications/{id:int}/image")]
+        [RequestSizeLimit(3 * 1024 * 1024)]
+        public async Task<IActionResult> UploadCelebrationImage(int id, [FromForm] IFormFile? image)
+        {
+            var entry = await FindWithQuestionsAsync(id);
+            if (entry == null) return Fail(404, "Publication not found.");
+
+            if (entry.Status == HemSamparkStatus.Archived)
+                return Fail(400, "This publication is archived. Restore it before editing.");
+
+            if (image == null || image.Length == 0)
+                return Fail(400, "Please choose an image.");
+
+            var error = ValidateLogo(image, "Image");
+            if (error != null) return Fail(400, error);
+
+            entry.CelebrationImageUrl = await SaveLogoFileAsync(image);
+            entry.ContentUpdatedAt = _clock.Now;
+            entry.UpdatedAt = _clock.Now;
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = "Image added. Regenerate the PDF to include it.",
+                publication = await BuildDetailAsync(entry)
+            });
+        }
+
+        [HttpDelete("publications/{id:int}/image")]
+        public async Task<IActionResult> RemoveCelebrationImage(int id)
+        {
+            var entry = await FindWithQuestionsAsync(id);
+            if (entry == null) return Fail(404, "Publication not found.");
+
+            if (entry.Status == HemSamparkStatus.Archived)
+                return Fail(400, "This publication is archived. Restore it before editing.");
+
+            if (string.IsNullOrEmpty(entry.CelebrationImageUrl))
+                return Ok(new { success = true, message = "No image to remove.", publication = await BuildDetailAsync(entry) });
+
+            entry.CelebrationImageUrl = null;
+            entry.ContentUpdatedAt = _clock.Now;
+            entry.UpdatedAt = _clock.Now;
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = "Image removed. Regenerate the PDF to apply it.",
+                publication = await BuildDetailAsync(entry)
+            });
+        }
 
         [HttpPost("publications/{id:int}/generate")]
         public async Task<IActionResult> Generate(int id)

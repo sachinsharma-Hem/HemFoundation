@@ -135,6 +135,10 @@ namespace HemFoundation.Controllers.Api
                     months = months.OrderByDescending(m => m.Key).Select(m => MonthDto(m, currentKey)),
                     rates = new
                     {
+                        student = 5,
+                        teacher = 2,
+                        certificate = 10,
+                        school = await _incentives.GetSchoolRateAsync(),
                         green = AffiliateIncentiveService.GreenRate,
                         orange = AffiliateIncentiveService.OrangeRate,
                         blue = AffiliateIncentiveService.BlueRate,
@@ -501,6 +505,51 @@ namespace HemFoundation.Controllers.Api
                 _logger.LogError(ex, "Affiliate incentive: detail for {UserId} failed", userId);
                 return Fail(500, "Error while loading the affiliate's incentive history.");
             }
+        }
+
+        // =====================================================================
+        // ADMIN: incentive settings
+        // =====================================================================
+
+        public class IncentiveSettingsDto
+        {
+            public decimal? SchoolRate { get; set; }
+        }
+
+        [HttpGet("admin/settings")]
+        public async Task<IActionResult> GetSettings()
+        {
+            if (!await AffiliateIncentiveAccess.IsAdminAsync(HttpContext, _db))
+                return Fail(403, "You do not have permission to change incentive settings.");
+
+            return Ok(new
+            {
+                success = true,
+                schoolRate = await _incentives.GetSchoolRateAsync(),
+                fixedRates = new { student = 5, teacher = 2, certificate = 10 }
+            });
+        }
+
+        [HttpPut("admin/settings")]
+        public async Task<IActionResult> SaveSettings([FromBody] IncentiveSettingsDto model)
+        {
+            if (!await AffiliateIncentiveAccess.IsAdminAsync(HttpContext, _db))
+                return Fail(403, "You do not have permission to change incentive settings.");
+
+            if (model?.SchoolRate is not decimal rate || rate < 0 || rate > 100000 || decimal.Round(rate, 2) != rate)
+                return Fail(400, "Enter a school rate between ₹0 and ₹1,00,000 (up to 2 decimal places).");
+
+            string? by = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!await _incentives.SetSchoolRateAsync(rate, by))
+                return Fail(409, "The settings table does not exist yet. Please run Data/Scripts/RunOnce_Update_2026_11_20.sql first.");
+
+            return Ok(new
+            {
+                success = true,
+                schoolRate = rate,
+                message = $"School rate saved: ₹{rate.ToString("#,##0.##", new CultureInfo("en-IN"))} per school, applied to all months."
+            });
         }
 
         [HttpGet("admin/export")]

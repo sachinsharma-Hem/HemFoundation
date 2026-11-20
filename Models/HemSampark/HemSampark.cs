@@ -70,6 +70,10 @@ namespace HemFoundation.Models.HemSampark
 
         [Column("footerlink")]
         public string? FooterLink { get; set; }
+
+        // PDF: show the pink strip behind the Hindi celebration heading.
+        [Column("hindiheadingbackground")]
+        public bool HindiHeadingBackground { get; set; }
     }
 
 
@@ -146,6 +150,10 @@ namespace HemFoundation.Models.HemSampark
 
         [Column("valuesinfocushi")]
         public string? ValuesInFocusHi { get; set; }
+
+        // Optional small picture shown at the right of the "Celebrations Today" text.
+        [Column("celebrationimageurl")]
+        public string? CelebrationImageUrl { get; set; }
 
         // Navigation property
         public List<DailyQuestion> Questions { get; set; }

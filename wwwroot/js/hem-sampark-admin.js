@@ -354,7 +354,6 @@
             '</div>' +
             '<input type="text" class="form-control" data-f="questionText" placeholder="Question text" value="' + esc(q.questionText) + '">' +
             '<div class="hsa-opts">' + options + '</div>' +
-            '<input type="text" class="form-control form-control-sm" data-f="explanation" placeholder="Explanation shown to users after they submit (optional)" value="' + esc(q.explanation) + '">' +
             '</div>';
     }
 
@@ -397,7 +396,6 @@
                     option3: $q.find('[data-f="option3"]').val(),
                     option4: $q.find('[data-f="option4"]').val(),
                     correctOption: Number($q.find('input[type=radio]:checked').val()) || 0,
-                    explanation: $q.find('[data-f="explanation"]').val(),
                     isActive: $q.find('[data-f="isActive"]').is(':checked')
                 };
             }).get()
@@ -414,7 +412,7 @@
     }
 
     function isDirty() {
-        return JSON.stringify(collectForm()) !== state.cleanForm;
+        return JSON.stringify(collectForm()) !== state.cleanForm || !!selectedImage();
     }
 
     function stateBanner(p, target) {
@@ -472,12 +470,36 @@
         $('#hsaValuesEn').val(p.valuesInFocusEn || '');
         $('#hsaValuesHi').val(p.valuesInFocusHi || '');
 
+        $('#hsaImage').val('');
+        showImage(p.celebrationImageUrl || '');
+        $('#hsaImageRemove').prop('hidden', !(p.id && p.celebrationImageUrl));
+
         $('#hsaQuestions').html((p.questions || []).map(questionCard).join(''));
         renumberQuestions();
 
         stateBanner(p, '#hsaEditorState');
         updateEditorButtons();
         state.cleanForm = JSON.stringify(collectForm());
+    }
+
+    function restoreForm(f) {
+        $('#hsaTitle').val(f.title); $('#hsaDate').val(f.entryDate); $('#hsaIssue').val(f.issueNumber);
+        $('#hsaDayHi').val(f.dayHindi); $('#hsaSamvat').val(f.vikramSamvat);
+        $('#hsaHeadEn').val(f.celebrationHeadingEn); $('#hsaHeadHi').val(f.celebrationHeadingHi);
+        $('#hsaContentEn').val(f.celebrationContentEn); $('#hsaContentHi').val(f.celebrationContentHi);
+        $('#hsaMantraEn').val(f.morningMantraEn); $('#hsaMantraHi').val(f.morningMantraHi);
+        $('#hsaValuesEn').val(f.valuesInFocusEn); $('#hsaValuesHi').val(f.valuesInFocusHi);
+    }
+
+    function showImage(url) {
+        $('#hsaImageThumb').html(url
+            ? '<img src="' + esc(url) + '" alt="Selected picture">'
+            : '<i class="bi bi-image"></i>');
+    }
+
+    function selectedImage() {
+        var input = document.getElementById('hsaImage');
+        return input && input.files && input.files[0] ? input.files[0] : null;
     }
 
     function showSubTab(name) {
@@ -535,7 +557,10 @@
             return $.Deferred().reject().promise();
         }
 
-        form.generatePdf = generatePdf;
+        // A newly chosen picture is uploaded after the save, and the PDF is
+        // generated after that, so the PDF always includes it.
+        var image = selectedImage();
+        form.generatePdf = generatePdf && !image;
         form.confirmDateChange = !!confirmDateChange;
         busy($button, true);
 
@@ -556,6 +581,36 @@
                 form.confirmDateChange = true;
                 busy($button, true);
                 return api('POST', 'publications', form);
+            });
+        }).then(function (res) {
+            if (!image) return res;
+
+            var data = new FormData();
+            data.append('image', image);
+
+            return api('POST', 'publications/' + res.publication.id + '/image', data).then(function () {
+                if (!generatePdf) {
+                    return api('GET', 'publications/' + res.publication.id).then(function (fresh) {
+                        res.publication = fresh.publication;
+                        return res;
+                    });
+                }
+                return api('POST', 'publications/' + res.publication.id + '/generate').then(function (generated) {
+                    res.publication = generated.publication;
+                    res.message = generated.message;
+                    return res;
+                }, function (message) {
+                    // Saved with the picture, but the PDF could not be made.
+                    return api('GET', 'publications/' + res.publication.id).then(function (fresh) {
+                        res.publication = fresh.publication;
+                        res.pdfFailed = true;
+                        res.message = 'Saved, but the PDF was not generated. ' + message;
+                        return res;
+                    });
+                });
+            }, function (message) {
+                res.notice = (res.notice ? res.notice + ' ' : '') + 'The picture was not uploaded: ' + message;
+                return res;
             });
         }).then(function (res) {
             busy($button, false);
@@ -637,8 +692,7 @@
             state.loaded.master = true;
             m = m || {};
 
-            $('#hsaMMantraEn').val(m.morningMantraEn || '');
-            $('#hsaMMantraHi').val(m.morningMantraHi || '');
+            $('#hsaMHindiBg').prop('checked', !!m.hindiHeadingBackground);
             $('#hsaMValuesEn').val(m.valuesInFocusEn || '');
             $('#hsaMValuesHi').val(m.valuesInFocusHi || '');
             $('#hsaMFooterText').val(m.footerText || '');
@@ -662,8 +716,7 @@
             var file = $('#hsaLogo' + n)[0].files[0];
             if (file) data.append('logo' + n + 'File', file);
         });
-        data.append('morningMantraEn', $('#hsaMMantraEn').val());
-        data.append('morningMantraHi', $('#hsaMMantraHi').val());
+        data.append('hindiHeadingBackground', $('#hsaMHindiBg').is(':checked') ? 'true' : 'false');
         data.append('valuesInFocusEn', $('#hsaMValuesEn').val());
         data.append('valuesInFocusHi', $('#hsaMValuesHi').val());
         data.append('footerText', $('#hsaMFooterText').val());
@@ -739,6 +792,40 @@
         $('.hsa-tab').on('click', function () { showTab($(this).data('hsa-tab')); });
         $('.hsa-subtab').on('click', function () { showSubTab($(this).data('hsa-sub')); });
         $('#hsaNewBtn').on('click', function () { openEditor(0); });
+
+        $('#hsaImage').on('change', function () {
+            var file = selectedImage();
+            if (!file) { showImage(state.editing ? state.editing.celebrationImageUrl || '' : ''); return; }
+            if (file.size > 2 * 1024 * 1024) {
+                toast('warning', 'The picture must be 2 MB or smaller.');
+                this.value = '';
+                return;
+            }
+            showImage(URL.createObjectURL(file));
+        });
+
+        $('#hsaImageRemove').on('click', function () {
+            if (!state.editing) return;
+            var $button = $(this);
+
+            confirmAction('Remove the picture?', 'It will be removed from this publication. Regenerate the PDF afterwards.', 'Remove', 'warning')
+                .then(function (yes) {
+                    if (!yes) return;
+                    busy($button, true);
+                    api('DELETE', 'publications/' + state.editing.id + '/image').then(function (res) {
+                        busy($button, false);
+                        var keep = collectForm();
+                        fillEditor(res.publication);
+                        refreshLists();
+                        toast('success', res.message);
+                        // Unsaved text in the form stays as the admin left it.
+                        restoreForm(keep);
+                    }, function (message) {
+                        busy($button, false);
+                        showError(message);
+                    });
+                });
+        });
 
         // Day (Hindi) follows the date unless the admin typed their own value.
         $('#hsaDate').on('change', function () {
