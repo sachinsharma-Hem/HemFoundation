@@ -86,7 +86,10 @@ namespace HemFoundation.Models.HemSampark
         public string? DayHindi { get; set; }
         public int IssueNumber { get; set; }
         public string? MorningMantraEn { get; set; }
+        public string? MorningMantraHi { get; set; }
         public string? ValuesInFocusEn { get; set; }
+        public string? ValuesInFocusHi { get; set; }
+        public string? ImageUrl { get; set; }
         public List<HemSamparkSnapshotQuestion> Questions { get; set; } = new();
 
         private static readonly JsonSerializerOptions JsonOptions =
@@ -107,8 +110,12 @@ namespace HemFoundation.Models.HemSampark
                 ContentEn = entry.CelebrationContentEn,
                 DayHindi = entry.DayHindi,
                 IssueNumber = entry.IssueNumber,
-                MorningMantraEn = Pick(entry.MorningMantraEn, master?.MorningMantraEn),
+                // The Morning Mantra is written for each publication (no master default).
+                MorningMantraEn = entry.MorningMantraEn,
+                MorningMantraHi = entry.MorningMantraHi,
                 ValuesInFocusEn = Pick(entry.ValuesInFocusEn, master?.ValuesInFocusEn),
+                ValuesInFocusHi = Pick(entry.ValuesInFocusHi, master?.ValuesInFocusHi),
+                ImageUrl = entry.CelebrationImageUrl,
                 Questions = (entry.Questions ?? new List<DailyQuestion>())
                     .Where(q => q.IsActive)
                     .OrderBy(q => q.DisplayOrder)

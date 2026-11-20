@@ -137,7 +137,25 @@
             document.getElementById('hsUserName').textContent = data.userName;
 
             renderHome();
+            autoOpenOncePerDay();
         });
+    }
+
+    // The first time a user arrives on a day, open today's publication
+    // straight away; "I have read it – Start Quiz" then leads to the quiz.
+    function autoOpenOncePerDay() {
+        var p = state.today && state.today.publication;
+        if (!p || !p.pdfAvailable) return;
+
+        var key = 'hsAutoRead_' + p.id + '_' + (state.today.userName || '');
+        try {
+            if (localStorage.getItem(key)) return;
+            localStorage.setItem(key, '1');
+        } catch (e) {
+            return;   // storage blocked: do not keep opening it
+        }
+
+        openReader();
     }
 
     function weekStrip(perf) {
@@ -191,18 +209,36 @@
             main += '<div class="hs-hero"><div class="hs-hero-top">' +
                 "<span class=\"hs-eyebrow\">Today's publication</span>" +
                 '<span class="hs-pill hs-pill-purple"><i class="bi bi-calendar3"></i> ' + esc(p.date) + '</span></div>' +
+                (p.pictureUrl ? '<img class="hs-hero-pic" src="' + esc(p.pictureUrl) + '" alt="">' : '') +
                 '<h2>' + esc(p.title) + '</h2>' +
                 (p.headingHi ? '<p class="hs-hero-hi">' + esc(p.headingHi) + '</p>' : '') +
-                '<p class="hs-summary">' + esc(p.summary) + '</p></div>' +
+                '</div>' +
 
-                '<div class="hs-flow"><span>📖 Read</span><i>→</i><span>🧠 Think</span><i>→</i><span>❤️ Feel</span><i>→</i><span>🎯 Act</span></div>' +
+                // Today's three steps: I Morning Mantra, II the English paragraph, III Values in Focus.
+                '<ol class="hs-steps">' +
+                ((p.morningMantra || p.morningMantraHi)
+                    ? '<li><span class="hs-step-no">I</span><div><b>Morning Mantra</b>' +
+                      (p.morningMantra ? '<p>' + esc(p.morningMantra) + '</p>' : '') +
+                      (p.morningMantraHi ? '<p class="hs-hi">' + esc(p.morningMantraHi) + '</p>' : '') + '</div></li>'
+                    : '') +
+                (p.summary
+                    ? '<li><span class="hs-step-no">II</span><div><b>' + esc(p.headingEn || 'Today') + '</b>' +
+                      '<p class="hs-step-text">' + esc(p.summary) + '</p></div></li>'
+                    : '') +
+                ((p.valuesInFocus || p.valuesInFocusHi)
+                    ? '<li><span class="hs-step-no">III</span><div><b>Values in Focus</b>' +
+                      (p.valuesInFocus ? '<p>' + esc(p.valuesInFocus) + '</p>' : '') +
+                      (p.valuesInFocusHi ? '<p class="hs-hi">' + esc(p.valuesInFocusHi) + '</p>' : '') + '</div></li>'
+                    : '') +
+                '</ol>' +
 
-                (p.morningMantra ? '<div class="hs-mantra"><b>Morning Mantra</b>' + esc(p.morningMantra) + '</div>' : '') +
-
+                // Read first, then the quiz: both cards are buttons.
                 '<div class="hs-avail">' +
-                '<div class="hs-avail-item ' + (p.pdfAvailable ? 'hs-ok' : 'hs-wait') + '"><i class="bi bi-file-earmark-pdf-fill"></i><div><b>PDF</b>' + (p.pdfAvailable ? 'Ready to read' : 'Not available') + '</div></div>' +
-                '<div class="hs-avail-item ' + (quiz.available ? 'hs-ok' : 'hs-wait') + '"><i class="bi bi-patch-question-fill"></i><div><b>Quiz</b>' +
-                (!quiz.available ? 'No quiz today' : quiz.attempted ? 'Completed' : quiz.totalQuestions + ' question' + (quiz.totalQuestions === 1 ? '' : 's')) + '</div></div></div>';
+                '<button type="button" class="hs-avail-item ' + (p.pdfAvailable ? 'hs-ok' : 'hs-wait') + '" id="hsCardPdf"' + (p.pdfAvailable ? '' : ' disabled') + '>' +
+                '<span class="hs-avail-step">1</span><i class="bi bi-file-earmark-pdf-fill"></i><div><b>Read the PDF</b>' + (p.pdfAvailable ? 'Tap to open' : 'Not available') + '</div></button>' +
+                '<button type="button" class="hs-avail-item ' + (quiz.available ? 'hs-ok' : 'hs-wait') + '" id="hsCardQuiz"' + (quiz.available ? '' : ' disabled') + '>' +
+                '<span class="hs-avail-step">2</span><i class="bi bi-patch-question-fill"></i><div><b>Take the quiz</b>' +
+                (!quiz.available ? 'No quiz today' : quiz.attempted ? 'Completed · see result' : quiz.totalQuestions + ' question' + (quiz.totalQuestions === 1 ? '' : 's')) + '</div></button></div>';
 
             if (quiz.attempted && quiz.result) {
                 var r = quiz.result;
@@ -228,6 +264,11 @@
 
         on('hsRefresh', loadHome);
         on('hsRead', openReader);
+        on('hsCardPdf', openReader);
+        on('hsCardQuiz', function () {
+            var q = state.today.publication.quiz;
+            if (q.attempted) renderResult(q.result, true); else startQuiz();
+        });
         on('hsStart', startQuiz);
         on('hsViewResult', function () { renderResult(state.today.publication.quiz.result, true); });
         on('hsAllHistory', function () { loadHistory(1); });

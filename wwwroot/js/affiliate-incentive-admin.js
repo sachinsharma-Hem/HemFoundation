@@ -392,6 +392,59 @@
         }
     });
     $('afiRetry').addEventListener('click', function () { load(); });
+
+    // ------------------------------------------------------------------
+    // Incentive settings (school rate)
+    // ------------------------------------------------------------------
+    function settingsError(message) {
+        $('afiSettingsError').textContent = message || '';
+        $('afiSettingsError').hidden = !message;
+    }
+
+    $('afiSettings').addEventListener('click', function () {
+        settingsError('');
+        $('afiSchoolRate').value = '';
+        bootstrap.Modal.getOrCreateInstance($('afiSettingsModal')).show();
+
+        fetch(API + '/settings', { headers: authHeaders(), credentials: 'same-origin', cache: 'no-store' })
+            .then(function (r) { return r.json(); })
+            .then(function (json) {
+                if (!json || json.success !== true) throw new Error((json && json.message) || 'Settings could not be loaded.');
+                $('afiSchoolRate').value = json.schoolRate;
+                $('afiSchoolRate').focus();
+            })
+            .catch(function (e) { settingsError(e.message); });
+    });
+
+    $('afiSettingsForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        settingsError('');
+
+        var value = Number($('afiSchoolRate').value);
+        if ($('afiSchoolRate').value === '' || !Number.isFinite(value) || value < 0 || value > 100000) {
+            settingsError('Enter a school rate between ₹0 and ₹1,00,000.');
+            return;
+        }
+
+        var button = $('afiSettingsSave');
+        button.disabled = true;
+
+        fetch(API + '/settings', {
+            method: 'PUT',
+            headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
+            credentials: 'same-origin',
+            body: JSON.stringify({ schoolRate: value })
+        })
+            .then(function (r) { return r.json().catch(function () { return null; }); })
+            .then(function (json) {
+                if (!json || json.success !== true) throw new Error((json && json.message) || 'Settings could not be saved.');
+                bootstrap.Modal.getOrCreateInstance($('afiSettingsModal')).hide();
+                if (window.Swal) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: json.message, showConfirmButton: false, timer: 3500 });
+                load();
+            })
+            .catch(function (e) { settingsError(e.message); })
+            .then(function () { button.disabled = false; });
+    });
     $('afiExport').addEventListener('click', exportCsv);
 
     load();

@@ -180,9 +180,9 @@
                 <div class="kpi-icon"><i class="bi bi-building"></i></div>
                 <span class="kpi-change"><i class="bi bi-arrow-up"></i> Active</span>
             </div>
-            <div class="kpi-title">Fully Active Schools</div>
+            <div class="kpi-title">Schools Fully Active This Month</div>
             <div class="kpi-number"><span class="counter" id="lblActiveSchools">0</span></div>
-            <div class="kpi-bottom"><span>Rate: ₹100 / school</span><strong id="lblSchoolIncentive">₹0</strong></div>
+            <div class="kpi-bottom"><span>Rate: <span id="lblSchoolRate">₹200</span> / school</span><strong id="lblSchoolIncentive">₹0</strong></div>
             <div class="kpi-progress"><span style="width:5%;"></span></div>
         </div>
 
@@ -288,7 +288,7 @@
                         <b id="calcStudents">₹0</b>
                     </div>
                     <div class="calculation-item">
-                        <div><strong>Active Schools</strong><small id="subTextSchools">0 × ₹100</small></div>
+                        <div><strong>Schools fully active this month</strong><small id="subTextSchools">0 × ₹200</small></div>
                         <b id="calcSchools">₹0</b>
                     </div>
                     <div class="calculation-item">
@@ -411,6 +411,7 @@
         if (!monthSelect) return;
 
         let months = [];        // newest first, as sent by the server
+        let schoolRate = 200;   // set by the admin; sent by the server
         let chartInstance = null;
 
         function drawProjectChart(counts) {
@@ -477,7 +478,7 @@
 
             safeSetText("lblActiveSchools", formatNumber(m.activeSchools));
             safeSetText("lblSchoolIncentive", formatCurrency(m.schoolIncentive));
-            safeSetText("subTextSchools", `${safeNumber(m.activeSchools)} × ₹100`);
+            safeSetText("subTextSchools", `${safeNumber(m.activeSchools)} × ${formatCurrency(schoolRate)}`);
             safeSetText("calcSchools", formatCurrency(m.schoolIncentive));
 
             safeSetText("lblActiveTeachers", formatNumber(m.activeTeachers));
@@ -617,6 +618,8 @@
                 }
 
                 months = Array.isArray(json.months) ? json.months : [];
+                if (json.rates && json.rates.school != null) schoolRate = safeNumber(json.rates.school);
+                safeSetText("lblSchoolRate", formatCurrency(schoolRate));
 
                 monthSelect.innerHTML = months.map(m => `<option value="${esc(m.key)}">${esc(m.label)}</option>`).join("");
 

@@ -33,7 +33,6 @@ namespace HemFoundation.Services.AffiliateIncentive
         public decimal TeacherIncentive { get; set; }
         public int TotalCertificates { get; set; }
         public decimal CertificateIncentive { get; set; }
-        public decimal BaseIncentive { get; set; }
 
         // Evaluated projects (same rule the incentive page has always used).
         public int Green { get; set; }
@@ -44,7 +43,13 @@ namespace HemFoundation.Services.AffiliateIncentive
         public int EvaluatedProjects => Green + Orange + Blue + Yellow + Red;
         public decimal ProjectIncentive { get; set; }
 
-        public decimal TotalIncentive => BaseIncentive + ProjectIncentive;
+        /// <summary>
+        /// Students + teachers + certificates (database function) + schools
+        /// that became fully active this month x the admin's school rate +
+        /// evaluated projects.
+        /// </summary>
+        public decimal TotalIncentive =>
+            StudentIncentive + TeacherIncentive + CertificateIncentive + SchoolIncentive + ProjectIncentive;
         public DateTime ComputedAt { get; set; }
 
         public int Key => Year * 100 + Month;
@@ -216,10 +221,13 @@ namespace HemFoundation.Services.AffiliateIncentive
             var now = Now;
             var currentMonth = new DateTime(now.Year, now.Month, 1);
 
+            bool monthlySchools = await RangeFunctionAvailableAsync();
+            decimal schoolRate = await GetSchoolRateAsync();
+
             // 1. Stored months that are final (calculated after the month ended).
             var stored = refresh
                 ? new Dictionary<(string, int, int), string>()
-                : await ReadStoredMonthsAsync(affiliates);
+                : await ReadStoredMonthsAsync(affiliates, monthlySchools);
 
             // 1b. Months that are not stored, not final or not fresh (or
             //     everything, on a refresh): one pass per affiliate through
@@ -227,7 +235,7 @@ namespace HemFoundation.Services.AffiliateIncentive
             //     installed. It gives the same figures as the per-month
             //     function without rescanning the activity logs for each month.
             if (await BackfillClosedMonthsAsync(affiliates, stored, currentMonth, refresh))
-                stored = await ReadStoredMonthsAsync(affiliates);
+                stored = await ReadStoredMonthsAsync(affiliates, monthlySchools);
 
             var result = new Dictionary<int, List<MonthlyIncentive>>();
             var toCompute = new List<(AffiliateInfo Affiliate, int Year, int Month)>();
@@ -266,6 +274,10 @@ namespace HemFoundation.Services.AffiliateIncentive
 
             FunctionCalls = toCompute.Count;
 
+            // School incentive uses the rate set by the admin.
+            foreach (var month in result.Values.SelectMany(m => m))
+                month.SchoolIncentive = month.ActiveSchools * schoolRate;
+
             // 3. Evaluated projects: one aggregate query for everyone.
             var projects = await GetProjectCountsAsync(affiliates);
 
@@ -294,6 +306,81 @@ namespace HemFoundation.Services.AffiliateIncentive
         /// <summary>(affiliate, month) pairs that had to go through the database function.</summary>
         public int FunctionCalls { get; private set; }
 
+        // =====================================================================
+        // Settings (Admin Incentive Report > Incentive settings)
+        // =====================================================================
+
+        public const string SchoolRateKey = "school_rate";
+
+        private decimal? _schoolRate;
+
+        private decimal DefaultSchoolRate =>
+            _config.GetValue<decimal?>("AffiliateIncentive:DefaultSchoolRate") ?? 200m;
+
+        /// <summary>Incentive per school that became fully active in the month.</summary>
+        public async Task<decimal> GetSchoolRateAsync()
+        {
+            if (_schoolRate.HasValue) return _schoolRate.Value;
+
+            decimal rate = DefaultSchoolRate;
+
+            try
+            {
+                await using var conn = new NpgsqlConnection(ConnectionString);
+                await conn.OpenAsync();
+
+                await using var cmd = new NpgsqlCommand(
+                    """
+                    SELECT CASE WHEN to_regclass('public.affiliate_incentive_settings') IS NULL THEN NULL
+                           ELSE (SELECT setting_value FROM public.affiliate_incentive_settings WHERE setting_key = @key)
+                           END
+                    """, conn);
+                cmd.Parameters.AddWithValue("key", SchoolRateKey);
+
+                DatabaseCalls++;
+                var value = await cmd.ExecuteScalarAsync() as string;
+
+                if (decimal.TryParse(value, System.Globalization.NumberStyles.Number,
+                        System.Globalization.CultureInfo.InvariantCulture, out var stored) && stored >= 0)
+                    rate = stored;
+            }
+            catch (PostgresException ex)
+            {
+                _logger.LogWarning(ex, "Affiliate incentive: settings could not be read; using the default school rate");
+            }
+
+            _schoolRate = rate;
+            return rate;
+        }
+
+        /// <summary>Saves the school rate. Returns false when the settings table is missing.</summary>
+        public async Task<bool> SetSchoolRateAsync(decimal rate, string? updatedBy)
+        {
+            await using var conn = new NpgsqlConnection(ConnectionString);
+            await conn.OpenAsync();
+
+            await using (var check = new NpgsqlCommand(
+                             "SELECT to_regclass('public.affiliate_incentive_settings') IS NOT NULL", conn))
+            {
+                if (!(bool)(await check.ExecuteScalarAsync() ?? false)) return false;
+            }
+
+            await using var cmd = new NpgsqlCommand(
+                """
+                INSERT INTO public.affiliate_incentive_settings (setting_key, setting_value, updated_at, updated_by)
+                VALUES (@key, @value, now(), @by)
+                ON CONFLICT (setting_key) DO UPDATE
+                SET setting_value = EXCLUDED.setting_value, updated_at = now(), updated_by = EXCLUDED.updated_by
+                """, conn);
+            cmd.Parameters.AddWithValue("key", SchoolRateKey);
+            cmd.Parameters.AddWithValue("value", rate.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture));
+            cmd.Parameters.AddWithValue("by", (object?)updatedBy ?? DBNull.Value);
+            await cmd.ExecuteNonQueryAsync();
+
+            _schoolRate = rate;
+            return true;
+        }
+
         /// <summary>Affiliates whose missing months were calculated in one pass.</summary>
         public int RangeCalls { get; private set; }
 
@@ -314,8 +401,17 @@ namespace HemFoundation.Services.AffiliateIncentive
                 await using var conn = new NpgsqlConnection(ConnectionString);
                 await conn.OpenAsync();
 
+                // The month-wise school version of the function needs its table
+                // and column (Data/Scripts/RunOnce_Update_2026_11_20.sql).
                 await using var cmd = new NpgsqlCommand(
-                    "SELECT to_regprocedure('public.refresh_incentive_dashboard_range(text,date,date,boolean)') IS NOT NULL",
+                    """
+                    SELECT to_regprocedure('public.refresh_incentive_dashboard_range(text,date,date,boolean)') IS NOT NULL
+                       AND to_regclass('public.affiliate_school_activation') IS NOT NULL
+                       AND EXISTS (SELECT 1 FROM information_schema.columns
+                                   WHERE table_schema = 'public'
+                                     AND table_name = 'incentive_dashboard_cache'
+                                     AND column_name = 'active_schools_in_month')
+                    """,
                     conn);
 
                 DatabaseCalls++;
@@ -402,7 +498,7 @@ namespace HemFoundation.Services.AffiliateIncentive
         /// The row is returned in the same JSON shape as the function.
         /// </summary>
         private async Task<Dictionary<(string, int, int), string>> ReadStoredMonthsAsync(
-            IReadOnlyCollection<AffiliateInfo> affiliates)
+            IReadOnlyCollection<AffiliateInfo> affiliates, bool monthlySchools)
         {
             var result = new Dictionary<(string, int, int), string>();
             if (affiliates.Count == 0) return result;
@@ -422,10 +518,12 @@ namespace HemFoundation.Services.AffiliateIncentive
                                'certificateIncentive', c.certificate_incentive,
                                'totalIncentive', c.total_incentive,
                                'history', c.history,
-                               'updatedAt', c.updated_at))::text
+                               'updatedAt', c.updated_at
+                               {0}))::text
                 FROM public.incentive_dashboard_cache c
                 WHERE c.aspnet_user_id = ANY(@uids)
                   AND c.month BETWEEN 1 AND 12
+                  {1}
                   AND (c.updated_at >= (make_date(c.year, c.month, 1) + interval '1 month')
                        OR c.updated_at >= now() - interval '10 minutes')
                 """;
@@ -435,7 +533,14 @@ namespace HemFoundation.Services.AffiliateIncentive
                 await using var conn = new NpgsqlConnection(ConnectionString);
                 await conn.OpenAsync();
 
-                await using var cmd = new NpgsqlCommand(sql, conn);
+                // With month-wise schools available, a row without that count
+                // is treated as missing and recalculated.
+                string query = monthlySchools
+                    ? string.Format(sql, ", 'activeSchoolsInMonth', c.active_schools_in_month",
+                                    "AND c.active_schools_in_month IS NOT NULL")
+                    : string.Format(sql, "", "");
+
+                await using var cmd = new NpgsqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("uids", affiliates.Select(a => a.AspNetUserId).Distinct().ToArray());
 
                 DatabaseCalls++;
@@ -534,34 +639,18 @@ namespace HemFoundation.Services.AffiliateIncentive
 
                 target.ActiveStudents = (int)Number(data, "activeStudents");
                 target.StudentIncentive = Number(data, "studentIncentive");
-                target.ActiveSchools = (int)Number(data, "activeSchools");
-                target.SchoolIncentive = Number(data, "schoolIncentive");
                 target.ActiveTeachers = (int)Number(data, "activeTeachers");
                 target.TeacherIncentive = Number(data, "teacherIncentive");
                 target.TotalCertificates = (int)Number(data, "totalCertificates");
                 target.CertificateIncentive = Number(data, "certificateIncentive");
 
-                decimal total = target.StudentIncentive + target.SchoolIncentive +
-                                target.TeacherIncentive + target.CertificateIncentive;
-
-                // The database function reports two different totals for a
-                // month: "totalIncentive" includes the school incentive, the
-                // last "history" entry does not. The incentive page has always
-                // shown the history figure, so that stays the default; set
-                // AffiliateIncentive:IncludeSchoolIncentiveInTotal = true to
-                // count the school incentive in monthly and lifetime totals.
-                bool includeSchools = _config.GetValue<bool>("AffiliateIncentive:IncludeSchoolIncentiveInTotal");
-
-                if (!includeSchools &&
-                    data.TryGetProperty("history", out var history) &&
-                    history.ValueKind == JsonValueKind.Array && history.GetArrayLength() > 0)
-                {
-                    var last = history[history.GetArrayLength() - 1];
-                    if (last.ValueKind == JsonValueKind.Object && last.TryGetProperty("totalIncentive", out _))
-                        total = Number(last, "totalIncentive");
-                }
-
-                target.BaseIncentive = total;
+                // Schools: those that became fully active IN THIS MONTH, when
+                // the month-wise count is available. Without it (update script
+                // not run yet) the database function's own count is used.
+                target.ActiveSchools = data.TryGetProperty("activeSchoolsInMonth", out var inMonth) &&
+                                       inMonth.ValueKind == JsonValueKind.Number
+                    ? inMonth.GetInt32()
+                    : (int)Number(data, "activeSchools");
 
                 if (data.TryGetProperty("updatedAt", out var updated) && updated.ValueKind == JsonValueKind.String &&
                     DateTime.TryParse(updated.GetString(), System.Globalization.CultureInfo.InvariantCulture,

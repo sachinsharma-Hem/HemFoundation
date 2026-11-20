@@ -127,14 +127,6 @@
                 <h3 class="hsa-card-title"><i class="bi bi-chat-quote"></i> Default text</h3>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label for="hsaMMantraEn">Morning Mantra (English)</label>
-                        <textarea class="form-control" id="hsaMMantraEn" rows="3"></textarea>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="hsaMMantraHi">Morning Mantra (Hindi)</label>
-                        <textarea class="form-control" id="hsaMMantraHi" rows="3"></textarea>
-                    </div>
-                    <div class="col-md-6">
                         <label for="hsaMValuesEn">Values in Focus (English)</label>
                         <textarea class="form-control" id="hsaMValuesEn" rows="2"></textarea>
                     </div>
@@ -150,9 +142,18 @@
                         <label for="hsaMFooterLink">Footer link</label>
                         <input type="text" class="form-control" id="hsaMFooterLink">
                     </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="hsaMHindiBg">
+                            <label class="form-check-label" for="hsaMHindiBg" style="color:var(--hsa-text);font-size:.88rem;font-weight:500">
+                                Show a coloured background behind the Hindi heading in the PDF
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div class="hsa-hint">
-                    Used by every publication unless it sets its own Morning Mantra / Values in Focus.
+                    The Morning Mantra is entered separately for each publication.
+                    Values in Focus here is the default, used when a publication leaves it empty.
                     Published PDFs do not change; today's and upcoming publications are marked "PDF outdated" until regenerated.
                 </div>
             </div>
@@ -228,7 +229,6 @@
                 <div class="hsa-subtabs">
                     <button type="button" class="hsa-subtab active" data-hsa-sub="content">Details &amp; Content</button>
                     <button type="button" class="hsa-subtab" data-hsa-sub="quiz">Quiz <span id="hsaQCount"></span></button>
-                    <button type="button" class="hsa-subtab" data-hsa-sub="mantra">Mantra &amp; Values</button>
                 </div>
 
                 <form id="hsaEditorForm" class="hsa-form" novalidate autocomplete="off">
@@ -260,6 +260,21 @@
                         </div>
 
                         <div class="hsa-card">
+                            <h3 class="hsa-card-title"><i class="bi bi-sunrise"></i> Morning Mantra</h3>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="hsaMantraEn">Morning Mantra (English)</label>
+                                    <textarea class="form-control" id="hsaMantraEn" rows="3" placeholder="Today's Morning Mantra in English"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="hsaMantraHi">Morning Mantra (Hindi)</label>
+                                    <textarea class="form-control" id="hsaMantraHi" rows="3" placeholder="आज का मॉर्निंग मंत्र हिंदी में"></textarea>
+                                </div>
+                            </div>
+                            <div class="hsa-hint">Written for this publication only. If both are empty, the PDF leaves out the Morning Mantra box.</div>
+                        </div>
+
+                        <div class="hsa-card">
                             <h3 class="hsa-card-title"><i class="bi bi-stars"></i> Celebrations Today</h3>
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -278,45 +293,45 @@
                                     <label for="hsaContentHi">Content (Hindi)</label>
                                     <textarea class="form-control" id="hsaContentHi" rows="9"></textarea>
                                 </div>
+                                <div class="col-12">
+                                    <label for="hsaImage">Picture next to the English text (optional)</label>
+                                    <div class="hsa-image-row">
+                                        <div class="hsa-image-thumb" id="hsaImageThumb"><i class="bi bi-image"></i></div>
+                                        <div class="flex-grow-1">
+                                            <input type="file" class="form-control form-control-sm" id="hsaImage" accept=".png,.jpg,.jpeg,.webp">
+                                            <div class="hsa-hint">PNG, JPG or WEBP, up to 2 MB. Shown small, at the right of the English paragraph.</div>
+                                            <button type="button" class="btn hsa-btn hsa-btn-light mt-2" id="hsaImageRemove" hidden><i class="bi bi-trash"></i> Remove picture</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+                        </div>
+
+                        <div class="hsa-card">
+                            <h3 class="hsa-card-title"><i class="bi bi-gem"></i> Values in Focus</h3>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="hsaValuesEn">Values in Focus (English)</label>
+                                    <textarea class="form-control" id="hsaValuesEn" rows="2" placeholder="e.g. Compassion, Respect, Awareness"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="hsaValuesHi">Values in Focus (Hindi)</label>
+                                    <textarea class="form-control" id="hsaValuesHi" rows="2" placeholder="जैसे करुणा, सम्मान, जागरूकता"></textarea>
+                                </div>
+                            </div>
+                            <div class="hsa-hint">Leave empty to use the default from Master Settings.</div>
                         </div>
                     </div>
 
                     <div class="hsa-subpanel" data-hsa-subpanel="quiz">
                         <div class="hsa-alert hsa-alert-info">
                             <i class="bi bi-info-circle"></i>
-                            <div>The question text is printed in the PDF under "Day's Challenge". Options, the correct answer and the explanation are used only in the online quiz. Select the radio button next to the correct option.</div>
+                            <div>The question text is printed in the PDF under "Day's Challenge". Options and the correct answer are used only in the online quiz. Select the radio button next to the correct option.</div>
                         </div>
                         <div id="hsaQuestions"></div>
                         <button type="button" class="btn hsa-btn hsa-btn-light" id="hsaAddQ"><i class="bi bi-plus-lg"></i> Add question</button>
                     </div>
 
-                    <div class="hsa-subpanel" data-hsa-subpanel="mantra">
-                        <div class="hsa-alert hsa-alert-info">
-                            <i class="bi bi-info-circle"></i>
-                            <div>Optional. Leave a field empty to use the default from Master Settings for this publication.</div>
-                        </div>
-                        <div class="hsa-card">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="hsaMantraEn">Morning Mantra (English)</label>
-                                    <textarea class="form-control" id="hsaMantraEn" rows="3"></textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="hsaMantraHi">Morning Mantra (Hindi)</label>
-                                    <textarea class="form-control" id="hsaMantraHi" rows="3"></textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="hsaValuesEn">Values in Focus (English)</label>
-                                    <textarea class="form-control" id="hsaValuesEn" rows="2"></textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="hsaValuesHi">Values in Focus (Hindi)</label>
-                                    <textarea class="form-control" id="hsaValuesHi" rows="2"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
