@@ -217,7 +217,7 @@
             main += '<div class="hs-hero"><div class="hs-hero-top">' +
                 "<span class=\"hs-eyebrow\">Today's publication</span>" +
                 '<span class="hs-pill hs-pill-purple"><i class="bi bi-calendar3"></i> ' + esc(p.date) + '</span></div>' +
-                (p.pictureUrl ? '<img class="hs-hero-pic" src="' + esc(p.pictureUrl) + '" alt="">' : '') +
+                (p.pictureUrl ? '<img class="hs-hero-pic" src="' + esc(p.pictureUrl) + '" alt="" onerror="this.remove()">' : '') +
                 '<h2>' + esc(p.title) + '</h2>' +
                 (p.headingHi ? '<p class="hs-hero-hi">' + esc(p.headingHi) + '</p>' : '') +
                 '</div>' +

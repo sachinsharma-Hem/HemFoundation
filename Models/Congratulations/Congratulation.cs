@@ -26,6 +26,11 @@ namespace HemFoundation.Models.Congratulations
         [Column("occasion_year")] public short? OccasionYear { get; set; }
         [Column("mobile")] public string? Mobile { get; set; }
         [Column("notes")] public string? Notes { get; set; }
+        // Optional details (Data/Scripts/RunOnce_Update_2026_11_24.sql).
+        [Column("email")] public string? Email { get; set; }
+        [Column("address")] public string? Address { get; set; }
+        [Column("city")] public string? City { get; set; }
+        [Column("pincode")] public string? Pincode { get; set; }
         [Column("is_active")] public bool IsActive { get; set; } = true;
         [Column("created_at")] public DateTime CreatedAt { get; set; }
         [Column("created_by")] public string? CreatedBy { get; set; }

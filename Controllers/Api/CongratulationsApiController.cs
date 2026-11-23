@@ -108,6 +108,10 @@ namespace HemFoundation.Controllers.Api
                 dayMonth = new DateTime(2000, c.OccasionMonth, c.OccasionDay).ToString("dd MMM", Inv),
                 c.Mobile,
                 c.Notes,
+                c.Email,
+                c.Address,
+                c.City,
+                c.Pincode,
                 nextDate = next.ToString("yyyy-MM-dd"),
                 nextLabel = Label(next),
                 daysLeft = (int)(next - today).TotalDays
@@ -143,6 +147,33 @@ namespace HemFoundation.Controllers.Api
             public bool YearKnown { get; set; } = true;
             public string? Mobile { get; set; }
             public string? Notes { get; set; }
+            // Optional details.
+            public string? Email { get; set; }
+            public string? Address { get; set; }
+            public string? City { get; set; }
+            public string? Pincode { get; set; }
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex EmailPattern =
+            new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+        /// <summary>Copies the optional details; with onlyFilled, empty values keep what is saved.</summary>
+        private static void ApplyDetails(CongratulationContact c, ContactSaveDto m, bool onlyFilled = false)
+        {
+            void Set(string? value, Action<string?> assign)
+            {
+                var v = Clean(value);
+                if (v != null || !onlyFilled) assign(v);
+            }
+
+            Set(m.Mobile, v => c.Mobile = v);
+            Set(m.Notes, v => c.Notes = v);
+            Set(m.Email, v => c.Email = v);
+            Set(m.Address, v => c.Address = v);
+            Set(m.City, v => c.City = v);
+            Set(m.Pincode, v => c.Pincode = v);
         }
 
         private static string? ValidateContact(ContactSaveDto m, out string occasion, out DateTime date)
@@ -155,7 +186,17 @@ namespace HemFoundation.Controllers.Api
             if (occasion.Length == 0) return "Choose Birthday or Anniversary.";
             if (!DateTime.TryParseExact(m.Date, "yyyy-MM-dd", Inv, DateTimeStyles.None, out date))
                 return "Please choose a valid date.";
-            if ((m.Mobile?.Length ?? 0) > 20) return "The mobile number is too long.";
+            if ((m.Mobile?.Trim().Length ?? 0) > 20) return "The mobile number is too long.";
+            if ((m.Notes?.Trim().Length ?? 0) > 250) return "The notes must be 250 characters or fewer.";
+
+            var email = Clean(m.Email);
+            if (email != null && (email.Length > 150 || !EmailPattern.IsMatch(email))) return "Please enter a valid e-mail address.";
+            if ((m.Address?.Trim().Length ?? 0) > 300) return "The address must be 300 characters or fewer.";
+            if ((m.City?.Trim().Length ?? 0) > 80) return "The city must be 80 characters or fewer.";
+
+            var pin = Clean(m.Pincode);
+            if (pin != null && (pin.Length > 10 || !pin.All(ch => char.IsDigit(ch) || ch == ' ')))
+                return "The PIN code must contain digits only.";
             return null;
         }
 
@@ -178,7 +219,9 @@ namespace HemFoundation.Controllers.Api
             {
                 var pattern = "%" + search.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
                 query = query.Where(c => EF.Functions.ILike(c.FullName, pattern, "\\")
-                                         || EF.Functions.ILike(c.Mobile ?? "", pattern, "\\"));
+                                         || EF.Functions.ILike(c.Mobile ?? "", pattern, "\\")
+                                         || EF.Functions.ILike(c.Email ?? "", pattern, "\\")
+                                         || EF.Functions.ILike(c.City ?? "", pattern, "\\"));
             }
 
             // Sorted by the next date it comes round, so the nearest is first.
@@ -236,8 +279,7 @@ namespace HemFoundation.Controllers.Api
             contact.OccasionDay = (short)date.Day;
             contact.OccasionMonth = (short)date.Month;
             contact.OccasionYear = model.YearKnown ? (short)date.Year : null;
-            contact.Mobile = string.IsNullOrWhiteSpace(model.Mobile) ? null : model.Mobile.Trim();
-            contact.Notes = string.IsNullOrWhiteSpace(model.Notes) ? null : model.Notes.Trim();
+            ApplyDetails(contact, model);
 
             await _db.SaveChangesAsync();
 
@@ -261,6 +303,335 @@ namespace HemFoundation.Controllers.Api
             await _db.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Contact removed from the list." });
+        }
+
+        // ---------------------------------------------------------------
+        // Excel import / template
+        // ---------------------------------------------------------------
+
+        private const long MaxImportBytes = 5 * 1024 * 1024;
+        private const int MaxImportRows = 5000;
+
+        private static readonly string[] TemplateHeaders =
+            { "Name", "Occasion", "Date", "Mobile", "Email", "Address", "City", "Pincode", "Notes" };
+
+        /// <summary>Header text → field. Spaces, dots and case are ignored.</summary>
+        private static readonly Dictionary<string, string> HeaderAliases = new()
+        {
+            ["name"] = "Name", ["fullname"] = "Name", ["naam"] = "Name", ["nameoncard"] = "Name", ["नाम"] = "Name",
+            ["occasion"] = "Occasion", ["type"] = "Occasion", ["event"] = "Occasion", ["अवसर"] = "Occasion",
+            ["date"] = "Date", ["dob"] = "Date", ["dateofbirth"] = "Date", ["birthdate"] = "Date", ["birthday"] = "Date",
+            ["anniversary"] = "Date", ["anniversarydate"] = "Date", ["occasiondate"] = "Date", ["तारीख"] = "Date", ["तिथि"] = "Date",
+            ["mobile"] = "Mobile", ["mobileno"] = "Mobile", ["mobilenumber"] = "Mobile", ["phone"] = "Mobile", ["phoneno"] = "Mobile",
+            ["contact"] = "Mobile", ["contactno"] = "Mobile", ["मोबाइल"] = "Mobile",
+            ["email"] = "Email", ["emailid"] = "Email", ["emailaddress"] = "Email", ["mail"] = "Email",
+            ["address"] = "Address", ["पता"] = "Address",
+            ["city"] = "City", ["शहर"] = "City",
+            ["pincode"] = "Pincode", ["pin"] = "Pincode", ["postalcode"] = "Pincode", ["zip"] = "Pincode", ["zipcode"] = "Pincode",
+            ["notes"] = "Notes", ["note"] = "Notes", ["remarks"] = "Notes", ["designation"] = "Notes"
+        };
+
+        private static readonly string[] DateFormatsWithYear =
+        {
+            "dd-MM-yyyy", "d-M-yyyy", "dd/MM/yyyy", "d/M/yyyy", "dd.MM.yyyy", "d.M.yyyy", "yyyy-MM-dd", "yyyy/MM/dd",
+            "dd MMM yyyy", "d MMM yyyy", "dd-MMM-yyyy", "d-MMM-yyyy", "dd MMMM yyyy", "d MMMM yyyy", "MMM d, yyyy", "MMMM d, yyyy",
+            "dd-MM-yy", "dd/MM/yy"
+        };
+
+        private static readonly string[] DateFormatsNoYear =
+            { "dd-MM", "d-M", "dd/MM", "d/M", "dd.MM", "d.M", "dd MMM", "d MMM", "dd-MMM", "d-MMM", "dd MMMM", "d MMMM", "MMM d", "MMMM d" };
+
+        private static string? OccasionFromText(string? text)
+        {
+            var t = (text ?? "").Trim().ToLowerInvariant();
+            if (t.Length == 0) return null;
+            if (t.Contains("birth") || t.Contains("जन्म") || t == "b" || t == "bday") return CongratulationOccasion.Birthday;
+            if (t.Contains("anniv") || t.Contains("marriage") || t.Contains("wedding") || t.Contains("वर्ष") || t.Contains("शादी") || t.Contains("विवाह") || t == "a")
+                return CongratulationOccasion.Anniversary;
+            return null;
+        }
+
+        /// <summary>Reads a date cell: a real Excel date, or text such as 25-11-1980 or 25 Nov (no year).</summary>
+        private static bool TryReadDate(ClosedXML.Excel.IXLCell cell, out DateTime date, out bool yearKnown)
+        {
+            date = default;
+            yearKnown = true;
+
+            if (cell.DataType == ClosedXML.Excel.XLDataType.DateTime && cell.TryGetValue(out DateTime d))
+            {
+                date = d.Date;
+                return true;
+            }
+
+            if (cell.DataType == ClosedXML.Excel.XLDataType.Number && cell.TryGetValue(out double serial) && serial > 0 && serial < 2958466)
+            {
+                date = DateTime.FromOADate(serial).Date;
+                return true;
+            }
+
+            var text = cell.GetFormattedString().Trim();
+            if (text.Length == 0) return false;
+
+            if (DateTime.TryParseExact(text, DateFormatsWithYear, Inv, DateTimeStyles.AllowWhiteSpaces, out date)) return true;
+
+            if (DateTime.TryParseExact(text, DateFormatsNoYear, Inv, DateTimeStyles.AllowWhiteSpaces, out var noYear))
+            {
+                yearKnown = false;
+                date = new DateTime(2000, noYear.Month, noYear.Day);   // 2000 is a leap year, so 29 Feb is kept
+                return true;
+            }
+
+            return false;
+        }
+
+        private static string CellText(ClosedXML.Excel.IXLCell cell)
+        {
+            if (cell.DataType == ClosedXML.Excel.XLDataType.Number && cell.TryGetValue(out double n))
+                return n.ToString("0.##########", Inv);   // mobile numbers and PIN codes without "E+" or ".0"
+            return cell.GetFormattedString().Trim();
+        }
+
+        [HttpGet("contacts/template")]
+        public IActionResult DownloadTemplate()
+        {
+            using var wb = new ClosedXML.Excel.XLWorkbook();
+            var ws = wb.AddWorksheet("Contacts");
+
+            for (int i = 0; i < TemplateHeaders.Length; i++)
+            {
+                var h = ws.Cell(1, i + 1);
+                h.Value = TemplateHeaders[i];
+                h.Style.Font.Bold = true;
+                h.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.FromHtml("#FDE2E3");
+            }
+
+            object[][] samples =
+            {
+                new object[] { "डॉ. चेतना जी गट्टानी", "Birthday", new DateTime(1975, 11, 23), "9826012345", "chetna@example.com", "12, MG Road", "Indore", "452001", "Trustee" },
+                new object[] { "श्री एवं श्रीमती राजेश शर्मा जी", "Anniversary", new DateTime(1998, 11, 23), "9893011111", "", "", "Bhopal", "", "" },
+                new object[] { "Mr. Rohan Gupta", "Birthday", "29-11", "", "", "", "", "", "Year not known: write only day-month" }
+            };
+
+            for (int r = 0; r < samples.Length; r++)
+                for (int c = 0; c < samples[r].Length; c++)
+                {
+                    var cell = ws.Cell(r + 2, c + 1);
+                    switch (samples[r][c])
+                    {
+                        case DateTime dt: cell.Value = dt; cell.Style.DateFormat.Format = "dd-mm-yyyy"; break;
+                        default: cell.SetValue(samples[r][c]?.ToString() ?? ""); break;
+                    }
+                }
+
+            ws.Column(4).Style.NumberFormat.Format = "@";   // mobile as text
+            ws.Column(8).Style.NumberFormat.Format = "@";   // PIN code as text
+            ws.Columns().AdjustToContents();
+            ws.SheetView.FreezeRows(1);
+
+            var help = wb.AddWorksheet("How to fill");
+            string[] lines =
+            {
+                "How to fill the Contacts sheet",
+                "",
+                "Name and Occasion and Date are required. All other columns are optional.",
+                "Occasion: Birthday or Anniversary (जन्मदिन / वर्षगाँठ also works).",
+                "Date: 25-11-1980, 25/11/1980 or 25 Nov 1980. If the year is not known, write only 25-11 or 25 Nov.",
+                "Mobile, Email, Address, City, Pincode, Notes: optional.",
+                "A person already in the list (same name, occasion and date) is not added twice; empty details are filled in.",
+                "Keep the first row (the column names). Delete the sample rows before uploading.",
+                "Up to 5,000 rows, file size up to 5 MB, .xlsx format."
+            };
+            for (int i = 0; i < lines.Length; i++) help.Cell(i + 1, 1).Value = lines[i];
+            help.Cell(1, 1).Style.Font.Bold = true;
+            help.Column(1).Width = 110;
+
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Congratulations-Contacts-Template.xlsx");
+        }
+
+        [HttpPost("contacts/import")]
+        [RequestSizeLimit(MaxImportBytes + 1024 * 1024)]
+        public async Task<IActionResult> ImportContacts(IFormFile? file)
+        {
+            if (file == null || file.Length == 0) return Fail(400, "Please choose an Excel file (.xlsx).");
+            if (file.Length > MaxImportBytes) return Fail(400, "The file must be 5 MB or smaller.");
+            if (!string.Equals(Path.GetExtension(file.FileName), ".xlsx", StringComparison.OrdinalIgnoreCase))
+                return Fail(400, "Only .xlsx files can be uploaded. In Excel use File → Save As → Excel Workbook (.xlsx).");
+
+            ClosedXML.Excel.XLWorkbook wb;
+            try
+            {
+                using var ms = new MemoryStream();
+                await file.CopyToAsync(ms);
+                ms.Position = 0;
+                wb = new ClosedXML.Excel.XLWorkbook(ms);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Congratulations import: unreadable file");
+                return Fail(400, "The file could not be read. Please upload a valid .xlsx file.");
+            }
+
+            using (wb)
+            {
+                var ws = wb.Worksheets.FirstOrDefault(w => w.Name.Equals("Contacts", StringComparison.OrdinalIgnoreCase)) ?? wb.Worksheets.First();
+                var used = ws.RangeUsed();
+                if (used == null) return Fail(400, "The sheet is empty.");
+
+                int firstRow = used.FirstRow().RowNumber(), lastRow = used.LastRow().RowNumber();
+                int lastCol = used.LastColumn().ColumnNumber();
+
+                // Map the header row.
+                var columns = new Dictionary<string, int>();
+                for (int c = 1; c <= lastCol; c++)
+                {
+                    var key = new string(ws.Cell(firstRow, c).GetFormattedString().Trim().ToLowerInvariant()
+                        .Where(ch => !char.IsWhiteSpace(ch) && ch != '.' && ch != '_' && ch != '-' && ch != '/' && ch != '*').ToArray());
+                    if (HeaderAliases.TryGetValue(key, out var field) && !columns.ContainsKey(field)) columns[field] = c;
+                }
+
+                if (!columns.ContainsKey("Name") || !columns.ContainsKey("Date"))
+                    return Fail(400, "The first row must have the column names. Name and Date are required (download the sample file).");
+                if (lastRow - firstRow > MaxImportRows) return Fail(400, $"Up to {MaxImportRows:N0} rows can be uploaded at a time.");
+
+                string Text(int row, string field) => columns.TryGetValue(field, out var c) ? CellText(ws.Cell(row, c)) : "";
+
+                var existing = await _db.CongratulationContacts.Where(x => x.IsActive).ToListAsync();
+                string Key(string name, string occ, int day, int month) => $"{name.Trim().ToLowerInvariant()}|{occ}|{day}|{month}";
+                var byKey = new Dictionary<string, CongratulationContact>();
+                foreach (var x in existing) byKey.TryAdd(Key(x.FullName, x.Occasion, x.OccasionDay, x.OccasionMonth), x);
+
+                int added = 0, updated = 0, empty = 0;
+                var errors = new List<object>();
+                int errorCount = 0;
+                var now = _clock.Now;
+
+                for (int row = firstRow + 1; row <= lastRow; row++)
+                {
+                    var name = Text(row, "Name");
+                    var occText = Text(row, "Occasion");
+                    var dateCell = ws.Cell(row, columns["Date"]);
+
+                    if (name.Length == 0 && occText.Length == 0 && dateCell.IsEmpty()) { empty++; continue; }
+
+                    void Error(string message)
+                    {
+                        errorCount++;
+                        if (errors.Count < 100) errors.Add(new { row, name, message });
+                    }
+
+                    // Without an Occasion column every row is a birthday.
+                    var occasion = columns.ContainsKey("Occasion") ? OccasionFromText(occText) : CongratulationOccasion.Birthday;
+                    if (occasion == null) { Error("Occasion must be Birthday or Anniversary."); continue; }
+                    if (!TryReadDate(dateCell, out var date, out var yearKnown)) { Error("The date could not be read (use 25-11-1980 or 25-11)."); continue; }
+                    if (date.Year < 1900 || date.Year > _clock.Today.Year + 1) { yearKnown = false; date = new DateTime(2000, date.Month, date.Day); }
+
+                    var dto = new ContactSaveDto
+                    {
+                        Name = name, Occasion = occasion, Date = date.ToString("yyyy-MM-dd", Inv), YearKnown = yearKnown,
+                        Mobile = Text(row, "Mobile"), Email = Text(row, "Email"), Address = Text(row, "Address"),
+                        City = Text(row, "City"), Pincode = Text(row, "Pincode"), Notes = Text(row, "Notes")
+                    };
+
+                    var error = ValidateContact(dto, out _, out _);
+                    if (error != null) { Error(error); continue; }
+
+                    var key = Key(name, occasion, date.Day, date.Month);
+                    if (byKey.TryGetValue(key, out var found))
+                    {
+                        // Already in the list: fill in the details given in the file.
+                        ApplyDetails(found, dto, onlyFilled: true);
+                        if (yearKnown && found.OccasionYear == null) found.OccasionYear = (short)date.Year;
+                        if (found.Id > 0) found.UpdatedAt = now;
+                        updated++;
+                        continue;
+                    }
+
+                    var contact = new CongratulationContact
+                    {
+                        FullName = name.Trim(),
+                        Occasion = occasion,
+                        OccasionDay = (short)date.Day,
+                        OccasionMonth = (short)date.Month,
+                        OccasionYear = yearKnown ? (short)date.Year : null,
+                        CreatedAt = now,
+                        CreatedBy = CurrentUser
+                    };
+                    ApplyDetails(contact, dto);
+                    _db.CongratulationContacts.Add(contact);
+                    byKey[key] = contact;
+                    added++;
+                }
+
+                await _db.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    added,
+                    updated,
+                    failed = errorCount,
+                    errors,
+                    message = $"{added} added, {updated} already in the list (details updated), {errorCount} not added."
+                });
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // English → Hindi for the name on the card
+        // ---------------------------------------------------------------
+
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> HindiCache = new();
+
+        // When the service cannot be reached it is not asked again for 10 minutes,
+        // so typing stays fast on a server without internet access.
+        private static DateTime _hindiOfflineUntil = DateTime.MinValue;
+
+        /// <summary>
+        /// Turns English words into Hindi (Devanagari) with Google Input Tools when the server
+        /// can reach it. Words it cannot convert come back as null and the page converts them itself.
+        /// </summary>
+        [HttpGet("transliterate")]
+        public async Task<IActionResult> Transliterate([FromQuery] string? text, [FromServices] IHttpClientFactory httpFactory, [FromServices] IConfiguration config)
+        {
+            var words = (text ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Select(w => w.Trim()).Where(w => w.Length is > 0 and <= 40 && w.All(ch => ch < 128 && char.IsLetter(ch)))
+                .Select(w => w.ToLowerInvariant()).Distinct().Take(12).ToList();
+
+            var result = new Dictionary<string, string?>();
+            if (words.Count == 0) return Ok(new { success = true, online = true, words = result });
+            if (DateTime.UtcNow < _hindiOfflineUntil) return Ok(new { success = true, online = false, words = result });
+            bool reached = false;
+
+            string endpoint = config["Congratulations:TransliterateUrl"] ?? "https://inputtools.google.com/request";
+            var client = httpFactory.CreateClient("CongratulationsHindi");
+            client.Timeout = TimeSpan.FromSeconds(4);
+
+            await Task.WhenAll(words.Select(async w =>
+            {
+                if (HindiCache.TryGetValue(w, out var cached)) { lock (result) result[w] = cached; return; }
+                string? hindi = null;
+                try
+                {
+                    var url = $"{endpoint}?text={Uri.EscapeDataString(w)}&itc=hi-t-i0-und&num=1&cp=0&cs=1&ie=utf-8&oe=utf-8";
+                    using var doc = System.Text.Json.JsonDocument.Parse(await client.GetStringAsync(url));
+                    reached = true;
+                    var root = doc.RootElement;
+                    if (root[0].GetString() == "SUCCESS")
+                        hindi = root[1][0][1][0].GetString();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Hindi conversion not available for {Word}", w);
+                }
+
+                if (!string.IsNullOrWhiteSpace(hindi)) HindiCache.TryAdd(w, hindi);
+                lock (result) result[w] = string.IsNullOrWhiteSpace(hindi) ? null : hindi;
+            }));
+
+            if (!reached && !words.All(HindiCache.ContainsKey)) _hindiOfflineUntil = DateTime.UtcNow.AddMinutes(10);
+            return Ok(new { success = true, online = reached || words.All(HindiCache.ContainsKey), words = result });
         }
 
         // ---------------------------------------------------------------
