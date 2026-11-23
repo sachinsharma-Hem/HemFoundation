@@ -159,6 +159,8 @@ namespace HemFoundation.Data
         public DbSet<AffiliatePunchLog> AffiliatePunchLogs { get; set; }
         public DbSet<hemsampark_quiz_submission> hemsampark_quiz_submissions { get; set; }
         public DbSet<hemsampark_quiz_answer> hemsampark_quiz_answers { get; set; }
+        public DbSet<HemFoundation.Models.Congratulations.CongratulationContact> CongratulationContacts { get; set; }
+        public DbSet<HemFoundation.Models.Congratulations.CongratulationWish> CongratulationWishes { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

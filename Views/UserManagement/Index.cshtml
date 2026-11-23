@@ -537,30 +537,64 @@
 
         }
 
+        // Users are loaded one page at a time from the server; filters and
+        // search run in the database. filteredMasterUsers keeps the full
+        // length (total matches) with only the current page filled, so the
+        // existing table, paging and row actions work unchanged.
+        let usersRequestId = 0;
+        let usersStats = { total: 0, active: 0, inactive: 0 };
+        let searchTimer = null;
+
+        function currentFilters() {
+            return {
+                role: ($('#filterRole').val() || '').trim(),
+                status: ($('#filterStatus').val() || '').trim(),
+                date: ($('#filterDate').val() || '').trim(),
+                search: ($('#searchQuery').val() || '').trim()
+            };
+        }
+
         function loadMasterUsers() {
 
+            const requestId = ++usersRequestId;
             showTableLoading("Loading user records...");
 
-            $.get('/api/usermanagement/all-users')
+            const params = $.param(Object.assign({ page: currentPage, pageSize: pageSize }, currentFilters()));
+
+            $.get('/api/usermanagement/users?' + params)
                 .done(function(res) {
+
+                    if (requestId !== usersRequestId) return;   // a newer request is running
 
                     if (!res || !res.success) {
                         showTableError("Unable to load user records.");
                         return;
                     }
 
-                    allMasterUsers = res.data || [];
-                    filteredMasterUsers = [...allMasterUsers];
-                    currentPage = 1;
+                    const total = res.total || 0;
+                    filteredMasterUsers = new Array(total);
+                    const start = (currentPage - 1) * pageSize;
+                    (res.data || []).forEach(function(u, i) { filteredMasterUsers[start + i] = u; });
+                    allMasterUsers = filteredMasterUsers;
 
-                    resetFilterControls();
+                    usersStats = { total: total, active: res.active || 0, inactive: res.inactive || 0 };
+
+                    const totalPages = Math.ceil(total / pageSize) || 1;
+                    if (currentPage > totalPages && total > 0) {
+                        currentPage = totalPages;
+                        loadMasterUsers();
+                        return;
+                    }
+
                     updateStatistics();
                     renderRoleDistribution(res.roleCounts || {});
                     renderMasterTable();
                     updateDeleteButtonState();
+                    $('#selectAllUsers').prop('checked', false);
 
                 })
                 .fail(function(xhr) {
+                    if (requestId !== usersRequestId) return;
                     console.error("Users API Error:", xhr.responseText);
                     showTableError("Failed to load user records.");
                 });
@@ -568,77 +602,19 @@
         }
 
         function applyFilters() {
-
-            const selectedRole = $('#filterRole').val().trim();
-            const selectedStatus = $('#filterStatus').val().trim();
-            const selectedDate = $('#filterDate').val().trim();
-            const searchText = $('#searchQuery').val().toLowerCase().trim();
-
-            filteredMasterUsers = allMasterUsers.filter(function(u) {
-
-                // Role filter
-                let matchesRole = true;
-                if (selectedRole) {
-                    const roles = (u.portalName || '').split(',').map(r => r.trim());
-                    matchesRole = roles.includes(selectedRole);
-                }
-
-                // Status filter
-                let matchesStatus = true;
-                if (selectedStatus) {
-                    const isActive = u.isActive === true || u.isActive === 1 || String(u.isActive).toLowerCase() === 'true';
-                    matchesStatus = selectedStatus === 'active' ? isActive : !isActive;
-                }
-
-                // Date filter
-                let matchesDate = true;
-                if (selectedDate && u.createdDate) {
-                    matchesDate = isDateInRange(u.createdDate, selectedDate);
-                }
-
-                // Search filter
-                let matchesSearch = true;
-                if (searchText) {
-                    const searchFields = [
-                        (u.fullName || '').toLowerCase(),
-                        (u.username || '').toLowerCase(),
-                        (u.userCode || '').toLowerCase(),
-                        (u.phoneNumber || '').toLowerCase(),
-                        (u.email || '').toLowerCase()
-                    ];
-                    matchesSearch = searchFields.some(field => field.includes(searchText));
-                }
-
-                return matchesRole && matchesStatus && matchesDate && matchesSearch;
-
-            });
-
-            currentPage = 1;
-            updateStatistics();
-            renderMasterTable();
-            updateDeleteButtonState();
-            $('#selectAllUsers').prop('checked', false);
-
+            // Typing in the search box waits a moment before asking the server.
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function() {
+                currentPage = 1;
+                loadMasterUsers();
+            }, 300);
         }
-
 
         function resetFilters() {
-
-            $('#filterRole').val('');
-            $('#filterStatus').val('');
-            $('#filterDate').val('');
-            $('#searchQuery').val('');
-
-            filteredMasterUsers = [...allMasterUsers];
+            resetFilterControls();
             currentPage = 1;
-
-            updateStatistics();
-            renderMasterTable();
-            updateDeleteButtonState();
-            $('#selectAllUsers').prop('checked', false);
-
+            loadMasterUsers();
         }
-
 
         function resetFilterControls() {
             $('#filterRole').val('');
@@ -676,18 +652,11 @@
 
         function updateStatistics() {
 
-            const total = filteredMasterUsers.length;
-
-            const active = filteredMasterUsers.filter(u => {
-                return u.isActive === true || u.isActive === 1 || String(u.isActive).toLowerCase() === 'true';
-            }).length;
-
-            const inactive = total - active;
             const selected = $('.user-checkbox:checked').length;
 
-            $('#statTotalUsers').text(total);
-            $('#statActiveUsers').text(active);
-            $('#statInactiveUsers').text(inactive);
+            $('#statTotalUsers').text(usersStats.total);
+            $('#statActiveUsers').text(usersStats.active);
+            $('#statInactiveUsers').text(usersStats.inactive);
             $('#statSelectedUsers').text(selected);
 
         }
@@ -1145,7 +1114,7 @@
             }
 
             currentPage = page;
-            renderMasterTable();
+            loadMasterUsers();
 
             const table = document.getElementById('masterUserTable');
             if (table) {

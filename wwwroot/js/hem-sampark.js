@@ -103,6 +103,14 @@
         if (el) el.addEventListener('click', handler);
     }
 
+    function bilingual(en, hi) {
+        en = (en || '').trim();
+        hi = (hi || '').trim();
+        return (en ? esc(en) : '') +
+            (en && hi ? '<span class="hs-sep"> / </span>' : '') +
+            (hi ? '<span class="hs-hi">' + esc(hi) + '</span>' : '');
+    }
+
     function statusPill(status) {
         var tone = status === 'Excellent' ? 'green' : status === 'Passed' ? 'purple' : 'amber';
         return '<span class="hs-pill hs-pill-' + tone + '">' + esc(status) + '</span>';
@@ -214,23 +222,22 @@
                 (p.headingHi ? '<p class="hs-hero-hi">' + esc(p.headingHi) + '</p>' : '') +
                 '</div>' +
 
-                // Today's three steps: I Morning Mantra, II the English paragraph, III Values in Focus.
-                '<ol class="hs-steps">' +
+                // Morning Mantra, a taste of the English paragraph, Values in Focus.
+                // English and Hindi share one line, separated by " / ".
+                '<div class="hs-steps">' +
                 ((p.morningMantra || p.morningMantraHi)
-                    ? '<li><span class="hs-step-no">I</span><div><b>Morning Mantra</b>' +
-                      (p.morningMantra ? '<p>' + esc(p.morningMantra) + '</p>' : '') +
-                      (p.morningMantraHi ? '<p class="hs-hi">' + esc(p.morningMantraHi) + '</p>' : '') + '</div></li>'
+                    ? '<div class="hs-step"><b>Morning Mantra</b><p>' + bilingual(p.morningMantra, p.morningMantraHi) + '</p></div>'
                     : '') +
                 (p.summary
-                    ? '<li><span class="hs-step-no">II</span><div><b>' + esc(p.headingEn || 'Today') + '</b>' +
-                      '<p class="hs-step-text">' + esc(p.summary) + '</p></div></li>'
+                    ? '<div class="hs-step"><b>' + esc(p.headingEn || 'Today') + '</b>' +
+                      '<p class="hs-step-text">' + esc(p.summary) + '</p>' +
+                      (p.pdfAvailable ? '<button type="button" class="hs-readmore" id="hsReadMore">Read more <i class="bi bi-arrow-right"></i></button>' : '') +
+                      '</div>'
                     : '') +
                 ((p.valuesInFocus || p.valuesInFocusHi)
-                    ? '<li><span class="hs-step-no">III</span><div><b>Values in Focus</b>' +
-                      (p.valuesInFocus ? '<p>' + esc(p.valuesInFocus) + '</p>' : '') +
-                      (p.valuesInFocusHi ? '<p class="hs-hi">' + esc(p.valuesInFocusHi) + '</p>' : '') + '</div></li>'
+                    ? '<div class="hs-step"><b>Values in Focus</b><p>' + bilingual(p.valuesInFocus, p.valuesInFocusHi) + '</p></div>'
                     : '') +
-                '</ol>' +
+                '</div>' +
 
                 // Read first, then the quiz: both cards are buttons.
                 '<div class="hs-avail">' +
@@ -265,6 +272,7 @@
         on('hsRefresh', loadHome);
         on('hsRead', openReader);
         on('hsCardPdf', openReader);
+        on('hsReadMore', openReader);
         on('hsCardQuiz', function () {
             var q = state.today.publication.quiz;
             if (q.attempted) renderResult(q.result, true); else startQuiz();

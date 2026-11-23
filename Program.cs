@@ -122,6 +122,7 @@ builder.Services.AddSingleton<HemFoundation.Services.HemSampark.HemSamparkClock>
 builder.Services.AddScoped<HemFoundation.Services.HemSampark.HemSamparkPdfService>();
 builder.Services.AddScoped<HemFoundation.Services.HemSampark.HemSamparkAccess>();
 
+builder.Services.AddMemoryCache();
 // Affiliate incentive: month-wise summaries (batched database access)
 builder.Services.AddScoped<HemFoundation.Services.AffiliateIncentive.AffiliateIncentiveService>();
 

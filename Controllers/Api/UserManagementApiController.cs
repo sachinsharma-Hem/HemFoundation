@@ -4,6 +4,7 @@ using HemFoundation.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace HemFoundation.Controllers.Api
 {
@@ -27,6 +28,136 @@ namespace HemFoundation.Controllers.Api
 
 
         
+
+        // =====================================================================
+        // Paged user list: filtering, search and paging run in the database,
+        // so the page no longer downloads every user (with passwords) at once.
+        // =====================================================================
+        [HttpGet("users")]
+        public async Task<IActionResult> GetUsersPage(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 50,
+            [FromQuery] string? role = null,
+            [FromQuery] string? status = null,
+            [FromQuery] string? date = null,
+            [FromQuery] string? search = null,
+            [FromServices] Microsoft.Extensions.Caching.Memory.IMemoryCache? cache = null)
+        {
+            try
+            {
+                page = Math.Max(1, page);
+                pageSize = Math.Clamp(pageSize, 10, 200);
+
+                var query = _context.HfViewUsers.AsNoTracking().AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(role))
+                {
+                    // UserRoles is a comma separated list; match a whole role name.
+                    string r = role.Trim();
+                    query = query.Where(u => u.UserRoles != null &&
+                        ("," + u.UserRoles.Replace(", ", ",") + ",").Contains("," + r + ","));
+                }
+
+                if (status == "active") query = query.Where(u => u.isactive);
+                else if (status == "inactive") query = query.Where(u => !u.isactive);
+
+                var today = DateTime.Today;
+                if (date == "today") query = query.Where(u => u.createddate >= today);
+                else if (date == "7days") query = query.Where(u => u.createddate >= today.AddDays(-6));
+                else if (date == "30days") query = query.Where(u => u.createddate >= today.AddDays(-29));
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    string pattern = "%" + search.Trim()
+                        .Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+
+                    query = query.Where(u =>
+                        EF.Functions.ILike((u.firstname ?? "") + " " + (u.lastname ?? ""), pattern, "\\") ||
+                        EF.Functions.ILike(u.username ?? "", pattern, "\\") ||
+                        EF.Functions.ILike(u.mobileno ?? "", pattern, "\\") ||
+                        EF.Functions.ILike(u.emailid ?? "", pattern, "\\") ||
+                        ("usr-" + u.userid.ToString()).Contains(search.Trim().ToLower()));
+                }
+
+                int total = await query.CountAsync();
+                int active = await query.CountAsync(u => u.isactive);
+
+                var rows = await query
+                    .OrderByDescending(x => x.createddate)
+                    .ThenByDescending(x => x.userid)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(u => new
+                    {
+                        id = u.userid,
+                        identityId = u.aspnetuserid ?? u.userid.ToString(),
+                        userCode = u.username ?? ("USR-" + u.userid),
+                        username = u.username ?? "-",
+                        fullName = ((u.firstname ?? "") + " " + (u.lastname ?? "")).Trim(),
+                        email = u.emailid ?? "-",
+                        phoneNumber = u.mobileno ?? "-",
+                        password = u.password_ ?? "-",
+                        portalName = u.UserRoles ?? "User",
+                        address = u.addressline1 ?? "-",
+                        pincode = u.pincode ?? "-",
+                        createdDate = u.createddate,
+                        isActive = u.isactive
+                    })
+                    .ToListAsync();
+
+                var items = rows.Select(u => new
+                {
+                    u.id, u.identityId, u.userCode, u.username, u.fullName, u.email, u.phoneNumber,
+                    u.password, u.portalName, city = "-", state = "-", u.address, u.pincode,
+                    createdDate = u.createdDate.HasValue ? u.createdDate.Value.ToString("dd MMM yyyy, hh:mm tt") : "-",
+                    u.isActive
+                });
+
+                // Role badges: counted in the database across all users, kept for 2 minutes.
+                Dictionary<string, int>? roleCounts = null;
+                if (cache == null || !cache.TryGetValue("usermanagement:role-counts", out roleCounts) || roleCounts == null)
+                {
+                    roleCounts = (await _context.Database.SqlQueryRaw<RoleCountRow>(
+                            """
+                            SELECT btrim(r) AS "Role", count(*)::int AS "Count"
+                            FROM public.hf_view_users u,
+                                 unnest(string_to_array(COALESCE(NULLIF(u."UserRoles", ''), 'User'), ',')) AS r
+                            WHERE btrim(r) <> ''
+                            GROUP BY btrim(r)
+                            """).ToListAsync())
+                        .ToDictionary(x => x.Role, x => x.Count);
+
+                    cache?.Set("usermanagement:role-counts", roleCounts, TimeSpan.FromMinutes(2));
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    page,
+                    pageSize,
+                    total,
+                    active,
+                    inactive = total - active,
+                    roleCounts,
+                    data = items
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Failed to load users.",
+                    error = ex.InnerException?.Message ?? ex.Message
+                });
+            }
+        }
+
+        public class RoleCountRow
+        {
+            public string Role { get; set; } = "";
+            public int Count { get; set; }
+        }
 
         [HttpGet("all-users")]
         public async Task<IActionResult> GetAllUsersList()

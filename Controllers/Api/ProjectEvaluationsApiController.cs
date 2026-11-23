@@ -67,8 +67,208 @@ namespace HemFoundation.Controllers.Api
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+        // =====================================================================
+        // Evaluation summary: real counts for the cards and charts.
+        //   submitted / evaluated / pending per project type
+        //   colour split of the evaluations, evaluations in the last 7 days,
+        //   a 14-day trend, evaluator-wise counts and the caller's own work.
+        // month/year limit the submissions (by submission date).
+        // =====================================================================
+        [HttpGet("summary")]
+        public async Task<IActionResult> GetEvaluationSummary(int? month = null, int? year = null)
+        {
+            try
+            {
+                string? me = HttpContext.Session.GetString("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+                bool filtered = month is >= 1 and <= 12 && year is > 2000;
+
+                string periodFilter(string column) => filtered
+                    ? $" AND {column} >= make_date(@y, @m, 1) AND {column} < make_date(@y, @m, 1) + interval '1 month'"
+                    : "";
+
+                // One row per project type.
+                string sql = $"""
+                    WITH subs AS (
+                        SELECT 'individual-projects'::text AS ptype, i.id AS pid
+                        FROM hf_tbl_uploadindividualproject i WHERE true {periodFilter("i.iscreateddate")}
+                        UNION ALL
+                        SELECT 'family-projects', f.id
+                        FROM hf_uploadanubhuti f WHERE true {periodFilter("f.iscreateddate")}
+                        UNION ALL
+                        SELECT 'group-pbl', g.submissionid
+                        FROM creativityactivitessubmission2021 g WHERE true {periodFilter("g.createddate")}
+                    ),
+                    ev AS (
+                        SELECT DISTINCT ON ("ProjectType", "ProjectID")
+                               "ProjectType" AS ptype, "ProjectID" AS pid,
+                               lower(btrim(coalesce("StatusColor", ''))) AS color, "EvaluatedDate" AS edate
+                        FROM "ProjectEvaluations"
+                        ORDER BY "ProjectType", "ProjectID", "EvaluatedDate" DESC
+                    )
+                    SELECT s.ptype,
+                           count(*)::int                                                     AS submitted,
+                           count(e.pid)::int                                                 AS evaluated,
+                           count(*) FILTER (WHERE e.color = 'green')::int                    AS green,
+                           count(*) FILTER (WHERE e.color = 'orange')::int                   AS orange,
+                           count(*) FILTER (WHERE e.color = 'blue')::int                     AS blue,
+                           count(*) FILTER (WHERE e.color = 'yellow')::int                   AS yellow,
+                           count(*) FILTER (WHERE e.color = 'red')::int                      AS red,
+                           count(*) FILTER (WHERE e.edate >= current_date - 6)::int          AS last7,
+                           count(*) FILTER (WHERE e.edate >= current_date)::int              AS today
+                    FROM subs s
+                    LEFT JOIN ev e ON e.ptype = s.ptype AND e.pid = s.pid
+                    GROUP BY s.ptype
+                    """;
+
+                var labels = new Dictionary<string, string>
+                {
+                    ["individual-projects"] = "Individual",
+                    ["family-projects"] = "Family",
+                    ["group-pbl"] = "Group"
+                };
+
+                var types = labels.Keys.ToDictionary(k => k, k => new Dictionary<string, int>());
+                var trend = new List<object>();
+                var evaluators = new List<object>();
+                int myTotal = 0, myLast7 = 0, myToday = 0;
+
+                var conn = (Npgsql.NpgsqlConnection)_context.Database.GetDbConnection();
+                bool opened = conn.State != System.Data.ConnectionState.Open;
+                if (opened) await conn.OpenAsync();
+
+                try
+                {
+                    await using (var cmd = new Npgsql.NpgsqlCommand(sql, conn))
+                    {
+                        if (filtered)
+                        {
+                            cmd.Parameters.AddWithValue("y", year!.Value);
+                            cmd.Parameters.AddWithValue("m", month!.Value);
+                        }
+
+                        await using var r = await cmd.ExecuteReaderAsync();
+                        while (await r.ReadAsync())
+                        {
+                            var key = r.GetString(0);
+                            if (!types.ContainsKey(key)) continue;
+                            var t = types[key];
+                            t["submitted"] = r.GetInt32(1);
+                            t["evaluated"] = r.GetInt32(2);
+                            t["green"] = r.GetInt32(3);
+                            t["orange"] = r.GetInt32(4);
+                            t["blue"] = r.GetInt32(5);
+                            t["yellow"] = r.GetInt32(6);
+                            t["red"] = r.GetInt32(7);
+                            t["last7"] = r.GetInt32(8);
+                            t["today"] = r.GetInt32(9);
+                        }
+                    }
+
+                    // Evaluations per day, last 14 days (all project types).
+                    await using (var cmd = new Npgsql.NpgsqlCommand("""
+                        SELECT d::date, count(e."EvaluationID")::int
+                        FROM generate_series(current_date - 13, current_date, interval '1 day') d
+                        LEFT JOIN "ProjectEvaluations" e
+                               ON e."EvaluatedDate" >= d AND e."EvaluatedDate" < d + interval '1 day'
+                        GROUP BY d ORDER BY d
+                        """, conn))
+                    {
+                        await using var r = await cmd.ExecuteReaderAsync();
+                        while (await r.ReadAsync())
+                            trend.Add(new { date = r.GetDateTime(0).ToString("dd MMM"), count = r.GetInt32(1) });
+                    }
+
+                    // Who evaluated how many (last 30 days).
+                    await using (var cmd = new Npgsql.NpgsqlCommand("""
+                        SELECT e."EvaluatedByUserId",
+                               max(COALESCE(NULLIF(btrim(coalesce(u.firstname,'') || ' ' || coalesce(u.lastname,'')), ''),
+                                            NULLIF(btrim(coalesce(a."FirstName",'') || ' ' || coalesce(a."LastName",'')), ''),
+                                            'User')) AS name,
+                               count(*) FILTER (WHERE e."EvaluatedDate" >= current_date - 29)::int AS last30,
+                               count(*) FILTER (WHERE e."EvaluatedDate" >= current_date - 6)::int  AS last7,
+                               count(*)::int AS total
+                        FROM "ProjectEvaluations" e
+                        LEFT JOIN users u ON u.aspnetuserid = e."EvaluatedByUserId"
+                        LEFT JOIN "Admins" a ON a."Id"::text = e."EvaluatedByUserId"
+                        WHERE coalesce(e."EvaluatedByUserId", '') <> ''
+                        GROUP BY e."EvaluatedByUserId"
+                        ORDER BY last30 DESC, total DESC
+                        LIMIT 8
+                        """, conn))
+                    {
+                        await using var r = await cmd.ExecuteReaderAsync();
+                        while (await r.ReadAsync())
+                            evaluators.Add(new { name = r.GetString(1), last30 = r.GetInt32(2), last7 = r.GetInt32(3), total = r.GetInt32(4) });
+                    }
+
+                    if (!string.IsNullOrEmpty(me))
+                    {
+                        await using var cmd = new Npgsql.NpgsqlCommand("""
+                            SELECT count(*)::int,
+                                   count(*) FILTER (WHERE "EvaluatedDate" >= current_date - 6)::int,
+                                   count(*) FILTER (WHERE "EvaluatedDate" >= current_date)::int
+                            FROM "ProjectEvaluations" WHERE "EvaluatedByUserId" = @me
+                            """, conn);
+                        cmd.Parameters.AddWithValue("me", me);
+                        await using var r = await cmd.ExecuteReaderAsync();
+                        if (await r.ReadAsync()) { myTotal = r.GetInt32(0); myLast7 = r.GetInt32(1); myToday = r.GetInt32(2); }
+                    }
+                }
+                finally
+                {
+                    if (opened) await conn.CloseAsync();
+                }
+
+                int Get(string type, string k) => types[type].GetValueOrDefault(k);
+
+                var typeRows = labels.Select(l => new
+                {
+                    key = l.Key,
+                    label = l.Value,
+                    submitted = Get(l.Key, "submitted"),
+                    evaluated = Get(l.Key, "evaluated"),
+                    pending = Get(l.Key, "submitted") - Get(l.Key, "evaluated"),
+                    last7 = Get(l.Key, "last7"),
+                    today = Get(l.Key, "today"),
+                    colors = new
+                    {
+                        green = Get(l.Key, "green"), orange = Get(l.Key, "orange"), blue = Get(l.Key, "blue"),
+                        yellow = Get(l.Key, "yellow"), red = Get(l.Key, "red")
+                    }
+                }).ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    period = filtered ? new DateTime(year!.Value, month!.Value, 1).ToString("MMMM yyyy") : "All time",
+                    totals = new
+                    {
+                        submitted = typeRows.Sum(t => t.submitted),
+                        evaluated = typeRows.Sum(t => t.evaluated),
+                        pending = typeRows.Sum(t => t.pending),
+                        last7 = typeRows.Sum(t => t.last7),
+                        today = typeRows.Sum(t => t.today),
+                        colors = new
+                        {
+                            green = typeRows.Sum(t => t.colors.green), orange = typeRows.Sum(t => t.colors.orange),
+                            blue = typeRows.Sum(t => t.colors.blue), yellow = typeRows.Sum(t => t.colors.yellow),
+                            red = typeRows.Sum(t => t.colors.red)
+                        }
+                    },
+                    types = typeRows,
+                    trend,
+                    evaluators,
+                    mine = new { total = myTotal, last7 = myLast7, today = myToday }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpGet("list/{projectType}")]
-        public async Task<IActionResult> GetProjectList(string projectType, int page = 1, int pageSize = 3000, string searchTerm = "", int? month = null, int? year = null)
+        public async Task<IActionResult> GetProjectList(string projectType, int page = 1, int pageSize = 3000, string searchTerm = "", int? month = null, int? year = null, string? evalStatus = null)
         {
             try
             {
@@ -240,6 +440,9 @@ namespace HemFoundation.Controllers.Api
                     if (!string.IsNullOrEmpty(searchTerm))
                         query = query.Where(x => x.SchoolName.ToLower().Contains(searchTerm) || x.FirstName.ToLower().Contains(searchTerm) || x.Title.ToLower().Contains(searchTerm) || x.Status.ToLower().Contains(searchTerm) || x.EvaluatedColor.ToLower().Contains(searchTerm));
 
+                    if (evalStatus == "pending") query = query.Where(x => !x.IsEvaluated);
+                    else if (evalStatus == "evaluated") query = query.Where(x => x.IsEvaluated);
+
                     query = query.OrderBy(x => x.CourseName).ThenBy(x => x.Standard);
                     var totalRecords = query.Count();
                     var data = query.Skip(skip).Take(pageSize).ToList();
@@ -319,6 +522,9 @@ namespace HemFoundation.Controllers.Api
                     if (!string.IsNullOrEmpty(searchTerm))
                         query = query.Where(x => x.SchoolName.ToLower().Contains(searchTerm) || x.FirstName.ToLower().Contains(searchTerm) || x.Title.ToLower().Contains(searchTerm) || x.Status.ToLower().Contains(searchTerm) || x.EvaluatedColor.ToLower().Contains(searchTerm));
 
+                    if (evalStatus == "pending") query = query.Where(x => !x.IsEvaluated);
+                    else if (evalStatus == "evaluated") query = query.Where(x => x.IsEvaluated);
+
                     query = query.OrderBy(x => x.CourseName).ThenBy(x => x.Standard);
                     var totalRecords = query.Count();
                     var data = query.Skip(skip).Take(pageSize).ToList();
@@ -378,6 +584,9 @@ namespace HemFoundation.Controllers.Api
 
                     if (!string.IsNullOrEmpty(searchTerm))
                         query = query.Where(x => x.SchoolName.ToLower().Contains(searchTerm) || x.Title.ToLower().Contains(searchTerm) || x.LastName.ToLower().Contains(searchTerm) || x.EvaluatedColor.ToLower().Contains(searchTerm));
+
+                    if (evalStatus == "pending") query = query.Where(x => !x.IsEvaluated);
+                    else if (evalStatus == "evaluated") query = query.Where(x => x.IsEvaluated);
 
                     query = query.OrderBy(x => x.CourseName).ThenBy(x => x.Standard);
                     var totalRecords = query.Count();
