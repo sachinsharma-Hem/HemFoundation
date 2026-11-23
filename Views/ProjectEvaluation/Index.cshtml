@@ -875,12 +875,20 @@
         </div>
     </div>
 
+    <!-- Evaluation status: real counts and charts -->
+    <partial name="~/Views/Shared/Partials/_EvaluationOverview.cshtml" />
+
     <!-- Projects Inspection Section -->
     <div class="inspection-card" id="inspection-section" style="display:none;">
         <div class="inspection-header">
             <h5 id="section-title">Project List</h5>
             <div class="search-container">
                 <input type="text" id="searchBox" class="search-input" placeholder="Search projects..." onkeyup="filterProjects()" />
+                <select id="evalStatusFilter" class="form-select form-select-sm" style="width:auto" onchange="filterProjects()" aria-label="Evaluation status">
+                    <option value="">All projects</option>
+                    <option value="pending">Not evaluated yet</option>
+                    <option value="evaluated">Evaluated</option>
+                </select>
                 <span class="record-badge" id="record-count">Total: 0</span>
 
                 <!-- EXCEL EXPORT BUTTON -->
@@ -1080,9 +1088,32 @@
         let pageSize = 25;
         let totalRecords = 0;
 
+        // "View pending" in the evaluation status table, or ?type=..&status=pending
+        window.evoShowPending = function(type, status) {
+            currentType = type;
+            currentPage = 1;
+            document.getElementById("searchBox").value = "";
+            document.getElementById("evalStatusFilter").value = status || "pending";
+            fetchProjects();
+            document.getElementById("inspection-section").scrollIntoView({ behavior: "smooth", block: "start" });
+        };
+
+        function overviewFilter() {
+            const month = document.getElementById("filterMonth").value;
+            const year = document.getElementById("filterYear").value;
+            return month ? { month: month, year: year } : {};
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
             loadDashboardCounts();
             loadEvaluatedHistory();
+            if (window.EvaluationOverview) window.EvaluationOverview.load(overviewFilter());
+
+            const qs = new URLSearchParams(window.location.search);
+            const qsType = qs.get("type");
+            if (["family-projects", "individual-projects", "group-pbl"].includes(qsType)) {
+                window.evoShowPending(qsType, qs.get("status") === "evaluated" ? "evaluated" : (qs.get("status") === "pending" ? "pending" : ""));
+            }
 
             document.querySelectorAll(".eval-card").forEach(card => {
                 card.addEventListener("click", function(e) {
@@ -1099,6 +1130,9 @@
         // ANALYTICS & CHARTS
         // ==========================
         function toggleAnalytics() {
+            // The charts now live on the page, with real figures.
+            const charts = document.getElementById('evoCharts');
+            if (charts) { charts.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
             var modal = new bootstrap.Modal(document.getElementById('analyticsModal'));
             modal.show();
 
@@ -1164,6 +1198,7 @@
 
         function onFilterChange() {
             loadDashboardCounts();
+            if (window.EvaluationOverview) window.EvaluationOverview.load(overviewFilter());
             if (currentType) fetchProjects();
         }
 
@@ -1202,7 +1237,7 @@
             let month = document.getElementById("filterMonth").value;
             let year = document.getElementById("filterYear").value;
 
-            let url = `/api/project-evaluations/list/${currentType}?page=${currentPage}&pageSize=${pageSize}&searchTerm=${encodeURIComponent(searchTerm)}`;
+            let url = `/api/project-evaluations/list/${currentType}?page=${currentPage}&pageSize=${pageSize}&searchTerm=${encodeURIComponent(searchTerm)}&evalStatus=${encodeURIComponent(document.getElementById("evalStatusFilter").value)}`;
             if (month) url += `&month=${month}&year=${year}`;
 
             fetch(url)
@@ -1421,7 +1456,7 @@
             let month = document.getElementById("filterMonth").value;
             let year = document.getElementById("filterYear").value;
 
-            let url = `/api/project-evaluations/list/${currentType}?page=${currentPage}&pageSize=${pageSize}&searchTerm=${encodeURIComponent(searchTerm)}`;
+            let url = `/api/project-evaluations/list/${currentType}?page=${currentPage}&pageSize=${pageSize}&searchTerm=${encodeURIComponent(searchTerm)}&evalStatus=${encodeURIComponent(document.getElementById("evalStatusFilter").value)}`;
             if (month) url += `&month=${month}&year=${year}`;
 
             fetch(url)
@@ -1690,6 +1725,7 @@
                         fetchProjects();
                         loadEvaluatedHistory();
                         loadDashboardCounts();
+                        if (window.EvaluationOverview) window.EvaluationOverview.load();
                     } else {
                         alert("Error saving evaluation");
                     }
@@ -1853,7 +1889,7 @@
             let month = document.getElementById("filterMonth").value;
             let year = document.getElementById("filterYear").value;
 
-            let url = `/api/project-evaluations/list/${currentType}?page=1&pageSize=999999&searchTerm=${encodeURIComponent(searchTerm)}`;
+            let url = `/api/project-evaluations/list/${currentType}?page=1&pageSize=999999&searchTerm=${encodeURIComponent(searchTerm)}&evalStatus=${encodeURIComponent(document.getElementById("evalStatusFilter").value)}`;
             if (month) url += `&month=${month}&year=${year}`;
 
             fetch(url)

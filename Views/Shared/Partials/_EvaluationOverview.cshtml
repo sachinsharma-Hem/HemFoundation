@@ -1,0 +1,81 @@
+@*
+    Evaluation overview: cards, per-type status, charts and evaluator counts.
+    Used on /ProjectEvaluation/index and on the Supervisor dashboard.
+    Data: /api/project-evaluations/summary (real counts, no estimates).
+    ViewData["EvoShowMine"] = true shows the signed-in evaluator's own figures.
+    ViewData["EvoPendingLink"] = true makes "View pending" open the evaluation page.
+*@
+@{
+    bool showMine = ViewData["EvoShowMine"] as bool? ?? false;
+    bool pendingLink = ViewData["EvoPendingLink"] as bool? ?? false;
+}
+<link rel="stylesheet" href="~/css/evaluation-overview.css" asp-append-version="true" />
+
+<section class="evo" id="evoRoot" data-show-mine="@(showMine ? "1" : "0")" data-pending-link="@(pendingLink ? "1" : "0")">
+    <div class="evo-head">
+        <div>
+            <h3 class="evo-title"><i class="bi bi-clipboard2-check"></i> Evaluation Status</h3>
+            <p class="evo-sub">Submitted projects, how many are evaluated and how many are still pending. <span id="evoPeriod"></span></p>
+        </div>
+        <button type="button" class="evo-btn" id="evoRefresh"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+    </div>
+
+    <div class="evo-cards">
+        <div class="evo-card"><span class="evo-ico is-blue"><i class="bi bi-inboxes"></i></span><div><b id="evoSubmitted">–</b><span>Submitted projects</span></div></div>
+        <div class="evo-card"><span class="evo-ico is-green"><i class="bi bi-check2-circle"></i></span><div><b id="evoEvaluated">–</b><span>Evaluated</span></div></div>
+        <div class="evo-card is-alert"><span class="evo-ico is-amber"><i class="bi bi-hourglass-split"></i></span><div><b id="evoPending">–</b><span>Not evaluated yet</span></div></div>
+        <div class="evo-card"><span class="evo-ico is-purple"><i class="bi bi-calendar-week"></i></span><div><b id="evoLast7">–</b><span>Evaluated in last 7 days <small id="evoToday"></small></span></div></div>
+    </div>
+
+    <div class="evo-mine" id="evoMine" hidden>
+        <span><i class="bi bi-person-check"></i> My evaluations</span>
+        <span>Today <b id="evoMyToday">0</b></span>
+        <span>Last 7 days <b id="evoMy7">0</b></span>
+        <span>All time <b id="evoMyTotal">0</b></span>
+    </div>
+
+    <div class="evo-panel">
+        <div class="evo-table-wrap">
+            <table class="evo-table">
+                <thead>
+                    <tr>
+                        <th>Project type</th>
+                        <th class="n">Submitted</th>
+                        <th class="n">Evaluated</th>
+                        <th class="n">Pending</th>
+                        <th>Progress</th>
+                        <th class="n">Last 7 days</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="evoTypes"><tr><td colspan="7" class="evo-empty">Loading…</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="evo-charts" id="evoCharts">
+        <div class="evo-panel">
+            <h4 class="evo-h"><i class="bi bi-bar-chart"></i> Evaluated vs pending, by type</h4>
+            <div class="evo-canvas"><canvas id="evoChartStatus"></canvas></div>
+        </div>
+        <div class="evo-panel">
+            <h4 class="evo-h"><i class="bi bi-pie-chart"></i> Evaluation results (colour)</h4>
+            <div class="evo-canvas"><canvas id="evoChartColors"></canvas></div>
+        </div>
+        <div class="evo-panel evo-wide">
+            <h4 class="evo-h"><i class="bi bi-graph-up"></i> Evaluations per day, last 14 days</h4>
+            <div class="evo-canvas"><canvas id="evoChartTrend"></canvas></div>
+        </div>
+        <div class="evo-panel">
+            <h4 class="evo-h"><i class="bi bi-people"></i> Evaluators</h4>
+            <div class="evo-table-wrap">
+                <table class="evo-table">
+                    <thead><tr><th>Name</th><th class="n">7 days</th><th class="n">30 days</th><th class="n">Total</th></tr></thead>
+                    <tbody id="evoEvaluators"><tr><td colspan="4" class="evo-empty">Loading…</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="~/js/evaluation-overview.js" asp-append-version="true"></script>

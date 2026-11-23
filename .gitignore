@@ -74,3 +74,6 @@ Properties/launchSettings.json
 
 # HEM Sampark generated PDFs (private storage)
 App_Data/HemSampark/
+
+# Congratulations delivery photos (private storage)
+App_Data/Congratulations/

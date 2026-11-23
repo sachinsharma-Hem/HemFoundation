@@ -99,12 +99,14 @@
 .hs-hero-pic { float: right; width: 92px; height: 92px; object-fit: cover; border-radius: 14px; margin: 0 0 8px 12px; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(31, 27, 58, .12); }
 .hs-hero::after { display: none; }
 
-.hs-steps { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 10px; }
-.hs-steps li { display: flex; gap: 12px; align-items: flex-start; background: #fff; border: 1px solid var(--hs-line); border-radius: 14px; padding: 12px 14px; }
-.hs-step-no { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 10px; background: var(--hs-primary); color: #fff; display: grid; place-items: center; font-weight: 700; font-family: Georgia, 'Times New Roman', serif; font-size: .95rem; }
+.hs-steps { padding: 0; margin: 16px 0; display: grid; gap: 10px; }
+.hs-step { background: #fff; border: 1px solid var(--hs-line); border-radius: 14px; padding: 12px 14px; min-width: 0; }
+.hs-hi { color: #ad2456; font-weight: 600; }
+.hs-sep { color: var(--hs-muted); }
+.hs-readmore { border: 0; background: none; padding: 4px 0 0; color: var(--hs-primary); font-weight: 600; font-size: .86rem; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
+.hs-readmore:hover { text-decoration: underline; }
 .hs-steps b { display: block; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--hs-primary); margin-bottom: 2px; }
 .hs-steps p { margin: 0; font-size: .92rem; color: #3e3a58; overflow-wrap: anywhere; }
-.hs-steps p.hs-hi { color: #ad2456; font-weight: 600; margin-top: 2px; }
 .hs-step-text { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .hs-hero p.hs-summary { margin: 0; color: #4b4763; font-size: .9rem; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 

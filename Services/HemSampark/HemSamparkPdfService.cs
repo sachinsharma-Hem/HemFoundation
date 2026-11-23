@@ -205,6 +205,20 @@ namespace HemFoundation.Services.HemSampark
                 return E(value.Trim()).Replace("\r\n", "\n").Replace("\n", "<br />");
             }
 
+            // English and Hindi on the same line, separated by " / ".
+            string BilingualLine(string cssClass, string? en, string? hi)
+            {
+                en = en?.Trim() ?? "";
+                hi = hi?.Trim() ?? "";
+                if (en.Length == 0 && hi.Length == 0) return "";
+
+                string enHtml = en.Length > 0 ? $"<span class='bl-en'>{E(en)}</span>" : "";
+                string hiHtml = hi.Length > 0 ? $"<span class='bl-hi'>{E(hi)}</span>" : "";
+                string sep = en.Length > 0 && hi.Length > 0 ? "<span class='bl-sep'> / </span>" : "";
+
+                return $"<p class='{cssClass}'>{enHtml}{sep}{hiHtml}</p>";
+            }
+
             string First(string? preferred, string? fallback) =>
                 string.IsNullOrWhiteSpace(preferred) ? (fallback ?? string.Empty) : preferred;
 
@@ -273,8 +287,7 @@ namespace HemFoundation.Services.HemSampark
                 ? ""
                 : $@"<div class='mantra-box'>
         <div class='mantra-title'>Morning Mantra</div>
-        {(mantraEn.Length > 0 ? $"<p class='mantra-en'>{E(mantraEn)}</p>" : "")}
-        {(mantraHi.Length > 0 ? $"<p class='mantra-hi'>{E(mantraHi)}</p>" : "")}
+        {BilingualLine("mantra-line", mantraEn, mantraHi)}
     </div>";
 
             // Optional small picture at the right of the English celebration text.
@@ -429,6 +442,25 @@ namespace HemFoundation.Services.HemSampark
         padding: 3px;
         margin: -6px -8px 5px;
     }}
+
+    .mantra-line {{
+        font-size: 11px;
+        font-weight: bold;
+        line-height: 1.35;
+        margin: 0;
+    }}
+
+    .values-line {{
+        font-size: 10.5px;
+        font-weight: bold;
+        text-align: center;
+        line-height: 1.35;
+        margin: 0;
+    }}
+
+    .bl-en {{ color: #202020; }}
+    .bl-sep {{ color: #6b6b6b; }}
+    .bl-hi {{ color: #ad2456; }}
 
     .mantra-en {{
         font-size: 11px;
@@ -644,12 +676,7 @@ namespace HemFoundation.Services.HemSampark
 
     <div class='values-box'>
         <div class='values-title'>Values in Focus</div>
-        <p class='values-en'>
-            {E(valuesEn)}
-        </p>
-        <p class='values-hi'>
-            {E(valuesHi)}
-        </p>
+        {BilingualLine("values-line", valuesEn, valuesHi)}
     </div>
 
     <div class='footer-box'>

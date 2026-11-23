@@ -1,0 +1,206 @@
+@{
+    ViewData["Title"] = "Congratulations";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/congratulations.css" asp-append-version="true" />
+}
+
+<div class="cg" id="cgRoot">
+
+    <div class="cg-head">
+        <div>
+            <h2><i class="bi bi-balloon-heart"></i> Congratulations</h2>
+            <p>Birthday and anniversary cards: upcoming dates, make a card, and keep a photo when it is given.</p>
+        </div>
+        <div class="cg-chips" id="cgSummary"></div>
+    </div>
+
+    <!-- ===================== NEXT 7 DAYS ===================== -->
+    <section class="cg-panel">
+        <div class="cg-panel-head">
+            <h3><i class="bi bi-calendar-heart"></i> Next 7 days <small id="cgToday"></small></h3>
+        </div>
+        <div class="cg-upcoming" id="cgUpcoming"><div class="cg-empty">Loading…</div></div>
+    </section>
+
+    <!-- ===================== MAKE A CARD ===================== -->
+    <section class="cg-panel" id="cgMaker">
+        <div class="cg-panel-head">
+            <h3><i class="bi bi-magic"></i> Make a card</h3>
+        </div>
+
+        <div class="cg-maker">
+            <form id="cgForm" class="cg-form" novalidate autocomplete="off">
+                <input type="hidden" id="cgContactId">
+
+                <label class="cg-label">Card type</label>
+                <div class="cg-toggle" role="radiogroup" aria-label="Card type">
+                    <button type="button" class="active" data-occasion="Birthday"><i class="bi bi-cake2"></i> Birthday</button>
+                    <button type="button" data-occasion="Anniversary"><i class="bi bi-heart"></i> Anniversary</button>
+                </div>
+
+                <label class="cg-label" for="cgName">Name on the card</label>
+                <input type="text" id="cgName" class="cg-input" maxlength="120" placeholder="e.g. डॉ. चेतना जी गट्टानी">
+
+                <label class="cg-check">
+                    <input type="checkbox" id="cgPriya" checked> Write “प्रिय” before the name
+                </label>
+
+                <div class="cg-row">
+                    <div>
+                        <label class="cg-label" for="cgDate">Date</label>
+                        <input type="date" id="cgDate" class="cg-input">
+                    </div>
+                    <div>
+                        <label class="cg-label" for="cgMobile">Mobile (optional)</label>
+                        <input type="tel" id="cgMobile" class="cg-input" maxlength="20" placeholder="98xxxxxxxx">
+                    </div>
+                </div>
+
+                <label class="cg-check">
+                    <input type="checkbox" id="cgSave" checked> Save in the contact list (for next year)
+                </label>
+
+                <div id="cgFormError" class="cg-error" hidden></div>
+
+                <div class="cg-actions">
+                    <button type="button" class="cg-btn is-primary" id="cgDownloadJpg"><i class="bi bi-file-image"></i> Download JPEG</button>
+                    <button type="button" class="cg-btn is-primary" id="cgDownloadPdf"><i class="bi bi-file-earmark-pdf"></i> Download PDF</button>
+                    <button type="button" class="cg-btn" id="cgClear"><i class="bi bi-x-lg"></i> Clear</button>
+                </div>
+            </form>
+
+            <div class="cg-preview">
+                <canvas id="cgCanvas" aria-label="Card preview"></canvas>
+                <div class="cg-hint">The design and text are fixed; only the name and date change.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== LISTS ===================== -->
+    <section class="cg-panel">
+        <div class="cg-tabs" role="tablist">
+            <button type="button" class="active" data-tab="contacts"><i class="bi bi-person-lines-fill"></i> Contact list</button>
+            <button type="button" data-tab="pending"><i class="bi bi-hourglass-split"></i> Cards made (photo pending)</button>
+            <button type="button" data-tab="given"><i class="bi bi-check2-circle"></i> Given (complete)</button>
+        </div>
+
+        <!-- Contacts -->
+        <div class="cg-tab active" data-tab-panel="contacts">
+            <div class="cg-filters">
+                <input type="search" id="cgSearch" class="cg-input" placeholder="Search name or mobile">
+                <select id="cgFilterType" class="cg-input">
+                    <option value="">Birthday &amp; Anniversary</option>
+                    <option value="Birthday">Birthday</option>
+                    <option value="Anniversary">Anniversary</option>
+                </select>
+                <select id="cgFilterMonth" class="cg-input">
+                    <option value="">All months</option>
+                    <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+                    <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+                    <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+                    <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                </select>
+                <button type="button" class="cg-btn is-primary" id="cgAddContact"><i class="bi bi-person-plus"></i> Add contact</button>
+            </div>
+            <div class="cg-table-wrap">
+                <table class="cg-table">
+                    <thead><tr><th>Name</th><th>Occasion</th><th>Date</th><th>Next</th><th>Mobile</th><th></th></tr></thead>
+                    <tbody id="cgContacts"><tr><td colspan="6" class="cg-empty">Loading…</td></tr></tbody>
+                </table>
+            </div>
+            <div class="cg-pager" id="cgContactsPager"></div>
+        </div>
+
+        <!-- Cards made, photo pending -->
+        <div class="cg-tab" data-tab-panel="pending">
+            <div class="cg-gallery" id="cgPending"></div>
+            <div class="cg-pager" id="cgPendingPager"></div>
+        </div>
+
+        <!-- Given -->
+        <div class="cg-tab" data-tab-panel="given">
+            <div class="cg-filters">
+                <input type="search" id="cgGivenSearch" class="cg-input" placeholder="Search name">
+            </div>
+            <div class="cg-gallery" id="cgGiven"></div>
+            <div class="cg-pager" id="cgGivenPager"></div>
+        </div>
+    </section>
+</div>
+
+<!-- Contact add / edit -->
+<div class="modal fade cg-modal" id="cgContactModal" tabindex="-1" aria-labelledby="cgContactTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="cgContactForm" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cgContactTitle">Add contact</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="cgCId">
+                    <label class="cg-label" for="cgCName">Name</label>
+                    <input type="text" id="cgCName" class="cg-input" maxlength="120">
+                    <label class="cg-label" for="cgCOccasion">Occasion</label>
+                    <select id="cgCOccasion" class="cg-input">
+                        <option value="Birthday">Birthday</option>
+                        <option value="Anniversary">Anniversary</option>
+                    </select>
+                    <label class="cg-label" for="cgCDate">Date</label>
+                    <input type="date" id="cgCDate" class="cg-input">
+                    <label class="cg-check"><input type="checkbox" id="cgCYearKnown" checked> I know the year</label>
+                    <label class="cg-label" for="cgCMobile">Mobile (optional)</label>
+                    <input type="tel" id="cgCMobile" class="cg-input" maxlength="20">
+                    <label class="cg-label" for="cgCNotes">Notes (optional)</label>
+                    <input type="text" id="cgCNotes" class="cg-input" maxlength="250">
+                    <div id="cgContactError" class="cg-error" hidden></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cg-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="cg-btn is-primary" id="cgContactSave"><i class="bi bi-check2"></i> Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Photo when the card is given -->
+<div class="modal fade cg-modal" id="cgPhotoModal" tabindex="-1" aria-labelledby="cgPhotoTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cgPhotoTitle">Card given – add photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="cg-photo-who" id="cgPhotoWho"></p>
+                <div class="cg-photo-preview" id="cgPhotoPreview"><i class="bi bi-image"></i><span>No photo yet</span></div>
+                <div class="cg-photo-buttons">
+                    <label class="cg-btn is-primary">
+                        <i class="bi bi-camera"></i> Take photo
+                        <input type="file" id="cgPhotoCamera" accept="image/*" capture="environment" hidden>
+                    </label>
+                    <label class="cg-btn">
+                        <i class="bi bi-images"></i> Choose from gallery
+                        <input type="file" id="cgPhotoGallery" accept="image/*" hidden>
+                    </label>
+                </div>
+                <div id="cgPhotoError" class="cg-error" hidden></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="cg-btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="cg-btn is-primary" id="cgPhotoSave" disabled><i class="bi bi-check2"></i> Save photo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/congratulations.js" asp-append-version="true"></script>
+}
