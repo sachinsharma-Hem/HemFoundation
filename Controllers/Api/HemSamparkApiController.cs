@@ -26,6 +26,7 @@ namespace HemFoundation.Controllers
         private readonly HemSamparkAccess _access;
         private readonly IConfiguration _config;
         private readonly ILogger<HemSamparkApiController> _logger;
+        private readonly IWebHostEnvironment _env;
 
         public HemSamparkApiController(
             ApplicationDbContext context,
@@ -33,14 +34,29 @@ namespace HemFoundation.Controllers
             HemSamparkClock clock,
             HemSamparkAccess access,
             IConfiguration config,
-            ILogger<HemSamparkApiController> logger)
+            ILogger<HemSamparkApiController> logger,
+            IWebHostEnvironment env)
         {
+            _env = env;
             _context = context;
             _pdf = pdf;
             _clock = clock;
             _access = access;
             _config = config;
             _logger = logger;
+        }
+
+        // The small celebration picture is shown only when one was added and the file is
+        // still there (it may have been removed after the publication was generated).
+        private string? ExistingImageUrl(string? url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return null;
+            if (!url.StartsWith("/images/HemSampark/", StringComparison.OrdinalIgnoreCase)) return null;
+
+            string fileName = Path.GetFileName(url.Split('?')[0]);
+            if (string.IsNullOrEmpty(fileName) || _env.WebRootPath == null) return null;
+
+            return System.IO.File.Exists(Path.Combine(_env.WebRootPath, "images", "HemSampark", fileName)) ? url : null;
         }
 
         // The [HemSamparkUser] filter guarantees a logged-in user.
@@ -185,7 +201,7 @@ namespace HemFoundation.Controllers
                     morningMantraHi = snapshot.MorningMantraHi,
                     valuesInFocus = snapshot.ValuesInFocusEn,
                     valuesInFocusHi = snapshot.ValuesInFocusHi,
-                    pictureUrl = string.IsNullOrWhiteSpace(snapshot.ImageUrl) ? null : snapshot.ImageUrl,
+                    pictureUrl = ExistingImageUrl(snapshot.ImageUrl),
                     pdfAvailable,
                     pdfUrl = pdfAvailable ? $"{baseUrl}/pdf?v={version}" : null,
                     downloadUrl = pdfAvailable ? $"{baseUrl}/pdf?download=true&v={version}" : null,

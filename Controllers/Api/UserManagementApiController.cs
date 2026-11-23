@@ -48,7 +48,15 @@ namespace HemFoundation.Controllers.Api
                 page = Math.Max(1, page);
                 pageSize = Math.Clamp(pageSize, 10, 200);
 
-                var query = _context.HfViewUsers.AsNoTracking().AsQueryable();
+                // "isactive" is boolean on some databases and bit(1) on others. A bit column
+                // cannot be used directly as a WHERE condition, so the status filter compares
+                // its text form ('1' / 'true'), which works for both types.
+                var query = status == "active"
+                    ? _context.HfViewUsers.FromSqlRaw("SELECT * FROM public.hf_view_users WHERE isactive::text IN ('1', 'true')")
+                    : status == "inactive"
+                        ? _context.HfViewUsers.FromSqlRaw("SELECT * FROM public.hf_view_users WHERE isactive IS NULL OR isactive::text NOT IN ('1', 'true')")
+                        : _context.HfViewUsers.AsQueryable();
+                query = query.AsNoTracking();
 
                 if (!string.IsNullOrWhiteSpace(role))
                 {
@@ -57,9 +65,6 @@ namespace HemFoundation.Controllers.Api
                     query = query.Where(u => u.UserRoles != null &&
                         ("," + u.UserRoles.Replace(", ", ",") + ",").Contains("," + r + ","));
                 }
-
-                if (status == "active") query = query.Where(u => u.isactive);
-                else if (status == "inactive") query = query.Where(u => !u.isactive);
 
                 var today = DateTime.Today;
                 if (date == "today") query = query.Where(u => u.createddate >= today);
@@ -79,8 +84,13 @@ namespace HemFoundation.Controllers.Api
                         ("usr-" + u.userid.ToString()).Contains(search.Trim().ToLower()));
                 }
 
-                int total = await query.CountAsync();
-                int active = await query.CountAsync(u => u.isactive);
+                // Grouping (instead of WHERE isactive) also works when the column is bit(1).
+                var statusCounts = await query
+                    .GroupBy(u => u.isactive)
+                    .Select(g => new { IsActive = g.Key, Count = g.Count() })
+                    .ToListAsync();
+                int total = statusCounts.Sum(x => x.Count);
+                int active = statusCounts.Where(x => x.IsActive).Sum(x => x.Count);
 
                 var rows = await query
                     .OrderByDescending(x => x.createddate)

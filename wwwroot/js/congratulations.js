@@ -323,16 +323,22 @@
                     '<td data-label="Date">' + esc(c.dayMonth) + (c.year ? ' ' + c.year : '') + '</td>' +
                     '<td data-label="Next">' + esc(c.nextLabel) + (c.daysLeft === 0 ? ' <span class="cg-badge is-today">Today</span>' : ' <span class="cg-up-meta">(' + c.daysLeft + ' days)</span>') + '</td>' +
                     '<td data-label="Mobile">' + esc(c.mobile || '—') + '</td>' +
+                    '<td data-label="Email / City"><div class="cg-contact-extra">' +
+                        (c.email || c.city || c.pincode
+                            ? esc(c.email || '') + (c.email && (c.city || c.pincode) ? '<br>' : '') + esc([c.city, c.pincode].filter(Boolean).join(' – '))
+                            : '—') +
+                        (c.address ? '<div title="' + esc(c.address) + '">' + esc(c.address.length > 40 ? c.address.slice(0, 40) + '…' : c.address) + '</div>' : '') +
+                    '</div></td>' +
                     '<td class="is-actions"><div class="cg-row-actions">' +
                     '<button type="button" class="cg-btn is-sm is-primary" data-c-make="' + i + '"><i class="bi bi-magic"></i> Card</button>' +
                     '<button type="button" class="cg-btn is-sm" data-c-edit="' + i + '"><i class="bi bi-pencil"></i></button>' +
                     '<button type="button" class="cg-btn is-sm" data-c-del="' + i + '" aria-label="Remove"><i class="bi bi-trash"></i></button>' +
                     '</div></td></tr>';
-            }).join('') : '<tr><td colspan="6" class="cg-empty">No contacts yet. Add one, or make a card – it is saved here automatically.</td></tr>';
+            }).join('') : '<tr><td colspan="7" class="cg-empty">No contacts yet. Add one, or make a card – it is saved here automatically.</td></tr>';
 
             pager($('cgContactsPager'), res, 'contacts', loadContacts);
         }).catch(function (e) {
-            $('cgContacts').innerHTML = '<tr><td colspan="6" class="cg-empty">' + esc(e.message) + '</td></tr>';
+            $('cgContacts').innerHTML = '<tr><td colspan="7" class="cg-empty">' + esc(e.message) + '</td></tr>';
         });
     }
 
@@ -346,6 +352,10 @@
         $('cgCDate').value = c ? (c.date || ('2000-' + String(c.month).padStart(2, '0') + '-' + String(c.day).padStart(2, '0'))) : '';
         $('cgCMobile').value = c && c.mobile ? c.mobile : '';
         $('cgCNotes').value = c && c.notes ? c.notes : '';
+        $('cgCEmail').value = c && c.email ? c.email : '';
+        $('cgCAddress').value = c && c.address ? c.address : '';
+        $('cgCCity').value = c && c.city ? c.city : '';
+        $('cgCPincode').value = c && c.pincode ? c.pincode : '';
         bootstrap.Modal.getOrCreateInstance($('cgContactModal')).show();
     }
 
@@ -427,6 +437,87 @@
         loadWishes('given');
     }
 
+
+    // ------------------------------------------------------------------
+    // Type in English, write in Hindi
+    // ------------------------------------------------------------------
+    var hindiKnown = {};          // word → Hindi from the server (Google Input Tools)
+    var hindiServerOff = false;   // the server could not convert: use the built-in converter only
+
+    function hindiPreferred() {
+        try { return localStorage.getItem('cg-hindi') !== 'off'; } catch (e) { return true; }
+    }
+
+    function hindiRemember(on) {
+        try { localStorage.setItem('cg-hindi', on ? 'on' : 'off'); } catch (e) { }
+    }
+
+    function englishWords(text) {
+        var seen = {}, list = [];
+        (text.match(/[A-Za-z]+/g) || []).forEach(function (w) {
+            var k = w.toLowerCase();
+            if (!seen[k] && !hindiKnown.hasOwnProperty(k) && !HindiTranslit.isListed(k)) { seen[k] = true; list.push(k); }
+        });
+        return list;
+    }
+
+    function askServer(words) {
+        if (!words.length || hindiServerOff || !window.fetch) return Promise.resolve();
+        return api('GET', '/transliterate?text=' + encodeURIComponent(words.join(' '))).then(function (res) {
+            if (res.online === false) { hindiServerOff = true; return; }
+            words.forEach(function (w) {
+                var hi = res.words ? res.words[w] : null;
+                hindiKnown[w] = hi || '';   // '' = not known: the built-in converter is used
+            });
+        }).catch(function () { hindiServerOff = true; });
+    }
+
+    /** Converts the finished English words in an input; the word being typed is left alone. */
+    function hindiInput(input, checkbox, onChange) {
+        var running = null;
+
+        function convert(all) {
+            if (!checkbox.checked) return Promise.resolve();
+            if (running) return running.then(function () { return convert(all); });
+            var value = input.value;
+            var cut = all ? value.length : Math.max(value.lastIndexOf(' '), value.lastIndexOf('.')) + 1;
+            var done = value.slice(0, cut);
+            if (!/[A-Za-z]/.test(done)) return Promise.resolve();
+
+            running = askServer(englishWords(done)).then(function () {
+                running = null;
+                var now = input.value;
+                if (now.slice(0, done.length) !== done) return;   // changed meanwhile: next key or blur will convert
+                var start = input.selectionStart, fromEnd = now.length - (start == null ? now.length : start);
+                var converted = HindiTranslit.text(done, hindiKnown);
+                input.value = converted + now.slice(done.length);
+                var pos = Math.max(0, input.value.length - fromEnd);
+                if (document.activeElement === input) try { input.setSelectionRange(pos, pos); } catch (e) { }
+                if (onChange) onChange();
+            });
+            return running;
+        }
+
+        input.addEventListener('keyup', function (e) {
+            if (e.key === ' ' || e.key === 'Enter' || e.key === '.' || e.key === 'Spacebar') convert(false);
+        });
+        input.addEventListener('input', function (e) {
+            // Mobile keyboards often send no useful key code: react to the typed space.
+            if (e.data === ' ' || e.data === '.') convert(false);
+        });
+        input.addEventListener('blur', function () { convert(true); });
+        checkbox.addEventListener('change', function () {
+            hindiRemember(checkbox.checked);
+            $('cgHindi').checked = $('cgCHindi').checked = checkbox.checked;
+            if (checkbox.checked) convert(true);
+        });
+        return convert;
+    }
+
+    $('cgHindi').checked = $('cgCHindi').checked = hindiPreferred();
+    var convertCardName = hindiInput($('cgName'), $('cgHindi'), draw);
+    var convertContactName = hindiInput($('cgCName'), $('cgCHindi'));
+
     // ------------------------------------------------------------------
     // Wiring
     // ------------------------------------------------------------------
@@ -435,10 +526,12 @@
     });
     ['cgName', 'cgDate'].forEach(function (id) { $(id).addEventListener('input', draw); });
     $('cgPriya').addEventListener('change', draw);
-    $('cgDownloadJpg').addEventListener('click', function () { download('jpg', this); });
-    $('cgDownloadPdf').addEventListener('click', function () { download('pdf', this); });
+    // Any English still in the name is converted before the card is saved.
+    $('cgDownloadJpg').addEventListener('click', function () { var b = this; convertCardName(true).then(function () { download('jpg', b); }); });
+    $('cgDownloadPdf').addEventListener('click', function () { var b = this; convertCardName(true).then(function () { download('pdf', b); }); });
     $('cgClear').addEventListener('click', function () {
         $('cgForm').reset();
+        $('cgHindi').checked = hindiPreferred();
         $('cgContactId').value = '';
         showError('cgFormError', '');
         draw();
@@ -486,6 +579,10 @@
 
     $('cgContactForm').addEventListener('submit', function (e) {
         e.preventDefault();
+        convertContactName(true).then(saveContact);
+    });
+
+    function saveContact() {
         var known = $('cgCYearKnown').checked;
         var date = $('cgCDate').value;
         if (date && !known) date = '2000' + date.slice(4);
@@ -495,14 +592,15 @@
 
         api('POST', '/contacts', {
             id: Number($('cgCId').value) || 0, name: $('cgCName').value, occasion: $('cgCOccasion').value,
-            date: date, yearKnown: known, mobile: $('cgCMobile').value, notes: $('cgCNotes').value
+            date: date, yearKnown: known, mobile: $('cgCMobile').value, notes: $('cgCNotes').value,
+            email: $('cgCEmail').value, address: $('cgCAddress').value, city: $('cgCCity').value, pincode: $('cgCPincode').value
         }).then(function (res) {
             bootstrap.Modal.getOrCreateInstance($('cgContactModal')).hide();
             toast('success', res.message);
             refreshAll();
         }).catch(function (err) { showError('cgContactError', err.message); })
           .then(function () { button.disabled = false; });
-    });
+    }
 
     root.addEventListener('click', function (e) {
         var b = e.target.closest('[data-w-photo]');
@@ -529,6 +627,60 @@
         }).catch(function (err) {
             showError('cgPhotoError', err.message);
             button.disabled = false;
+        });
+    });
+
+
+    // ------------------------------------------------------------------
+    // Excel upload
+    // ------------------------------------------------------------------
+    $('cgImport').addEventListener('click', function () {
+        $('cgImportFile').value = '';
+        $('cgImportUpload').disabled = true;
+        showError('cgImportError', '');
+        $('cgImportResult').hidden = true;
+        bootstrap.Modal.getOrCreateInstance($('cgImportModal')).show();
+    });
+
+    $('cgImportFile').addEventListener('change', function () {
+        showError('cgImportError', '');
+        $('cgImportResult').hidden = true;
+        var f = this.files && this.files[0];
+        if (f && !/\.xlsx$/i.test(f.name)) {
+            showError('cgImportError', 'Please choose an .xlsx file (Excel Workbook).');
+            $('cgImportUpload').disabled = true;
+            return;
+        }
+        $('cgImportUpload').disabled = !f;
+    });
+
+    $('cgImportUpload').addEventListener('click', function () {
+        var f = $('cgImportFile').files[0];
+        if (!f) return;
+        var button = this;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Uploading…';
+        showError('cgImportError', '');
+
+        var form = new FormData();
+        form.append('file', f, f.name);
+
+        api('POST', '/contacts/import', form).then(function (res) {
+            var html = '<div class="is-ok"><i class="bi bi-check2-circle"></i> ' + res.added + ' added · ' + res.updated + ' already in the list (details updated)</div>';
+            if (res.failed) {
+                html += '<div>' + res.failed + ' row(s) not added:</div><ul>' + res.errors.map(function (x) {
+                    return '<li>Row ' + x.row + (x.name ? ' (' + esc(x.name) + ')' : '') + ': ' + esc(x.message) + '</li>';
+                }).join('') + '</ul>';
+            }
+            $('cgImportResult').innerHTML = html;
+            $('cgImportResult').hidden = false;
+            $('cgImportFile').value = '';
+            refreshAll();
+        }).catch(function (err) {
+            showError('cgImportError', err.message);
+            button.disabled = false;
+        }).then(function () {
+            button.innerHTML = '<i class="bi bi-upload"></i> Upload';
         });
     });
 

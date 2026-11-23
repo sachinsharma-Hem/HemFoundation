@@ -45,7 +45,12 @@
                 </div>
 
                 <label class="cg-label" for="cgName">Name on the card</label>
-                <input type="text" id="cgName" class="cg-input" maxlength="120" placeholder="e.g. डॉ. चेतना जी गट्टानी">
+                <input type="text" id="cgName" class="cg-input" maxlength="120" placeholder="e.g. डॉ. चेतना जी गट्टानी" lang="hi">
+
+                <label class="cg-check">
+                    <input type="checkbox" id="cgHindi" checked> Type in English, write in Hindi (हिंदी में बदलें)
+                </label>
+                <div class="cg-hint is-left" id="cgHindiHint">Type a word and press space – e.g. “shri mahesh ji” becomes “श्री महेश जी”. You can correct any word.</div>
 
                 <label class="cg-check">
                     <input type="checkbox" id="cgPriya" checked> Write “प्रिय” before the name
@@ -106,12 +111,13 @@
                     <option value="7">July</option><option value="8">August</option><option value="9">September</option>
                     <option value="10">October</option><option value="11">November</option><option value="12">December</option>
                 </select>
+                <button type="button" class="cg-btn" id="cgImport"><i class="bi bi-file-earmark-excel"></i> Upload Excel</button>
                 <button type="button" class="cg-btn is-primary" id="cgAddContact"><i class="bi bi-person-plus"></i> Add contact</button>
             </div>
             <div class="cg-table-wrap">
                 <table class="cg-table">
-                    <thead><tr><th>Name</th><th>Occasion</th><th>Date</th><th>Next</th><th>Mobile</th><th></th></tr></thead>
-                    <tbody id="cgContacts"><tr><td colspan="6" class="cg-empty">Loading…</td></tr></tbody>
+                    <thead><tr><th>Name</th><th>Occasion</th><th>Date</th><th>Next</th><th>Mobile</th><th>Email / City</th><th></th></tr></thead>
+                    <tbody id="cgContacts"><tr><td colspan="7" class="cg-empty">Loading…</td></tr></tbody>
                 </table>
             </div>
             <div class="cg-pager" id="cgContactsPager"></div>
@@ -146,7 +152,8 @@
                 <div class="modal-body">
                     <input type="hidden" id="cgCId">
                     <label class="cg-label" for="cgCName">Name</label>
-                    <input type="text" id="cgCName" class="cg-input" maxlength="120">
+                    <input type="text" id="cgCName" class="cg-input" maxlength="120" lang="hi">
+                    <label class="cg-check"><input type="checkbox" id="cgCHindi" checked> Type in English, write in Hindi (हिंदी में बदलें)</label>
                     <label class="cg-label" for="cgCOccasion">Occasion</label>
                     <select id="cgCOccasion" class="cg-input">
                         <option value="Birthday">Birthday</option>
@@ -155,8 +162,28 @@
                     <label class="cg-label" for="cgCDate">Date</label>
                     <input type="date" id="cgCDate" class="cg-input">
                     <label class="cg-check"><input type="checkbox" id="cgCYearKnown" checked> I know the year</label>
-                    <label class="cg-label" for="cgCMobile">Mobile (optional)</label>
-                    <input type="tel" id="cgCMobile" class="cg-input" maxlength="20">
+                    <div class="cg-row">
+                        <div>
+                            <label class="cg-label" for="cgCMobile">Mobile (optional)</label>
+                            <input type="tel" id="cgCMobile" class="cg-input" maxlength="20">
+                        </div>
+                        <div>
+                            <label class="cg-label" for="cgCEmail">Email (optional)</label>
+                            <input type="email" id="cgCEmail" class="cg-input" maxlength="150">
+                        </div>
+                    </div>
+                    <label class="cg-label" for="cgCAddress">Address (optional)</label>
+                    <input type="text" id="cgCAddress" class="cg-input" maxlength="300">
+                    <div class="cg-row">
+                        <div>
+                            <label class="cg-label" for="cgCCity">City (optional)</label>
+                            <input type="text" id="cgCCity" class="cg-input" maxlength="80">
+                        </div>
+                        <div>
+                            <label class="cg-label" for="cgCPincode">PIN code (optional)</label>
+                            <input type="text" id="cgCPincode" class="cg-input" maxlength="10" inputmode="numeric">
+                        </div>
+                    </div>
                     <label class="cg-label" for="cgCNotes">Notes (optional)</label>
                     <input type="text" id="cgCNotes" class="cg-input" maxlength="250">
                     <div id="cgContactError" class="cg-error" hidden></div>
@@ -166,6 +193,33 @@
                     <button type="submit" class="cg-btn is-primary" id="cgContactSave"><i class="bi bi-check2"></i> Save</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Excel upload -->
+<div class="modal fade cg-modal" id="cgImportModal" tabindex="-1" aria-labelledby="cgImportTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cgImportTitle">Upload contacts from Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ol class="cg-steps">
+                    <li><a href="/api/congratulations/contacts/template" id="cgTemplate"><i class="bi bi-download"></i> Download the sample Excel file</a></li>
+                    <li>Fill <b>Name</b>, <b>Occasion</b> (Birthday / Anniversary) and <b>Date</b>. Mobile, Email, Address, City, PIN code and Notes are optional.</li>
+                    <li>Choose the file and click <b>Upload</b>.</li>
+                </ol>
+                <label class="cg-label" for="cgImportFile">Excel file (.xlsx)</label>
+                <input type="file" id="cgImportFile" class="cg-input cg-file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                <div id="cgImportError" class="cg-error" hidden></div>
+                <div id="cgImportResult" class="cg-import-result" hidden></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="cg-btn" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="cg-btn is-primary" id="cgImportUpload" disabled><i class="bi bi-upload"></i> Upload</button>
+            </div>
         </div>
     </div>
 </div>
@@ -202,5 +256,6 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/hindi-transliterate.js" asp-append-version="true"></script>
     <script src="~/js/congratulations.js" asp-append-version="true"></script>
 }
