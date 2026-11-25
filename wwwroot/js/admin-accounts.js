@@ -9,6 +9,7 @@
 
     var $ = function (id) { return document.getElementById(id); };
     var state = { items: [], roles: [], canManage: false, meId: 0, roleColumn: false };
+    var editing = null;   // the admin being edited, or null when adding
 
     function esc(v) {
         return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
@@ -76,26 +77,58 @@
                 '<td class="ps-3"><div class="d-flex align-items-center gap-2"><span class="rounded-circle d-inline-grid text-white fw-bold" style="width:36px;height:36px;place-items:center;background:' + (a.isSuperAdmin ? '#4B2E83' : '#6c757d') + '">' + esc(initials(a.name)) + '</span>' +
                 '<div><div class="fw-semibold">' + esc(a.name) + (me ? ' <span class="badge text-bg-warning">You</span>' : '') + '</div></div></div></td>' +
                 '<td><div>' + esc(a.email || '—') + '</div><div class="small text-muted">' + esc(a.mobile || '') + '</div></td>' +
-                '<td>' + roleCell + '</td><td>' + statusCell + '</td><td class="pe-3 small text-muted">' + esc(a.createdOn) + '</td></tr>';
-        }).join('') : '<tr><td colspan="5" class="text-center text-muted py-4">No admins yet.</td></tr>';
+                '<td>' + roleCell + '</td><td>' + statusCell + '</td><td class="small text-muted">' + esc(a.createdOn) + '</td>' +
+                '<td class="pe-3 text-end">' + (d.canManage || me
+                    ? '<button type="button" class="btn btn-sm btn-outline-primary rounded-pill" data-edit="' + i + '" title="Edit details or set a new password"><i class="bi bi-pencil-square"></i><span class="d-none d-lg-inline ms-1">Edit</span></button>'
+                    : '') + '</td></tr>';
+        }).join('') : '<tr><td colspan="6" class="text-center text-muted py-4">No admins yet.</td></tr>';
 
         $('aaRole').innerHTML = roleOptions('Admin');
     }
 
     function load() {
-        $('aaRows').innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Loading…</td></tr>';
+        $('aaRows').innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Loading…</td></tr>';
         return api('GET', '').then(function (j) {
             state = { items: j.items, roles: j.roles, canManage: j.canManage, meId: j.meId, roleColumn: j.roleColumn, total: j.total, active: j.active, superAdmins: j.superAdmins };
             render();
         }).catch(function (e) {
-            $('aaRows').innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">' + esc(e.message) + '</td></tr>';
+            $('aaRows').innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">' + esc(e.message) + '</td></tr>';
         });
     }
 
-    function showForm(show) {
+    function showForm(show, admin) {
+        editing = show && admin ? admin : null;
         $('aaForm').hidden = !show;
         $('aaFormError').hidden = true;
-        if (show) { $('aaForm').reset(); $('aaRole').innerHTML = roleOptions('Admin'); $('aaRole').disabled = false; $('aaFirst').focus(); }
+        if (!show) return;
+        $('aaForm').reset();
+        var pw = $('aaPassword'); pw.type = 'password'; $('aaShowPw').innerHTML = '<i class="bi bi-eye"></i>';
+        if (editing) {
+            $('aaFormTitle').innerHTML = '<i class="bi bi-pencil-square text-primary me-1"></i> Edit admin · ' + esc(editing.name);
+            $('aaFirst').value = editing.firstName || '';
+            $('aaLast').value = editing.lastName || '';
+            $('aaEmail').value = editing.email || '';
+            $('aaMobile').value = editing.mobile || '';
+            $('aaPwLabel').textContent = 'New password';
+            $('aaPwReq').hidden = true;
+            pw.required = false;
+            pw.placeholder = 'Leave empty to keep the current password';
+            $('aaPwHint').textContent = 'Only fill this to reset a forgotten password. Share the new password with the person safely.';
+            $('aaRoleCol').hidden = true;   // role and super admin are changed in the list
+            $('aaSave').innerHTML = '<i class="bi bi-check2 me-1"></i> Save changes';
+        } else {
+            $('aaFormTitle').innerHTML = '<i class="bi bi-person-plus text-primary me-1"></i> New admin';
+            $('aaPwLabel').textContent = 'Password';
+            $('aaPwReq').hidden = false;
+            pw.required = true;
+            pw.placeholder = 'At least 8 characters, letters and numbers';
+            $('aaPwHint').textContent = 'Share it with the person safely; they log in with the email and this password.';
+            $('aaRoleCol').hidden = false;
+            $('aaRole').innerHTML = roleOptions('Admin'); $('aaRole').disabled = false;
+            $('aaSave').innerHTML = '<i class="bi bi-check2 me-1"></i> Create admin';
+        }
+        $('aaForm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        $('aaFirst').focus();
     }
 
     openBtn.addEventListener('click', function () {
@@ -103,7 +136,11 @@
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
         load();
     });
-    $('aaToggleForm').addEventListener('click', function () { showForm($('aaForm').hidden); });
+    $('aaToggleForm').addEventListener('click', function () { showForm($('aaForm').hidden || !!editing); });
+    $('aaRows').addEventListener('click', function (e) {
+        var b = e.target.closest('[data-edit]'); if (!b) return;
+        showForm(true, state.items[Number(b.getAttribute('data-edit'))]);
+    });
     $('aaCancel').addEventListener('click', function () { showForm(false); });
     $('aaSuper').addEventListener('change', function () { $('aaRole').disabled = this.checked; });
     $('aaMobile').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 10); });
@@ -124,10 +161,16 @@
         e.preventDefault();
         var err = $('aaFormError'); err.hidden = true;
         var btn = $('aaSave'); btn.disabled = true;
-        api('POST', '', {
-            firstName: $('aaFirst').value, lastName: $('aaLast').value, email: $('aaEmail').value, mobile: $('aaMobile').value,
-            password: $('aaPassword').value, role: $('aaRole').value, isSuperAdmin: $('aaSuper').checked
-        }).then(function (j) {
+        var call = editing
+            ? api('PUT', '/' + editing.id, {
+                firstName: $('aaFirst').value, lastName: $('aaLast').value, email: $('aaEmail').value, mobile: $('aaMobile').value,
+                newPassword: $('aaPassword').value
+            })
+            : api('POST', '', {
+                firstName: $('aaFirst').value, lastName: $('aaLast').value, email: $('aaEmail').value, mobile: $('aaMobile').value,
+                password: $('aaPassword').value, role: $('aaRole').value, isSuperAdmin: $('aaSuper').checked
+            });
+        call.then(function (j) {
             toast('success', j.message); showForm(false); load();
         }).catch(function (ex) {
             err.textContent = ex.message; err.hidden = false;

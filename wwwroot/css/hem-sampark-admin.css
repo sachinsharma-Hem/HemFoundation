@@ -213,3 +213,23 @@ button.hsa-stat:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba
     .hsa-modal .modal-footer .hsa-btn { flex: 1 1 46%; justify-content: center; }
     #hsaPreview .modal-content { height: 100%; }
 }
+
+/* Section title of the celebration strip (Celebrations Today / Observance Today / own words) */
+.hsa-section-pick { margin: -4px 0 16px; padding: 12px; border: 1px dashed var(--hsa-border, #e3dcef); border-radius: 12px; background: rgba(75, 46, 131, .03); }
+.hsa-section-pick-label { display: block; font-size: .8rem; font-weight: 700; color: var(--hsa-muted, #6b6787); margin-bottom: 8px; }
+.hsa-section-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.hsa-section-opt { position: relative; display: inline-flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; }
+.hsa-section-opt > input[type=radio] { position: absolute; opacity: 0; pointer-events: none; }
+.hsa-section-opt > span { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--hsa-border, #e3dcef); background: var(--hsa-card, #fff); font-size: .86rem; font-weight: 600; color: var(--hsa-text, #1f1a3a); transition: background .15s, border-color .15s, color .15s; white-space: nowrap; }
+.hsa-section-opt > span i { color: var(--hsa-primary, #4b2e83); }
+.hsa-section-opt > input[type=radio]:checked + span { background: var(--hsa-primary, #4b2e83); border-color: var(--hsa-primary, #4b2e83); color: #fff; }
+.hsa-section-opt > input[type=radio]:checked + span i { color: #fff; }
+.hsa-section-opt > input[type=radio]:focus-visible + span { outline: 2px solid var(--hsa-primary, #4b2e83); outline-offset: 2px; }
+.hsa-section-custom { flex: 1 1 320px; }
+.hsa-section-custom .form-control { flex: 1; min-width: 160px; }
+.hsa-section-custom .form-control:disabled { opacity: .6; }
+@media (max-width: 575.98px) {
+    .hsa-section-opt:not(.hsa-section-custom) { flex: 1 1 calc(50% - 4px); }
+    .hsa-section-opt:not(.hsa-section-custom) > span { width: 100%; justify-content: center; }
+    .hsa-section-custom { flex-wrap: wrap; }
+}

@@ -275,7 +275,25 @@
                         </div>
 
                         <div class="hsa-card">
-                            <h3 class="hsa-card-title"><i class="bi bi-stars"></i> Celebrations Today</h3>
+                            <h3 class="hsa-card-title"><i class="bi bi-stars"></i> <span id="hsaSectionLabel">Celebrations Today</span></h3>
+                            <div class="hsa-section-pick" role="radiogroup" aria-label="Title of this section in the PDF">
+                                <span class="hsa-section-pick-label">Section title in the PDF</span>
+                                <div class="hsa-section-options">
+                                    <label class="hsa-section-opt">
+                                        <input type="radio" name="hsaSection" value="celebrations" checked>
+                                        <span><i class="bi bi-stars"></i> Celebrations Today</span>
+                                    </label>
+                                    <label class="hsa-section-opt">
+                                        <input type="radio" name="hsaSection" value="observance">
+                                        <span><i class="bi bi-calendar-heart"></i> Observance Today</span>
+                                    </label>
+                                    <label class="hsa-section-opt hsa-section-custom">
+                                        <input type="radio" name="hsaSection" value="custom">
+                                        <span><i class="bi bi-pencil"></i> Other</span>
+                                        <input type="text" class="form-control form-control-sm" id="hsaSectionCustom" maxlength="60" placeholder="Write your own title, e.g. Remembering Today" disabled>
+                                    </label>
+                                </div>
+                            </div>
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="hsaHeadEn" class="hsa-req">Heading (English)</label>

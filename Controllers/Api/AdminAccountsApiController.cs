@@ -242,6 +242,74 @@ namespace HemFoundation.Controllers.Api
         }
 
         // ------------------------------------------------------------------
+        // Edit name, email, mobile and (optionally) set a new password
+        // ------------------------------------------------------------------
+
+        public class UpdateAdminDto
+        {
+            public string? FirstName { get; set; }
+            public string? LastName { get; set; }
+            public string? Email { get; set; }
+            public string? Mobile { get; set; }
+            /// <summary>Empty keeps the current password.</summary>
+            public string? NewPassword { get; set; }
+        }
+
+        /// <summary>A super admin can edit any admin (e.g. reset a forgotten password); every admin can edit their own account.</summary>
+        [HttpPut("{id:long}")]
+        public async Task<IActionResult> Update(long id, [FromBody] UpdateAdminDto model)
+        {
+            if (!HttpContext.Request.Headers.ContainsKey("X-Requested-With")) return Fail(400, "Invalid request.");
+            var me = await CurrentAdminAsync();
+            if (me == null) return Fail(401, "Please log in with an admin account.");
+            if (!me.IsSuperAdmin && me.Id != id) return Fail(403, "Only a super admin can change another admin's account.");
+            if (model == null) return Fail(400, "Invalid request.");
+
+            var admin = await _context.Admins.FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+            if (admin == null) return Fail(404, "Admin not found.");
+
+            string first = (model.FirstName ?? "").Trim(), last = (model.LastName ?? "").Trim();
+            string email = (model.Email ?? "").Trim(), mobile = (model.Mobile ?? "").Trim();
+            string password = model.NewPassword ?? "";
+
+            if (first.Length < 2 || first.Length > 100) return Fail(400, "Please enter the first name.");
+            if (last.Length > 100) return Fail(400, "The last name is too long.");
+            if (email.Length > 200 || !EmailPattern.IsMatch(email)) return Fail(400, "Please enter a valid email address. It is used to log in.");
+            if (mobile.Length > 0 && (mobile.Length != 10 || !mobile.All(char.IsDigit))) return Fail(400, "Mobile number must be 10 digits.");
+            if (password.Length > 0)
+            {
+                if (password.Length < 8 || password.Length > 100) return Fail(400, "The new password must be 8 to 100 characters.");
+                if (!password.Any(char.IsLetter) || !password.Any(char.IsDigit)) return Fail(400, "The new password must have letters and numbers.");
+            }
+
+            string emailLower = email.ToLower();
+            if (!string.Equals(admin.Email, email, StringComparison.OrdinalIgnoreCase))
+            {
+                if (await _context.Admins.AnyAsync(a => a.Id != id && a.Email != null && a.Email.ToLower() == emailLower && !a.IsDeleted))
+                    return Fail(409, "Another admin already uses this email.");
+                if (await _context.Set<ApplicationUser>().AnyAsync(u => (u.Email != null && u.Email.ToLower() == emailLower) || (u.UserName != null && u.UserName.ToLower() == emailLower)))
+                    return Fail(409, "This email is already used by a portal user. Use a different email for the admin login.");
+            }
+
+            admin.FirstName = first;
+            admin.LastName = string.IsNullOrEmpty(last) ? null : last;
+            admin.Email = email;
+            admin.MobileNo = string.IsNullOrEmpty(mobile) ? null : mobile;
+            bool passwordChanged = password.Length > 0;
+            if (passwordChanged) admin.PlainPassword = password;   // the admin login compares this column (existing behaviour)
+            admin.UpdatedOn = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Admin {Admin} updated by admin {By}{Pw}", admin.Id, me.Id, passwordChanged ? " (password changed)" : "");
+            string who = admin.Id == me.Id ? "Your account" : $"{first}'s account";
+            return Ok(new
+            {
+                success = true,
+                message = passwordChanged ? $"{who} is updated. The new password works from the next login." : $"{who} is updated."
+            });
+        }
+
+        // ------------------------------------------------------------------
         // Change role / super admin
         // ------------------------------------------------------------------
 

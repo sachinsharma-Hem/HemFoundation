@@ -25,6 +25,8 @@ namespace HemFoundation.Models.HemSampark
         public string? DayHindi { get; set; }
         public int IssueNumber { get; set; }
         public string? VikramSamvat { get; set; }
+        /// <summary>Strip title above the heading; empty means "Celebrations Today".</summary>
+        public string? CelebrationSectionTitle { get; set; }
         public string? CelebrationHeadingEn { get; set; }
         public string? CelebrationContentEn { get; set; }
         public string? CelebrationHeadingHi { get; set; }
@@ -159,6 +161,25 @@ namespace HemFoundation.Models.HemSampark
             !string.IsNullOrWhiteSpace(entry.Title) ? entry.Title!
             : !string.IsNullOrWhiteSpace(entry.CelebrationHeadingEn) ? entry.CelebrationHeadingEn!
             : $"HEM Sampark – {entry.EntryDate:dd MMM yyyy}";
+    }
+
+    /// <summary>Title of the strip above the day's heading in the PDF.</summary>
+    public static class HemSamparkSectionTitle
+    {
+        public const string Celebrations = "Celebrations Today";
+        public const string Observance = "Observance Today";
+        public const int MaxLength = 60;
+
+        /// <summary>The title to print: the saved one, or "Celebrations Today".</summary>
+        public static string Resolve(string? saved) =>
+            string.IsNullOrWhiteSpace(saved) ? Celebrations : saved.Trim();
+
+        /// <summary>The value to store: null for the default, so old rows and new rows read the same.</summary>
+        public static string? Normalize(string? value)
+        {
+            var v = (value ?? "").Trim();
+            return v.Length == 0 || v.Equals(Celebrations, StringComparison.OrdinalIgnoreCase) ? null : v;
+        }
     }
 
     /// <summary>Score maths shared by the user result screens and admin reports.</summary>
