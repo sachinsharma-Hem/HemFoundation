@@ -585,6 +585,21 @@ namespace HemFoundation.Services.HemSampark
         overflow-wrap: anywhere;
     }}
 
+    /* Fixed instruction under the Day's Challenge title. */
+    .challenge-note {{
+        font-size: 10.8px;
+        font-weight: 700;
+        line-height: 1.35;
+        margin: 0 0 6px;
+        padding-bottom: 5px;
+        border-bottom: 1px dashed #a8d79b;
+        overflow-wrap: anywhere;
+    }}
+
+    .challenge-note .bl-hi {{
+        font-family: Arial, 'Noto Sans Devanagari', sans-serif;
+    }}
+
     .question:last-child {{
         margin-bottom: 0;
     }}
@@ -693,6 +708,7 @@ namespace HemFoundation.Services.HemSampark
 
     <div class='challenge-box'>
         <div class='challenge-title'>Day's Challenge</div>
+        {(index > 1 ? ChallengeNote : string.Empty)}
         {questionsBuilder}
     </div>
 
@@ -875,6 +891,11 @@ namespace HemFoundation.Services.HemSampark
             return fileName;
         }
     
+        /// <summary>Printed under the "Day's Challenge" title, above the questions.</summary>
+        private const string ChallengeNote =
+            "<p class='challenge-note'><span class='bl-en'>Look at the four options given in the Google form and answer.</span>" +
+            "<span class='bl-sep'> / </span><span class='bl-hi'>गूगल फॉर्म में दर्शाए गए चार विकल्पों को देखकर उत्तर दें।</span></p>";
+
         /// <summary>
         /// The small picture beside the English text is printed about 34 mm wide. A low-resolution
         /// upload looks soft or blocky there, so it is enlarged in steps with high-quality
