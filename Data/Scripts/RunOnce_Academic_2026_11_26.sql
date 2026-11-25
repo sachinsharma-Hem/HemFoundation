@@ -13,72 +13,65 @@
 -- HF_SP_UpsertStudentMark, HF_SP_GetStudentHolisticAcademicReport,
 -- SP_GetStudentActivityLogMarks) are now done in the application, with the same rules.
 --
--- Only new tables and indexes are created. No existing table, column or row
+-- Only missing tables and plain indexes are created. No existing table, column or row
 -- is changed or removed. A school's id is its user id, as in the old system.
 -- =============================================================================
+
+-- If these tables already exist (moved from the old system), the CREATE TABLE lines are
+-- skipped and nothing in them is touched. The structure below is the same as the old one
+-- (isactive / isabsent are bit), so new and existing databases work the same way.
+-- Only plain (non-unique) indexes are added, which never fail on existing rows.
+-- The "one rule / one mark" checks of the old MERGE are done in the application.
 
 CREATE TABLE IF NOT EXISTS public.hf_tbl_academicterms
 (
     termid        serial PRIMARY KEY,
-    instituteid   integer      NOT NULL,
-    termname      varchar(100) NOT NULL,
-    academicyear  varchar(20)  NOT NULL,
-    isactive      boolean      NOT NULL DEFAULT true,
-    createdby     integer,
-    createdon     timestamp without time zone NOT NULL DEFAULT now()
+    instituteid   integer NOT NULL,
+    termname      varchar(100),
+    academicyear  varchar(20),
+    isactive      bit(1) DEFAULT B'1'
 );
-CREATE INDEX IF NOT EXISTS ix_academicterms_institute ON public.hf_tbl_academicterms (instituteid);
 
 CREATE TABLE IF NOT EXISTS public.hf_tbl_institutesubjects
 (
     subjectid     serial PRIMARY KEY,
-    instituteid   integer      NOT NULL,
-    subjectname   varchar(100) NOT NULL,
+    instituteid   integer NOT NULL,
+    subjectname   varchar(100),
     subjectcode   varchar(20),
-    isactive      boolean      NOT NULL DEFAULT true,
-    createdby     integer,
-    createdon     timestamp without time zone NOT NULL DEFAULT now()
+    isactive      bit(1) DEFAULT B'1'
 );
-CREATE INDEX IF NOT EXISTS ix_institutesubjects_institute ON public.hf_tbl_institutesubjects (instituteid);
--- One active subject with the same name per school (the old procedure's duplicate check).
-CREATE UNIQUE INDEX IF NOT EXISTS ux_institutesubjects_name
-    ON public.hf_tbl_institutesubjects (instituteid, lower(subjectname)) WHERE isactive;
 
 CREATE TABLE IF NOT EXISTS public.hf_tbl_examconfigurations
 (
     configid      serial PRIMARY KEY,
-    instituteid   integer      NOT NULL,
-    termid        integer      NOT NULL REFERENCES public.hf_tbl_academicterms (termid),
-    standard      varchar(50)  NOT NULL,
-    subjectid     integer      NOT NULL REFERENCES public.hf_tbl_institutesubjects (subjectid),
-    maxmarks      numeric(6,2) NOT NULL CHECK (maxmarks > 0),
-    passingmarks  numeric(6,2) NOT NULL CHECK (passingmarks >= 0),
-    createdon     timestamp without time zone NOT NULL DEFAULT now(),
-    modifiedon    timestamp without time zone,
-    CONSTRAINT ck_examconfig_passing CHECK (passingmarks <= maxmarks)
+    instituteid   integer NOT NULL,
+    termid        integer NOT NULL,
+    standard      varchar(50),
+    subjectid     integer NOT NULL,
+    maxmarks      numeric(6,2),
+    passingmarks  numeric(6,2)
 );
--- One rule per school + term + standard + subject (the old MERGE key).
-CREATE UNIQUE INDEX IF NOT EXISTS ux_examconfigurations_rule
-    ON public.hf_tbl_examconfigurations (instituteid, termid, standard, subjectid);
 
 CREATE TABLE IF NOT EXISTS public.hf_tbl_studentmarks
 (
-    markid            bigserial PRIMARY KEY,
-    instituteid       integer      NOT NULL,
-    studentid         integer      NOT NULL,
-    configid          integer      NOT NULL REFERENCES public.hf_tbl_examconfigurations (configid),
-    marksobtained     numeric(6,2) NOT NULL DEFAULT 0,
-    isabsent          boolean      NOT NULL DEFAULT false,
+    markid            serial PRIMARY KEY,
+    instituteid       integer NOT NULL,
+    studentid         integer NOT NULL,
+    configid          integer NOT NULL,
+    marksobtained     numeric(6,2),
+    isabsent          bit(1) DEFAULT B'0',
     remarks           varchar(200),
-    createdby         integer,
-    createdtimestamp  timestamp without time zone NOT NULL DEFAULT now(),
-    modifiedtimestamp timestamp without time zone NOT NULL DEFAULT now()
+    createdby         integer NOT NULL,
+    createdtimestamp  timestamp without time zone DEFAULT now(),
+    modifiedtimestamp timestamp without time zone DEFAULT now()
 );
--- One mark per student per exam (the old MERGE key).
-CREATE UNIQUE INDEX IF NOT EXISTS ux_studentmarks_student_exam
-    ON public.hf_tbl_studentmarks (instituteid, studentid, configid);
-CREATE INDEX IF NOT EXISTS ix_studentmarks_student ON public.hf_tbl_studentmarks (studentid);
-CREATE INDEX IF NOT EXISTS ix_studentmarks_config ON public.hf_tbl_studentmarks (configid);
+
+-- Speed only (plain indexes; safe on existing data).
+CREATE INDEX IF NOT EXISTS ix_academicterms_institute     ON public.hf_tbl_academicterms (instituteid);
+CREATE INDEX IF NOT EXISTS ix_institutesubjects_institute ON public.hf_tbl_institutesubjects (instituteid);
+CREATE INDEX IF NOT EXISTS ix_examconfigurations_lookup   ON public.hf_tbl_examconfigurations (instituteid, termid, subjectid);
+CREATE INDEX IF NOT EXISTS ix_studentmarks_config_student ON public.hf_tbl_studentmarks (configid, studentid);
+CREATE INDEX IF NOT EXISTS ix_studentmarks_student        ON public.hf_tbl_studentmarks (studentid);
 
 -- Check: should list the four tables.
 SELECT table_name FROM information_schema.tables
