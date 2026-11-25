@@ -222,25 +222,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const vidCols = document.querySelectorAll(".hem-vid-col");
 
     if (vidCols.length > 0) {
+        // On phones the two columns are stacked, so they slide up instead of sideways
+        // (a sideways start pushed the text past the right edge of the screen).
+        const stacked = window.matchMedia("(max-width: 991.98px)").matches;
+
         vidCols.forEach((col, index) => {
             col.style.opacity = "0";
-            col.style.transform = index === 0 ? "translateX(-40px) scale(0.95)" : "translateX(40px) scale(0.95)";
-            col.style.transition = `all 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.15}s`;
+            col.style.transform = stacked
+                ? "translateY(24px)"
+                : (index === 0 ? "translateX(-40px) scale(0.95)" : "translateX(40px) scale(0.95)");
+            col.style.transition = `all 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${stacked ? 0 : index * 0.15}s`;
         });
 
+        // Each column appears when it scrolls into view.
         const observer = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    vidCols.forEach(col => {
-                        col.style.opacity = "1";
-                        col.style.transform = "translate(0) scale(1)";
-                    });
+                    entry.target.style.opacity = "1";
+                    entry.target.style.transform = "none";
                     observer.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.2 });
+        }, { threshold: 0.15 });
 
-        observer.observe(vidCols[0]);
+        vidCols.forEach(col => observer.observe(col));
     }
 
     // 2. Smart Video Modal Autoplay & Cleanup
@@ -249,11 +254,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (videoModal && videoContainer) {
         // Embed URL of your youtube video with autoplay enabled
-        const embedUrl = "https://www.youtube.com/embed/_KjRB1egRqk?autoplay=1&rel=0";
+        // playsinline: phones play it inside the popup instead of forcing full screen.
+        const embedUrl = "https://www.youtube.com/embed/_KjRB1egRqk?autoplay=1&rel=0&playsinline=1&modestbranding=1";
 
-        // When modal opens, inject iframe
+        // When modal opens, inject iframe. YouTube needs the page's origin as referrer,
+        // otherwise some browsers show "Video unavailable / error 153".
         videoModal.addEventListener("show.bs.modal", () => {
-            videoContainer.innerHTML = `<iframe src="${embedUrl}" title="HEMA Foundation: Introduction" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen class="w-100 h-100 border-0"></iframe>`;
+            videoContainer.innerHTML = `<iframe src="${embedUrl}" title="HEMA Foundation: Introduction" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen class="w-100 h-100 border-0"></iframe>`;
         });
 
         // When modal closes, remove iframe to stop audio/video
@@ -475,33 +482,83 @@ document.addEventListener("DOMContentLoaded", () => {
         observer.observe(ctaTextCol);
     }
 
-    // 2. Demo Form Submission Handler
+    // 2. Demo Form Submission Handler: sends the request to the admin e-mail (api/demo-request).
     const demoForm = document.getElementById("hemDemoForm");
     if (demoForm) {
+        const errorBox = document.getElementById("demoError");
+        const submitBtn = document.getElementById("demoSubmit");
+        const submitHtml = submitBtn ? submitBtn.innerHTML : "";
+
+        const showError = (message) => {
+            if (!errorBox) { alert(message); return; }
+            errorBox.querySelector(".alert").textContent = message;
+            errorBox.classList.toggle("d-none", !message);
+        };
+
         demoForm.addEventListener("submit", function (e) {
             e.preventDefault();
+            showError("");
 
-            // Close the modal automatically
-            const modalEl = document.getElementById("modalcontact");
-            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) {
-                modalInstance.hide();
+            if (!demoForm.checkValidity()) {
+                demoForm.classList.add("was-validated");
+                const first = demoForm.querySelector(":invalid");
+                if (first) first.focus();
+                return;
             }
 
-            // Show Success Notification (Uses SweetAlert2 if loaded, otherwise fallback to alert)
-            if (typeof Swal !== "undefined") {
-                Swal.fire({
-                    title: "Request Received!",
-                    text: "Thank you for scheduling a live demo. Our value education team will contact you within 24 hours.",
-                    icon: "success",
-                    confirmButtonColor: "#0066FF",
-                    confirmButtonText: "Great, Thanks!"
+            const value = (id) => (document.getElementById(id)?.value || "").trim();
+            const payload = {
+                name: value("demoName"),
+                email: value("demoEmail"),
+                phone: value("demoPhone"),
+                school: value("demoSchool"),
+                message: value("demoMessage"),
+                website: value("demoWebsite")
+            };
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Sending…</span>';
+            }
+
+            fetch("/api/demo-request", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+                body: JSON.stringify(payload)
+            })
+                .then(r => r.json().catch(() => ({})).then(j => ({ ok: r.ok, body: j })))
+                .then(({ ok, body }) => {
+                    if (!ok || body.success === false) {
+                        showError(body.message || "We could not send your request. Please try again.");
+                        return;
+                    }
+
+                    const text = body.message || "Thank you for scheduling a live demo. Our value education team will contact you within 24 hours.";
+                    const confirm = () => {
+                        if (typeof Swal !== "undefined") {
+                            Swal.fire({ title: "Request Received!", text: text, icon: "success", confirmButtonColor: "#0066FF", confirmButtonText: "Great, Thanks!" });
+                        } else {
+                            alert(text);
+                        }
+                    };
+
+                    // Close the form first, then confirm (a browser alert would freeze the closing popup).
+                    const modalEl = document.getElementById("modalcontact");
+                    const modalInstance = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+                    if (modalInstance && modalEl.classList.contains("show")) {
+                        modalEl.addEventListener("hidden.bs.modal", confirm, { once: true });
+                        modalInstance.hide();
+                    } else {
+                        confirm();
+                    }
+
+                    demoForm.reset();
+                    demoForm.classList.remove("was-validated");
+                })
+                .catch(() => showError("No internet connection. Please check and try again."))
+                .finally(() => {
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = submitHtml; }
                 });
-            } else {
-                alert("Thank you! Your demo request has been submitted successfully.");
-            }
-
-            this.reset(); // Reset form inputs
         });
     }
 });

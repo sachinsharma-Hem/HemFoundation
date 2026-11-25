@@ -55,7 +55,14 @@
                         return Unauthorized(new { success = false, message = "Invalid username or password." });
                     }
 
+                    // A role picked in User Management → Admin accounts; otherwise "Admin" as before.
                     string primaryRole = "Admin";
+                    if (!adminUser.IsSuperAdmin)
+                    {
+                        string? chosenRole = await AdminAccountsApiController.GetAdminRoleAsync(_context, adminUser.Id);
+                        if (!string.IsNullOrWhiteSpace(chosenRole) && await _context.Roles.AnyAsync(r => r.Name == chosenRole))
+                            primaryRole = chosenRole;
+                    }
                     var roles = new List<string> { primaryRole };
 
                     List<HemFoundation.Models.Entities.RoleMenuRight> menuRights;
@@ -125,6 +132,8 @@
                     );
 
                     HttpContext.Session.SetString("IsAdminLoggedIn", "true");
+                    HttpContext.Session.SetString("AdminId", adminUser.Id.ToString());
+                    HttpContext.Session.SetString("IsSuperAdmin", adminUser.IsSuperAdmin ? "true" : "false");
                     HttpContext.Session.SetString("UserId", adminUser.Id.ToString());
                     HttpContext.Session.SetString("UserEmail", adminUser.Email ?? "");
                     HttpContext.Session.SetString("UserFullName", fullName);
@@ -287,6 +296,9 @@
                 string userrealfullName = !string.IsNullOrEmpty(bFirstName) ? $"{bFirstName} {bLastName}".Trim() : (user.UserName ?? "");
                 string mobileNo = businessUser != null ? (businessUser.MobileNo ?? "") : "";
 
+                // A portal user: drop any admin marker left from an earlier login in this browser.
+                HttpContext.Session.Remove("AdminId");
+                HttpContext.Session.Remove("IsSuperAdmin");
                 HttpContext.Session.SetString("IsAdminLoggedIn", "true");
                 HttpContext.Session.SetString("UserId", user.Id);
                 HttpContext.Session.SetString("UserEmail", user.Email ?? "");

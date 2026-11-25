@@ -168,7 +168,7 @@
         <div class="text-center mb-5">
             <h2 class="fw-bold hem-why-title">Why Schools Choose Hem Virtues?</h2>
             <div class="hem-why-line mx-auto"></div>
-            <p class="text-muted small mt-2">Click on any card to explore how Hem Foundation empowers students.</p>
+            <p class="text-muted small mt-2">Click on any card to explore how HEMA Foundation empowers students.</p>
         </div>
 
         <!-- 6 Cards Grid (Added data attributes & pointer cursor) -->
@@ -1363,12 +1363,17 @@
                     Fill in your details below and our value education experts will get in touch with you shortly.
                 </p>
 
-                <form id="hemDemoForm" class="row g-3">
+                <form id="hemDemoForm" class="row g-3" novalidate>
+                    <!-- Left empty by people; bots that fill it are ignored -->
+                    <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+                        <label for="demoWebsite">Website</label><input type="text" id="demoWebsite" name="website" tabindex="-1" autocomplete="off">
+                    </div>
+                    <div id="demoError" class="col-12 d-none"><div class="alert alert-danger py-2 px-3 small mb-0"></div></div>
                     <div class="col-12 col-md-6">
                         <label class="form-label small fw-bold text-dark">Full Name <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person"></i></span>
-                            <input type="text" class="form-control bg-light border-start-0 py-2" placeholder="e.g. Dr. Rajesh Sharma" required>
+                            <input type="text" class="form-control bg-light border-start-0 py-2" id="demoName" name="name" maxlength="100" autocomplete="name" placeholder="e.g. Dr. Rajesh Sharma" required>
                         </div>
                     </div>
 
@@ -1376,7 +1381,7 @@
                         <label class="form-label small fw-bold text-dark">Email Address <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
-                            <input type="email" class="form-control bg-light border-start-0 py-2" placeholder="name@school.com" required>
+                            <input type="email" class="form-control bg-light border-start-0 py-2" id="demoEmail" name="email" maxlength="150" autocomplete="email" placeholder="name@school.com" required>
                         </div>
                     </div>
 
@@ -1384,7 +1389,7 @@
                         <label class="form-label small fw-bold text-dark">Phone Number <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-telephone"></i></span>
-                            <input type="tel" class="form-control bg-light border-start-0 py-2" placeholder="+91 98765 43210" required>
+                            <input type="tel" class="form-control bg-light border-start-0 py-2" id="demoPhone" name="phone" maxlength="20" autocomplete="tel" placeholder="+91 98765 43210" required>
                         </div>
                     </div>
 
@@ -1392,17 +1397,17 @@
                         <label class="form-label small fw-bold text-dark">School / Institution Name <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-building"></i></span>
-                            <input type="text" class="form-control bg-light border-start-0 py-2" placeholder="e.g. Delhi Public School" required>
+                            <input type="text" class="form-control bg-light border-start-0 py-2" id="demoSchool" name="school" maxlength="150" autocomplete="organization" placeholder="e.g. Delhi Public School" required>
                         </div>
                     </div>
 
                     <div class="col-12">
                         <label class="form-label small fw-bold text-dark">Your Message / Requirement</label>
-                        <textarea class="form-control bg-light py-2" rows="4" placeholder="Tell us about your student strength, grades, or any specific requirements..."></textarea>
+                        <textarea class="form-control bg-light py-2" rows="4" id="demoMessage" name="message" maxlength="1000" placeholder="Tell us about your student strength, grades, or any specific requirements..."></textarea>
                     </div>
 
                     <div class="col-12 mt-4">
-                        <button type="submit" class="btn hem-btn-submit w-100 py-3 rounded-pill text-white fw-bold shadow d-flex align-items-center justify-content-center gap-2 border-0">
+                        <button type="submit" id="demoSubmit" class="btn hem-btn-submit w-100 py-3 rounded-pill text-white fw-bold shadow d-flex align-items-center justify-content-center gap-2 border-0">
                             <span>Submit Demo Request</span>
                             <i class="bi bi-send-fill fs-5"></i>
                         </button>
