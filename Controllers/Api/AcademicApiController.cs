@@ -29,7 +29,7 @@ namespace HemFoundation.Controllers.Api
             if (!_access.LoggedIn) { context.Result = Fail(401, "Your session has expired. Please log in again."); return; }
             if (_access.InstituteId == 0) { context.Result = Fail(403, "Academics is available to school accounts."); return; }
             if (!HttpMethods.IsGet(Request.Method) && !Request.Headers.ContainsKey("X-Requested-With")) { context.Result = Fail(400, "Invalid request."); return; }
-            if (!await _academic.TablesExistAsync()) { context.Result = Fail(503, "The academic tables are not set up yet. Run Data/Scripts/RunOnce_Academic_2026_11_26.sql."); return; }
+            if (!await _academic.TablesExistAsync()) { context.Result = Fail(503, "The academic tables are not set up yet. Run Data/Scripts/RunOnce_Update_2026_11_27.sql."); return; }
 
             try { await next(); }
             catch (AcademicService.AcademicException ex) { context.Result = Fail(400, ex.Message); }

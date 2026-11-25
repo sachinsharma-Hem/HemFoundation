@@ -11,7 +11,7 @@ namespace HemFoundation.Services.Academic
     /// Replaces the old SQL Server procedures HF_SP_SaveInstituteSubject, HF_SP_SaveExamConfiguration,
     /// HF_SP_UpsertStudentMark, HF_SP_GetStudentHolisticAcademicReport and SP_GetStudentActivityLogMarks
     /// with the same rules. Every method is limited to one school (instituteId = the school's user id).
-    /// Tables: Data/Scripts/RunOnce_Academic_2026_11_26.sql
+    /// Tables: Data/Scripts/RunOnce_Update_2026_11_27.sql
     /// </summary>
     public class AcademicService
     {

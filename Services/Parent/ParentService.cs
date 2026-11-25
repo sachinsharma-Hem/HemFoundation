@@ -9,7 +9,7 @@ namespace HemFoundation.Services.Parent
     /// mobile number) and sees each child's progress. Replaces the old SQL Server procedures
     /// HF_SP_GetUnmappedChildrenByMobile / ByUserID, HF_SP_MapChildToParent, HF_SP_GetStudentsDetailsByUserID
     /// (parent part), HF_SP_StudentsDashboardCount and HF_Proc_StudentsMainCoursewiseDetails.
-    /// Table: Data/Scripts/RunOnce_Parent_2026_11_27.sql (hf_tbl_parentchildassociation).
+    /// Table: Data/Scripts/RunOnce_Update_2026_11_27.sql (hf_tbl_parentchildassociation).
     /// </summary>
     public class ParentService
     {
