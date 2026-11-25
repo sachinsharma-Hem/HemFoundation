@@ -1,0 +1,191 @@
+@model HemFoundation.Services.Academic.AcademicService.ReportCard
+@{
+    Layout = null;
+    var terms = Model.Academic.GroupBy(a => new { a.TermId, a.TermName, a.AcademicYear }).ToList();
+    var present = Model.Academic.Where(a => !a.IsAbsent).ToList();
+    decimal? academicPct = present.Count == 0 ? null : Math.Round(present.Sum(a => a.MarksObtained) * 100m / present.Sum(a => a.MaxMarks), 1);
+    decimal? valuePct = Model.Values.Count == 0 ? null : Math.Round(Model.Values.Sum(v => v.Total) * 100m / (Model.Values.Count * 100m), 1);
+    int passed = Model.Academic.Count(a => a.Status == "Pass"), needs = Model.Academic.Count(a => a.Status == "Needs Improvement"), absent = Model.Academic.Count(a => a.IsAbsent);
+    string initials = string.Concat(Model.InstituteName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpperInvariant(w[0])));
+    string Fmt(decimal v) => v.ToString("0.##");
+    string Grade(decimal pct) => pct >= 91 ? "A1" : pct >= 81 ? "A2" : pct >= 71 ? "B1" : pct >= 61 ? "B2" : pct >= 51 ? "C1" : pct >= 41 ? "C2" : pct >= 33 ? "D" : "E";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Statement of Marks – @Model.StudentName</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <style>
+        :root { --p: #4B2E83; --p2: #6A41B5; --pink: #E51E86; --ink: #1F1A3A; --muted: #6B6787; --line: #E3DEEE; --soft: #F4F0FB; --ok: #138A4B; --warn: #B45309; --bad: #C62D4A; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #EEEAF6; font-family: Poppins, system-ui, sans-serif; color: var(--ink); font-size: 13px; }
+        .bar { position: sticky; top: 0; z-index: 5; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 12px 16px; background: rgba(238, 234, 246, .92); backdrop-filter: blur(6px); }
+        .bar a, .bar button { border: 0; border-radius: 999px; padding: 9px 18px; font: 600 13px Poppins, sans-serif; display: inline-flex; gap: 8px; align-items: center; text-decoration: none; cursor: pointer; }
+        .bar .back { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+        .bar .print { background: linear-gradient(90deg, var(--p), var(--p2)); color: #fff; box-shadow: 0 8px 18px rgba(75, 46, 131, .25); }
+        .sheet { width: 210mm; min-height: 297mm; margin: 8px auto 32px; background: #fff; padding: 14mm 14mm 12mm; position: relative; overflow: hidden; box-shadow: 0 10px 40px rgba(31, 26, 58, .15); border-radius: 6px; }
+        .sheet::before { content: ""; position: absolute; inset: 0; background: url('/images/logo/logo.png') center 58% / 70% no-repeat; opacity: .04; pointer-events: none; }
+        .sheet > * { position: relative; }
+        .ribbon { position: absolute; left: 0; right: 0; top: 0; height: 6px; background: linear-gradient(90deg, var(--p), var(--p2), var(--pink)); }
+        header.top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 2px solid var(--p); }
+        header.top .l img { height: 46px; }
+        header.top .c { text-align: center; }
+        header.top .c h1 { margin: 0; font-size: 20px; letter-spacing: .06em; color: var(--p); }
+        header.top .c p { margin: 2px 0 0; color: var(--muted); font-size: 11.5px; }
+        header.top .r { display: flex; justify-content: flex-end; }
+        .school-logo { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; border: 1px solid var(--line); }
+        .school-mark { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; background: var(--soft); color: var(--p); font-weight: 700; font-size: 18px; }
+        .info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 16px; margin: 14px 0 12px; padding: 12px 14px; background: #FAF8FE; border: 1px solid var(--line); border-radius: 10px; }
+        .info .wide { grid-column: span 2; }
+        .info span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+        .info b { font-size: 13px; overflow-wrap: anywhere; }
+        .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 6px; }
+        .sum { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .sum span { color: var(--muted); font-size: 11px; font-weight: 600; }
+        .sum b { font-size: 18px; color: var(--p); }
+        .sum small { display: block; color: var(--muted); font-size: 10.5px; }
+        .line { text-align: center; margin: 12px 0 4px; font-weight: 600; color: #4a4566; font-size: 12px; }
+        h2.part { display: flex; align-items: center; gap: 8px; font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--p); margin: 16px 0 8px; padding: 7px 10px; background: var(--soft); border-left: 4px solid var(--p); border-radius: 4px; }
+        h3.term { font-size: 12px; margin: 12px 0 6px; color: var(--ink); display: flex; justify-content: space-between; }
+        h3.term small { color: var(--muted); font-weight: 500; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: var(--p); color: #fff; font-weight: 600; padding: 7px 8px; text-align: center; font-size: 11px; }
+        th:first-child { text-align: left; border-radius: 6px 0 0 0; } th:last-child { border-radius: 0 6px 0 0; }
+        td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: center; font-variant-numeric: tabular-nums; }
+        td:first-child { text-align: left; font-weight: 600; }
+        tr.total td { background: #FAF8FE; font-weight: 700; border-bottom: 0; }
+        .meter { display: inline-block; width: 60px; height: 6px; background: #ECE8F4; border-radius: 3px; overflow: hidden; vertical-align: middle; margin-left: 6px; }
+        .meter i { display: block; height: 100%; background: linear-gradient(90deg, var(--p2), var(--pink)); }
+        .st { display: inline-block; border-radius: 999px; padding: 2px 9px; font-weight: 700; font-size: 10.5px; }
+        .st.pass { background: #E3F5EA; color: var(--ok); } .st.needs { background: #FEF3DB; color: var(--warn); } .st.absent { background: #EFEDF4; color: var(--muted); }
+        .empty { color: var(--muted); text-align: center; padding: 14px; font-weight: 500; }
+        .remark { color: var(--muted); font-size: 10.5px; font-weight: 400; display: block; }
+        .sign { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 46px; }
+        .sign div { border-top: 1px solid #555; padding-top: 6px; text-align: center; font-size: 11px; font-weight: 600; color: #555; }
+        footer.foot { margin-top: 18px; display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; border-top: 1px dashed var(--line); padding-top: 8px; }
+        @@media (max-width: 860px) {
+            .sheet { width: auto; min-height: 0; margin: 8px; padding: 18px 14px; }
+            .info { grid-template-columns: repeat(2, 1fr); }
+            .summary { grid-template-columns: 1fr; }
+            header.top { grid-template-columns: 1fr auto; }
+            header.top .c { grid-column: 1 / -1; grid-row: 2; }
+            .tbl { overflow-x: auto; }
+            .tbl table { min-width: 520px; }
+            .sign { grid-template-columns: 1fr; gap: 26px; }
+        }
+        @@media print {
+            @@page { size: A4; margin: 0; }
+            body { background: #fff; }
+            .bar { display: none; }
+            .sheet { margin: 0; box-shadow: none; border-radius: 0; width: 210mm; min-height: 297mm; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            tr, h3.term { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bar">
+        <a class="back" href="@ViewBag.BackUrl"><i class="bi bi-arrow-left"></i> Back</a>
+        <button class="print" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save as PDF</button>
+    </div>
+
+    <main class="sheet">
+        <div class="ribbon"></div>
+        <header class="top">
+            <div class="l"><img src="~/images/logo/logo.png" alt="HEM Virtues – A Learning Revolution"></div>
+            <div class="c"><h1>STATEMENT OF MARKS</h1><p>Academic Evaluation &amp; Value Ledger · Session @Model.AcademicYear</p></div>
+            <div class="r">
+                @if (!string.IsNullOrWhiteSpace(Model.SchoolLogoUrl))
+                {
+                    <img class="school-logo" src="@Model.SchoolLogoUrl" alt="@Model.InstituteName" onerror="this.outerHTML='<span class=&quot;school-mark&quot;>@initials</span>'">
+                }
+                else
+                {
+                    <span class="school-mark">@initials</span>
+                }
+            </div>
+        </header>
+
+        <section class="info">
+            <div class="wide"><span>Student name</span><b>@Model.StudentName</b></div>
+            <div><span>Standard</span><b>@Model.Standard@(string.IsNullOrWhiteSpace(Model.Division) ? "" : " – " + Model.Division)</b></div>
+            <div><span>Roll number</span><b>@(string.IsNullOrWhiteSpace(Model.RollNo) ? "—" : Model.RollNo)</b></div>
+            <div class="wide"><span>School</span><b>@(string.IsNullOrWhiteSpace(Model.InstituteName) ? "—" : Model.InstituteName)</b></div>
+            <div><span>Session</span><b>@Model.AcademicYear</b></div>
+            <div><span>Student ID</span><b>@Model.StudentId</b></div>
+        </section>
+
+        <section class="summary">
+            <div class="sum"><div><span>Value courses</span><small>@Model.Values.Count course@(Model.Values.Count == 1 ? "" : "s")</small></div><b>@(valuePct == null ? "—" : valuePct + "%")</b></div>
+            <div class="sum"><div><span>School exams</span><small>@present.Count subject@(present.Count == 1 ? "" : "s") written</small></div><b>@(academicPct == null ? "—" : academicPct + "%")</b></div>
+            <div class="sum"><div><span>Result</span><small>@passed pass · @needs needs improvement@(absent > 0 ? " · " + absent + " absent" : "")</small></div><b>@(academicPct == null ? "—" : Grade(academicPct.Value))</b></div>
+        </section>
+
+        <p class="line">Has taken part in the Value Courses and Scholastic Programme of HEM Virtues.</p>
+
+        <h2 class="part"><i class="bi bi-stars"></i> Part I · Value-based performance</h2>
+        <div class="tbl">
+            <table>
+                <thead><tr><th>Value course</th><th>MCQ <small>/ 50</small></th><th>Practical <small>/ 30</small></th><th>PBL <small>/ 20</small></th><th>Total <small>/ 100</small></th></tr></thead>
+                <tbody>
+                    @if (Model.Values.Count == 0)
+                    {
+                        <tr><td colspan="5" class="empty">No value course activity yet for this standard.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var v in Model.Values)
+                        {
+                            var pct = Math.Min(100, Math.Max(0, v.Total));
+                            <tr><td>@v.CourseName</td><td>@Fmt(v.Mcq)</td><td>@Fmt(v.Practical)</td><td>@Fmt(v.Pbl)</td>
+                                <td><b>@Fmt(v.Total)</b><span class="meter"><i style="width:@pct.ToString(System.Globalization.CultureInfo.InvariantCulture)%"></i></span></td></tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="part"><i class="bi bi-journal-check"></i> Part II · Scholastic progress</h2>
+        @if (terms.Count == 0)
+        {
+            <p class="empty">No exam marks are published for this student yet.</p>
+        }
+        @foreach (var t in terms)
+        {
+            var written = t.Where(x => !x.IsAbsent).ToList();
+            decimal tMax = written.Sum(x => x.MaxMarks), tGot = written.Sum(x => x.MarksObtained);
+            <h3 class="term">@t.Key.TermName <small>@t.Key.AcademicYear</small></h3>
+            <div class="tbl">
+                <table>
+                    <thead><tr><th>Subject</th><th>Max marks</th><th>Passing</th><th>Obtained</th><th>%</th><th>Result</th></tr></thead>
+                    <tbody>
+                        @foreach (var a in t)
+                        {
+                            <tr>
+                                <td>@a.SubjectName@if (!string.IsNullOrWhiteSpace(a.Remarks)) {<span class="remark">@a.Remarks</span>}</td>
+                                <td>@Fmt(a.MaxMarks)</td>
+                                <td>@Fmt(a.PassingMarks)</td>
+                                <td><b>@(a.IsAbsent ? "AB" : Fmt(a.MarksObtained))</b></td>
+                                <td>@(a.IsAbsent ? "—" : Math.Round(a.MarksObtained * 100m / a.MaxMarks, 1) + "%")</td>
+                                <td>
+                                    @if (a.Status == "Pass") { <span class="st pass">PASS</span> }
+                                    else if (a.IsAbsent) { <span class="st absent">ABSENT</span> }
+                                    else { <span class="st needs">NEEDS IMPROVEMENT</span> }
+                                </td>
+                            </tr>
+                        }
+                        <tr class="total"><td>Total</td><td>@Fmt(tMax)</td><td></td><td>@Fmt(tGot)</td><td>@(tMax == 0 ? "—" : Math.Round(tGot * 100m / tMax, 1) + "%")</td><td>@(tMax == 0 ? "" : Grade(Math.Round(tGot * 100m / tMax, 1)))</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <div class="sign"><div>Class Teacher</div><div>Principal &amp; Seal</div><div>Parent / Guardian</div></div>
+        <footer class="foot"><span>HEM Virtues · Hema Foundation</span><span>Generated on @DateTime.Now.ToString("dd MMM yyyy")</span></footer>
+    </main>
+</body>
+</html>

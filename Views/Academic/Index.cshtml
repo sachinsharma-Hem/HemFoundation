@@ -1,0 +1,232 @@
+@{
+    ViewData["Title"] = "Academics";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    bool ready = ViewBag.TablesReady as bool? ?? false;
+    bool adminView = ViewBag.IsAdminView as bool? ?? false;
+    int instituteId = ViewBag.InstituteId as int? ?? 0;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/academic.css" asp-append-version="true" />
+}
+
+<div class="acad" id="acadRoot" data-institute="@(adminView ? instituteId.ToString() : "")" data-year="@ViewBag.AcademicYear">
+
+    <header class="acad-head">
+        <div>
+            <h2><i class="bi bi-journal-bookmark"></i> Academics</h2>
+            <p>Subjects, exam terms, marks and report cards of your school.</p>
+        </div>
+        <div class="acad-head-chips">
+            <span class="acad-chip"><i class="bi bi-calendar3"></i> Session @ViewBag.AcademicYear</span>
+            @if (adminView)
+            {
+                <span class="acad-chip is-warn"><i class="bi bi-shield-lock"></i> Admin view · school @instituteId</span>
+            }
+        </div>
+    </header>
+
+    @if (!ready)
+    {
+        <div class="acad-setup">
+            <i class="bi bi-database-gear"></i>
+            <div>
+                <b>Academics is not set up on the database yet.</b>
+                <span>Run <code>Data/Scripts/RunOnce_Academic_2026_11_26.sql</code> once on the PostgreSQL database, then reload this page.</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <nav class="acad-tabs" role="tablist" aria-label="Academics">
+            <button type="button" role="tab" data-tab="overview" class="active"><i class="bi bi-speedometer2"></i><span>Overview</span></button>
+            <button type="button" role="tab" data-tab="subjects"><i class="bi bi-book"></i><span>Subjects</span></button>
+            <button type="button" role="tab" data-tab="terms"><i class="bi bi-calendar-week"></i><span>Terms</span></button>
+            <button type="button" role="tab" data-tab="exams"><i class="bi bi-sliders"></i><span>Exam setup</span></button>
+            <button type="button" role="tab" data-tab="marks"><i class="bi bi-pencil-square"></i><span>Enter marks</span></button>
+            <button type="button" role="tab" data-tab="report-cards"><i class="bi bi-award"></i><span>Report cards</span></button>
+        </nav>
+
+        <!-- ================= OVERVIEW ================= -->
+        <section class="acad-tab active" data-panel="overview">
+            <div class="acad-kpis" id="kpis">
+                <div class="acad-kpi"><span class="ic is-purple"><i class="bi bi-people"></i></span><div><b data-k="students">–</b><small>Students</small></div></div>
+                <div class="acad-kpi"><span class="ic is-blue"><i class="bi bi-book"></i></span><div><b data-k="subjects">–</b><small>Subjects</small></div></div>
+                <div class="acad-kpi"><span class="ic is-teal"><i class="bi bi-calendar-week"></i></span><div><b data-k="terms">–</b><small>Terms</small></div></div>
+                <div class="acad-kpi"><span class="ic is-amber"><i class="bi bi-sliders"></i></span><div><b data-k="exams">–</b><small>Exams set up</small></div></div>
+                <div class="acad-kpi wide"><span class="ic is-green"><i class="bi bi-pencil-square"></i></span><div class="grow"><b data-k="entered">–</b><small>Marks entered</small><div class="acad-bar"><i data-k="enteredBar"></i></div></div></div>
+                <div class="acad-kpi"><span class="ic is-pink"><i class="bi bi-trophy"></i></span><div><b data-k="pass">–</b><small>Pass rate</small></div></div>
+            </div>
+
+            <div class="acad-grid-2">
+                <div class="acad-card">
+                    <div class="acad-card-head"><h3><i class="bi bi-list-check"></i> Getting started</h3></div>
+                    <ol class="acad-steps" id="steps"></ol>
+                </div>
+                <div class="acad-card">
+                    <div class="acad-card-head"><h3><i class="bi bi-bar-chart"></i> Exams</h3><small id="examCountNote"></small></div>
+                    <div class="acad-table-wrap"><table class="acad-table">
+                        <thead><tr><th>Exam</th><th>Marks entered</th><th class="r">Average</th><th class="r">Pass</th><th></th></tr></thead>
+                        <tbody id="overviewExams"><tr><td colspan="5" class="acad-empty">Loading…</td></tr></tbody>
+                    </table></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SUBJECTS ================= -->
+        <section class="acad-tab" data-panel="subjects">
+            <div class="acad-grid-form">
+                <form class="acad-card" id="subjectForm" novalidate autocomplete="off">
+                    <div class="acad-card-head"><h3 id="subjectFormTitle"><i class="bi bi-plus-circle"></i> Add a subject</h3></div>
+                    <input type="hidden" id="subjectId">
+                    <label class="acad-label" for="subjectName">Subject name <span class="req">*</span></label>
+                    <input class="form-control" id="subjectName" maxlength="100" placeholder="e.g. Mathematics" required>
+                    <label class="acad-label" for="subjectCode">Subject code <span class="opt">(optional)</span></label>
+                    <input class="form-control" id="subjectCode" maxlength="20" placeholder="e.g. MATH101">
+                    <div class="acad-actions">
+                        <button type="submit" class="btn acad-btn-primary" id="subjectSave"><i class="bi bi-check2"></i> Save subject</button>
+                        <button type="button" class="btn btn-light" id="subjectCancel" hidden>Cancel</button>
+                    </div>
+                </form>
+                <div class="acad-card">
+                    <div class="acad-card-head"><h3><i class="bi bi-book"></i> Your subjects</h3><small id="subjectCount"></small></div>
+                    <div class="acad-list" id="subjectList"><div class="acad-empty">Loading…</div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TERMS ================= -->
+        <section class="acad-tab" data-panel="terms">
+            <div class="acad-grid-form">
+                <form class="acad-card" id="termForm" novalidate autocomplete="off">
+                    <div class="acad-card-head"><h3 id="termFormTitle"><i class="bi bi-plus-circle"></i> Add a term</h3></div>
+                    <input type="hidden" id="termId">
+                    <label class="acad-label" for="termName">Term / exam name <span class="req">*</span></label>
+                    <input class="form-control" id="termName" maxlength="100" placeholder="e.g. Half Yearly" list="termSuggestions" required>
+                    <datalist id="termSuggestions"><option value="Unit Test 1"></option><option value="Unit Test 2"></option><option value="Half Yearly"></option><option value="Pre-Board"></option><option value="Annual"></option></datalist>
+                    <label class="acad-label" for="termYear">Academic year <span class="req">*</span></label>
+                    <input class="form-control" id="termYear" maxlength="9" placeholder="2026-27" required>
+                    <div class="acad-actions">
+                        <button type="submit" class="btn acad-btn-primary" id="termSave"><i class="bi bi-check2"></i> Save term</button>
+                        <button type="button" class="btn btn-light" id="termCancel" hidden>Cancel</button>
+                    </div>
+                </form>
+                <div class="acad-card">
+                    <div class="acad-card-head"><h3><i class="bi bi-calendar-week"></i> Terms</h3><small id="termCount"></small></div>
+                    <div class="acad-list" id="termList"><div class="acad-empty">Loading…</div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= EXAM SETUP ================= -->
+        <section class="acad-tab" data-panel="exams">
+            <form class="acad-card" id="examForm" novalidate>
+                <div class="acad-card-head"><h3><i class="bi bi-sliders"></i> Set up exams</h3><small>Saving the same term, standard and subject again updates its marks.</small></div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="acad-label" for="examTerm">Term <span class="req">*</span></label>
+                        <select class="form-select" id="examTerm" required></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="acad-label" for="examStandard">Standard <span class="req">*</span></label>
+                        <select class="form-select" id="examStandard" required></select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="acad-label" for="examMax">Max marks <span class="req">*</span></label>
+                        <input type="number" class="form-control" id="examMax" min="1" max="1000" step="0.5" value="100" required>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="acad-label" for="examPass">Passing marks <span class="req">*</span></label>
+                        <input type="number" class="form-control" id="examPass" min="0" max="1000" step="0.5" value="35" required>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <label class="acad-label m-0">Subjects <span class="req">*</span></label>
+                            <button type="button" class="btn btn-link btn-sm p-0" id="examAllSubjects">Select all</button>
+                        </div>
+                        <div class="acad-chipset" id="examSubjects"></div>
+                    </div>
+                </div>
+                <div class="acad-form-error" id="examError" hidden></div>
+                <div class="acad-actions"><button type="submit" class="btn acad-btn-primary" id="examSave"><i class="bi bi-check2"></i> Save exams</button></div>
+            </form>
+
+            <div class="acad-card">
+                <div class="acad-card-head"><h3><i class="bi bi-table"></i> Exams set up</h3>
+                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill" id="examExport"><i class="bi bi-file-earmark-excel"></i> Export</button></div>
+                <div class="acad-filters">
+                    <select class="form-select form-select-sm" id="fTerm" aria-label="Filter by term"><option value="">All terms</option></select>
+                    <select class="form-select form-select-sm" id="fStandard" aria-label="Filter by standard"><option value="">All standards</option></select>
+                    <input type="search" class="form-control form-control-sm" id="fSearch" placeholder="Search subject" aria-label="Search subject">
+                </div>
+                <div class="acad-table-wrap"><table class="acad-table">
+                    <thead><tr><th>Term</th><th>Standard</th><th>Subject</th><th class="r">Max</th><th class="r">Pass</th><th>Marks entered</th><th></th></tr></thead>
+                    <tbody id="examRows"><tr><td colspan="7" class="acad-empty">Loading…</td></tr></tbody>
+                </table></div>
+            </div>
+        </section>
+
+        <!-- ================= ENTER MARKS ================= -->
+        <section class="acad-tab" data-panel="marks">
+            <div class="acad-card">
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-6">
+                        <label class="acad-label" for="marksExam">Exam</label>
+                        <select class="form-select" id="marksExam"></select>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="acad-mode" role="tablist" aria-label="How to enter marks">
+                            <button type="button" class="active" data-mode="online"><i class="bi bi-ui-checks-grid"></i> Type marks here</button>
+                            <button type="button" data-mode="excel"><i class="bi bi-file-earmark-excel"></i> Upload Excel</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="acad-exam-info" id="examInfo" hidden></div>
+            </div>
+
+            <div class="acad-card" id="onlinePanel" hidden>
+                <div class="acad-card-head"><h3><i class="bi bi-pencil-square"></i> Marks</h3>
+                    <div class="d-flex gap-2 flex-wrap"><input type="search" class="form-control form-control-sm" id="markSearch" placeholder="Search student" aria-label="Search student" style="max-width:200px"></div></div>
+                <div class="acad-marks" id="markRows"></div>
+                <div class="acad-savebar">
+                    <span id="markStatus" class="small text-muted"></span>
+                    <button type="button" class="btn acad-btn-primary" id="markSave" disabled><i class="bi bi-cloud-check"></i> Save marks</button>
+                </div>
+                <div class="acad-errors" id="markErrors" hidden></div>
+            </div>
+
+            <div class="acad-card" id="excelPanel" hidden>
+                <div class="acad-excel">
+                    <div class="acad-excel-step"><span class="n">1</span><div><b>Download the template</b><small>A sheet with every student of this standard. Existing marks are filled in.</small>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2 rounded-pill" id="tplDownload"><i class="bi bi-download"></i> Download Excel template</button></div></div>
+                    <div class="acad-excel-step"><span class="n">2</span><div><b>Fill the marks</b><small>Write marks in “Marks Obtained”. For absent students write <b>Y</b> in “Is Absent?”. Do not change the hidden columns.</small></div></div>
+                    <div class="acad-excel-step"><span class="n">3</span><div><b>Upload the filled sheet</b><small>If any row is wrong nothing is saved, and you see which rows to fix.</small>
+                        <label class="acad-drop mt-2" for="xlsFile"><i class="bi bi-cloud-arrow-up"></i><span id="xlsName">Choose the .xlsx file</span><input type="file" id="xlsFile" accept=".xlsx" hidden></label>
+                        <button type="button" class="btn acad-btn-primary mt-2" id="xlsUpload" disabled><i class="bi bi-upload"></i> Upload marks</button></div></div>
+                </div>
+                <div class="acad-errors" id="xlsErrors" hidden></div>
+            </div>
+
+            <div class="acad-card acad-empty" id="marksEmpty">Choose an exam to enter marks. No exams yet? Set them up in <a href="#exams" data-go="exams">Exam setup</a>.</div>
+        </section>
+
+        <!-- ================= REPORT CARDS ================= -->
+        <section class="acad-tab" data-panel="report-cards">
+            <div class="acad-card">
+                <div class="acad-card-head"><h3><i class="bi bi-award"></i> Report cards</h3><small>Opens a printable statement of marks: value courses and school exams.</small></div>
+                <div class="acad-filters">
+                    <select class="form-select form-select-sm" id="rcStandard" aria-label="Standard"></select>
+                    <input type="search" class="form-control form-control-sm" id="rcSearch" placeholder="Search name or roll number" aria-label="Search student">
+                </div>
+                <div class="acad-students" id="rcList"><div class="acad-empty">Choose a standard.</div></div>
+            </div>
+        </section>
+    }
+</div>
+
+@section Scripts {
+    @if (ready)
+    {
+        <script src="~/js/academic.js" asp-append-version="true"></script>
+    }
+}
