@@ -353,7 +353,7 @@ namespace HemFoundation.Controllers
             SELECT DISTINCT m.maincourseid, m.maincoursename 
             FROM maincourses AS m 
             INNER JOIN view_wj_syllabus AS s ON s.maincourseid = m.maincourseid 
-            WHERE @Standard = s.standard_;
+            WHERE @Standard = s.standard_ and m.maincoursename not like '%urvey%';
         ";
 
                 using (var cmd = new NpgsqlCommand(query, conn))

@@ -173,6 +173,11 @@ namespace HemFoundation.Controllers
             if (userId == null) return RedirectToAction("Login", "Account");
             int studentsID = userId.Value;
 
+            if (!string.IsNullOrEmpty(projectName) && projectName.Length > 50)
+            {
+                TempData["Error"] = "Project should not be more then 50 character!!";
+                return RedirectToAction("Creativity", new { CourseID = MCID, PractID = PractID });
+            }
             await SaveCreativitySubmissionWithoutGroupNewAsync(studentsID, null, null, SuggestionComment, MCID, projectName, false);
 
             TempData["Success"] = "Project details saved! Now you can invite your colleague.";
@@ -299,7 +304,7 @@ namespace HemFoundation.Controllers
             bool hasVideoFile = VideoFile != null && VideoFile.Length > 0;
 
             int videoMethods = (hasDriveId ? 1 : 0) + (hasCloudUrl ? 1 : 0) + (hasVideoFile ? 1 : 0);
-
+           
             if (videoMethods == 0)
             {
                 return BadRequest(new { success = false, message = "Video submission is mandatory. Upload a video, select one from Google Drive, or provide a cloud link." });
