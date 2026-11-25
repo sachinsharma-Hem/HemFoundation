@@ -238,6 +238,7 @@ namespace HemFoundation.Controllers
 
             Add(e.Title); Add(e.EntryDate.ToString(DateFormat)); Add(e.DayHindi);
             Add(e.IssueNumber); Add(e.VikramSamvat);
+            Add(e.CelebrationSectionTitle);
             Add(e.CelebrationHeadingEn); Add(e.CelebrationContentEn);
             Add(e.CelebrationHeadingHi); Add(e.CelebrationContentHi);
             Add(e.MorningMantraEn); Add(e.MorningMantraHi);
@@ -307,6 +308,7 @@ namespace HemFoundation.Controllers
                 e.DayHindi,
                 e.IssueNumber,
                 e.VikramSamvat,
+                celebrationSectionTitle = HemSamparkSectionTitle.Resolve(e.CelebrationSectionTitle),
                 e.CelebrationHeadingEn,
                 e.CelebrationContentEn,
                 e.CelebrationHeadingHi,
@@ -637,6 +639,9 @@ namespace HemFoundation.Controllers
             if (!TryParseDate(model.EntryDate, out var entryDate))
                 return Fail(400, "Please choose a valid publication date.");
 
+            if ((model.CelebrationSectionTitle?.Trim().Length ?? 0) > HemSamparkSectionTitle.MaxLength)
+                return Fail(400, $"The section title must be {HemSamparkSectionTitle.MaxLength} characters or fewer.");
+
             if (string.IsNullOrWhiteSpace(model.CelebrationHeadingEn))
                 return Fail(400, "The English heading is required.");
 
@@ -767,6 +772,7 @@ namespace HemFoundation.Controllers
             entry.DayHindi = dayHindi ?? HindiDays[(int)entryDate.DayOfWeek];
             entry.IssueNumber = model.IssueNumber;
             entry.VikramSamvat = Clean(model.VikramSamvat);
+            entry.CelebrationSectionTitle = HemSamparkSectionTitle.Normalize(model.CelebrationSectionTitle);
             entry.CelebrationHeadingEn = Clean(model.CelebrationHeadingEn);
             entry.CelebrationContentEn = Clean(model.CelebrationContentEn);
             entry.CelebrationHeadingHi = Clean(model.CelebrationHeadingHi);

@@ -151,6 +151,11 @@ namespace HemFoundation.Models.HemSampark
         [Column("valuesinfocushi")]
         public string? ValuesInFocusHi { get; set; }
 
+        // Title of the strip above the heading: "Celebrations Today" (empty = this),
+        // "Observance Today" or the admin's own words. See HemSamparkSectionTitle.
+        [Column("celebrationsectiontitle")]
+        public string? CelebrationSectionTitle { get; set; }
+
         // Optional small picture shown at the right of the "Celebrations Today" text.
         [Column("celebrationimageurl")]
         public string? CelebrationImageUrl { get; set; }

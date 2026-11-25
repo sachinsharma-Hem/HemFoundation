@@ -363,6 +363,37 @@
         $('#hsaQCount').text('(' + $cards.length + ')');
     }
 
+    // ---- Section title: "Celebrations Today", "Observance Today" or the admin's own words ----
+    var SECTION_TITLES = { celebrations: 'Celebrations Today', observance: 'Observance Today' };
+
+    function sectionTitle() {
+        var pick = $('input[name="hsaSection"]:checked').val() || 'celebrations';
+        return pick === 'custom' ? $.trim($('#hsaSectionCustom').val()) : SECTION_TITLES[pick];
+    }
+
+    function setSectionTitle(title) {
+        title = $.trim(title || '');
+        var pick = 'celebrations';
+        if (!title || title.toLowerCase() === SECTION_TITLES.celebrations.toLowerCase()) pick = 'celebrations';
+        else if (title.toLowerCase() === SECTION_TITLES.observance.toLowerCase()) pick = 'observance';
+        else pick = 'custom';
+        $('input[name="hsaSection"][value="' + pick + '"]').prop('checked', true);
+        $('#hsaSectionCustom').val(pick === 'custom' ? title : '');
+        syncSectionTitle();
+    }
+
+    function syncSectionTitle() {
+        var custom = $('input[name="hsaSection"]:checked').val() === 'custom';
+        $('#hsaSectionCustom').prop('disabled', !custom).toggleClass('is-invalid', false);
+        $('#hsaSectionLabel').text(sectionTitle() || 'Your own title');
+    }
+
+    $(document).on('change', 'input[name="hsaSection"]', function () {
+        syncSectionTitle();
+        if (this.value === 'custom') $('#hsaSectionCustom').trigger('focus');
+    });
+    $(document).on('input', '#hsaSectionCustom', syncSectionTitle);
+
     function collectForm() {
         return {
             id: state.editing ? state.editing.id : 0,
@@ -371,6 +402,7 @@
             issueNumber: parseInt($('#hsaIssue').val(), 10) || 0,
             dayHindi: $('#hsaDayHi').val(),
             vikramSamvat: $('#hsaSamvat').val(),
+            celebrationSectionTitle: sectionTitle(),
             celebrationHeadingEn: $('#hsaHeadEn').val(),
             celebrationHeadingHi: $('#hsaHeadHi').val(),
             celebrationContentEn: $('#hsaContentEn').val(),
@@ -461,6 +493,7 @@
         $('#hsaIssue').val(p.issueNumber != null ? p.issueNumber : '');
         $('#hsaDayHi').val(p.dayHindi || '');
         $('#hsaSamvat').val(p.vikramSamvat || '');
+        setSectionTitle(p.celebrationSectionTitle);
         $('#hsaHeadEn').val(p.celebrationHeadingEn || '');
         $('#hsaHeadHi').val(p.celebrationHeadingHi || '');
         $('#hsaContentEn').val(p.celebrationContentEn || '');
@@ -485,6 +518,7 @@
     function restoreForm(f) {
         $('#hsaTitle').val(f.title); $('#hsaDate').val(f.entryDate); $('#hsaIssue').val(f.issueNumber);
         $('#hsaDayHi').val(f.dayHindi); $('#hsaSamvat').val(f.vikramSamvat);
+        setSectionTitle(f.celebrationSectionTitle);
         $('#hsaHeadEn').val(f.celebrationHeadingEn); $('#hsaHeadHi').val(f.celebrationHeadingHi);
         $('#hsaContentEn').val(f.celebrationContentEn); $('#hsaContentHi').val(f.celebrationContentHi);
         $('#hsaMantraEn').val(f.morningMantraEn); $('#hsaMantraHi').val(f.morningMantraHi);
@@ -528,6 +562,8 @@
 
     function validateForm(form) {
         if (!form.entryDate) return ['content', '#hsaDate', 'Please choose the publication date.'];
+        if ($('input[name="hsaSection"]:checked').val() === 'custom' && !$.trim(form.celebrationSectionTitle))
+            return ['content', '#hsaSectionCustom', 'Write the section title, or choose Celebrations Today / Observance Today.'];
         if (!$.trim(form.celebrationHeadingEn)) return ['content', '#hsaHeadEn', 'The English heading is required.'];
         if (!$.trim(form.celebrationContentEn)) return ['content', '#hsaContentEn', 'The English content is required.'];
 

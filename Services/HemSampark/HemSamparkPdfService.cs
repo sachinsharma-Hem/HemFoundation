@@ -206,6 +206,16 @@ namespace HemFoundation.Services.HemSampark
             }
 
             // English and Hindi on the same line, separated by " / ".
+            // The day's English and Hindi paragraphs start with a round dot, as in the printed sheet.
+            // Admin text can be plain or HTML; for HTML the dot goes inside the first paragraph.
+            string WithDot(string html)
+            {
+                if (string.IsNullOrWhiteSpace(html)) return html;
+                const string dot = "<span class='para-dot' aria-hidden='true'></span>";
+                var m = System.Text.RegularExpressions.Regex.Match(html, @"^\s*<(p|div|span|strong|b)(\s[^>]*)?>", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                return m.Success ? html.Insert(m.Length, dot) : dot + html;
+            }
+
             string BilingualLine(string cssClass, string? en, string? hi)
             {
                 en = en?.Trim() ?? "";
@@ -522,6 +532,18 @@ namespace HemFoundation.Services.HemSampark
         margin: 2px 0 4px 8px;
         border-radius: 4px;
         border: 1px solid #efc9c0;
+        image-rendering: auto;
+    }}
+
+    /* Round dot before the English and Hindi paragraphs. */
+    .para-dot {{
+        display: inline-block;
+        width: 0.62em;
+        height: 0.62em;
+        border-radius: 50%;
+        background: currentColor;
+        margin: 0 0.4em 0.08em 0;
+        vertical-align: middle;
     }}
 
     .content-text::after {{
@@ -651,14 +673,14 @@ namespace HemFoundation.Services.HemSampark
 
     {mantraHtml}
 
-    <div class='strip-heading'>Celebrations Today</div>
+    <div class='strip-heading'>{E(HemSamparkSectionTitle.Resolve(entry.CelebrationSectionTitle))}</div>
 
     <h4 class='celebration-heading'>
         {E(entry.CelebrationHeadingEn ?? "")}
     </h4>
 
     <div class='content-text'>
-        {celebrationImageHtml}{Rich(entry.CelebrationContentEn)}
+        {celebrationImageHtml}{WithDot(Rich(entry.CelebrationContentEn))}
     </div>
 
     <h4 class='{hindiHeadingClass}'>
@@ -666,7 +688,7 @@ namespace HemFoundation.Services.HemSampark
     </h4>
 
     <div class='content-text content-hi'>
-        {Rich(entry.CelebrationContentHi)}
+        {WithDot(Rich(entry.CelebrationContentHi))}
     </div>
 
     <div class='challenge-box'>
@@ -741,6 +763,8 @@ namespace HemFoundation.Services.HemSampark
                 });
 
             await page.EmulateMediaTypeAsync(MediaType.Print);
+
+            await SharpenSmallPicturesAsync(page);
 
             // ---- Fit everything on one page ----
             // Height of the content at a given scale, measured without the
@@ -850,5 +874,69 @@ namespace HemFoundation.Services.HemSampark
 
             return fileName;
         }
-    }
+    
+        /// <summary>
+        /// The small picture beside the English text is printed about 34 mm wide. A low-resolution
+        /// upload looks soft or blocky there, so it is enlarged in steps with high-quality
+        /// resampling and lightly sharpened (an unsharp mask) before the PDF is made.
+        /// Pictures that are already large enough are left exactly as uploaded.
+        /// </summary>
+        private async Task SharpenSmallPicturesAsync(IPage page)
+        {
+            try
+            {
+                await page.EvaluateFunctionAsync(@"async () => {
+                    const TARGET = 1000;                       // px across the printed width (about 750 dpi)
+                    for (const img of document.querySelectorAll('img.celebration-img')) {
+                        try {
+                            if (!img.complete) await img.decode();
+                            let w = img.naturalWidth, h = img.naturalHeight;
+                            if (!w || !h || w >= TARGET) continue;
+
+                            let canvas = document.createElement('canvas');
+                            canvas.width = w; canvas.height = h;
+                            canvas.getContext('2d').drawImage(img, 0, 0);
+
+                            // Enlarge at most 2x per step: much smoother than one big jump.
+                            while (w < TARGET) {
+                                const nw = Math.min(TARGET, w * 2), nh = Math.round(h * nw / w);
+                                const next = document.createElement('canvas');
+                                next.width = nw; next.height = nh;
+                                const ctx = next.getContext('2d');
+                                ctx.imageSmoothingEnabled = true;
+                                ctx.imageSmoothingQuality = 'high';
+                                ctx.drawImage(canvas, 0, 0, nw, nh);
+                                canvas = next; w = nw; h = nh;
+                            }
+
+                            // Unsharp mask: picture + 0.7 x (picture - blurred picture).
+                            const ctx = canvas.getContext('2d');
+                            const blur = document.createElement('canvas');
+                            blur.width = w; blur.height = h;
+                            const bctx = blur.getContext('2d');
+                            bctx.filter = 'blur(1.4px)';
+                            bctx.drawImage(canvas, 0, 0);
+                            const src = ctx.getImageData(0, 0, w, h), soft = bctx.getImageData(0, 0, w, h);
+                            const d = src.data, s = soft.data, amount = 0.7;
+                            for (let i = 0; i < d.length; i += 4) {
+                                for (let k = 0; k < 3; k++) {
+                                    const v = d[i + k] + amount * (d[i + k] - s[i + k]);
+                                    d[i + k] = v < 0 ? 0 : v > 255 ? 255 : v;
+                                }
+                            }
+                            ctx.putImageData(src, 0, 0);
+
+                            const png = img.src.startsWith('data:image/png') || img.src.startsWith('data:image/webp');
+                            img.src = png ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.93);
+                            await img.decode();
+                        } catch (e) { /* keep the original picture */ }
+                    }
+                }");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "HEM Sampark PDF: the small picture could not be sharpened; the original is used.");
+            }
+        }
+}
 }
