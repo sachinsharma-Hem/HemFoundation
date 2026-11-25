@@ -1,297 +1,431 @@
 ﻿@{
     ViewData["Title"] = "Portal Registration";
     Layout = "~/Views/Shared/Layouts/_Layout.cshtml";
-    int portalId = Context.Request.Query["portalId"].ToString() != "" ? Convert.ToInt32(Context.Request.Query["portalId"]) : 6;
+
+    // Same portals as before (default 6 = Affiliate). An invalid value no longer breaks the page.
+    int portalId = int.TryParse(Context.Request.Query["portalId"].ToString(), out var pid) && new[] { 2, 3, 4, 5, 6 }.Contains(pid) ? pid : 6;
+
+    // Text for the brand panel on the left: [key, icon, title, lead, chips, benefits(icon|title|text)]
+    var portal = portalId switch
+    {
+        4 => new { Key = "School", Icon = "bi-building", Title = "Register your school",
+                   Lead = "Bring value education, SEL activities and progress reports to every class in your school.",
+                   Chips = new[] { "Free to join", "Grades 3 – 12" },
+                   Benefits = new[] { new[] { "bi-layers", "Ready-to-use value lessons", "Monthly values, stories, videos and activities" },
+                                      new[] { "bi-bar-chart-line", "Track every class", "Student participation and progress reports" },
+                                      new[] { "bi-award", "Certificates and recognition", "For students, teachers and the school" } } },
+        3 => new { Key = "Student", Icon = "bi-mortarboard", Title = "Register as a student",
+                   Lead = "Learn good values through stories, videos and fun activities, and earn points and badges.",
+                   Chips = new[] { "Grades 3 – 12", "Parent’s mobile login" },
+                   Benefits = new[] { new[] { "bi-stars", "Fun monthly values", "Stories, videos, quizzes and projects" },
+                                      new[] { "bi-award", "Points and badges", "For every activity you complete" },
+                                      new[] { "bi-people", "Parents stay informed", "Your parent’s mobile number is your login" } } },
+        2 => new { Key = "Teacher", Icon = "bi-easel", Title = "Register as a teacher",
+                   Lead = "Teach values with ready lesson plans, track your class and become a certified value educator.",
+                   Chips = new[] { "Free training", "Certificate" },
+                   Benefits = new[] { new[] { "bi-journal-richtext", "Ready lesson plans", "PPTs, worksheets and activity guides" },
+                                      new[] { "bi-bar-chart-line", "Class reports", "See how every student is doing" },
+                                      new[] { "bi-patch-check", "Value Educator certificate", "After the online training" } } },
+        5 => new { Key = "Parent", Icon = "bi-heart", Title = "Register as a parent",
+                   Lead = "Follow your child’s value journey, see their activities and support them at home.",
+                   Chips = new[] { "Free", "Follow your child" },
+                   Benefits = new[] { new[] { "bi-bar-chart-line", "See your child’s progress", "Activities, points and badges" },
+                                      new[] { "bi-house-heart", "Values at home", "Simple tasks to do together" },
+                                      new[] { "bi-shield-check", "Safe and private", "Only you see your child’s details" } } },
+        _ => new { Key = "Affiliate Partner", Icon = "bi-star", Title = "Become an affiliate partner",
+                   Lead = "Introduce HEM Virtues to schools in your area and earn an incentive for every school you bring.",
+                   Chips = new[] { "Incentive per school", "Your own dashboard" },
+                   Benefits = new[] { new[] { "bi-building-add", "Bring schools on board", "Share HEM Virtues with schools near you" },
+                                      new[] { "bi-bar-chart-line", "Track your schools", "See which schools joined and are active" },
+                                      new[] { "bi-cash-coin", "Monthly incentive", "For every active school" } } }
+    };
+    string detailsTitle = portalId switch { 4 => "Contact person", 3 => "Student details", _ => "Your details" };
+    string orgTitle = portalId == 4 ? "School details" : "Organisation";
+    string loginTitle = portalId == 3 ? "Parent / guardian & login" : "Login & contact";
+    string photoLabel = portalId switch { 4 => "School logo or photo", 3 => "Student photo", _ => "Your photo" };
 }
 
-<div class="register-hero-section py-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-xl-9 col-lg-10">
+<div class="hreg">
+    <div class="hreg-shell">
 
-                <div id="alertBox" class="alert d-none shadow-sm rounded-4 mb-4 border-0 text-center fw-semibold py-3" role="alert"></div>
-
-                <div class="card border-0 shadow-xl rounded-5 p-4 p-md-5 bg-white position-relative overflow-hidden">
-
-                    <div class="position-absolute top-0 start-0 w-100 bg-success" style="height: 6px;"></div>
-
-                    <div class="text-center mb-4 pb-2">
-                        <div class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold mb-2 shadow-sm" id="badgeRole">
-                            <i class="bi bi-shield-check me-1"></i> Secure Onboarding
-                        </div>
-                        <h3 class="fw-extrabold text-dark tracking-tight mb-1" id="formHeader">Account Registration</h3>
-                        <p class="text-muted small m-0">Your Mobile Number will act as your Login Username & Password.</p>
+        <!-- ================= BRAND PANEL ================= -->
+        <aside class="hreg-brand">
+            <div class="hreg-brand-top">
+                <span class="hreg-portal-ico"><i class="bi @portal.Icon"></i></span>
+                <div>
+                    <div class="hreg-eyebrow">Join HEM Virtues · @portal.Key</div>
+                    <div class="hreg-chips">
+                        @foreach (var c in portal.Chips)
+                        {
+                            <span>@c</span>
+                        }
                     </div>
-
-                    <form id="universalRegisterForm" enctype="multipart/form-data" class="needs-validation" novalidate>
-                        <input type="hidden" id="hdnPortalId" value="@portalId" />
-
-                        <div class="row g-3">
-                            <!-- First Name -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1" id="lblFirstName">First Name <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-person"></i></span>
-<input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtFirstName" placeholder="First Name" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required />                                </div>
-                            </div>
-
-                            <!-- Last Name -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1" id="lblLastName">Last Name <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-person-fill"></i></span>
-<input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtLastName" placeholder="Last Name" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required />                                </div>
-                            </div>
-
-                            <!-- Student Specific: Standard Dropdown -->
-                            <div class="col-md-6 student-field d-none">
-                                <label class="form-label small fw-bold text-secondary mb-1">Standard / Class <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-primary"><i class="bi bi-book"></i></span>
-                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="ddlStandard">
-                                        <option value="">-- Loading Standards --</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Student Specific: Division -->
-                            <div class="col-md-6 student-field d-none">
-                                <label class="form-label small fw-bold text-secondary mb-1">Division</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-primary"><i class="bi bi-grid"></i></span>
-                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtDivision" placeholder="e.g. A, B, C" />
-                                </div>
-                            </div>
-
-                            <!-- Gender Dropdown (Male, Female, Other with single-letter values M, F, O) -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1">Gender <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-gender-ambiguous"></i></span>
-                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="ddlGender" required>
-                                        <option value="">-- Select Gender --</option>
-                                        <option value="M">Male</option>
-                                        <option value="F">Female</option>
-                                        <option value="O">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Student Specific: Guardian Name -->
-                            <div class="col-md-6 student-field d-none">
-                                <label class="form-label small fw-bold text-secondary mb-1">Guardian / Parent Name <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-primary"><i class="bi bi-people"></i></span>
-<input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtGuardianName" placeholder="Guardian Full Name" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" />                                </div>
-                            </div>
-
-                            <!-- Teacher Specific: Qualification -->
-                            <div class="col-md-6 teacher-field d-none">
-                                <label class="form-label small fw-bold text-secondary mb-1">Qualification <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-info"><i class="bi bi-award"></i></span>
-                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtQualification" placeholder="e.g. B.Ed, M.Sc" />
-                                </div>
-                            </div>
-
-                            <!-- Parent Specific: Relation with Student -->
-                            <div class="col-md-6 parent-field d-none">
-                                <label class="form-label small fw-bold text-secondary mb-1">Relation with Student <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-warning"><i class="bi bi-heart"></i></span>
-                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="ddlRelation">
-                                        <option value="">-- Select Relation --</option>
-                                        <option value="Father">Father</option>
-                                        <option value="Mother">Mother</option>
-                                        <option value="Guardian">Guardian</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Organisation / School Name -->
-                            <div class="col-md-6 org-field">
-                                <label class="form-label small fw-bold text-secondary mb-1" id="lblOrgName">Organisation / Institution Name <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-building"></i></span>
-<input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtOrgName" placeholder="Enter Name" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required />                                </div>
-                            </div>
-
-                            <!-- Type Of Organisation -->
-                            <div class="col-md-6 org-field" id="orgTypeContainer">
-                                <label class="form-label small fw-bold text-secondary mb-1">Type Of Organisation <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-diagram-3"></i></span>
-                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="ddlOrgType" required>
-                                        <option value="">-- Select Type --</option>
-                                        <option value="Social Organisation">Social Organisation</option>
-                                        <option value="Corporate">Corporate</option>
-                                        <option value="Private School">Private School</option>
-                                        <option value="Government School">Government School</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Mobile No -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1" id="lblMobile">Mobile No (Username & Password) <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-phone"></i></span>
-                                    <input type="text" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtMobileNo" maxlength="10" placeholder="10-digit Mobile Number" oninput="this.value = this.value.replace(/\D/g, '')" required />
-                                </div>
-                            </div>
-
-                            <!-- Email ID -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1" id="lblEmail">Email ID</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-envelope"></i></span>
-                                    <input type="email" class="form-control form-control-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="txtEmailID" />
-                                </div>
-                                <small id="emailError" class="text-danger d-none ms-1" style="font-size: 11px;">Please enter a valid email address.</small>
-                            </div>
-
-                            <!-- Profile Photo -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-secondary mb-1" id="lblPhoto">Upload Photo</label>
-                                <input type="file" class="form-control form-control-lg rounded-4 border-0 bg-light shadow-none fs-6 py-2" id="filePhoto" accept="image/*" />
-                            </div>
-
-                            <!-- Branch Name -->
-                            <div class="col-md-6 org-field">
-                                <label class="form-label small fw-bold text-secondary mb-1">Branch Name</label>
-                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-light shadow-none fs-6 py-2" id="txtBranchName" placeholder="Branch Name (Optional)" />
-                            </div>
-
-                            <!-- Referred By Dropdown -->
-                            <div class="col-md-12" id="referredByContainer">
-                                <label class="form-label small fw-bold text-secondary mb-1">Referred By (Affiliate)</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3 text-success"><i class="bi bi-share"></i></span>
-                                    <select class="form-select form-select-lg rounded-end-4 border-0 bg-light shadow-none fs-6 py-2" id="ddlReferredBy">
-                                        <option value="">-- Please Select Affiliate (Optional) --</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Address -->
-                            <div class="col-12">
-                                <label class="form-label small fw-bold text-secondary mb-1">Address <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtAddress" placeholder="Street Address" required />
-                            </div>
-
-                            <!-- Pincode -->
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold text-secondary mb-1">Pincode <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-light shadow-none req-field fs-6 py-2" id="txtPincode" maxlength="6" placeholder="Pincode" oninput="this.value = this.value.replace(/\D/g, '')" onkeyup="fetchCityState(this.value)" required />
-                            </div>
-
-                            <!-- City -->
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold text-secondary mb-1">City </label>
-                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-white border req-field fs-6 py-2" id="txtCity" placeholder="City" readonly required />
-                            </div>
-
-                            <!-- State -->
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold text-secondary mb-1">State</label>
-                                <input type="text" class="form-control form-control-lg rounded-4 border-0 bg-white border req-field fs-6 py-2" id="txtState" placeholder="State" readonly required />
-                            </div>
-
-                            <!-- Submit Button -->
-                            <div class="col-12 mt-4 pt-2">
-                                <button type="submit" class="btn btn-success rounded-pill w-100 py-3 fw-bold shadow-lg transition-all hover-scale" id="btnRegister" disabled>
-                                    <span class="fs-6">Complete Registration</span> <i class="bi bi-arrow-right ms-2"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
                 </div>
             </div>
+
+            <div>
+                <h1 class="hreg-title">@portal.Title</h1>
+                <p class="hreg-lead">@portal.Lead</p>
+            </div>
+
+            <ul class="hreg-benefits">
+                @foreach (var b in portal.Benefits)
+                {
+                    <li><span class="hreg-b"><i class="bi @b[0]"></i></span><div><b>@b[1]</b><small>@b[2]</small></div></li>
+                }
+            </ul>
+
+            <div class="hreg-next">
+                <h3>What happens next</h3>
+                <ol>
+                    <li>Fill this form – about 2 minutes</li>
+                    <li>Log in with your mobile number</li>
+                    <li>Start your HEM Virtues journey</li>
+                </ol>
+            </div>
+
+            <div class="hreg-foot">
+                <span>Not a @portal.Key.ToLower()? <a href="/?register=1">Choose another account type</a></span>
+                <span>Already registered? <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</a></span>
+                <span class="hreg-help"><i class="bi bi-telephone"></i> Need help? +91 72280 01342</span>
+            </div>
+        </aside>
+
+        <!-- ================= FORM ================= -->
+        <div class="hreg-form-side">
+
+            <div id="alertBox" class="alert d-none shadow-sm rounded-4 mb-3 border-0 fw-semibold py-3" role="alert"></div>
+
+            <div class="hreg-titlebar">
+                <div>
+                    <div class="hreg-role" id="badgeRole"><i class="bi bi-shield-check me-1"></i> Secure Onboarding</div>
+                    <h2 id="formHeader">Account Registration</h2>
+                    <p>Fields marked <span class="hreg-req">*</span> are required.</p>
+                </div>
+                <span class="hreg-progress" id="regProgress" aria-live="polite"><span id="regProgressText">0 of 0 required done</span><i><b id="regProgressBar"></b></i></span>
+            </div>
+
+            <form id="universalRegisterForm" enctype="multipart/form-data" class="needs-validation" novalidate>
+                <input type="hidden" id="hdnPortalId" value="@portalId" />
+
+                <!-- ===== 1. Details ===== -->
+                <section class="hreg-section">
+                    <div class="hreg-sec-head"><span class="hreg-n"></span><h3>@detailsTitle</h3>
+                        @if (portalId == 4) { <span class="hreg-sub">Who manages HEM Virtues at the school</span> }
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="hreg-label" for="txtFirstName" id="lblFirstName">First Name <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-person"></i>
+                                <input type="text" class="form-control req-field" id="txtFirstName" placeholder="First name" autocomplete="given-name" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="hreg-label" for="txtLastName" id="lblLastName">Last Name <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-person"></i>
+                                <input type="text" class="form-control req-field" id="txtLastName" placeholder="Last name" autocomplete="family-name" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="hreg-label" for="ddlGender">Gender <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-gender-ambiguous"></i>
+                                <select class="form-select req-field" id="ddlGender" required>
+                                    <option value="">Select gender</option>
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                    <option value="O">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Student -->
+                        <div class="col-md-6 student-field d-none">
+                            <label class="hreg-label" for="ddlStandard">Standard / Class <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-book"></i>
+                                <select class="form-select" id="ddlStandard">
+                                    <option value="">Loading standards…</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 student-field d-none">
+                            <label class="hreg-label" for="txtDivision">Division <span class="hreg-opt">(optional)</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-grid"></i>
+                                <input type="text" class="form-control" id="txtDivision" maxlength="5" placeholder="e.g. A, B, C" />
+                            </div>
+                        </div>
+
+                        <!-- Teacher -->
+                        <div class="col-md-6 teacher-field d-none">
+                            <label class="hreg-label" for="txtQualification">Qualification <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-award"></i>
+                                <input type="text" class="form-control" id="txtQualification" placeholder="e.g. B.Ed, M.Sc" />
+                            </div>
+                        </div>
+
+                        <!-- Parent -->
+                        <div class="col-md-6 parent-field d-none">
+                            <label class="hreg-label" for="ddlRelation">Relation with Student <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-heart"></i>
+                                <select class="form-select" id="ddlRelation">
+                                    <option value="">Select relation</option>
+                                    <option value="Father">Father</option>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Guardian">Guardian</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== 2. School / organisation (School and Affiliate) ===== -->
+                <section class="hreg-section org-field">
+                    <div class="hreg-sec-head"><span class="hreg-n"></span><h3>@orgTitle</h3></div>
+                    <div class="row g-3">
+                        <div class="col-md-6 org-field">
+                            <label class="hreg-label" for="txtOrgName" id="lblOrgName">Organisation / Institution Name <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-building"></i>
+                                <input type="text" class="form-control req-field" id="txtOrgName" placeholder="Enter name" autocomplete="organization" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6 org-field" id="orgTypeContainer">
+                            <label class="hreg-label" for="ddlOrgType">Type Of Organisation <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-diagram-3"></i>
+                                <select class="form-select req-field" id="ddlOrgType" required>
+                                    <option value="">Select type</option>
+                                    <option value="Social Organisation">Social Organisation</option>
+                                    <option value="Corporate">Corporate</option>
+                                    <option value="Private School">Private School</option>
+                                    <option value="Government School">Government School</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 org-field">
+                            <label class="hreg-label" for="txtBranchName">Branch Name <span class="hreg-opt">(optional)</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-geo"></i>
+                                <input type="text" class="form-control" id="txtBranchName" placeholder="Branch name" />
+                            </div>
+                        </div>
+                        <div class="col-md-6" id="referredByContainer">
+                            <label class="hreg-label" for="ddlReferredBy">Referred By (Affiliate) <span class="hreg-opt">(optional)</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-share"></i>
+                                <select class="form-select" id="ddlReferredBy">
+                                    <option value="">Select affiliate</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== 3. Login & contact ===== -->
+                <section class="hreg-section">
+                    <div class="hreg-sec-head"><span class="hreg-n"></span><h3>@loginTitle</h3></div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="hreg-login-note"><span class="hreg-k"><i class="bi bi-key"></i></span>
+                                <span><b>Your mobile number is your login</b>Use it as both username and password the first time you log in.</span></div>
+                        </div>
+
+                        <!-- Student: guardian name -->
+                        <div class="col-12 student-field d-none">
+                            <label class="hreg-label" for="txtGuardianName">Guardian / Parent Name <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-people"></i>
+                                <input type="text" class="form-control" id="txtGuardianName" placeholder="Guardian full name" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="hreg-label" for="txtMobileNo" id="lblMobile">Mobile No (Username & Password) <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-phone"></i>
+                                <input type="tel" class="form-control req-field" id="txtMobileNo" maxlength="10" inputmode="numeric" autocomplete="tel-national" placeholder="10-digit mobile number" oninput="this.value = this.value.replace(/\D/g, '')" required />
+                            </div>
+                            <small class="hreg-hint" id="mobileHint"><i class="bi bi-lock"></i> This number is your username and your password.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="hreg-label" for="txtEmailID" id="lblEmail">Email ID</label>
+                            <div class="hreg-ctl"><i class="bi bi-envelope"></i>
+                                <input type="email" class="form-control" id="txtEmailID" autocomplete="email" placeholder="name@example.com" />
+                            </div>
+                            <small id="emailError" class="hreg-hint text-danger d-none">Please enter a valid email address.</small>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="hreg-label" for="filePhoto" id="lblPhoto">@photoLabel <span class="hreg-opt">(optional)</span></label>
+                            <label class="hreg-upload" for="filePhoto">
+                                <span class="hreg-av" id="photoPreview"><i class="bi bi-camera"></i></span>
+                                <span><b id="photoTitle">Add a clear photo</b><small id="photoSub">JPG or PNG, up to 5 MB</small></span>
+                                <span class="hreg-btn-mini" id="photoBtn">Choose file</span>
+                            </label>
+                            <input type="file" class="d-none" id="filePhoto" accept="image/*" />
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== 4. Address ===== -->
+                <section class="hreg-section">
+                    <div class="hreg-sec-head"><span class="hreg-n"></span><h3>Address</h3></div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="hreg-label" for="txtAddress">Address <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-house"></i>
+                                <input type="text" class="form-control req-field" id="txtAddress" placeholder="House / street / area" autocomplete="street-address" required />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="hreg-label" for="txtPincode">Pincode <span class="text-danger">*</span></label>
+                            <div class="hreg-ctl"><i class="bi bi-geo-alt"></i>
+                                <input type="text" class="form-control req-field" id="txtPincode" maxlength="6" inputmode="numeric" autocomplete="postal-code" placeholder="6-digit pincode" oninput="this.value = this.value.replace(/\D/g, '')" onkeyup="fetchCityState(this.value)" required />
+                            </div>
+                            <small class="hreg-hint" id="pinHint"><i class="bi bi-info-circle"></i> City and state fill in automatically.</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="hreg-label" for="txtCity">City</label>
+                            <div class="hreg-ctl"><i class="bi bi-pin-map"></i>
+                                <input type="text" class="form-control req-field" id="txtCity" placeholder="Auto-filled" readonly required />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="hreg-label" for="txtState">State</label>
+                            <div class="hreg-ctl"><i class="bi bi-map"></i>
+                                <input type="text" class="form-control req-field" id="txtState" placeholder="Auto-filled" readonly required />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="hreg-submitbar">
+                    <button type="submit" class="hreg-submit" id="btnRegister" disabled>
+                        <span>Create my account</span> <i class="bi bi-arrow-right"></i>
+                    </button>
+                    <div class="hreg-safe"><i class="bi bi-shield-check"></i> Your details are safe with HEMA Foundation and are never shared.</div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <style>
-    .shadow-xl {
-        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.08) !important;
+    /* Registration page only (everything is inside .hreg). */
+    .hreg {
+        --hr-purple: #4B2E83; --hr-purple-2: #6A41B5; --hr-pink: #E51E86;
+        --hr-ink: #1F1A3A; --hr-muted: #6B6787; --hr-line: #E3DEEE; --hr-soft: #F4F0FB; --hr-ok: #138A4B;
+        padding: 28px 16px 56px;
+        background: radial-gradient(900px 420px at 8% -10%, rgba(229, 30, 134, .08), transparent 60%), radial-gradient(800px 400px at 100% 0%, rgba(0, 174, 239, .08), transparent 60%), #F5F3FA;
+        color: var(--hr-ink);
     }
+    .hreg-shell { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 400px minmax(0, 1fr); background: #fff; border-radius: 26px; overflow: hidden; border: 1px solid #ECE8F4; box-shadow: 0 1px 2px rgba(31, 26, 58, .05), 0 18px 48px rgba(31, 26, 58, .10); }
 
-    .hover-scale {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    /* brand panel */
+    .hreg-brand { position: relative; color: #fff; padding: 34px 30px; background: linear-gradient(160deg, var(--hr-purple) 0%, #5C2E8F 48%, var(--hr-pink) 120%); overflow: hidden; display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+    .hreg-brand::before, .hreg-brand::after { content: ""; position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .08); }
+    .hreg-brand::before { width: 260px; height: 260px; right: -90px; top: -80px; }
+    .hreg-brand::after { width: 180px; height: 180px; left: -70px; bottom: 60px; }
+    .hreg-brand > * { position: relative; z-index: 1; }
+    .hreg-brand-top { display: flex; gap: 14px; align-items: center; }
+    .hreg-portal-ico { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .28); font-size: 26px; flex: 0 0 auto; }
+    .hreg-eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
+    .hreg-chips { display: none; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .hreg-chips span { font-size: 11px; font-weight: 600; background: rgba(255, 255, 255, .16); border-radius: 999px; padding: 3px 10px; }
+    .hreg-title { color: #fff; font-size: 28px; line-height: 1.18; margin: 4px 0 8px; font-weight: 700; }
+    .hreg-lead { margin: 0; opacity: .92; font-size: 13.5px; }
+    .hreg-benefits { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+    .hreg-benefits li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; font-size: 13px; }
+    .hreg-b { width: 34px; height: 34px; border-radius: 10px; background: rgba(255, 255, 255, .14); display: grid; place-items: center; font-size: 16px; }
+    .hreg-benefits b { display: block; font-size: 13.5px; font-weight: 600; }
+    .hreg-benefits small { opacity: .85; font-size: 12px; }
+    .hreg-next { background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .2); border-radius: 16px; padding: 14px 16px; }
+    .hreg-next h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; opacity: .9; color: #fff; }
+    .hreg-next ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; counter-reset: n; }
+    .hreg-next li { display: flex; gap: 10px; align-items: center; font-size: 12.5px; counter-increment: n; }
+    .hreg-next li::before { content: counter(n); width: 22px; height: 22px; border-radius: 50%; background: #fff; color: var(--hr-purple); font-weight: 700; font-size: 11.5px; display: grid; place-items: center; flex: 0 0 auto; }
+    .hreg-foot { margin-top: auto; font-size: 12.5px; display: flex; flex-direction: column; gap: 6px; }
+    .hreg-foot a { color: #fff; font-weight: 600; text-decoration: underline; }
+    .hreg-help { display: flex; gap: 8px; align-items: center; opacity: .9; }
+
+    /* form side */
+    .hreg-form-side { padding: 30px 36px 34px; min-width: 0; }
+    .hreg-titlebar { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+    .hreg-titlebar h2 { margin: 4px 0 0; font-size: 22px; font-weight: 700; color: var(--hr-ink); }
+    .hreg-titlebar p { margin: 2px 0 0; color: var(--hr-muted); font-size: 13px; }
+    .hreg-role { display: inline-flex; align-items: center; font-size: 11.5px; font-weight: 600; color: var(--hr-purple); background: var(--hr-soft); border-radius: 999px; padding: 3px 10px; }
+    .hreg-req { color: var(--hr-pink); }
+    .hreg-progress { font-size: 12px; font-weight: 600; color: var(--hr-purple); background: var(--hr-soft); border-radius: 999px; padding: 5px 12px; display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; }
+    .hreg-progress i { width: 70px; height: 6px; background: #E2DAF2; border-radius: 3px; overflow: hidden; display: inline-block; }
+    .hreg-progress i b { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--hr-purple-2), var(--hr-pink)); border-radius: 3px; transition: width .25s; }
+
+    .hreg-section { border-top: 1px solid #EFEBF6; padding-top: 18px; margin-top: 18px; }
+    .hreg-section.hreg-first { border-top: 0; padding-top: 0; margin-top: 12px; }
+    .hreg-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .hreg-n { width: 26px; height: 26px; border-radius: 8px; background: var(--hr-soft); color: var(--hr-purple); font-weight: 700; font-size: 12.5px; display: grid; place-items: center; transition: background .2s, color .2s; }
+    .hreg-n.done { background: var(--hr-ok); color: #fff; }
+    .hreg-sec-head h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--hr-ink); }
+    .hreg-sub { color: var(--hr-muted); font-size: 12px; margin-left: auto; }
+
+    .hreg-label { display: block; font-size: 12.5px; font-weight: 600; color: var(--hr-ink); margin-bottom: 6px; }
+    .hreg-opt { color: var(--hr-muted); font-weight: 500; font-size: 11.5px; }
+    .hreg-ctl { position: relative; }
+    .hreg-ctl > i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9A93B5; pointer-events: none; font-size: 15px; z-index: 2; }
+    .hreg .hreg-ctl .form-control, .hreg .hreg-ctl .form-select { height: 46px; border: 1.5px solid var(--hr-line); background-color: #fff; border-radius: 12px; padding-left: 40px; font-size: 14px; color: var(--hr-ink); box-shadow: none; transition: border-color .15s, box-shadow .15s; }
+    .hreg .hreg-ctl .form-control::placeholder { color: #A9A3C0; }
+    .hreg .hreg-ctl .form-control:focus, .hreg .hreg-ctl .form-select:focus { border-color: var(--hr-purple-2); box-shadow: 0 0 0 4px rgba(106, 65, 181, .12); background-color: #fff; }
+    .hreg .hreg-ctl .form-control[readonly] { background-color: #FAF9FD; }
+    .hreg .hreg-ctl .form-control[readonly]:not(:placeholder-shown) { border-color: #B9DFC8; }
+    .hreg .hreg-ctl.is-ok .form-control, .hreg .hreg-ctl.is-ok .form-select { border-color: #B9DFC8; }
+    .hreg .hreg-ctl.is-bad .form-control { border-color: #E8A2B2; }
+    .hreg-hint { display: flex; gap: 6px; align-items: center; font-size: 11.5px; color: var(--hr-muted); margin-top: 6px; }
+    .hreg-hint.ok { color: var(--hr-ok); font-weight: 600; }
+
+    .hreg-login-note { display: flex; gap: 12px; align-items: center; background: linear-gradient(90deg, #F2ECFC, #FDEFF6); border: 1px solid #E8DDF8; border-radius: 14px; padding: 12px 14px; font-size: 12.5px; }
+    .hreg-login-note b { display: block; font-size: 13px; }
+    .hreg-k { width: 36px; height: 36px; border-radius: 10px; background: #fff; display: grid; place-items: center; color: var(--hr-purple); flex: 0 0 auto; box-shadow: 0 1px 3px rgba(0, 0, 0, .06); }
+
+    .hreg-upload { display: flex; gap: 14px; align-items: center; border: 1.5px dashed #CFC6E4; border-radius: 14px; padding: 12px 14px; background: #FCFBFE; cursor: pointer; margin: 0; }
+    .hreg-upload:hover { border-color: var(--hr-purple-2); }
+    .hreg-av { width: 52px; height: 52px; border-radius: 50%; background: var(--hr-soft); color: var(--hr-purple-2); display: grid; place-items: center; flex: 0 0 auto; overflow: hidden; font-size: 20px; }
+    .hreg-av img { width: 100%; height: 100%; object-fit: cover; }
+    .hreg-upload b { font-size: 13px; font-weight: 600; display: block; }
+    .hreg-upload small { color: var(--hr-muted); font-size: 11.5px; }
+    .hreg-btn-mini { margin-left: auto; border: 1.5px solid var(--hr-line); border-radius: 999px; padding: 6px 12px; font-weight: 600; font-size: 12px; background: #fff; white-space: nowrap; }
+
+    .hreg-submitbar { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
+    .hreg-submit { height: 52px; border: 0; border-radius: 14px; color: #fff; font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+        background: linear-gradient(90deg, var(--hr-purple) 0%, var(--hr-purple-2) 55%, var(--hr-pink) 100%); box-shadow: 0 10px 24px rgba(75, 46, 131, .28); transition: transform .15s, box-shadow .15s; }
+    .hreg-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(75, 46, 131, .32); }
+    .hreg-submit:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+    .hreg-safe { display: flex; gap: 8px; justify-content: center; align-items: center; color: var(--hr-muted); font-size: 12px; text-align: center; }
+    .hreg-safe i { color: var(--hr-ok); }
+
+    @@media (max-width: 991.98px) {
+        .hreg-shell { grid-template-columns: 1fr; }
+        .hreg-brand { padding: 22px 20px; gap: 14px; }
+        .hreg-benefits, .hreg-next, .hreg-help { display: none !important; }
+        .hreg-chips { display: flex; }
+        .hreg-title { font-size: 22px; }
+        .hreg-foot { flex-direction: row; flex-wrap: wrap; gap: 4px 14px; }
     }
-
-        .hover-scale:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 0.5rem 1.5rem rgba(25, 135, 84, 0.25) !important;
-        }
-
-    .form-control:focus, .form-select:focus {
-        background-color: #fff !important;
-        box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.12) !important;
-        border-color: #198754 !important;
+    @@media (max-width: 575.98px) {
+        .hreg { padding: 0 0 24px; }
+        .hreg-shell { border-radius: 0; border: 0; box-shadow: none; }
+        .hreg-form-side { padding: 20px 16px 8px; }
+        .hreg-progress { width: 100%; justify-content: space-between; }
+        .hreg-sub { margin-left: 36px; width: 100%; margin-top: -4px; }
+        .hreg-submitbar { position: sticky; bottom: 0; z-index: 5; background: linear-gradient(180deg, rgba(255, 255, 255, 0), #fff 28%); padding: 16px 0 calc(8px + env(safe-area-inset-bottom, 0px)); margin-top: 12px; }
     }
+    @@media (prefers-reduced-motion: reduce) { .hreg * { transition: none !important; } }
 </style>
 
 @section Scripts {
     <script>
         let portalId = $('#hdnPortalId').val();
 
-        // function customizeFormLabels() {
-        //     if (portalId == "3") { // Student
-        //         $('#formHeader').text("Student Registration");
-        //         $('#badgeRole').html(`<i class="bi bi-mortarboard-fill text-primary me-1"></i> Student Portal`);
-        //         $('#lblFirstName').text("Student First Name");
-        //         $('#lblLastName').text("Student Last Name");
-        //         $('#lblMobile').text("Guardian Mobile No (Username & Password)");
-        //         $('#lblEmail').text("Guardian Email ID");
-
-        //         $('.student-field').removeClass('d-none');
-        //         $('.org-field').hide();
-        //         $('#referredByContainer').hide();
-
-        //         $('#txtEmailID').removeClass('req-field');
-        //         $('#ddlStandard, #txtGuardianName').addClass('req-field');
-        //         $('#txtOrgName, #ddlOrgType').removeClass('req-field');
-        //         loadStandardsDropdown();
-        //     }
-        //     else if (portalId == "4") { // School
-        //         $('#formHeader').text("School Registration");
-        //         $('#badgeRole').html(`<i class="bi bi-building text-warning me-1"></i> School Portal`);
-        //         $('#lblOrgName').html(`School Name <span class="text-danger">*</span>`);
-        //         loadAffiliatesDropdown();
-        //     }
-        //     else if (portalId == "2") { // Teacher
-        //         $('#formHeader').text("Teacher Registration");
-        //         $('#badgeRole').html(`<i class="bi bi-person-badge text-info me-1"></i> Teacher Portal`);
-        //         $('.teacher-field').removeClass('d-none');
-        //         $('.org-field').hide();
-        //         $('#referredByContainer').hide();
-        //         $('#txtQualification').addClass('req-field');
-        //         $('#txtOrgName, #ddlOrgType').removeClass('req-field');
-        //     }
-        //     else if (portalId == "5") { // Parent
-        //         $('#formHeader').text("Parent Registration");
-        //         $('#badgeRole').html(`<i class="bi bi-people-fill text-warning me-1"></i> Parent Portal`);
-        //         $('.parent-field').removeClass('d-none');
-        //         $('.org-field').hide();
-        //         $('#referredByContainer').hide();
-        //         $('#ddlRelation').addClass('req-field');
-        //         $('#txtOrgName, #ddlOrgType').removeClass('req-field');
-        //     }
-        //     else if (portalId == "6") { // Affiliate
-        //         $('#formHeader').text("Affiliate Partner Registration");
-        //         $('#badgeRole').html(`<i class="bi bi-star-fill text-info me-1"></i> Affiliate Partner`);
-        //         $('#referredByContainer').hide();
-        //     }
-        // }
         function customizeFormLabels() {
-            if (portalId == "3") { 
+            if (portalId == "3") {
                 $('#formHeader').text("Student Registration");
-                $('#badgeRole').html(`<i class="bi bi-mortarboard-fill text-primary me-1"></i> Student Portal`);
+                $('#badgeRole').html(`<i class="bi bi-mortarboard-fill me-1"></i> Student Portal`);
                 $('#lblFirstName').html('Student First Name <span class="text-danger">*</span>');
                 $('#lblLastName').html('Student Last Name <span class="text-danger">*</span>');
                 $('#lblMobile').html('Guardian Mobile No (Username & Password) <span class="text-danger">*</span>');
-                $('#lblEmail').text("Guardian Email ID");
+                $('#lblEmail').html('Guardian Email ID <span class="hreg-opt">(optional)</span>');
+                $('#mobileHint').html('<i class="bi bi-lock"></i> This number is the student’s username and password.');
 
                 $('.student-field').removeClass('d-none');
                 $('.org-field').hide();
@@ -303,33 +437,34 @@
 
                 loadStandardsDropdown();
             }
-            else if (portalId == "4") { 
+            else if (portalId == "4") {
                 $('#formHeader').text("School Registration");
-                $('#badgeRole').html(`<i class="bi bi-building text-warning me-1"></i> School Portal`);
+                $('#badgeRole').html(`<i class="bi bi-building me-1"></i> School Portal`);
                 $('#lblOrgName').html(`School Name <span class="text-danger">*</span>`);
+                $('#txtOrgName').attr('placeholder', 'e.g. Delhi Public School');
                 loadAffiliatesDropdown();
             }
-            else if (portalId == "2") { 
+            else if (portalId == "2") {
                 $('#formHeader').text("Teacher Registration");
-                $('#badgeRole').html(`<i class="bi bi-person-badge text-info me-1"></i> Teacher Portal`);
+                $('#badgeRole').html(`<i class="bi bi-person-badge me-1"></i> Teacher Portal`);
                 $('.teacher-field').removeClass('d-none');
                 $('.org-field').hide();
                 $('#referredByContainer').hide();
                 $('#txtQualification').addClass('req-field');
                 $('#txtOrgName, #ddlOrgType').removeClass('req-field');
             }
-            else if (portalId == "5") { 
+            else if (portalId == "5") {
                 $('#formHeader').text("Parent Registration");
-                $('#badgeRole').html(`<i class="bi bi-people-fill text-warning me-1"></i> Parent Portal`);
+                $('#badgeRole').html(`<i class="bi bi-people-fill me-1"></i> Parent Portal`);
                 $('.parent-field').removeClass('d-none');
                 $('.org-field').hide();
                 $('#referredByContainer').hide();
                 $('#ddlRelation').addClass('req-field');
                 $('#txtOrgName, #ddlOrgType').removeClass('req-field');
             }
-            else if (portalId == "6") { 
+            else if (portalId == "6") {
                 $('#formHeader').text("Affiliate Partner Registration");
-                $('#badgeRole').html(`<i class="bi bi-star-fill text-info me-1"></i> Affiliate Partner`);
+                $('#badgeRole').html(`<i class="bi bi-star-fill me-1"></i> Affiliate Partner`);
                 $('#referredByContainer').hide();
             }
 
@@ -337,27 +472,40 @@
                 $('#lblEmail').html('Email ID <span class="text-danger">*</span>');
                 $('#txtEmailID').addClass('req-field');
             }
+
+            numberSections();
+        }
+
+        // Numbers the visible sections 1, 2, 3… (the School section is hidden for some portals).
+        function numberSections() {
+            $('.hreg-section').removeClass('hreg-first');
+            $('.hreg-section:visible').each(function (i) {
+                if (i === 0) $(this).addClass('hreg-first');
+                $(this).find('.hreg-n').text(i + 1).attr('data-n', i + 1);
+            });
+        }
+
+        // Option text is set with .text(): names from the database are never read as HTML.
+        function fillDropdown($dropdown, firstText, data) {
+            $dropdown.empty().append($('<option>').val('').text(firstText));
+            if (data) data.forEach(item => $dropdown.append($('<option>').val(item.id).text(item.name)));
         }
 
         function loadStandardsDropdown() {
             $.get('/api/universal/standards-list', function(data) {
-                let $dropdown = $('#ddlStandard');
-                $dropdown.empty().append('<option value="">-- Select Standard --</option>');
-                if (data) data.forEach(item => $dropdown.append(`<option value="${item.id}">${item.name}</option>`));
+                fillDropdown($('#ddlStandard'), 'Select standard', data);
             });
         }
 
         function loadAffiliatesDropdown() {
             $.get('/api/universal/affiliates-list', function(data) {
-                let $dropdown = $('#ddlReferredBy');
-                $dropdown.empty().append('<option value="">-- Please Select Affiliate (Optional) --</option>');
-                if (data) data.forEach(item => $dropdown.append(`<option value="${item.id}">${item.name}</option>`));
+                fillDropdown($('#ddlReferredBy'), 'Select affiliate', data);
             });
         }
 
         function validateForm() {
             let isValid = true;
-            let nameRegex = /^[A-Za-z\s]+$/; 
+            let nameRegex = /^[A-Za-z\s]+$/;
 
             $('.req-field:visible').each(function() {
                 if (!$(this).val() || $(this).val().trim() === "") isValid = false;
@@ -369,7 +517,7 @@
             if ($('#txtGuardianName').is(':visible') && !nameRegex.test($('#txtGuardianName').val().trim())) isValid = false; // Guardian Name
 
             if ($('#txtMobileNo').val().trim().length !== 10) isValid = false;
-            
+
             let emailVal = $('#txtEmailID').val().trim();
             let emailRegex = /^[^\s\x40]+\x40[^\s\x40]+\.[^\s\x40]+$/;
 
@@ -385,32 +533,105 @@
             }
 
             $('#btnRegister').prop('disabled', !isValid);
+            updateProgress();
+        }
+
+        // ---- Look only: progress, section ticks, field marks (validation itself is validateForm above) ----
+        function fieldOk($f) {
+            let v = ($f.val() || '').trim();
+            if (!v) return false;
+            if ($f.is('#txtMobileNo')) return v.length === 10;
+            if ($f.is('#txtPincode')) return v.length === 6;
+            if ($f.is('#txtEmailID')) return /^[^\s\x40]+\x40[^\s\x40]+\.[^\s\x40]+$/.test(v);
+            if ($f.is('#txtFirstName, #txtLastName, #txtGuardianName') || ($f.is('#txtOrgName') && portalId == "4")) return /^[A-Za-z\s]+$/.test(v);
+            return true;
+        }
+
+        function updateProgress() {
+            let $req = $('.req-field:visible');
+            let done = $req.filter(function () { return fieldOk($(this)); }).length;
+            let total = $req.length;
+            $('#regProgressText').text(done + ' of ' + total + ' required done');
+            $('#regProgressBar').css('width', total ? Math.round(done / total * 100) + '%' : '0');
+
+            $('.hreg-ctl').each(function () {
+                let $f = $(this).find('.form-control, .form-select').first();
+                if ($f.is('[readonly]')) return;
+                let v = ($f.val() || '').trim();
+                $(this).toggleClass('is-ok', v !== '' && fieldOk($f)).toggleClass('is-bad', v !== '' && !fieldOk($f) && ($f.is('#txtEmailID') || $f.is('#txtMobileNo') && v.length === 10));
+            });
+
+            $('.hreg-section:visible').each(function () {
+                let $r = $(this).find('.req-field:visible');
+                let ok = $r.length > 0 && $r.toArray().every(el => fieldOk($(el)));
+                let $n = $(this).find('.hreg-n');
+                $n.toggleClass('done', ok).html(ok ? '<i class="bi bi-check-lg"></i>' : $n.attr('data-n'));
+            });
         }
 
         $(document).on('input change', '.req-field, #txtMobileNo, #txtEmailID', validateForm);
+
+        function setCityState(city, state, ok) {
+            $('#txtCity').val(city);
+            $('#txtState').val(state);
+            $('#pinHint').toggleClass('ok', !!ok).html(ok
+                ? '<i class="bi bi-check-circle"></i> City and state filled from pincode.'
+                : '<i class="bi bi-info-circle"></i> City and state fill in automatically.');
+            validateForm();
+        }
 
         function fetchCityState(pincode) {
             if (pincode.length === 6) {
                 $.get(`https://api.postalpincode.in/pincode/${pincode}`, function(data) {
                     if (data && data[0].Status === "Success") {
-                        $('#txtCity').val(data[0].PostOffice[0].District);
-                        $('#txtState').val(data[0].PostOffice[0].State);
-                        validateForm();
+                        setCityState(data[0].PostOffice[0].District, data[0].PostOffice[0].State, true);
+                    } else {
+                        setCityState('', '', false);
+                        $('#pinHint').html('<i class="bi bi-exclamation-circle text-danger"></i> We could not find this pincode. Please check it.');
                     }
+                }).fail(function () {
+                    $('#pinHint').html('<i class="bi bi-wifi-off"></i> Could not look up the pincode. Check your internet and type it again.');
                 });
+            } else if ($('#txtCity').val() || $('#txtState').val()) {
+                // The pincode was changed: clear the old city and state.
+                setCityState('', '', false);
             }
         }
+
+        // Photo: preview, and a size check before uploading.
+        $('#filePhoto').on('change', function () {
+            let f = this.files && this.files[0];
+            if (!f) return;
+            if (!/^image\//.test(f.type) || f.size > 5 * 1024 * 1024) {
+                this.value = '';
+                $('#photoPreview').html('<i class="bi bi-camera"></i>');
+                $('#photoTitle').text('Add a clear photo');
+                $('#photoSub').html('<span class="text-danger">Please choose an image of up to 5 MB.</span>');
+                $('#photoBtn').text('Choose file');
+                return;
+            }
+            let url = URL.createObjectURL(f);
+            $('#photoPreview').empty().append($('<img alt="">').attr('src', url));
+            $('#photoTitle').text('Photo added');
+            $('#photoSub').text(f.name);
+            $('#photoBtn').text('Change');
+        });
 
         function showAlert(message, type = 'success') {
             const $box = $('#alertBox');
             $box.removeClass('d-none bg-success-subtle bg-danger-subtle text-success text-danger')
                 .addClass(type === 'success' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger')
-                .html(`<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'} me-2"></i> ${message}`);
-            $('html, body').animate({ scrollTop: 0 }, 'fast');
+                .empty()
+                .append($('<i>').addClass('bi me-2 bi-' + (type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill')))
+                .append(document.createTextNode(message));
+            $('html, body').animate({ scrollTop: $box.offset().top - 90 }, 'fast');
         }
+
+        const submitHtml = $('#btnRegister').html();
 
         $(document).ready(function() {
             customizeFormLabels();
+            validateForm();
 
             $('#universalRegisterForm').on('submit', function(e) {
                 e.preventDefault();
@@ -463,11 +684,17 @@
                     success: function(res) {
                         if (res.success) {
                             showAlert(res.message, 'success');
+                            $btn.html('<i class="bi bi-check-circle me-2"></i>Registered');
                             setTimeout(() => { window.location.href = '/Home/Index'; }, 2500);
+                        } else {
+                            // The old page left the button spinning here.
+                            $btn.prop('disabled', false).html(submitHtml);
+                            showAlert(res.message || 'Registration failed.', 'danger');
+                            validateForm();
                         }
                     },
                     error: function(xhr) {
-                        $btn.prop('disabled', false).html('Complete Registration <i class="bi bi-arrow-right ms-2"></i>');
+                        $btn.prop('disabled', false).html(submitHtml);
                         showAlert(xhr.responseJSON?.message || 'Registration failed.', 'danger');
                         validateForm();
                     }

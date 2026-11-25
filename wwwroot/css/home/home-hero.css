@@ -1449,3 +1449,46 @@
     letter-spacing: 0.3px;
     color: #ffffff;
 }
+
+/* =========================================================
+   Home page on phones (only this page loads this file)
+   ========================================================= */
+/* The floating quick-access and scroll-to-top buttons sit above every popup
+   (z-index 9990+); hide them while a popup is open so they do not cover the
+   video or the popup's close button. */
+body.modal-open #quickDrawer,
+body.modal-open #scrollTopBtn {
+    display: none !important;
+}
+
+@media (max-width: 767.98px) {
+    /* Smaller quick-access tab so it covers less of the cards it floats over. */
+    #drawerToggle {
+        width: 36px;
+        height: 42px;
+        font-size: 16px;
+        border-radius: 12px 0 0 12px;
+    }
+
+    #drawerToggle:hover {
+        width: 38px;
+    }
+
+    .drawer-content.show {
+        right: 36px;
+    }
+
+}
+
+/* Video popup close button: a white X on a dark circle, visible over any video frame
+   (the white-on-white button showed only an empty circle). */
+#hemVideoModal .btn-close {
+    width: 34px;
+    height: 34px;
+    padding: 0 !important;
+    opacity: 1;
+    filter: none !important;
+    border-radius: 50% !important;
+    background: rgba(15, 23, 42, .78) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") center / 12px no-repeat !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, .85);
+}
