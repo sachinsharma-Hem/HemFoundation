@@ -1,17 +1,21 @@
 ﻿using ClosedXML.Excel;
+using Dapper;
+using HemFoundation.Common;
 using HemFoundation.Data;
 using HemFoundation.DTOs;
 using HemFoundation.Models;
 using HemFoundation.Models.Entities; // Adjust based on your DTO location
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Build.Framework;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using ReactiveExtensionsSharp;
 using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using HemFoundation.Common;
 
 namespace HemFoundation.Controllers // Changed namespace to Controllers convention
 {
@@ -1472,7 +1476,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 filter = "A";
             }
 
-            string connString = _configuration.GetConnectionString("DefaultConnection");
+            string connString = _connectionString;
             DataSet essr1 = new DataSet();
 
             using (var conn = new Npgsql.NpgsqlConnection(connString))
@@ -1527,7 +1531,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
             }
         }
 
-       
+        
 
     }
 }

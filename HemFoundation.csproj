@@ -7,6 +7,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Content Remove="wwwroot\images\congratulations\anniversary-template.jpg" />
+	  <Content Remove="wwwroot\images\congratulations\birthday-template.jpg" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="16.2.0" />
 		<PackageReference Include="ClosedXML" Version="0.105.1" />
 		<PackageReference Include="Dapper" Version="2.1.79" />
@@ -60,6 +65,7 @@
 		<Folder Include="Views\Learn\Shared\" />
 		<Folder Include="wwwroot\Content\img\" />
 		<Folder Include="wwwroot\images\banners\" />
+		<Folder Include="wwwroot\images\congratulations\" />
 		<Folder Include="wwwroot\images\gallery\" />
 		<Folder Include="wwwroot\images\icons\" />
 		<Folder Include="wwwroot\images\logo\" />

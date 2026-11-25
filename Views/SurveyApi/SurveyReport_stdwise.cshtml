@@ -1,6 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Survey Report - Standard Wise";
-    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
 }
 
 <style>
@@ -585,7 +585,7 @@
                 <input type="text"
                        id="txtSearch"
                        class="form-control"
-                       placeholder="Search student, standard, division, institute or mobile number..." />
+                       placeholder="Search student, standard, division,gender, institute or mobile number..." />
 
             </div>
 
@@ -1356,7 +1356,10 @@
             String(lastName)
         ).trim();
     }
-
+    function getGender(row) {
+        // getValue already checks both "gender" and "Gender"
+        return getValue(row, "gender") || "";
+    }
 
     function renderTable(searchText) {
 
@@ -1399,6 +1402,7 @@
                         getValue(row, "Standard"),
                         getValue(row, "division"),
                         getValue(row, "Division"),
+                        getGender(row),
                         getValue(row, "instituteName"),
                         getValue(row, "InstituteName"),
                         getValue(row, "mobileNo"),
@@ -1422,6 +1426,7 @@
             '<th rowspan="2">Student</th>' +
             '<th rowspan="2">Standard</th>' +
             '<th rowspan="2">Division</th>' +
+            '<th rowspan="2">Gender</th>' +
             '<th rowspan="2">Institute</th>';
 
 
@@ -1577,6 +1582,9 @@
                     escapeHtml(division) +
                     "</td>" +
 
+                    "<td>" +                              // new
+                    escapeHtml(getGender(row)) +
+                    "</td>" +
                     "<td>" +
                     escapeHtml(institute) +
                     "</td>";
@@ -1732,6 +1740,7 @@
             "Student",
             "Standard",
             "Division",
+            "Gender",
             "Institute"
         ];
 
@@ -1800,7 +1809,7 @@
                     ) ||
                     ""
                 );
-
+                csvRow.push(getGender(row));
                 csvRow.push(
                     getValue(
                         row,

@@ -634,6 +634,7 @@ namespace HemFoundation.Controllers
         public string? FirstName { get; set; }
 
         public string? LastName { get; set; }
+         public string? Gender { get; set; }
 
         public string? Standard { get; set; }
 
@@ -722,5 +723,28 @@ namespace HemFoundation.Controllers
         public decimal? PreQ15Point { get; set; }
 
         public decimal? PostQ15Point { get; set; }
+    }
+    public class SurveyReportModel
+    {
+        public int? UserID { get; set; }
+        public int? QuestionNumber { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? Gender { get; set; }
+        public string? Standard { get; set; }
+        public string? Division { get; set; }
+        public string? InstituteName { get; set; }
+        public string? MobileNo { get; set; }
+        public string? CourseName { get; set; }
+        public string? TopicName { get; set; }
+        public string? Questions { get; set; }
+        public string? Option1 { get; set; }
+        public string? Option2 { get; set; }
+        public string? Option3 { get; set; }
+        public string? Option4 { get; set; }
+        public string? Option5 { get; set; }
+        public string? UserSelectedAnswer { get; set; }
+        public int? Points { get; set; }
+        public int? TotalPoints { get; set; }
     }
 }
