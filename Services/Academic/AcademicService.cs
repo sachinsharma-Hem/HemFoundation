@@ -551,7 +551,7 @@ namespace HemFoundation.Services.Academic
                 FROM wj_students s
                 LEFT JOIN users u ON u.userid = s.studentid
                 LEFT JOIN LATERAL (SELECT instituteid FROM wj_studentassociates x WHERE x.studentid = s.studentid
-                                   ORDER BY (x.isprimaryassociate = B'1') DESC NULLS LAST LIMIT 1) a ON true
+                                   ORDER BY (x.isprimaryassociate::text IN ('1', 'true')) DESC LIMIT 1) a ON true
                 LEFT JOIN wj_institutes i ON i.instituteid = a.instituteid
                 LEFT JOIN users iu ON iu.userid = a.instituteid
                 WHERE s.studentid = @studentId", new { studentId });
@@ -582,9 +582,9 @@ namespace HemFoundation.Services.Academic
                        sum(CASE WHEN activity_type IN ('Pratical', 'Practical', 'HEM Project') THEN pts ELSE 0 END) AS Practical,
                        sum(CASE WHEN activity_type ILIKE '%PBL%' THEN pts ELSE 0 END) AS Pbl
                 FROM (SELECT maincoursename, activity_type,
-                             CASE WHEN points ~ '^\s*-?\d+(\.\d+)?\s*$' THEN points::numeric ELSE 0 END AS pts
+                             CASE WHEN points::text ~ '^\s*-?\d+(\.\d+)?\s*$' THEN points::text::numeric ELSE 0 END AS pts
                       FROM hf_view_studentactivitylog
-                      WHERE studentid = @studentId AND btrim(standard) = @standard AND maincoursename IS NOT NULL) x
+                      WHERE studentid = @studentId AND btrim(standard::text) = @standard AND maincoursename IS NOT NULL) x
                 GROUP BY maincoursename";
             var values = (await c.QueryAsync<ValueLine>(activitySql, new { studentId, standard = card.Standard })).ToList();
 

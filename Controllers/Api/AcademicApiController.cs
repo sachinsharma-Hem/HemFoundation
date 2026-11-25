@@ -43,7 +43,9 @@ namespace HemFoundation.Controllers.Api
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Academic API error");
-                return Fail(500, "Something went wrong. Please try again.");
+                // On a developer machine show the real cause, so a database difference is easy to spot.
+                var env = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
+                return Fail(500, env.IsDevelopment() ? "Server error: " + ex.GetBaseException().Message : "Something went wrong. Please try again.");
             }
         }
 
