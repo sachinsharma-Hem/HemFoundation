@@ -1,0 +1,194 @@
+/* Academics (Views/Academic/Index.cshtml). Everything is scoped to .acad. */
+.acad {
+    --ac-purple: #4B2E83; --ac-purple-2: #6A41B5; --ac-pink: #E51E86; --ac-soft: #F2EDFB;
+    --ac-ink: var(--text-main, #1F1A3A); --ac-muted: var(--text-muted, #6B6787);
+    --ac-line: var(--border-color, #E7E2F1); --ac-card: var(--card-bg, #FFFFFF); --ac-bg: var(--body-bg, #F7F5FC);
+    --ac-ok: #138A4B; --ac-ok-soft: #E3F5EA; --ac-warn: #B45309; --ac-warn-soft: #FEF3DB; --ac-bad: #C62D4A; --ac-bad-soft: #FDEBEF;
+    max-width: 1400px; margin: 0 auto; padding: 18px 4px 40px; color: var(--ac-ink);
+}
+.acad *, .acad *::before, .acad *::after { box-sizing: border-box; }
+
+/* header */
+.acad-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; padding: 22px 24px; border-radius: 20px; color: #fff; margin-bottom: 16px;
+    background: linear-gradient(120deg, var(--ac-purple) 0%, var(--ac-purple-2) 55%, var(--ac-pink) 120%); box-shadow: 0 12px 28px rgba(75, 46, 131, .2); position: relative; overflow: hidden; }
+.acad-head::after { content: ""; position: absolute; right: -60px; top: -80px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255, 255, 255, .09); }
+.acad-head h2 { margin: 0; font-size: 1.6rem; font-weight: 700; color: #fff; display: flex; gap: 10px; align-items: center; }
+.acad-head p { margin: 4px 0 0; opacity: .9; font-size: .92rem; }
+.acad-head-chips { display: flex; gap: 8px; flex-wrap: wrap; position: relative; z-index: 1; }
+.acad-chip { background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .25); border-radius: 999px; padding: 5px 12px; font-size: .8rem; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+.acad-chip.is-warn { background: #FFF4D6; color: #7A4B00; border-color: #FFE3A3; }
+
+.acad-setup { display: flex; gap: 14px; align-items: center; padding: 18px 20px; border-radius: 16px; background: var(--ac-warn-soft); border: 1px solid #F6D48C; color: #6B4200; }
+.acad-setup i { font-size: 1.8rem; }
+.acad-setup b, .acad-setup span { display: block; }
+
+/* tabs */
+.acad-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 6px; background: var(--ac-card); border: 1px solid var(--ac-line); border-radius: 16px; margin-bottom: 16px; scrollbar-width: thin; }
+.acad-tabs button { border: 0; background: none; border-radius: 12px; padding: 9px 14px; font-weight: 600; font-size: .9rem; color: var(--ac-muted); display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; transition: background .15s, color .15s; }
+.acad-tabs button:hover { background: var(--ac-soft); color: var(--ac-purple); }
+.acad-tabs button.active { background: var(--ac-purple); color: #fff; box-shadow: 0 6px 14px rgba(75, 46, 131, .25); }
+.acad-tab { display: none; }
+.acad-tab.active { display: block; animation: acadIn .2s ease; }
+@keyframes acadIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* cards */
+.acad-card { background: var(--ac-card); border: 1px solid var(--ac-line); border-radius: 18px; padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(31, 26, 58, .04); min-width: 0; }
+.acad-card-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.acad-card-head h3 { margin: 0; font-size: 1.05rem; font-weight: 700; display: flex; gap: 8px; align-items: center; color: var(--ac-ink); }
+.acad-card-head h3 i { color: var(--ac-purple-2); }
+.acad-card-head small { color: var(--ac-muted); font-weight: 500; }
+.acad-grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 16px; align-items: start; }
+.acad-grid-form { display: grid; grid-template-columns: minmax(260px, 360px) minmax(0, 1fr); gap: 16px; align-items: start; }
+
+/* kpis */
+.acad-kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.acad-kpi { background: var(--ac-card); border: 1px solid var(--ac-line); border-radius: 16px; padding: 14px; display: flex; gap: 12px; align-items: center; min-width: 0; }
+.acad-kpi.wide { grid-column: span 2; }
+.acad-kpi b { display: block; font-size: 1.45rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.acad-kpi small { color: var(--ac-muted); font-weight: 600; font-size: .78rem; }
+.acad-kpi .grow { flex: 1; min-width: 0; }
+.acad .ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 1.2rem; flex: 0 0 auto; }
+.ic.is-purple { background: var(--ac-soft); color: var(--ac-purple); } .ic.is-blue { background: #E7F0FE; color: #1F6FE0; } .ic.is-teal { background: #E2F6F7; color: #0E8C94; }
+.ic.is-amber { background: var(--ac-warn-soft); color: var(--ac-warn); } .ic.is-green { background: var(--ac-ok-soft); color: var(--ac-ok); } .ic.is-pink { background: #FDE8F2; color: var(--ac-pink); }
+.acad-bar { height: 8px; background: #ECE8F4; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+.acad-bar.small { height: 6px; margin-top: 0; }
+.acad-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--ac-purple-2), var(--ac-pink)); transition: width .3s; }
+.acad-bar i.ok { background: linear-gradient(90deg, #4CC07A, var(--ac-ok)); }
+
+/* getting started */
+.acad-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.acad-steps li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--ac-line); border-radius: 12px; }
+.acad-steps .n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--ac-soft); color: var(--ac-purple); font-weight: 700; font-size: .85rem; flex: 0 0 auto; }
+.acad-steps li.done .n { background: var(--ac-ok); color: #fff; }
+.acad-steps li.done .t { color: var(--ac-muted); }
+.acad-steps .t { flex: 1; font-weight: 600; font-size: .9rem; }
+.acad-steps a { font-weight: 600; font-size: .82rem; text-decoration: none; color: var(--ac-purple); white-space: nowrap; }
+
+/* forms */
+.acad-label { display: block; font-size: .82rem; font-weight: 600; color: var(--ac-ink); margin: 12px 0 6px; }
+.acad .row .acad-label { margin-top: 0; }
+.acad-label .req { color: var(--ac-pink); } .acad-label .opt { color: var(--ac-muted); font-weight: 500; }
+.acad .form-control, .acad .form-select { border-radius: 12px; border: 1.5px solid var(--ac-line); min-height: 44px; }
+.acad .form-control-sm, .acad .form-select-sm { min-height: 36px; border-radius: 10px; }
+.acad .form-control:focus, .acad .form-select:focus { border-color: var(--ac-purple-2); box-shadow: 0 0 0 4px rgba(106, 65, 181, .12); }
+.acad-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.acad-btn-primary { background: linear-gradient(90deg, var(--ac-purple), var(--ac-purple-2)); color: #fff !important; border: 0; border-radius: 12px; padding: 10px 18px; font-weight: 600; display: inline-flex; gap: 8px; align-items: center; box-shadow: 0 8px 18px rgba(75, 46, 131, .22); }
+.acad-btn-primary:hover { filter: brightness(1.05); }
+.acad-btn-primary:disabled { opacity: .5; box-shadow: none; }
+.acad-form-error { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--ac-bad-soft); color: var(--ac-bad); font-weight: 600; font-size: .88rem; }
+.acad-chipset { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.acad-check { margin: 0; cursor: pointer; }
+.acad-check input { position: absolute; opacity: 0; pointer-events: none; }
+.acad-check span { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--ac-line); border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: .86rem; background: var(--ac-card); transition: all .15s; }
+.acad-check input:checked + span { background: var(--ac-purple); border-color: var(--ac-purple); color: #fff; }
+.acad-check input:checked + span::before { content: "\2713"; }
+.acad-check input:focus-visible + span { outline: 3px solid rgba(106, 65, 181, .35); outline-offset: 2px; }
+
+/* lists */
+.acad-list { display: flex; flex-direction: column; gap: 8px; }
+.acad-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--ac-line); border-radius: 14px; }
+.acad-item .grow { flex: 1; min-width: 0; }
+.acad-item b { overflow-wrap: anywhere; }
+.acad-avatar { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--ac-soft); color: var(--ac-purple); font-weight: 700; font-size: .85rem; flex: 0 0 auto; }
+.acad-avatar.is-teal { background: #E2F6F7; color: #0E8C94; }
+.acad-sub { color: var(--ac-muted); font-size: .78rem; }
+.acad-empty { text-align: center; color: var(--ac-muted); padding: 24px 12px; display: flex; flex-direction: column; gap: 6px; align-items: center; font-size: .9rem; }
+.acad-empty i { font-size: 1.8rem; color: #C9C1DE; }
+td.acad-empty { display: table-cell; }
+
+/* tables */
+.acad-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.acad-filters > * { flex: 1 1 180px; max-width: 280px; }
+.acad-table-wrap { overflow-x: auto; border: 1px solid var(--ac-line); border-radius: 14px; }
+.acad-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.acad-table th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ac-muted); background: #FAF8FE; padding: 10px 12px; border-bottom: 1px solid var(--ac-line); white-space: nowrap; }
+.acad-table td { padding: 10px 12px; border-bottom: 1px solid var(--ac-line); vertical-align: middle; }
+.acad-table tr:last-child td { border-bottom: 0; }
+.acad-table .r { text-align: right; white-space: nowrap; }
+.acad-pill { display: inline-block; background: var(--ac-soft); color: var(--ac-purple); border-radius: 999px; padding: 2px 10px; font-weight: 600; font-size: .8rem; }
+.acad-badge { display: inline-block; border-radius: 999px; padding: 3px 10px; font-weight: 700; font-size: .78rem; font-variant-numeric: tabular-nums; }
+.acad-badge.is-purple { background: var(--ac-soft); color: var(--ac-purple); } .acad-badge.is-amber { background: var(--ac-warn-soft); color: var(--ac-warn); }
+
+/* marks */
+.acad-mode { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid var(--ac-line); border-radius: 12px; overflow: hidden; }
+.acad-mode button { border: 0; background: var(--ac-card); padding: 10px; font-weight: 600; font-size: .88rem; color: var(--ac-muted); display: inline-flex; gap: 8px; justify-content: center; align-items: center; }
+.acad-mode button.active { background: var(--ac-purple); color: #fff; }
+.acad-exam-info { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: #FAF8FE; font-weight: 600; font-size: .88rem; }
+.acad-exam-info i { color: var(--ac-purple-2); }
+
+.acad-marks { display: flex; flex-direction: column; gap: 6px; }
+.acad-mark { display: grid; grid-template-columns: 70px minmax(0, 1.4fr) 150px 80px minmax(0, 1fr); gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--ac-line); border-radius: 12px; border-left-width: 4px; }
+.acad-mark.head { border: 0; padding: 0 12px 2px; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ac-muted); font-weight: 700; }
+.acad-mark .roll { font-weight: 700; color: var(--ac-muted); font-variant-numeric: tabular-nums; }
+.acad-mark .name { min-width: 0; overflow-wrap: anywhere; }
+.acad-mark .name small { color: var(--ac-muted); }
+.acad-mark input[type=number], .acad-mark input[type=text] { width: 100%; height: 38px; border: 1.5px solid var(--ac-line); border-radius: 10px; padding: 0 10px; background: var(--ac-card); color: var(--ac-ink); }
+.acad-mark input:focus { outline: none; border-color: var(--ac-purple-2); box-shadow: 0 0 0 3px rgba(106, 65, 181, .12); }
+.acad-mark input:disabled { background: #F4F2F8; }
+.acad-mark .mk { position: relative; }
+.acad-mark .st { position: absolute; right: 10px; top: 50%; width: 8px; height: 8px; border-radius: 50%; transform: translateY(-50%); }
+.acad-mark.is-pass { border-left-color: #4CC07A; } .acad-mark.is-pass .st { background: var(--ac-ok); }
+.acad-mark.is-fail { border-left-color: #F0A93B; } .acad-mark.is-fail .st { background: var(--ac-warn); }
+.acad-mark.is-absent { border-left-color: #A9A3C0; background: #FAF9FD; }
+.acad-mark.is-bad { border-left-color: var(--ac-bad); background: var(--ac-bad-soft); } .acad-mark.is-bad input[type=number] { border-color: var(--ac-bad); }
+.acad-switch { position: relative; display: inline-block; width: 44px; height: 24px; margin: 0; }
+.acad-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 1; }
+.acad-switch i { position: absolute; inset: 0; background: #D6D0E5; border-radius: 12px; transition: background .15s; }
+.acad-switch i::after { content: ""; position: absolute; width: 18px; height: 18px; top: 3px; left: 3px; background: #fff; border-radius: 50%; transition: left .15s; box-shadow: 0 1px 3px rgba(0, 0, 0, .2); }
+.acad-switch input:checked + i { background: #8C84A8; } .acad-switch input:checked + i::after { left: 23px; }
+.acad-switch input:focus-visible + i { outline: 3px solid rgba(106, 65, 181, .35); outline-offset: 2px; }
+.acad-savebar { position: sticky; bottom: 0; z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 14px -18px -18px; padding: 12px 18px; background: var(--ac-card); border-top: 1px solid var(--ac-line); border-radius: 0 0 18px 18px; }
+.acad-errors { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--ac-bad-soft); color: var(--ac-bad); font-size: .88rem; max-height: 320px; overflow: auto; }
+.acad-errors ul { margin: 8px 0 0; padding-left: 18px; }
+
+.acad-excel { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.acad-excel-step { display: flex; gap: 12px; padding: 14px; border: 1px solid var(--ac-line); border-radius: 14px; }
+.acad-excel-step .n { width: 30px; height: 30px; border-radius: 50%; background: var(--ac-purple); color: #fff; display: grid; place-items: center; font-weight: 700; flex: 0 0 auto; }
+.acad-excel-step b { display: block; } .acad-excel-step small { color: var(--ac-muted); display: block; }
+.acad-drop { display: flex; gap: 10px; align-items: center; border: 1.5px dashed #C9BEE3; border-radius: 12px; padding: 10px 12px; cursor: pointer; background: #FBF9FF; font-weight: 600; font-size: .86rem; overflow-wrap: anywhere; }
+.acad-drop i { font-size: 1.3rem; color: var(--ac-purple-2); }
+
+/* report cards */
+.acad-students { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.acad-student { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--ac-line); border-radius: 14px; text-decoration: none; color: var(--ac-ink); background: var(--ac-card); transition: border-color .15s, transform .15s; }
+.acad-student:hover { border-color: var(--ac-purple-2); transform: translateY(-1px); color: var(--ac-ink); }
+.acad-student .grow { flex: 1; min-width: 0; }
+.acad-student b { display: block; overflow-wrap: anywhere; } .acad-student small { color: var(--ac-muted); }
+.acad-student .go { font-weight: 600; font-size: .8rem; color: var(--ac-purple); white-space: nowrap; }
+
+/* responsive */
+@media (max-width: 1199.98px) {
+    .acad-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .acad-kpi.wide { grid-column: span 1; }
+    .acad-grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 991.98px) {
+    .acad-grid-form, .acad-excel { grid-template-columns: 1fr; }
+}
+@media (max-width: 767.98px) {
+    .acad { padding-top: 10px; }
+    .acad-head { padding: 18px; border-radius: 16px; }
+    .acad-head h2 { font-size: 1.3rem; }
+    .acad-tabs button span { display: none; }
+    .acad-tabs button.active span { display: inline; }
+    .acad-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .acad-kpi.wide { grid-column: 1 / -1; }
+    .acad-card { padding: 14px; border-radius: 16px; }
+    .acad-mark { grid-template-columns: 52px minmax(0, 1fr) 110px; grid-template-areas: "roll name name" "mk mk ab" "rm rm rm"; row-gap: 8px; }
+    .acad-mark.head { display: none; }
+    .acad-mark .roll { grid-area: roll; } .acad-mark .name { grid-area: name; } .acad-mark .mk { grid-area: mk; } .acad-mark .ab { grid-area: ab; display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+    .acad-mark .ab::before { content: "Absent"; font-size: .78rem; color: var(--ac-muted); font-weight: 600; }
+    .acad-mark .rm { grid-area: rm; }
+    .acad-savebar { margin: 14px -14px -14px; padding: 12px 14px; }
+    .acad-savebar .btn { flex: 1; justify-content: center; }
+    .acad-table thead { display: none; }
+    .acad-table-wrap { border: 0; }
+    .acad-table, .acad-table tbody, .acad-table tr, .acad-table td { display: block; width: 100%; }
+    .acad-table tr { border: 1px solid var(--ac-line); border-radius: 14px; padding: 8px 12px; margin-bottom: 10px; }
+    .acad-table td { border: 0; padding: 5px 0; display: flex; justify-content: space-between; gap: 12px; text-align: right; align-items: center; }
+    .acad-table td[data-label]::before { content: attr(data-label); color: var(--ac-muted); font-size: .74rem; font-weight: 600; text-align: left; }
+    .acad-table td.acad-empty { display: block; text-align: center; }
+    .acad-table td.is-actions { justify-content: flex-end; }
+    .acad-filters > * { max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) { .acad * { transition: none !important; animation: none !important; } }
