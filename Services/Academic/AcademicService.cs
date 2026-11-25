@@ -247,7 +247,7 @@ namespace HemFoundation.Services.Academic
             WHERE e.instituteid = @inst";
 
         private const string ExamsGroupBy = @"
-            GROUP BY e.configid, t.termname, t.academicyear, sub.subjectname, r.students";
+            GROUP BY e.configid, e.termid, e.standard, e.subjectid, e.maxmarks, e.passingmarks, t.termname, t.academicyear, sub.subjectname, r.students";
 
         public async Task<List<Exam>> ExamsAsync(int inst)
         {
