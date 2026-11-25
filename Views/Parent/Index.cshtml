@@ -1,0 +1,146 @@
+@{
+    ViewData["Title"] = "My Children";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+    bool ready = ViewBag.TableReady as bool? ?? false;
+    bool adminView = ViewBag.IsAdminView as bool? ?? false;
+    int parentId = ViewBag.ParentId as int? ?? 0;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/parent.css" asp-append-version="true" />
+}
+
+<div class="pdash" id="pdRoot" data-parent="@(adminView ? parentId.ToString() : "")">
+
+    <header class="pd-head">
+        <div class="pd-head-text">
+            <span class="pd-eyebrow"><i class="bi bi-heart"></i> Parent dashboard</span>
+            <h2 id="pdGreeting">My children</h2>
+            <p>See how your children are learning: courses, marks, projects and certificates.</p>
+        </div>
+        <div class="pd-head-actions">
+            @if (adminView)
+            {
+                <span class="pd-chip is-warn"><i class="bi bi-shield-lock"></i> Admin view · parent @parentId</span>
+            }
+            <button type="button" class="pd-btn is-light" id="pdAddChild" @(ready ? "" : "disabled")><i class="bi bi-person-plus"></i> Add my child</button>
+        </div>
+    </header>
+
+    @if (!ready)
+    {
+        <div class="pd-setup">
+            <i class="bi bi-database-exclamation"></i>
+            <div>
+                <b>One-time setup needed</b>
+                <span>Run <code>Data/Scripts/RunOnce_Parent_2026_11_27.sql</code> on the database, then reload this page.</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- children -->
+        <section class="pd-kids" id="pdKids" aria-label="Your children">
+            <div class="pd-kid is-skeleton"></div><div class="pd-kid is-skeleton"></div>
+        </section>
+
+        <!-- empty state -->
+        <section class="pd-empty d-none" id="pdEmpty">
+            <div class="pd-empty-art"><i class="bi bi-people"></i></div>
+            <h3>Add your child to get started</h3>
+            <p>We look for students registered with your mobile number. Pick your child and their progress will appear here.</p>
+            <button type="button" class="pd-btn" id="pdEmptyAdd"><i class="bi bi-search"></i> Find my children</button>
+        </section>
+
+        <!-- dashboard of the selected child -->
+        <section id="pdBoard" class="d-none" aria-live="polite">
+
+            <div class="pd-child">
+                <div class="pd-avatar lg" id="pdChildAvatar"></div>
+                <div class="pd-child-info">
+                    <h3 id="pdChildName">–</h3>
+                    <div class="pd-child-meta" id="pdChildMeta"></div>
+                </div>
+                <div class="pd-child-actions">
+                    <a class="pd-btn is-outline" id="pdReportCard" href="#"><i class="bi bi-award"></i> Report card</a>
+                    <button type="button" class="pd-btn is-outline" id="pdExport"><i class="bi bi-download"></i> Download</button>
+                    <button type="button" class="pd-icon-btn" id="pdRefresh" title="Refresh" aria-label="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+                </div>
+            </div>
+
+            <div class="pd-top">
+                <!-- course completion ring -->
+                <div class="pd-card pd-ring-card">
+                    <div class="pd-ring" id="pdRing" style="--p:0">
+                        <div><b id="pdRingPct">0%</b><small>courses done</small></div>
+                    </div>
+                    <ul class="pd-legend">
+                        <li><i class="dot is-green"></i> Completed <b id="kDone">0</b></li>
+                        <li><i class="dot is-amber"></i> In progress <b id="kProg">0</b></li>
+                        <li><i class="dot is-grey"></i> Not started <b id="kNot">0</b></li>
+                        <li class="total">Total courses <b id="kTotal">0</b></li>
+                    </ul>
+                </div>
+
+                <!-- key figures -->
+                <div class="pd-kpis">
+                    <div class="pd-kpi"><span class="ic is-purple"><i class="bi bi-bullseye"></i></span><div class="grow"><small>Marks gained</small><b><span id="kMarks">0</span><em> / <span id="kMax">0</span></em></b><div class="pd-bar"><i id="kMarksBar"></i></div></div></div>
+                    <div class="pd-kpi"><span class="ic is-pink"><i class="bi bi-trophy"></i></span><div class="grow"><small>Rank in class</small><b id="kRank">–</b><span class="pd-sub" id="kRankSub">&nbsp;</span></div></div>
+                    <div class="pd-kpi"><span class="ic is-green"><i class="bi bi-patch-check"></i></span><div class="grow"><small>Certificates</small><b id="kCert">0</b><span class="pd-sub">value courses certified</span></div></div>
+                    <div class="pd-kpi"><span class="ic is-blue"><i class="bi bi-clock-history"></i></span><div class="grow"><small>Last active</small><b id="kLast" class="sm">–</b><span class="pd-sub" id="kLastSub">&nbsp;</span></div></div>
+                </div>
+            </div>
+
+            <!-- activity counts -->
+            <div class="pd-acts">
+                <div class="pd-act"><i class="bi bi-ui-checks"></i><b id="aMcq">0</b><small>MCQ tests</small></div>
+                <div class="pd-act"><i class="bi bi-tools"></i><b id="aPrac">0</b><small>Practicals</small></div>
+                <div class="pd-act"><i class="bi bi-house-heart"></i><b id="aFam">0</b><small>Family projects</small></div>
+                <div class="pd-act"><i class="bi bi-people"></i><b id="aGrp">0</b><small>Group projects</small></div>
+                <div class="pd-act"><i class="bi bi-clipboard-data"></i><b id="aSur">0</b><small>Surveys</small></div>
+            </div>
+
+            <div class="pd-grid">
+                <!-- course-wise -->
+                <div class="pd-card">
+                    <div class="pd-card-head">
+                        <h4><i class="bi bi-journal-check"></i> Course-wise progress</h4>
+                        <div class="pd-filter" role="group" aria-label="Filter courses">
+                            <button type="button" class="active" data-f="all">All</button>
+                            <button type="button" data-f="Completed">Done</button>
+                            <button type="button" data-f="In progress">In progress</button>
+                            <button type="button" data-f="Not started">Not started</button>
+                        </div>
+                    </div>
+                    <div id="pdCourses" class="pd-courses"></div>
+                </div>
+
+                <!-- recent -->
+                <div class="pd-card">
+                    <div class="pd-card-head"><h4><i class="bi bi-activity"></i> Recent activity</h4></div>
+                    <ol id="pdRecent" class="pd-timeline"></ol>
+                </div>
+            </div>
+
+            <p class="pd-note"><i class="bi bi-info-circle"></i> Each value course is out of 100 (MCQ 50, Practical 30, Project 20), the same as the report card. A course is <b>completed</b> when it is certified, or its family project, group project and survey are done.</p>
+        </section>
+    }
+</div>
+
+<!-- add child -->
+<dialog class="pd-dialog" id="pdDialog" aria-labelledby="pdDialogTitle">
+    <form method="dialog" class="pd-dialog-inner">
+        <div class="pd-dialog-head">
+            <div>
+                <h3 id="pdDialogTitle"><i class="bi bi-person-plus"></i> Add my child</h3>
+                <p id="pdDialogSub">Students registered with your mobile number.</p>
+            </div>
+            <button class="pd-icon-btn" value="close" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div id="pdFound" class="pd-found"></div>
+    </form>
+</dialog>
+
+@section Scripts {
+    <script src="~/js/parent.js" asp-append-version="true"></script>
+}

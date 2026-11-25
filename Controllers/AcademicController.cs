@@ -38,8 +38,13 @@ namespace HemFoundation.Controllers
     public class AcademicController : Controller
     {
         private readonly AcademicService _academic;
+        private readonly HemFoundation.Services.Parent.ParentService _parents;
 
-        public AcademicController(AcademicService academic) => _academic = academic;
+        public AcademicController(AcademicService academic, HemFoundation.Services.Parent.ParentService parents)
+        {
+            _academic = academic;
+            _parents = parents;
+        }
 
         /// <summary>Subjects, terms, exam setup, marks and report cards of a school.</summary>
         [HttpGet("")]
@@ -71,8 +76,13 @@ namespace HemFoundation.Controllers
             int studentId = a.IsStudent ? a.UserId : id ?? 0;
             if (studentId <= 0) return View("NoSchool", "Choose a student from Academics → Report cards.");
 
-            if (!a.IsStudent && !a.IsAdmin)
+            // A parent sees the report cards of the children they have added.
+            var parent = ParentAccess.From(HttpContext);
+            bool parentOk = parent.IsParent && await _parents.TableExistsAsync() && await _parents.IsMappedAsync(parent.ParentId, studentId);
+
+            if (!a.IsStudent && !a.IsAdmin && !parentOk)
             {
+                if (parent.IsParent) return View("NoSchool", "This child is not linked to your account.");
                 if (!a.IsSchool || !await _academic.StudentBelongsAsync(a.InstituteId, studentId))
                     return View("NoSchool", "This student is not in your school.");
             }
@@ -81,7 +91,7 @@ namespace HemFoundation.Controllers
 
             var card = await _academic.ReportCardAsync(studentId);
             if (card == null) return View("NoSchool", "Student not found.");
-            ViewBag.BackUrl = a.IsStudent ? "/" : "/Academic/Index" + (a.IsSchool ? "" : "?instituteId=" + card.InstituteId) + "#report-cards";
+            ViewBag.BackUrl = parentOk ? "/Parent/Index" : a.IsStudent ? "/" : "/Academic/Index" + (a.IsSchool ? "" : "?instituteId=" + card.InstituteId) + "#report-cards";
             return View(card);
         }
     }
