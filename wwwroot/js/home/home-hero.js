@@ -562,3 +562,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+// "Choose another account type" on the registration page links to /?register=1:
+// open the account-type popup straight away.
+document.addEventListener("DOMContentLoaded", () => {
+    try {
+        if (new URLSearchParams(window.location.search).get("register") === "1") {
+            const el = document.getElementById("modalRegister");
+            if (el && window.bootstrap) bootstrap.Modal.getOrCreateInstance(el).show();
+        }
+    } catch (e) { /* ignore */ }
+});
