@@ -1,0 +1,224 @@
+@model HemFoundation.Services.RoleDashboard.ViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+    bool Has(string w) => Model.Widgets.Contains(w);
+    var links = Model.Menus
+        .Where(m => !string.IsNullOrWhiteSpace(m.Url) && HemFoundation.Services.RoleDashboard.ControllerOf(m.Url) != "admin" && m.Url.Trim() != "#")
+        .ToList();
+    string firstName = (Model.Name ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+}
+
+<div class="rdash container-fluid py-3 px-3 px-md-4">
+
+    <!-- Welcome -->
+    <div class="rdash-hero">
+        <div>
+            <div class="rdash-eyebrow"><i class="bi bi-person-badge me-1"></i>@Model.Role</div>
+            <h2>Welcome@(string.IsNullOrEmpty(firstName) ? "" : ", " + firstName)</h2>
+            <p>Your work for today, based on the menus given to your role.</p>
+        </div>
+        <div class="rdash-date" id="rdashDate"></div>
+    </div>
+
+    <!-- Quick links: every menu of the role -->
+    <section class="rdash-panel">
+        <div class="rdash-panel-head"><h3><i class="bi bi-grid"></i> Your menus</h3><small>@links.Count</small></div>
+        @if (links.Count == 0)
+        {
+            <div class="rdash-empty">
+                <i class="bi bi-ui-checks-grid"></i>
+                <b>No menus are given to the role “@Model.Role” yet.</b>
+                <span>Ask an administrator to give this role its menus on the Role rights page. They will appear here, with a summary for each module.</span>
+            </div>
+        }
+        else
+        {
+            <div class="rdash-links">
+                @foreach (var m in links)
+                {
+                    <a class="rdash-link" href="@m.Url"><span class="rdash-link-ico"><i class="@(string.IsNullOrWhiteSpace(m.Icon) ? "bi bi-arrow-right-circle" : m.Icon)"></i></span><span>@m.Name</span><i class="bi bi-chevron-right ms-auto text-muted"></i></a>
+                }
+            </div>
+        }
+    </section>
+
+    @if (Has("congratulations"))
+    {
+        <!-- Congratulations -->
+        <section class="rdash-panel" id="wCongrats">
+            <div class="rdash-panel-head">
+                <h3><i class="bi bi-balloon-heart" style="color:#c7040a"></i> Congratulations</h3>
+                <a class="rdash-open" href="/Congratulations/Index">Open <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="rdash-kpis">
+                <div class="rdash-kpi is-hot"><span>Today</span><b data-k="today">–</b><small>birthdays &amp; anniversaries</small></div>
+                <div class="rdash-kpi"><span>Next 7 days</span><b data-k="next7">–</b><small>coming up</small></div>
+                <div class="rdash-kpi"><span>Cards made</span><b data-k="made">–</b><small>all time</small></div>
+                <div class="rdash-kpi is-ok"><span>Cards given</span><b data-k="delivered">–</b><small>with photo</small></div>
+                <div class="rdash-kpi is-warn"><span>Photo pending</span><b data-k="pending">–</b><small>card made, not given</small></div>
+                <div class="rdash-kpi"><span>Contacts</span><b data-k="contacts">–</b><small data-k="split"></small></div>
+            </div>
+            <h4 class="rdash-sub">Next 7 days</h4>
+            <div class="rdash-list" id="wCongratsList"><div class="rdash-muted">Loading…</div></div>
+        </section>
+    }
+
+    @if (Has("sampark"))
+    {
+        <!-- HEM Sampark -->
+        <section class="rdash-panel" id="wSampark">
+            <div class="rdash-panel-head">
+                <h3><i class="bi bi-journal-richtext" style="color:#5b3fd6"></i> HEM Sampark</h3>
+                <a class="rdash-open" href="/HemSampark/Admin">Open <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="rdash-today" id="wSamparkToday"><span class="rdash-muted">Loading…</span></div>
+            <div class="rdash-kpis">
+                <div class="rdash-kpi is-ok"><span>Published</span><b data-k="published">–</b></div>
+                <div class="rdash-kpi"><span>Scheduled</span><b data-k="scheduled">–</b><small>future dates</small></div>
+                <div class="rdash-kpi is-warn"><span>Drafts</span><b data-k="draft">–</b></div>
+                <div class="rdash-kpi"><span>Quiz attempts</span><b data-k="attempts">–</b></div>
+                <div class="rdash-kpi"><span>Participants</span><b data-k="participants">–</b></div>
+                <div class="rdash-kpi"><span>Average score</span><b data-k="averagePercent">–</b></div>
+            </div>
+        </section>
+    }
+
+    @if (Has("users"))
+    {
+        <!-- Users -->
+        <section class="rdash-panel" id="wUsers">
+            <div class="rdash-panel-head">
+                <h3><i class="bi bi-people" style="color:#198754"></i> Users</h3>
+                <a class="rdash-open" href="/usermanagement/index">Open <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="rdash-kpis">
+                <div class="rdash-kpi"><span>Total users</span><b data-k="total">–</b></div>
+                <div class="rdash-kpi is-ok"><span>Active</span><b data-k="active">–</b></div>
+                <div class="rdash-kpi is-warn"><span>Inactive</span><b data-k="inactive">–</b></div>
+            </div>
+            <div class="rdash-chips" id="wUsersRoles"></div>
+        </section>
+    }
+
+    @if (Has("evaluation"))
+    {
+        <!-- Project evaluation (same overview as the evaluation page) -->
+        ViewData["EvoShowMine"] = true;
+        ViewData["EvoPendingLink"] = true;
+        <section class="rdash-panel p-0 border-0 bg-transparent shadow-none">
+            <partial name="~/Views/Shared/Partials/_EvaluationOverview.cshtml" view-data="ViewData" />
+        </section>
+    }
+</div>
+
+<style>
+    .rdash { max-width: 1400px; }
+    .rdash-hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; padding: 20px 22px; border-radius: 18px; color: #fff; margin-bottom: 16px;
+        background: linear-gradient(120deg, #4B2E83, #6A41B5 55%, #E51E86); box-shadow: 0 10px 24px rgba(75, 46, 131, .18); }
+    .rdash-hero h2 { margin: 2px 0 2px; font-weight: 700; font-size: 1.5rem; color: #fff; }
+    .rdash-hero p { margin: 0; opacity: .9; font-size: .9rem; }
+    .rdash-eyebrow { display: inline-flex; align-items: center; font-size: .75rem; font-weight: 600; background: rgba(255, 255, 255, .18); border-radius: 999px; padding: 3px 10px; }
+    .rdash-date { font-weight: 600; font-size: .85rem; opacity: .92; }
+    .rdash-panel { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e9e5f2); border-radius: 16px; padding: 18px; margin-bottom: 16px; }
+    .rdash-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .rdash-panel-head h3 { margin: 0; font-size: 1.05rem; font-weight: 700; display: flex; gap: 8px; align-items: center; color: var(--text-main, #1f1a3a); }
+    .rdash-panel-head small { color: var(--text-muted, #6b6787); font-weight: 600; }
+    .rdash-open { font-weight: 600; font-size: .85rem; text-decoration: none; color: #4B2E83; white-space: nowrap; }
+    .rdash-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+    .rdash-link { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border-color, #e9e5f2); border-radius: 12px; text-decoration: none; color: var(--text-main, #1f1a3a); font-weight: 600; font-size: .9rem; background: var(--card-bg, #fff); transition: border-color .15s, transform .15s; }
+    .rdash-link:hover { border-color: #6A41B5; transform: translateY(-1px); }
+    .rdash-link-ico { width: 34px; height: 34px; border-radius: 10px; background: #f1ecfa; color: #4B2E83; display: grid; place-items: center; flex: 0 0 auto; }
+    .rdash-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .rdash-kpi { border: 1px solid var(--border-color, #e9e5f2); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; background: var(--card-bg, #fff); }
+    .rdash-kpi span { font-size: .78rem; color: var(--text-muted, #6b6787); font-weight: 600; }
+    .rdash-kpi b { font-size: 1.6rem; line-height: 1.1; color: var(--text-main, #1f1a3a); font-variant-numeric: tabular-nums; }
+    .rdash-kpi small { font-size: .72rem; color: var(--text-muted, #6b6787); }
+    .rdash-kpi.is-hot { border-color: rgba(199, 4, 10, .35); background: rgba(199, 4, 10, .04); } .rdash-kpi.is-hot b { color: #c7040a; }
+    .rdash-kpi.is-ok b { color: #138A4B; } .rdash-kpi.is-warn b { color: #b45309; }
+    .rdash-sub { font-size: .85rem; font-weight: 700; margin: 16px 0 8px; color: var(--text-main, #1f1a3a); }
+    .rdash-list { display: flex; flex-direction: column; gap: 8px; }
+    .rdash-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color, #e9e5f2); border-radius: 12px; font-size: .88rem; flex-wrap: wrap; }
+    .rdash-row b { overflow-wrap: anywhere; }
+    .rdash-pill { font-size: .72rem; font-weight: 700; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+    .rdash-pill.today { background: #c7040a; color: #fff; } .rdash-pill.made { background: rgba(245, 158, 11, .15); color: #b45309; }
+    .rdash-pill.given { background: rgba(16, 185, 129, .15); color: #047857; } .rdash-pill.new { background: #f1eff7; color: #6b6787; }
+    .rdash-today { border-radius: 12px; padding: 12px 14px; background: #f4f0fb; margin-bottom: 12px; font-size: .9rem; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .rdash-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .rdash-chips span { border: 1px solid var(--border-color, #e9e5f2); border-radius: 999px; padding: 4px 12px; font-size: .78rem; color: var(--text-muted, #6b6787); }
+    .rdash-chips b { color: var(--text-main, #1f1a3a); }
+    .rdash-muted { color: var(--text-muted, #6b6787); font-size: .88rem; }
+    .rdash-empty { text-align: center; padding: 26px 12px; display: flex; flex-direction: column; gap: 6px; align-items: center; color: var(--text-muted, #6b6787); }
+    .rdash-empty i { font-size: 2rem; color: #b8b0d0; }
+    .rdash-empty b { color: var(--text-main, #1f1a3a); }
+</style>
+
+@section Scripts {
+    <script>
+        (function () {
+            'use strict';
+            var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+            var num = function (n) { return n == null ? '–' : Number(n).toLocaleString('en-IN'); };
+            var getJson = function (url) {
+                return fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function (r) { if (!r.ok) throw new Error(r.status === 403 ? 'You do not have access to this data.' : 'Could not load.'); return r.json(); });
+            };
+            var set = function (root, key, value) { var el = root && root.querySelector('[data-k="' + key + '"]'); if (el) el.textContent = value; };
+            var fail = function (root, message) {
+                if (!root) return;
+                var box = document.createElement('div'); box.className = 'rdash-muted mt-2'; box.textContent = message; root.appendChild(box);
+            };
+
+            document.getElementById('rdashDate').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+            // Congratulations
+            var wc = document.getElementById('wCongrats');
+            if (wc) {
+                getJson('/api/congratulations/summary').then(function (s) {
+                    set(wc, 'today', num(s.today)); set(wc, 'next7', num(s.next7));
+                    set(wc, 'made', num((s.delivered || 0) + (s.pending || 0))); set(wc, 'delivered', num(s.delivered));
+                    set(wc, 'pending', num(s.pending)); set(wc, 'contacts', num(s.contacts));
+                    set(wc, 'split', s.birthdays + ' birthdays, ' + s.anniversaries + ' anniversaries');
+                }).catch(function (e) { fail(wc, e.message); });
+
+                getJson('/api/congratulations/upcoming?days=7').then(function (res) {
+                    var box = document.getElementById('wCongratsList');
+                    if (!res.items || !res.items.length) { box.innerHTML = '<div class="rdash-muted">No birthdays or anniversaries in the next 7 days.</div>'; return; }
+                    box.innerHTML = res.items.slice(0, 8).map(function (x) {
+                        var c = x.contact, w = x.wish;
+                        var when = c.daysLeft === 0 ? '<span class="rdash-pill today">Today</span>' : '<span class="rdash-muted">' + esc(c.nextLabel) + '</span>';
+                        var st = !w ? '<span class="rdash-pill new">Card not made</span>' : w.status === 'Delivered' ? '<span class="rdash-pill given">Given</span>' : '<span class="rdash-pill made">Photo pending</span>';
+                        return '<div class="rdash-row"><i class="bi ' + (c.occasion === 'Anniversary' ? 'bi-heart' : 'bi-cake2') + '" style="color:#c7040a"></i><b>' + esc(c.name) + '</b><span class="rdash-muted">' + esc(c.occasion) + '</span>' + when + '<span class="ms-auto">' + st + '</span></div>';
+                    }).join('') + (res.items.length > 8 ? '<a class="rdash-open" href="/Congratulations/Index">+ ' + (res.items.length - 8) + ' more</a>' : '');
+                }).catch(function (e) { document.getElementById('wCongratsList').innerHTML = ''; fail(document.getElementById('wCongratsList'), e.message); });
+            }
+
+            // HEM Sampark
+            var ws = document.getElementById('wSampark');
+            if (ws) {
+                getJson('/api/hem-sampark/admin/stats').then(function (s) {
+                    ['published', 'scheduled', 'draft', 'attempts', 'participants'].forEach(function (k) { set(ws, k, num(s[k])); });
+                    set(ws, 'averagePercent', s.attempts ? s.averagePercent + '%' : '–');
+                    var t = s.today, box = document.getElementById('wSamparkToday');
+                    box.innerHTML = t
+                        ? '<b>Today:</b> ' + esc(t.title) + ' <span class="rdash-pill ' + (t.status === 'Published' ? 'given' : 'made') + '">' + esc(t.status) + '</span><span class="rdash-muted">' + num(t.attempts) + ' quiz attempts today</span>'
+                        : '<span class="rdash-muted">No publication for today yet.</span> <a class="rdash-open" href="/HemSampark/Admin">Create one</a>';
+                }).catch(function (e) { document.getElementById('wSamparkToday').textContent = e.message; });
+            }
+
+            // Users
+            var wu = document.getElementById('wUsers');
+            if (wu) {
+                getJson('/api/usermanagement/users?page=1&pageSize=10').then(function (s) {
+                    set(wu, 'total', num(s.total)); set(wu, 'active', num(s.active)); set(wu, 'inactive', num(s.inactive));
+                    var rc = s.roleCounts || {};
+                    document.getElementById('wUsersRoles').innerHTML = Object.keys(rc).sort(function (a, b) { return rc[b] - rc[a]; })
+                        .map(function (k) { return '<span>' + esc(k) + ' <b>' + num(rc[k]) + '</b></span>'; }).join('');
+                }).catch(function (e) { fail(wu, e.message); });
+            }
+
+            // Project evaluation overview
+            if (window.EvaluationOverview && document.getElementById('evoRoot')) window.EvaluationOverview.load();
+        })();
+    </script>
+}
