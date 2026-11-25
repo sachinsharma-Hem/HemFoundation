@@ -125,11 +125,11 @@ namespace HemFoundation.Services.Academic
         {
             await using var c = Open();
             return (await c.QueryAsync<Subject>(@"
-                SELECT s.subjectid AS SubjectId, s.subjectname AS SubjectName, s.subjectcode AS SubjectCode,
+                SELECT s.subjectid AS SubjectId, coalesce(s.subjectname, '') AS SubjectName, s.subjectcode AS SubjectCode,
                        (SELECT count(*) FROM hf_tbl_examconfigurations e WHERE e.subjectid = s.subjectid)::int AS ExamCount
                 FROM hf_tbl_institutesubjects s
-                WHERE s.instituteid = @inst AND s.isactive
-                ORDER BY lower(s.subjectname)", new { inst })).ToList();
+                WHERE s.instituteid = @inst AND coalesce(s.isactive, B'1') = B'1'
+                ORDER BY lower(coalesce(s.subjectname, ''))", new { inst })).ToList();
         }
 
         public async Task<int> SaveSubjectAsync(int inst, int? subjectId, string name, string? code, int userId)
@@ -140,26 +140,26 @@ namespace HemFoundation.Services.Academic
 
             await using var c = Open();
             bool duplicate = await c.ExecuteScalarAsync<bool>(@"
-                SELECT EXISTS (SELECT 1 FROM hf_tbl_institutesubjects WHERE instituteid = @inst AND isactive
+                SELECT EXISTS (SELECT 1 FROM hf_tbl_institutesubjects WHERE instituteid = @inst AND coalesce(isactive, B'1') = B'1'
                                AND lower(subjectname) = lower(@name) AND subjectid <> coalesce(@subjectId, 0))", new { inst, name, subjectId });
             if (duplicate) throw new AcademicException($"“{name}” is already in your subject list.");
 
             if (subjectId is > 0)
             {
                 int n = await c.ExecuteAsync(@"UPDATE hf_tbl_institutesubjects SET subjectname = @name, subjectcode = @code
-                                               WHERE subjectid = @subjectId AND instituteid = @inst AND isactive", new { inst, subjectId, name, code });
+                                               WHERE subjectid = @subjectId AND instituteid = @inst AND coalesce(isactive, B'1') = B'1'", new { inst, subjectId, name, code });
                 if (n == 0) throw new AcademicException("Subject not found.");
                 return subjectId.Value;
             }
-            return await c.ExecuteScalarAsync<int>(@"INSERT INTO hf_tbl_institutesubjects (instituteid, subjectname, subjectcode, isactive, createdby)
-                                                     VALUES (@inst, @name, @code, true, @userId) RETURNING subjectid", new { inst, name, code, userId });
+            return await c.ExecuteScalarAsync<int>(@"INSERT INTO hf_tbl_institutesubjects (instituteid, subjectname, subjectcode, isactive)
+                                                     VALUES (@inst, @name, @code, B'1') RETURNING subjectid", new { inst, name, code });
         }
 
         /// <summary>Hidden from new exams; exams already set up keep it (the history stays correct).</summary>
         public async Task RemoveSubjectAsync(int inst, int subjectId)
         {
             await using var c = Open();
-            int n = await c.ExecuteAsync("UPDATE hf_tbl_institutesubjects SET isactive = false WHERE subjectid = @subjectId AND instituteid = @inst",
+            int n = await c.ExecuteAsync("UPDATE hf_tbl_institutesubjects SET isactive = B'0' WHERE subjectid = @subjectId AND instituteid = @inst",
                 new { inst, subjectId });
             if (n == 0) throw new AcademicException("Subject not found.");
         }
@@ -171,10 +171,10 @@ namespace HemFoundation.Services.Academic
         {
             await using var c = Open();
             return (await c.QueryAsync<Term>(@"
-                SELECT t.termid AS TermId, t.termname AS TermName, t.academicyear AS AcademicYear,
+                SELECT t.termid AS TermId, coalesce(t.termname, '') AS TermName, coalesce(t.academicyear, '') AS AcademicYear,
                        (SELECT count(*) FROM hf_tbl_examconfigurations e WHERE e.termid = t.termid)::int AS ExamCount
                 FROM hf_tbl_academicterms t
-                WHERE t.instituteid = @inst AND t.isactive
+                WHERE t.instituteid = @inst AND coalesce(t.isactive, B'1') = B'1'
                 ORDER BY t.academicyear DESC, t.termid", new { inst })).ToList();
         }
 
@@ -192,19 +192,19 @@ namespace HemFoundation.Services.Academic
 
             await using var c = Open();
             bool duplicate = await c.ExecuteScalarAsync<bool>(@"
-                SELECT EXISTS (SELECT 1 FROM hf_tbl_academicterms WHERE instituteid = @inst AND isactive
+                SELECT EXISTS (SELECT 1 FROM hf_tbl_academicterms WHERE instituteid = @inst AND coalesce(isactive, B'1') = B'1'
                                AND lower(termname) = lower(@name) AND academicyear = @year AND termid <> coalesce(@termId, 0))", new { inst, name, year, termId });
             if (duplicate) throw new AcademicException($"“{name} ({year})” already exists.");
 
             if (termId is > 0)
             {
-                int n = await c.ExecuteAsync("UPDATE hf_tbl_academicterms SET termname = @name, academicyear = @year WHERE termid = @termId AND instituteid = @inst AND isactive",
+                int n = await c.ExecuteAsync("UPDATE hf_tbl_academicterms SET termname = @name, academicyear = @year WHERE termid = @termId AND instituteid = @inst AND coalesce(isactive, B'1') = B'1'",
                     new { inst, termId, name, year });
                 if (n == 0) throw new AcademicException("Term not found.");
                 return termId.Value;
             }
-            return await c.ExecuteScalarAsync<int>(@"INSERT INTO hf_tbl_academicterms (instituteid, termname, academicyear, isactive, createdby)
-                                                     VALUES (@inst, @name, @year, true, @userId) RETURNING termid", new { inst, name, year, userId });
+            return await c.ExecuteScalarAsync<int>(@"INSERT INTO hf_tbl_academicterms (instituteid, termname, academicyear, isactive)
+                                                     VALUES (@inst, @name, @year, B'1') RETURNING termid", new { inst, name, year });
         }
 
         public async Task RemoveTermAsync(int inst, int termId)
@@ -212,7 +212,7 @@ namespace HemFoundation.Services.Academic
             await using var c = Open();
             bool used = await c.ExecuteScalarAsync<bool>("SELECT EXISTS (SELECT 1 FROM hf_tbl_examconfigurations WHERE termid = @termId AND instituteid = @inst)", new { inst, termId });
             if (used) throw new AcademicException("This term has exams set up. Remove those exams first.");
-            int n = await c.ExecuteAsync("UPDATE hf_tbl_academicterms SET isactive = false WHERE termid = @termId AND instituteid = @inst", new { inst, termId });
+            int n = await c.ExecuteAsync("UPDATE hf_tbl_academicterms SET isactive = B'0' WHERE termid = @termId AND instituteid = @inst", new { inst, termId });
             if (n == 0) throw new AcademicException("Term not found.");
         }
 
@@ -224,10 +224,16 @@ namespace HemFoundation.Services.Academic
                 SELECT btrim(s.standard) AS standard, count(DISTINCT s.studentid)::int AS students
                 FROM wj_studentassociates a JOIN wj_students s ON s.studentid = a.studentid
                 WHERE a.instituteid = @inst GROUP BY btrim(s.standard)
+            ),
+            marks AS (
+                SELECT DISTINCT ON (configid, studentid) markid, configid, instituteid,
+                       coalesce(marksobtained, 0) AS marksobtained, coalesce(isabsent = B'1', false) AS isabsent
+                FROM hf_tbl_studentmarks WHERE instituteid = @inst
+                ORDER BY configid, studentid, markid DESC
             )
-            SELECT e.configid AS ConfigId, e.termid AS TermId, t.termname AS TermName, t.academicyear AS AcademicYear,
-                   e.standard AS Standard, e.subjectid AS SubjectId, sub.subjectname AS SubjectName,
-                   e.maxmarks AS MaxMarks, e.passingmarks AS PassingMarks,
+            SELECT e.configid AS ConfigId, e.termid AS TermId, coalesce(t.termname, '') AS TermName, coalesce(t.academicyear, '') AS AcademicYear,
+                   coalesce(btrim(e.standard), '') AS Standard, e.subjectid AS SubjectId, coalesce(sub.subjectname, '') AS SubjectName,
+                   coalesce(e.maxmarks, 0) AS MaxMarks, coalesce(e.passingmarks, 0) AS PassingMarks,
                    coalesce(r.students, 0) AS Students,
                    count(m.markid)::int AS Entered,
                    count(m.markid) FILTER (WHERE m.isabsent)::int AS Absent,
@@ -237,7 +243,7 @@ namespace HemFoundation.Services.Academic
             JOIN hf_tbl_academicterms t ON t.termid = e.termid
             JOIN hf_tbl_institutesubjects sub ON sub.subjectid = e.subjectid
             LEFT JOIN roster r ON r.standard = btrim(e.standard)
-            LEFT JOIN hf_tbl_studentmarks m ON m.configid = e.configid AND m.instituteid = e.instituteid
+            LEFT JOIN marks m ON m.configid = e.configid
             WHERE e.instituteid = @inst";
 
         private const string ExamsGroupBy = @"
@@ -265,25 +271,42 @@ namespace HemFoundation.Services.Academic
             if (passingMarks < 0 || passingMarks > maxMarks) throw new AcademicException("Passing marks must be between 0 and the max marks.");
 
             await using var c = Open();
-            bool termOk = await c.ExecuteScalarAsync<bool>("SELECT EXISTS (SELECT 1 FROM hf_tbl_academicterms WHERE termid = @termId AND instituteid = @inst AND isactive)", new { inst, termId });
+            bool termOk = await c.ExecuteScalarAsync<bool>("SELECT EXISTS (SELECT 1 FROM hf_tbl_academicterms WHERE termid = @termId AND instituteid = @inst AND coalesce(isactive, B'1') = B'1')", new { inst, termId });
             if (!termOk) throw new AcademicException("Choose a term.");
-            bool subjectOk = await c.ExecuteScalarAsync<bool>("SELECT EXISTS (SELECT 1 FROM hf_tbl_institutesubjects WHERE subjectid = @subjectId AND instituteid = @inst AND isactive)", new { inst, subjectId });
+            bool subjectOk = await c.ExecuteScalarAsync<bool>("SELECT EXISTS (SELECT 1 FROM hf_tbl_institutesubjects WHERE subjectid = @subjectId AND instituteid = @inst AND coalesce(isactive, B'1') = B'1')", new { inst, subjectId });
             if (!subjectOk) throw new AcademicException("Choose a subject.");
 
             // Lowering max marks below marks already entered would make those marks invalid.
             decimal? highest = await c.ExecuteScalarAsync<decimal?>(@"
                 SELECT max(m.marksobtained) FROM hf_tbl_studentmarks m JOIN hf_tbl_examconfigurations e ON e.configid = m.configid
-                WHERE e.instituteid = @inst AND e.termid = @termId AND btrim(e.standard) = @standard AND e.subjectid = @subjectId AND NOT m.isabsent",
+                WHERE e.instituteid = @inst AND e.termid = @termId AND btrim(e.standard) = @standard AND e.subjectid = @subjectId AND m.isabsent IS DISTINCT FROM B'1'",
                 new { inst, termId, standard, subjectId });
             if (highest is decimal h && h > maxMarks) throw new AcademicException($"A student already has {h:0.##} marks in this exam. Max marks cannot be lower than that.");
 
-            var row = await c.QuerySingleAsync<(int ConfigId, bool Inserted)>(@"
-                INSERT INTO hf_tbl_examconfigurations (instituteid, termid, standard, subjectid, maxmarks, passingmarks)
-                VALUES (@inst, @termId, @standard, @subjectId, @maxMarks, @passingMarks)
-                ON CONFLICT (instituteid, termid, standard, subjectid)
-                DO UPDATE SET maxmarks = EXCLUDED.maxmarks, passingmarks = EXCLUDED.passingmarks, modifiedon = now()
-                RETURNING configid, (xmax = 0) AS inserted", new { inst, termId, standard, subjectId, maxMarks, passingMarks });
-            return (row.ConfigId, !row.Inserted);
+            await c.OpenAsync();
+            await using var tx = await c.BeginTransactionAsync();
+            // One rule per school + term + standard + subject (the old MERGE key); the lock stops two saves adding it twice.
+            await c.ExecuteAsync("SELECT pg_advisory_xact_lock(881001, @inst)", new { inst }, tx);
+            int? existing = await c.ExecuteScalarAsync<int?>(@"
+                SELECT configid FROM hf_tbl_examconfigurations
+                WHERE instituteid = @inst AND termid = @termId AND btrim(standard) = @standard AND subjectid = @subjectId
+                ORDER BY configid LIMIT 1", new { inst, termId, standard, subjectId }, tx);
+            int configId;
+            if (existing is int id)
+            {
+                await c.ExecuteAsync("UPDATE hf_tbl_examconfigurations SET maxmarks = @maxMarks, passingmarks = @passingMarks WHERE configid = @id",
+                    new { id, maxMarks, passingMarks }, tx);
+                configId = id;
+            }
+            else
+            {
+                configId = await c.ExecuteScalarAsync<int>(@"
+                    INSERT INTO hf_tbl_examconfigurations (instituteid, termid, standard, subjectid, maxmarks, passingmarks)
+                    VALUES (@inst, @termId, @standard, @subjectId, @maxMarks, @passingMarks) RETURNING configid",
+                    new { inst, termId, standard, subjectId, maxMarks, passingMarks }, tx);
+            }
+            await tx.CommitAsync();
+            return (configId, existing != null);
         }
 
         public async Task RemoveExamAsync(int inst, int configId)
@@ -304,9 +327,11 @@ namespace HemFoundation.Services.Academic
             await using var c = Open();
             var rows = await c.QueryAsync<MarkRow>(@"
                 SELECT st.StudentId, st.Name, st.RollNo, st.Division,
-                       m.marksobtained AS MarksObtained, coalesce(m.isabsent, false) AS IsAbsent, m.remarks AS Remarks, (m.markid IS NOT NULL) AS HasMark
+                       m.marksobtained AS MarksObtained, coalesce(m.isabsent = B'1', false) AS IsAbsent, m.remarks AS Remarks, (m.markid IS NOT NULL) AS HasMark
                 FROM (" + StudentsSql + @" AND btrim(s.standard) = @standard ORDER BY s.studentid) st
-                LEFT JOIN hf_tbl_studentmarks m ON m.studentid = st.StudentId AND m.configid = @configId AND m.instituteid = @inst",
+                LEFT JOIN LATERAL (SELECT x.markid, x.marksobtained, x.isabsent, x.remarks FROM hf_tbl_studentmarks x
+                                   WHERE x.studentid = st.StudentId AND x.configid = @configId AND x.instituteid = @inst
+                                   ORDER BY x.markid DESC LIMIT 1) m ON true",
                 new { inst, configId, standard = exam.Standard.Trim() });
             return SortStudents(rows).ToList();
         }
@@ -345,14 +370,19 @@ namespace HemFoundation.Services.Academic
             await using var tx = await c.BeginTransactionAsync();
             try
             {
+                await c.ExecuteAsync("SELECT pg_advisory_xact_lock(881002, @configId)", new { configId }, tx);
                 foreach (var (_, m) in rows)
                 {
-                    await c.ExecuteAsync(@"
-                        INSERT INTO hf_tbl_studentmarks (instituteid, studentid, configid, marksobtained, isabsent, remarks, createdby, createdtimestamp, modifiedtimestamp)
-                        VALUES (@inst, @StudentId, @configId, @marks, @IsAbsent, @remarks, @userId, now(), now())
-                        ON CONFLICT (instituteid, studentid, configid) DO UPDATE
-                        SET marksobtained = EXCLUDED.marksobtained, isabsent = EXCLUDED.isabsent, remarks = EXCLUDED.remarks, modifiedtimestamp = now()",
-                        new { inst, configId, userId, m.StudentId, m.IsAbsent, marks = m.IsAbsent ? 0 : m.MarksObtained ?? 0, remarks = string.IsNullOrWhiteSpace(m.Remarks) ? null : m.Remarks.Trim() }, tx);
+                    var p = new { inst, configId, userId, m.StudentId, absent = m.IsAbsent ? 1 : 0, marks = m.IsAbsent ? 0 : m.MarksObtained ?? 0,
+                                  remarks = string.IsNullOrWhiteSpace(m.Remarks) ? null : m.Remarks.Trim() };
+                    int n = await c.ExecuteAsync(@"
+                        UPDATE hf_tbl_studentmarks
+                        SET marksobtained = @marks, isabsent = CAST(@absent AS bit(1)), remarks = @remarks, modifiedtimestamp = now()
+                        WHERE instituteid = @inst AND studentid = @StudentId AND configid = @configId", p, tx);
+                    if (n == 0)
+                        await c.ExecuteAsync(@"
+                            INSERT INTO hf_tbl_studentmarks (instituteid, studentid, configid, marksobtained, isabsent, remarks, createdby, createdtimestamp, modifiedtimestamp)
+                            VALUES (@inst, @StudentId, @configId, @marks, CAST(@absent AS bit(1)), @remarks, @userId, now(), now())", p, tx);
                 }
                 await tx.CommitAsync();
                 return new SaveResult(true, rows.Count, new());
@@ -468,8 +498,8 @@ namespace HemFoundation.Services.Academic
             var exams = await ExamsAsync(inst);
             await using var c = Open();
             var counts = await c.QuerySingleAsync<(int Subjects, int Terms, int Students)>(@"
-                SELECT (SELECT count(*) FROM hf_tbl_institutesubjects WHERE instituteid = @inst AND isactive)::int,
-                       (SELECT count(*) FROM hf_tbl_academicterms WHERE instituteid = @inst AND isactive)::int,
+                SELECT (SELECT count(*) FROM hf_tbl_institutesubjects WHERE instituteid = @inst AND coalesce(isactive, B'1') = B'1')::int,
+                       (SELECT count(*) FROM hf_tbl_academicterms WHERE instituteid = @inst AND coalesce(isactive, B'1') = B'1')::int,
                        (SELECT count(DISTINCT studentid) FROM wj_studentassociates WHERE instituteid = @inst)::int", new { inst });
 
             int expected = exams.Sum(e => e.Students), entered = exams.Sum(e => e.Entered);
@@ -529,14 +559,18 @@ namespace HemFoundation.Services.Academic
 
             // Part II – academic marks (HF_SP_GetStudentHolisticAcademicReport)
             card.Academic = (await c.QueryAsync<AcademicLine>(@"
-                SELECT sub.subjectname AS SubjectName, sub.subjectcode AS SubjectCode, t.termid AS TermId, t.termname AS TermName, t.academicyear AS AcademicYear,
-                       ec.maxmarks AS MaxMarks, ec.passingmarks AS PassingMarks, m.marksobtained AS MarksObtained, m.isabsent AS IsAbsent, m.remarks AS Remarks,
-                       CASE WHEN m.isabsent THEN 'Absent' WHEN m.marksobtained >= ec.passingmarks THEN 'Pass' ELSE 'Needs Improvement' END AS Status
-                FROM hf_tbl_studentmarks m
+                SELECT coalesce(sub.subjectname, '') AS SubjectName, sub.subjectcode AS SubjectCode, t.termid AS TermId, coalesce(t.termname, '') AS TermName,
+                       coalesce(t.academicyear, '') AS AcademicYear, coalesce(ec.maxmarks, 0) AS MaxMarks, coalesce(ec.passingmarks, 0) AS PassingMarks,
+                       m.marksobtained AS MarksObtained, m.isabsent AS IsAbsent, m.remarks AS Remarks,
+                       CASE WHEN m.isabsent THEN 'Absent' WHEN m.marksobtained >= coalesce(ec.passingmarks, 0) THEN 'Pass' ELSE 'Needs Improvement' END AS Status
+                FROM (SELECT DISTINCT ON (configid) configid, coalesce(marksobtained, 0) AS marksobtained,
+                             coalesce(isabsent = B'1', false) AS isabsent, remarks
+                      FROM hf_tbl_studentmarks WHERE studentid = @studentId AND instituteid = @inst
+                      ORDER BY configid, markid DESC) m
                 JOIN hf_tbl_examconfigurations ec ON ec.configid = m.configid
                 JOIN hf_tbl_institutesubjects sub ON sub.subjectid = ec.subjectid
                 JOIN hf_tbl_academicterms t ON t.termid = ec.termid
-                WHERE m.studentid = @studentId AND m.instituteid = @inst
+                WHERE ec.maxmarks > 0
                 ORDER BY t.academicyear DESC, t.termid, sub.subjectname", new { studentId, inst = card.InstituteId })).ToList();
 
             card.AcademicYear = card.Academic.Select(a => a.AcademicYear).FirstOrDefault() ?? CurrentAcademicYear(DateTime.Today);
