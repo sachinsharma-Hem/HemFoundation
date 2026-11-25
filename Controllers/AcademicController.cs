@@ -87,7 +87,7 @@ namespace HemFoundation.Controllers
                     return View("NoSchool", "This student is not in your school.");
             }
 
-            if (!await _academic.TablesExistAsync()) return View("NoSchool", "The academic tables are not set up yet. Run Data/Scripts/RunOnce_Academic_2026_11_26.sql.");
+            if (!await _academic.TablesExistAsync()) return View("NoSchool", "The academic tables are not set up yet. Run Data/Scripts/RunOnce_Update_2026_11_27.sql.");
 
             var card = await _academic.ReportCardAsync(studentId);
             if (card == null) return View("NoSchool", "Student not found.");
