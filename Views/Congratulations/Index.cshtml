@@ -255,6 +255,33 @@
     </div>
 </div>
 
+<!-- Prasad given after the card -->
+<div class="modal fade cg-modal" id="cgPrasadModal" tabindex="-1" aria-labelledby="cgPrasadTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cgPrasadTitle"><i class="bi bi-gift"></i> Prasad delivery date</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="cg-photo-who" id="cgPrasadWho"></p>
+                <label class="cg-label" for="cgPrasadDate">Prasad given on</label>
+                <input type="date" id="cgPrasadDate" class="cg-input">
+                <div class="cg-prasad-quick">
+                    <button type="button" class="cg-btn is-sm" data-prasad-days="0">Today</button>
+                    <button type="button" class="cg-btn is-sm" data-prasad-days="1">Yesterday</button>
+                    <button type="button" class="cg-btn is-sm" data-prasad-days="2">2 days ago</button>
+                </div>
+                <div id="cgPrasadError" class="cg-error" hidden></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="cg-btn" id="cgPrasadClear" hidden><i class="bi bi-x-lg"></i> Remove date</button>
+                <button type="button" class="cg-btn is-primary" id="cgPrasadSave"><i class="bi bi-check2"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/js/hindi-transliterate.js" asp-append-version="true"></script>
     <script src="~/js/congratulations.js" asp-append-version="true"></script>

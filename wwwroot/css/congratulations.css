@@ -141,3 +141,9 @@
     .cg-row-actions { justify-content: stretch; width: 100%; }
     .cg-row-actions .cg-btn { flex: 1; }
 }
+
+/* Prasad given after the card */
+.cg-prasad { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-size: .78rem; font-weight: 700; border-radius: 999px; padding: 2px 10px; background: #FEF3DB; color: #8A5A00; }
+.cg-prasad.is-done { background: #E3F5EA; color: #13703F; }
+.cg-given-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.cg-prasad-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }

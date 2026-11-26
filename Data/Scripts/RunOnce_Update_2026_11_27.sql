@@ -12,6 +12,7 @@
 --   PART 2  Parent dashboard   - which children a parent has added
 --   PART 3  HEM Sampark        - title of the "Celebrations Today" strip
 --   PART 4  Menus + role rights - Academics, My Report Card, My Children
+--   PART 5  Congratulations    - date the prasad was given (after the card)
 --
 -- Only missing tables, a missing column, plain indexes, and missing menu rows
 -- are added. No existing table, column or row is changed or removed.
@@ -133,6 +134,14 @@ JOIN LATERAL (SELECT x."Id" FROM public."Menus" x
               ORDER BY x."Id" LIMIT 1) mn ON true
 WHERE NOT EXISTS (SELECT 1 FROM public."RoleMenuRights" rr WHERE rr."RoleId" = r.id AND rr."MenuId" = mn."Id");
 
+-- #############################################################################
+-- PART 5 - CONGRATULATIONS: PRASAD DELIVERY DATE
+-- The card photo is taken when the banner is given; the prasad is given later.
+-- Empty = prasad not given yet.
+-- #############################################################################
+ALTER TABLE public.congratulation_wishes ADD COLUMN IF NOT EXISTS prasad_delivered_on date;
+ALTER TABLE public.congratulation_wishes ADD COLUMN IF NOT EXISTS prasad_saved_by     text;
+
 COMMIT;
 
 
@@ -148,6 +157,9 @@ SELECT 'Parent table', CASE WHEN to_regclass('public.hf_tbl_parentchildassociati
 UNION ALL
 SELECT 'HEM Sampark column', CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns
         WHERE table_schema = 'public' AND table_name = 'dailysamparkentries' AND column_name = 'celebrationsectiontitle') THEN 'OK' ELSE 'MISSING' END
+UNION ALL
+SELECT 'Prasad delivery date column', CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'congratulation_wishes' AND column_name = 'prasad_delivered_on') THEN 'OK' ELSE 'MISSING' END
 UNION ALL
 SELECT 'Menu ' || u.url || ' (' || u.role_name || ')',
        CASE WHEN NOT EXISTS (SELECT 1 FROM public."Menus" x WHERE lower(x."RouteUrl") = lower(u.url) AND NOT x."IsDeleted") THEN 'MENU MISSING'
