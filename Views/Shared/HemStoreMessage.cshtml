@@ -1,0 +1,13 @@
+@model string
+@{
+    ViewData["Title"] = "HEM Store";
+    Layout = "~/Views/Shared/Layouts/_TeacherLayout.cshtml";
+}
+<div class="container py-5">
+    <div class="mx-auto text-center p-4 p-md-5 bg-white border rounded-4 shadow-sm" style="max-width:560px">
+        <div class="mx-auto mb-3 d-grid rounded-circle" style="width:64px;height:64px;place-items:center;background:#FFF1D6;color:#B45309;font-size:1.8rem"><i class="bi bi-bag-heart"></i></div>
+        <h4 class="fw-bold mb-2">HEM Store</h4>
+        <p class="text-muted mb-4">@Model</p>
+        <a href="javascript:history.back()" class="btn btn-light rounded-pill px-4">Go back</a>
+    </div>
+</div>
