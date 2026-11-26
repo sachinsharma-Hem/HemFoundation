@@ -862,7 +862,6 @@ namespace HemFoundation.Controllers.Api
             if (!DateTime.TryParseExact(model.Date.Trim(), "yyyy-MM-dd", Inv, DateTimeStyles.None, out var day))
                 return Fail(400, "Please choose the date the prasad was given.");
             if (day.Date > _clock.Today) return Fail(400, "The prasad date cannot be in the future.");
-            if (day.Date < wish.WishDate.Date.AddDays(-30)) return Fail(400, "The prasad date is too far before the " + wish.Occasion.ToLower() + ".");
 
             wish.PrasadDeliveredOn = day.Date;
             wish.PrasadSavedBy = CurrentUser;
