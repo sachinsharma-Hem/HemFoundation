@@ -253,7 +253,8 @@
                 '<span class="cg-chip">Next 7 days <b>' + s.next7 + '</b></span>' +
                 '<span class="cg-chip">Contacts <b>' + s.contacts + '</b> (' + s.birthdays + ' birthdays, ' + s.anniversaries + ' anniversaries)</span>' +
                 '<span class="cg-chip">Given <b>' + s.delivered + '</b></span>' +
-                '<span class="cg-chip">Photo pending <b>' + s.pending + '</b></span>';
+                '<span class="cg-chip">Photo pending <b>' + s.pending + '</b></span>' +
+                '<span class="cg-chip' + (s.prasadPending ? ' is-hot' : '') + '">Prasad pending <b>' + (s.prasadPending || 0) + '</b></span>';
         }).catch(function () { });
     }
 
@@ -381,8 +382,13 @@
                     '<div class="cg-given-body"><b>' + esc(w.name) + '</b>' +
                     '<span>' + esc(w.occasion) + ' · ' + esc(w.dateLabel) + '</span>' +
                     '<span>' + (w.deliveredAt ? 'Given ' + esc(w.deliveredAt) : 'Card made ' + esc(w.generatedAt)) + '</span>' +
+                    '<span class="cg-prasad' + (w.prasadDate ? ' is-done' : '') + '"><i class="bi bi-gift"></i> ' +
+                    (w.prasadDate ? 'Prasad given ' + esc(w.prasadLabel) : 'Prasad: pending') + '</span>' +
+                    '<div class="cg-given-actions">' +
                     '<button type="button" class="cg-btn is-sm' + (w.photoUrl ? '' : ' is-primary') + '" data-w-photo="' + kind + ':' + i + '"><i class="bi bi-camera"></i> ' +
-                    (w.photoUrl ? 'Change photo' : 'Add photo') + '</button></div></div>';
+                    (w.photoUrl ? 'Change photo' : 'Add photo') + '</button>' +
+                    '<button type="button" class="cg-btn is-sm' + (w.photoUrl && !w.prasadDate ? ' is-primary' : '') + '" data-w-prasad="' + kind + ':' + i + '"><i class="bi bi-calendar-check"></i> ' +
+                    (w.prasadDate ? 'Change prasad date' : 'Add prasad date') + '</button></div></div></div>';
             }).join('') : '<div class="cg-empty">' + (kind === 'given' ? 'No cards given yet.' : 'Every card made has a photo.') + '</div>';
 
             pager(kind === 'given' ? $('cgGivenPager') : $('cgPendingPager'), res, kind, function () { loadWishes(kind); });
@@ -630,6 +636,45 @@
         });
     });
 
+
+    // ------------------------------------------------------------------
+    // Prasad given after the card
+    // ------------------------------------------------------------------
+    var prasadWish = null;
+    function isoDay(daysAgo) {
+        var d = new Date(); d.setDate(d.getDate() - (daysAgo || 0));
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function openPrasad(wish) {
+        prasadWish = wish;
+        showError('cgPrasadError', '');
+        $('cgPrasadWho').textContent = wish.name + ' · ' + wish.occasion + ' · ' + wish.dateLabel;
+        $('cgPrasadDate').max = isoDay(0);
+        $('cgPrasadDate').value = wish.prasadDate || isoDay(0);
+        $('cgPrasadClear').hidden = !wish.prasadDate;
+        bootstrap.Modal.getOrCreateInstance($('cgPrasadModal')).show();
+    }
+    function savePrasad(date, button) {
+        if (!prasadWish) return;
+        button.disabled = true;
+        api('POST', '/wishes/' + prasadWish.id + '/prasad', { date: date }).then(function (res) {
+            bootstrap.Modal.getOrCreateInstance($('cgPrasadModal')).hide();
+            toast('success', res.message);
+            refreshAll();
+        }).catch(function (err) { showError('cgPrasadError', err.message); })
+          .then(function () { button.disabled = false; });
+    }
+    document.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-w-prasad]');
+        if (b) { var parts = b.getAttribute('data-w-prasad').split(':'); openPrasad(wishItems[parts[0]][Number(parts[1])]); return; }
+        var q = e.target.closest('[data-prasad-days]');
+        if (q) $('cgPrasadDate').value = isoDay(Number(q.getAttribute('data-prasad-days')));
+    });
+    $('cgPrasadSave').addEventListener('click', function () {
+        if (!$('cgPrasadDate').value) { showError('cgPrasadError', 'Please choose the date.'); return; }
+        savePrasad($('cgPrasadDate').value, this);
+    });
+    $('cgPrasadClear').addEventListener('click', function () { savePrasad('', this); });
 
     // ------------------------------------------------------------------
     // Excel upload

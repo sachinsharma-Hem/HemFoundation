@@ -55,5 +55,8 @@ namespace HemFoundation.Models.Congratulations
         [Column("photo_path")] public string? PhotoPath { get; set; }
         [Column("delivered_at")] public DateTime? DeliveredAt { get; set; }
         [Column("delivered_by")] public string? DeliveredBy { get; set; }
+        /// <summary>Day the prasad was given (after the card). Empty = not given yet.</summary>
+        [Column("prasad_delivered_on", TypeName = "date")] public DateTime? PrasadDeliveredOn { get; set; }
+        [Column("prasad_saved_by")] public string? PrasadSavedBy { get; set; }
     }
 }

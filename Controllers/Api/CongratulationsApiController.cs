@@ -131,7 +131,9 @@ namespace HemFoundation.Controllers.Api
             deliveredAt = w.DeliveredAt?.ToString("dd MMM yyyy, hh:mm tt", Inv),
             photoUrl = string.IsNullOrEmpty(w.PhotoPath)
                 ? null
-                : $"/api/congratulations/wishes/{w.Id}/photo?v={w.DeliveredAt?.Ticks ?? 0}"
+                : $"/api/congratulations/wishes/{w.Id}/photo?v={w.DeliveredAt?.Ticks ?? 0}",
+            prasadDate = w.PrasadDeliveredOn?.ToString("yyyy-MM-dd"),
+            prasadLabel = w.PrasadDeliveredOn?.ToString("dd MMM yyyy", Inv)
         };
 
         // ---------------------------------------------------------------
@@ -840,6 +842,34 @@ namespace HemFoundation.Controllers.Api
             return Ok(new { success = true, message = "Photo saved. Marked as given.", wish = WishDto(wish) });
         }
 
+        public class PrasadDto { public string? Date { get; set; } }
+
+        /// <summary>Saves (or clears, with an empty date) the day the prasad was given.</summary>
+        [HttpPost("wishes/{id:int}/prasad")]
+        public async Task<IActionResult> SavePrasad(int id, [FromBody] PrasadDto model)
+        {
+            var wish = await _db.CongratulationWishes.FirstOrDefaultAsync(w => w.Id == id);
+            if (wish == null) return Fail(404, "Card not found.");
+
+            if (string.IsNullOrWhiteSpace(model?.Date))
+            {
+                wish.PrasadDeliveredOn = null;
+                wish.PrasadSavedBy = CurrentUser;
+                await _db.SaveChangesAsync();
+                return Ok(new { success = true, message = "Prasad date removed.", wish = WishDto(wish) });
+            }
+
+            if (!DateTime.TryParseExact(model.Date.Trim(), "yyyy-MM-dd", Inv, DateTimeStyles.None, out var day))
+                return Fail(400, "Please choose the date the prasad was given.");
+            if (day.Date > _clock.Today) return Fail(400, "The prasad date cannot be in the future.");
+            if (day.Date < wish.WishDate.Date.AddDays(-30)) return Fail(400, "The prasad date is too far before the " + wish.Occasion.ToLower() + ".");
+
+            wish.PrasadDeliveredOn = day.Date;
+            wish.PrasadSavedBy = CurrentUser;
+            await _db.SaveChangesAsync();
+            return Ok(new { success = true, message = "Prasad delivery date saved.", wish = WishDto(wish) });
+        }
+
         [HttpGet("wishes/{id:int}/photo")]
         public async Task<IActionResult> GetPhoto(int id)
         {
@@ -931,7 +961,8 @@ namespace HemFoundation.Controllers.Api
                 today = todayCount,
                 next7,
                 delivered = await _db.CongratulationWishes.CountAsync(w => w.Status == CongratulationWish.Delivered),
-                pending = await _db.CongratulationWishes.CountAsync(w => w.Status == CongratulationWish.Generated)
+                pending = await _db.CongratulationWishes.CountAsync(w => w.Status == CongratulationWish.Generated),
+                prasadPending = await _db.CongratulationWishes.CountAsync(w => w.Status == CongratulationWish.Delivered && w.PrasadDeliveredOn == null)
             });
         }
     }
