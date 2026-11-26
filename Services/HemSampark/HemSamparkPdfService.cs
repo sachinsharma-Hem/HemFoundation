@@ -328,6 +328,9 @@ namespace HemFoundation.Services.HemSampark
                 index++;
             }
 
+            // A different colour theme for each day of the week (from the publication date).
+            string themeVars = DayTheme(entry.EntryDate.DayOfWeek);
+
             string footerText = E(master?.FooterText);
             string footerLink = E(master?.FooterLink);
             string rawLink = (master?.FooterLink ?? "").Trim();
@@ -353,6 +356,8 @@ namespace HemFoundation.Services.HemSampark
     *, *:before, *:after {{
         box-sizing: border-box;
     }}
+    :root {{ {themeVars} }}
+
     html, body {{
         margin: 0;
         padding: 0;
@@ -363,7 +368,7 @@ namespace HemFoundation.Services.HemSampark
         print-color-adjust: exact;
     }}
     body {{
-        background: #fff7f5;
+        background: var(--page-bg);
     }}
     .page {{ 
         width: 140mm;
@@ -371,8 +376,8 @@ namespace HemFoundation.Services.HemSampark
         padding: 3mm;
         /* Yahan border-image se half color split kiya gaya hai */
         border: 3mm solid;
-        border-image: linear-gradient(to right, #29266f 50%, #00b4ff 50%) 1;
-        background: #fff7f5;
+        border-image: linear-gradient(to right, var(--frame1) 50%, var(--frame2) 50%) 1;
+        background: var(--page-bg);
         display: flex;
         flex-direction: column;
     }}
@@ -382,7 +387,7 @@ namespace HemFoundation.Services.HemSampark
         width: 100%;
         table-layout: fixed;
         border-collapse: collapse;
-        border-bottom: 2px solid #29266f;
+        border-bottom: 2px solid var(--frame1);
         margin-bottom: 5px;
     }}
 
@@ -403,7 +408,7 @@ namespace HemFoundation.Services.HemSampark
 
     .hem-logo {{
         font-size: 17px;
-        color: #29266f;
+        color: var(--frame1);
     }}
 
     /* Date on left, Vikram Samvat / Friday / Issue on right */
@@ -424,7 +429,7 @@ namespace HemFoundation.Services.HemSampark
 
     /* Section heading strips */
     .strip-heading {{
-        background: #ffd9d3;
+        background: var(--strip);
         color: #282020;
         text-align: center;
         font-family: Georgia, serif;
@@ -436,14 +441,14 @@ namespace HemFoundation.Services.HemSampark
     }}
 
     .mantra-box {{
-        background: #fce4ec;
-        border: 1px solid #efbfd0;
+        background: var(--mantra-bg);
+        border: 1px solid var(--mantra-border);
         padding: 6px 8px;
         margin-bottom: 6px;
     }}
 
     .mantra-title {{
-        background: #ffd9d3;
+        background: var(--strip);
         text-align: center;
         font-family: Georgia, serif;
         font-size: 17px;
@@ -470,7 +475,7 @@ namespace HemFoundation.Services.HemSampark
 
     .bl-en {{ color: #202020; }}
     .bl-sep {{ color: #6b6b6b; }}
-    .bl-hi {{ color: #ad2456; }}
+    .bl-hi {{ color: var(--hi); }}
 
     .mantra-en {{
         font-size: 11px;
@@ -480,7 +485,7 @@ namespace HemFoundation.Services.HemSampark
     }}
 
     .mantra-hi {{
-        color: #ad2456;
+        color: var(--hi);
         font-size: 11px;
         font-weight: bold;
         line-height: 1.3;
@@ -492,7 +497,7 @@ namespace HemFoundation.Services.HemSampark
         font-size: 13px;
         line-height: 1.25;
         font-weight: 800;
-        color: #c52218;
+        color: var(--heading);
         margin: 3px 0;
     }}
 
@@ -514,13 +519,13 @@ namespace HemFoundation.Services.HemSampark
         font-size: 17px;
         line-height: 1.3;
         font-weight: 800;
-        color: #ad2456;
+        color: var(--hi);
         margin: 6px 0 3px;
         padding: 0;
     }}
 
     .celebration-heading-hi.with-bg {{
-        background: #ffd9d3;
+        background: var(--strip);
         padding: 3px 5px;
     }}
 
@@ -531,7 +536,7 @@ namespace HemFoundation.Services.HemSampark
         object-fit: cover;
         margin: 2px 0 4px 8px;
         border-radius: 4px;
-        border: 1px solid #efc9c0;
+        border: 1px solid var(--img-border);
         image-rendering: auto;
     }}
 
@@ -553,20 +558,20 @@ namespace HemFoundation.Services.HemSampark
     }}
 
     .content-hi {{
-        color: #ad2456;
+        color: var(--hi);
     font-weight: 700;
     }}
 
     /* Day's Challenge */
     .challenge-box {{
-        background: #f0f9e9;
-        border: 1px solid #a8d79b;
+        background: var(--box-bg);
+        border: 1px solid var(--box-border);
         padding: 6px 8px;
         margin: 4px 0 6px;
     }}
 
     .challenge-title {{
-        background: #ffd9d3;
+        background: var(--strip);
         text-align: center;
         font-family: Georgia, serif;
         font-size: 17px;
@@ -592,7 +597,7 @@ namespace HemFoundation.Services.HemSampark
         line-height: 1.35;
         margin: 0 0 6px;
         padding-bottom: 5px;
-        border-bottom: 1px dashed #a8d79b;
+        border-bottom: 1px dashed var(--box-border);
         overflow-wrap: anywhere;
     }}
 
@@ -606,7 +611,7 @@ namespace HemFoundation.Services.HemSampark
 
     /* Values in Focus */
     .values-title {{
-        background: #ffd9d3;
+        background: var(--strip);
         text-align: center;
         font-family: Georgia, serif;
         font-size: 17px;
@@ -617,8 +622,8 @@ namespace HemFoundation.Services.HemSampark
     }}
 
     .values-box {{
-        background: #f0f9e9;
-        border: 1px solid #a8d79b;
+        background: var(--box-bg);
+        border: 1px solid var(--box-border);
         padding: 6px 8px;
         margin-top: 2px;
     }}
@@ -632,7 +637,7 @@ namespace HemFoundation.Services.HemSampark
     }}
 
     .values-hi {{
-        color: #ad2456;
+        color: var(--hi);
         font-size: 10.5px;
         font-weight: bold;
         text-align: center;
@@ -644,20 +649,20 @@ namespace HemFoundation.Services.HemSampark
         text-align: center;
         margin-top: auto;
         padding: 7px 0 0;
-        border-top: 1px solid #8d9fc6;
-        font-size: 11px;
+        border-top: 1px solid var(--footer-border);
+        font-size: 13.5px;
         font-weight: bold;
     }}
 
     .footer-box a {{
-        color: #202f83;
+        color: var(--link);
         text-decoration: underline;
         overflow-wrap: anywhere;
     }}
 
     .footer-box p {{
-        color: #c52218;
-        font-size: 11px;
+        color: var(--heading);
+        font-size: 13.5px;
         font-weight: bold;
         margin: 3px 0 0;
     }}
@@ -891,6 +896,25 @@ namespace HemFoundation.Services.HemSampark
             return fileName;
         }
     
+        /// <summary>Seven colour themes for the PDF, one for each day of the week.</summary>
+        private static string DayTheme(DayOfWeek day)
+        {
+            // frame1, frame2, page background, strip, mantra background, mantra border,
+            // Hindi text, heading, box background, box border, link, footer line, picture border
+            string[] t = day switch
+            {
+                DayOfWeek.Monday => new[] { "#29266f", "#00b4ff", "#fff7f5", "#ffd9d3", "#fce4ec", "#efbfd0", "#ad2456", "#c52218", "#f0f9e9", "#a8d79b", "#202f83", "#8d9fc6", "#efc9c0" },   // navy and sky
+                DayOfWeek.Tuesday => new[] { "#9a3412", "#f59e0b", "#fffaf0", "#fde2b8", "#fff1d6", "#f3cf8f", "#9a3412", "#c2410c", "#eef6ff", "#9cc3ea", "#7c2d12", "#e0b57a", "#f3cf8f" },  // saffron
+                DayOfWeek.Wednesday => new[] { "#14532d", "#22c55e", "#f6fbf4", "#cdeccf", "#e7f6e7", "#a9d8ab", "#166534", "#15803d", "#fff8e6", "#eacb84", "#14532d", "#98c9a0", "#a9d8ab" }, // green
+                DayOfWeek.Thursday => new[] { "#4c1d95", "#eab308", "#faf7ff", "#e4d8fb", "#f1eafe", "#cdb8f2", "#6d28d9", "#7c3aed", "#fff9e6", "#ecd58a", "#4c1d95", "#b9a6e3", "#cdb8f2" },  // purple and gold
+                DayOfWeek.Friday => new[] { "#134e4a", "#14b8a6", "#f3fbfa", "#c9efea", "#e3f6f3", "#a3dcd4", "#0f766e", "#0d9488", "#fdf2f8", "#efb4d1", "#134e4a", "#8fcfc6", "#a3dcd4" },    // teal
+                DayOfWeek.Saturday => new[] { "#1e3a8a", "#3b82f6", "#f5f8ff", "#d6e4ff", "#e8efff", "#b3c8f5", "#1d4ed8", "#1e40af", "#f0f9e9", "#a8d79b", "#1e3a8a", "#9db4e6", "#b3c8f5" },  // blue
+                _ => new[] { "#7f1d1d", "#ec4899", "#fff5f7", "#fbd0dc", "#fde7ee", "#f2b3c7", "#9d174d", "#b91c1c", "#f0f9ff", "#9fd0ee", "#7f1d1d", "#e3a3b5", "#f2b3c7" }                       // Sunday: maroon and pink
+            };
+            string[] n = { "frame1", "frame2", "page-bg", "strip", "mantra-bg", "mantra-border", "hi", "heading", "box-bg", "box-border", "link", "footer-border", "img-border" };
+            return string.Join(" ", n.Select((name, i) => $"--{name}: {t[i]};"));
+        }
+
         /// <summary>Printed under the "Day's Challenge" title, above the questions.</summary>
         private const string ChallengeNote =
             "<p class='challenge-note'><span class='bl-en'>Look at the four options given in the Google form and answer.</span>" +
