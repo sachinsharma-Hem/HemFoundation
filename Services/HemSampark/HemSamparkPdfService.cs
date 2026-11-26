@@ -376,7 +376,7 @@ namespace HemFoundation.Services.HemSampark
         padding: 3mm;
         /* Yahan border-image se half color split kiya gaya hai */
         border: 3mm solid;
-        border-image: linear-gradient(to right, var(--frame1) 50%, var(--frame2) 50%) 1;
+        border-image: linear-gradient(to right, #29266f 50%, #00b4ff 50%) 1;  /* outer border: same every day */
         background: var(--page-bg);
         display: flex;
         flex-direction: column;
