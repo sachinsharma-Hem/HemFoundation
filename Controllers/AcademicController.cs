@@ -91,7 +91,7 @@ namespace HemFoundation.Controllers
 
             var card = await _academic.ReportCardAsync(studentId);
             if (card == null) return View("NoSchool", "Student not found.");
-            ViewBag.BackUrl = parentOk ? "/Parent/Index" : a.IsStudent ? "/" : "/Academic/Index" + (a.IsSchool ? "" : "?instituteId=" + card.InstituteId) + "#report-cards";
+            ViewBag.BackUrl = parentOk ? "/Parent/Index" : a.IsStudent ? "/Learn/Index" : "/Academic/Index" + (a.IsSchool ? "" : "?instituteId=" + card.InstituteId) + "#report-cards";
             return View(card);
         }
     }
