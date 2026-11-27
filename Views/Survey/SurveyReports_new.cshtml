@@ -123,7 +123,7 @@
             const dataUrl = '@Url.Action("GetSurveyData", "Survey")';
             let table = null;
             let currentCourseId = "";
-
+            let currentCourseName = "";   // new
             const text = (d) => (d === null || d === undefined || d === "") ? "N/A" : d;
             const num = (d) => (d === null || d === undefined || d === "") ? "0" : d;
 
@@ -149,7 +149,14 @@
                 { data: "points", render: num },
                 { data: "totalPoints", render: num }
             ];
-
+            // Removes characters not allowed in file names and falls back if empty
+            function exportFileName() {
+                const name = (currentCourseName || "Survey_Report")
+                    .replace(/[\\/:*?"<>|]+/g, "_")
+                    .replace(/\s+/g, " ")
+                    .trim();
+                return name || "Survey_Report";
+            }
             function initTable(rows) {
                 table = $("#teacherTable").DataTable({
                     data: rows,
@@ -161,9 +168,8 @@
                                 {
                                     extend: "excel",
                                     text: "Export to Excel",
-                                    title: "Survey Report",
-                                    // function so the filename follows the selected course
-                                    filename: () => "Survey_Report_" + currentCourseId,
+                                    title: () => currentCourseName,
+                                    filename: () => exportFileName(),
                                     exportOptions: { columns: ":visible" }
                                 },
                                 "copy", "csv", "pdf", "colvis", "print"
@@ -176,7 +182,8 @@
 
             $("#CoursesDDL").on("change", function () {
                 currentCourseId = $(this).val();
-
+                
+                currentCourseName = $(this).find("option:selected").text().trim();
                 if (!currentCourseId || currentCourseId === "0") {
                     if (table) table.clear().draw();
                     return;

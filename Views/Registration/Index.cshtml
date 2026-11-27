@@ -49,8 +49,8 @@
             }
 
             /* =========================================
-            ACTIVE TAB: THE GLASSMORPHISM EFFECT
-            ========================================= */
+                ACTIVE TAB: THE GLASSMORPHISM EFFECT
+                ========================================= */
             .glass-nav-pills .nav-link.active {
                 background: linear-gradient(135deg, rgba(111, 66, 193, 0.1), rgba(13, 110, 253, 0.05)) !important;
                 backdrop-filter: blur(10px) saturate(150%);
@@ -63,8 +63,8 @@
 
     /* Tabulator Customizations to Match Bootstrap */
     /* ============================================
-       TABULATOR DIRECTORY TABLE
-       ============================================ */
+           TABULATOR DIRECTORY TABLE
+           ============================================ */
 
     .directory-table-wrapper {
         width: 100%;
@@ -186,25 +186,11 @@
         cursor: pointer;
     }
 
-    .multiselect-native-select .btn-group {
-        width: 100% !important;
-    }
-
-    .multiselect-container {
-        width: 100% !important;
-        max-height: 250px;
-        overflow-y: auto;
-    }
     /* Ensure proper Bootstrap modal backdrop overlay layer */
     .modal-backdrop {
         background-color: rgba(0, 0, 0, 0.5) !important;
     }
 
-    /* Fix Bootstrap Multiselect dropdown inside Modals */
-    .modal .mult-select-container, .modal .multiselect-container {
-        z-index: 1056 !important;
-        position: absolute !important;
-    }
 
     .modal-content {
         background-clip: padding-box;
@@ -213,39 +199,61 @@
         border-radius: 1rem;
         outline: 0;
     }
-    /* Force multiselect container dropdown to display above modal elements */
-    .modal .multiselect-container.dropdown-menu {
-        position: absolute !important;
-        inset: auto auto 0 0 !important;
-        transform: translate(0px, 38px) !important;
-        width: 100% !important;
-        z-index: 1060 !important;
-    }
-
-    /* Ensure modal body does not clip absolute dropdown items */
-    .modal-body {
-        overflow: visible !important;
-    }
 
     .glass-nav-pills .nav-link.active {
         /* Soft semi-transparent theme color (Purple/Blue mix) */
         background: linear-gradient(135deg, rgba(111, 66, 193, 0.1), rgba(13, 110, 253, 0.05)) !important;
-        
         /* Blur Effect */
         backdrop-filter: blur(10px) saturate(150%);
         -webkit-backdrop-filter: blur(10px) saturate(150%);
-        
         /* Text Color & Soft Border */
         color: #6f42c1 !important; /* Elegant Purple Text */
         border: 1px solid rgba(111, 66, 193, 0.25);
-        
         /* Floating Shadow */
         box-shadow: 0 4px 15px rgba(111, 66, 193, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.6);
         transform: translateY(-1px);
-
     }
 </style>
+<style>
+    /* Bootstrap Multiselect: desktop and mobile touch scrolling */
+    #assignStandardList .multiselect-native-select,
+    #assignStandardList .multiselect-native-select > .btn-group {
+        display: block;
+        width: 100% !important;
+    }
 
+        #assignStandardList .multiselect-native-select .multiselect {
+            width: 100% !important;
+            text-align: left;
+        }
+
+    #assignStandardList .multiselect-container.dropdown-menu {
+        box-sizing: border-box;
+        width: 100% !important;
+        max-height: 210px !important;
+        overflow-y: scroll !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain;
+        touch-action: pan-y !important;
+        pointer-events: auto;
+        z-index: 1060 !important;
+    }
+
+        #assignStandardList .multiselect-container.dropdown-menu > li {
+            white-space: normal;
+        }
+
+    #assignStandardList .multiselect-container .multiselect-filter,
+    #assignStandardList .multiselect-container .input-group {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+    }
+
+    /* Do not override Bootstrap's modal-body overflow behavior globally. */
+</style>
 <div class="container-fluid py-4">
     <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
         <h4 class="fw-bold text-dark mb-4"><i class="bi bi-ui-checks-grid text-primary me-2"></i> School Management & Registration Hub</h4>
@@ -290,127 +298,129 @@
                         </button>
                     </div>
                 </div><div id="directory-table-wrapper">
-                <div id="studentTableContainer"></div></div>
+                <div id="studentTableContainer"></div>
             </div>
+        </div>
 
-            <!-- REASSIGN GRADE MODAL (STUDENT) -->
-            <div class="modal fade" id="Dv_StandardModal" tabindex="-1" role="dialog" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered modal-sm">
-                    <div class="modal-content border-0 shadow" style="border-radius:14px;">
-                        <div class="modal-header border-0 pb-0">
-                            <h5 class="modal-title font-weight-bold text-purple-brand"><i class="fas fa-graduation-cap me-2"></i>Reassign Grade</h5>
-                            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body text-center pt-2">
-                            <h6 id="lbl_Student_Name" class="fw-bold text-secondary mb-3">Student Name</h6>
-                            <input type="hidden" id="hd_StudentID" value="0" />
-
-                            <div class="form-group text-start mb-3">
-                                <label class="small fw-bold text-muted mb-1">Standard / Class *</label>
-                                <select id="dll_student_standard" class="form-select form-select-md">
-                                    <option value="" disabled selected>-- Select Standard --</option>
-                                    @for (int i = 3; i <= 15; i++)
-                                    {
-                                        string suffix = (i == 1) ? "st" : (i == 2) ? "nd" : (i == 3) ? "rd" : "th";
-                                        <option value="@(i)@suffix">@(i)@suffix</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="form-group text-start mb-4">
-                                <label class="small fw-bold text-muted mb-1">Division / Section</label>
-                                <input type="text" id="dv_division" class="form-control form-control-md" placeholder="e.g. A, B, Rose" maxlength="10">
-                            </div>
-
-                            <button class="btn btn-primary rounded-pill w-100 fw-bold py-2 bg-purple-brand border-0" onclick="setStandard()" id="btnSet" style="background-color: #6f42c1;">
-                                Save Structural Assignment
-                            </button>
-                        </div>
+        <!-- REASSIGN GRADE MODAL (STUDENT) -->
+        <div class="modal fade" id="Dv_StandardModal" tabindex="-1" role="dialog" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow" style="border-radius:14px;">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title font-weight-bold text-purple-brand"><i class="fas fa-graduation-cap me-2"></i>Reassign Grade</h5>
+                        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
                     </div>
-                </div>
-            </div>
+                    <div class="modal-body text-center pt-2">
+                        <h6 id="lbl_Student_Name" class="fw-bold text-secondary mb-3">Student Name</h6>
+                        <input type="hidden" id="hd_StudentID" value="0" />
 
-            <!-- TAB 2: TEACHERS LIST -->
-            <div class="tab-pane fade" id="teacherContent">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-dark m-0">Enrolled Teachers</h5>
-                <div class="d-flex flex-column flex-sm-row gap-2">
-                        <input type="text" id="teacherSearchInput" class="form-control form-control-sm" placeholder="Search teachers..." onkeyup="filterTabulator('teacher', this.value)">
-                        <button class="btn btn-success btn-sm" onclick="exportTable('teacher', 'xlsx')">
-                            <i class="fas fa-file-excel me-1"></i> Export Excel
-                        </button>
-                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddTeacher">
-                            <i class="bi bi-person-plus-fill me-1"></i> Add New Teacher
-                        </button>
-                    </div>
-                </div>
-            <!-- Tabulator Container --><div class="directory-table-wrapper">
-                <div id="teacherTableContainer"></div></div>
-            </div>
-
-            <!-- TAB 3: VOLUNTEERS LIST -->
-            <div class="tab-pane fade" id="volunteerContent">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-dark m-0">Assigned Volunteers</h5>
-            <div class="d-flex flex-column flex-sm-row gap-2">
-                        <input type="text" id="volunteerSearchInput" class="form-control form-control-sm" placeholder="Search volunteers..." onkeyup="filterTabulator('volunteer', this.value)">
-                        <button class="btn btn-success btn-sm" onclick="exportTable('volunteer', 'xlsx')">
-                            <i class="fas fa-file-excel me-1"></i> Export Excel
-                        </button>
-                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddVolunteer">
-                            <i class="bi bi-person-plus-fill me-1"></i> Add New Volunteer
-                        </button>
-                    </div>
-        </div><div class="directory-table-wrapper">
-                <div id="volunteerTableContainer"></div></div>
-            </div>
-
-            <!-- TAB 4: BULK UPLOAD -->
-            <div class="tab-pane fade" id="bulkContent">
-                <div class="card border border-primary-subtle rounded-4 p-4 bg-light mb-4">
-                    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-file-earmark-arrow-up-fill me-2"></i> Bulk Registration</h5>
-                    <form id="bulkUploadForm">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Select Upload Type</label>
-                            <select id="bulkUploadType" class="form-select rounded-3 shadow-none" required>
-                                <option value="Student">Students Bulk Upload</option>
-                                <option value="Teacher">Teachers Bulk Upload</option>
-                                <option value="Volunteer">Volunteer Bulk Upload</option>
+                        <div class="form-group text-start mb-3">
+                            <label class="small fw-bold text-muted mb-1">Standard / Class *</label>
+                            <select id="dll_student_standard" class="form-select form-select-md">
+                                <option value="" disabled selected>-- Select Standard --</option>
+                                @for (int i = 3; i <= 15; i++)
+                                {
+                                    string suffix = (i == 1) ? "st" : (i == 2) ? "nd" : (i == 3) ? "rd" : "th";
+                                    <option value="@(i)@suffix">@(i)@suffix</option>
+                                }
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Upload Excel Workbook</label>
-                            <input type="file" id="bulkExcelFile" class="form-control rounded-3 shadow-none" accept=".xlsx, .xls" required>
+                        <div class="form-group text-start mb-4">
+                            <label class="small fw-bold text-muted mb-1">Division / Section</label>
+                            <input type="text" id="dv_division" class="form-control form-control-md" placeholder="e.g. A, B, Rose" maxlength="10">
                         </div>
-                        <div class="border border-warning rounded-4 p-3 bg-white mb-3">
-                            <div class="text-warning fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Format Compliance</div>
-                            <p class="text-muted small mb-2">Ensure to use Sheet1 structure columns only. Before you upload your data, please ensure every row matches your school's required template.</p>
-                            <button type="button" id="downloadTemplateBtn" class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold">
-                                <i class="bi bi-download me-1"></i> Download Template Blueprint
-                            </button>
-                        </div>
-                        <button type="submit" class="btn btn-purple btn-sm rounded-pill px-4 fw-bold text-white shadow-sm" style="background-color: #6f42c1;">
-                            <i class="bi bi-upload me-1"></i> UPLOAD REGISTRATION EXCEL
+
+                        <button class="btn btn-primary rounded-pill w-100 fw-bold py-2 bg-purple-brand border-0" onclick="setStandard()" id="btnSet" style="background-color: #6f42c1;">
+                            Save Structural Assignment
                         </button>
-                    </form>
-                </div>
-                <h5 class="fw-bold text-dark mb-3">Upload History</h5>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle small border" id="logsTable">
-                        <thead class="table-light">
-                            <tr><th>Type</th><th>File Name</th><th>Status</th><th>Date</th><th>Action</th></tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- TAB 2: TEACHERS LIST -->
+        <div class="tab-pane fade" id="teacherContent">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-dark m-0">Enrolled Teachers</h5>
+                <div class="d-flex flex-column flex-sm-row gap-2">
+                    <input type="text" id="teacherSearchInput" class="form-control form-control-sm" placeholder="Search teachers..." onkeyup="filterTabulator('teacher', this.value)">
+                    <button class="btn btn-success btn-sm" onclick="exportTable('teacher', 'xlsx')">
+                        <i class="fas fa-file-excel me-1"></i> Export Excel
+                    </button>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddTeacher">
+                        <i class="bi bi-person-plus-fill me-1"></i> Add New Teacher
+                    </button>
+                </div>
+            </div>
+            <!-- Tabulator Container --><div class="directory-table-wrapper">
+            <div id="teacherTableContainer"></div>
+        </div>
+    </div>
+
+    <!-- TAB 3: VOLUNTEERS LIST -->
+    <div class="tab-pane fade" id="volunteerContent">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark m-0">Assigned Volunteers</h5>
+            <div class="d-flex flex-column flex-sm-row gap-2">
+                <input type="text" id="volunteerSearchInput" class="form-control form-control-sm" placeholder="Search volunteers..." onkeyup="filterTabulator('volunteer', this.value)">
+                <button class="btn btn-success btn-sm" onclick="exportTable('volunteer', 'xlsx')">
+                    <i class="fas fa-file-excel me-1"></i> Export Excel
+                </button>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddVolunteer">
+                    <i class="bi bi-person-plus-fill me-1"></i> Add New Volunteer
+                </button>
+            </div>
+        </div><div class="directory-table-wrapper">
+        <div id="volunteerTableContainer"></div>
     </div>
 </div>
 
-<!-- ================= MODALS ================= -->
+<!-- TAB 4: BULK UPLOAD -->
+<div class="tab-pane fade" id="bulkContent">
+    <div class="card border border-primary-subtle rounded-4 p-4 bg-light mb-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-file-earmark-arrow-up-fill me-2"></i> Bulk Registration</h5>
+        <form id="bulkUploadForm">
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Select Upload Type</label>
+                <select id="bulkUploadType" class="form-select rounded-3 shadow-none" required>
+                    <option value="Student">Students Bulk Upload</option>
+                    <option value="Teacher">Teachers Bulk Upload</option>
+                    <option value="Volunteer">Volunteer Bulk Upload</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Upload Excel Workbook</label>
+                <input type="file" id="bulkExcelFile" class="form-control rounded-3 shadow-none" accept=".xlsx, .xls" required>
+            </div>
+            <div class="border border-warning rounded-4 p-3 bg-white mb-3">
+                <div class="text-warning fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Format Compliance</div>
+                <p class="text-muted small mb-2">Ensure to use Sheet1 structure columns only. Before you upload your data, please ensure every row matches your school's required template.</p>
+                <button type="button" id="downloadTemplateBtn" class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold">
+                    <i class="bi bi-download me-1"></i> Download Template Blueprint
+                </button>
+            </div>
+            <button type="submit" class="btn btn-purple btn-sm rounded-pill px-4 fw-bold text-white shadow-sm" style="background-color: #6f42c1;">
+                <i class="bi bi-upload me-1"></i> UPLOAD REGISTRATION EXCEL
+            </button>
+        </form>
+    </div>
+    <h5 class="fw-bold text-dark mb-3">Upload History</h5>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle small border" id="logsTable">
+            <thead class="table-light">
+                <tr><th>Type</th><th>File Name</th><th>Status</th><th>Date</th><th>Action</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+</div>
+</div>
+</div>
 
+<!-- ================= MODALS ================= -->
 <!-- ASSIGN STANDARD MODAL (TEACHER) -->
-<div class="modal fade" id="assignStandardList" tabindex="-1" aria-hidden="true" data-bs-backdrop="true"  data-bs-keyboard="false">
+<div class="modal fade" id="assignStandardList" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; background-color: #ffffff;">
             <div class="modal-header border-0 pb-0">
@@ -583,8 +593,6 @@
     </div>
 </div>
 <!-- REQUIRED DEPENDENCY ORDER: jQuery MUST load first -->
-
-
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- Tabulator JS, SheetJS, Moment.js, SweetAlert2 & MultiSelect -->
@@ -595,41 +603,43 @@
     <script src="~/Content/MultiSelect/bootstrap-multiselect.js" type="text/javascript"></script>
     <script>
 
+
+
         const fileBaseUrl = '@Html.Raw(fileBaseUrl)';
 
-function getFileUrl(filePath) {
+        function getFileUrl(filePath) {
 
-    if (!filePath) {
-        return '#';
-    }
+            if (!filePath) {
+                return '#';
+            }
 
-    if (
-        filePath.startsWith('http://') ||
-        filePath.startsWith('https://')
-    ) {
-        return filePath;
-    }
+            if (
+                filePath.startsWith('http://') ||
+                filePath.startsWith('https://')
+            ) {
+                return filePath;
+            }
 
-    let cleanPath =
-        filePath.replace(/^\/+/, '');
+            let cleanPath =
+                filePath.replace(/^\/+/, '');
 
-    return fileBaseUrl.replace(/\/+$/, '') +
-        '/' +
-        cleanPath;
-}
-function getDownloadUrl(filePath) {
+            return fileBaseUrl.replace(/\/+$/, '') +
+                '/' +
+                cleanPath;
+        }
+        function getDownloadUrl(filePath) {
 
-    if (!filePath) {
-        return '#';
-    }
+            if (!filePath) {
+                return '#';
+            }
 
-    return '/api/admin/download-bulk-file?filePath='
-        + encodeURIComponent(filePath);
-}
-      
+            return '/api/admin/download-bulk-file?filePath='
+                + encodeURIComponent(filePath);
+        }
+
         let studentTable, teacherTable, volunteerTable;
 
-        $(document).ready(function() {
+        $(document).ready(function () {
             const urlParams = new URLSearchParams(window.location.search);
 
             const activeTab = urlParams.get('tab');
@@ -652,8 +662,11 @@ function getDownloadUrl(filePath) {
                 }
             }
 
-            $('#clearStandards').on('click', function() {
-                $('#dll_Standard').multiselect('clearSelection');
+            $('#clearStandards').on('click', function () {
+                var $standardSelect = $('#dll_Standard');
+                if (typeof $standardSelect.multiselect === 'function' && $standardSelect.data('multiselect')) {
+                    $standardSelect.multiselect('clearSelection');
+                }
             });
 
             var standardData = [
@@ -673,42 +686,67 @@ function getDownloadUrl(filePath) {
             ];
 
             var $selectElement = $('#dll_Standard');
-            $selectElement.empty(); 
-            $.each(standardData, function(index, value) {
+            $selectElement.empty();
+            $.each(standardData, function (index, value) {
                 $selectElement.append($('<option>', { value: value, text: value }));
             });
 
             if ($selectElement.length && typeof $selectElement.multiselect === 'function') {
+
+                // Avoid initializing the same element more than once.
+                if ($selectElement.data('multiselect')) {
+                    $selectElement.multiselect('destroy');
+                }
+
                 $selectElement.multiselect({
                     nonSelectedText: 'Select Assigned Grades',
                     enableFiltering: true,
                     includeSelectAllOption: true,
                     filterPlaceholder: 'Search class records...',
-                    maxHeight: 250,
-                    buttonClass: 'btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between',
+                    maxHeight: 210,
+                    buttonWidth: '100%',
+                    dropRight: false,
+                    // The local plugin template defaults to Bootstrap 4 data-toggle.
+                    // This page uses Bootstrap 5, so use its data-bs-toggle attribute.
                     templates: {
-                        button: '<button type="button" class="multiselect dropdown-toggle btn btn-outline-secondary form-select text-start d-flex align-items-center justify-content-between" data-bs-toggle="dropdown" aria-expanded="false"><span class="multiselect-selected-text"></span></button>'
+                        button: `
+                                    <button type="button"
+                                            class="multiselect dropdown-toggle btn btn-outline-secondary form-select text-start"
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded="false">
+                                        <span class="multiselect-selected-text"></span>
+                                    </button>
+                                `
                     }
                 });
+
+                // Ensure the popup keeps its own scroll area after plugin rendering.
+                var $popup = $selectElement.next('.btn-group').find('.multiselect-container');
+                $popup.css({
+                    'max-height': '210px',
+                    'overflow-y': 'scroll',
+                    'overflow-x': 'hidden',
+                    '-webkit-overflow-scrolling': 'touch',
+                    'touch-action': 'pan-y'
+                });
             }
-            // });
 
             loadSchoolHubData();
 
             // Load Standards into Student Modal
-            $.get('/api/universal/standards-list', function(data) {
+            $.get('/api/universal/standards-list', function (data) {
                 let $ddl = $('#ddlInternalStandard');
                 $ddl.append('<option value="">-- Select --</option>');
                 if (data) data.forEach(i => $ddl.append(`<option value="${i.id}">${i.name}</option>`));
             });
 
             function loadSchoolHubData() {
-                $.get('/api/universal/school-lists', function(res) {
+                $.get('/api/universal/school-lists', function (res) {
                     if (res.success) {
                         initStudentTable(res.students || []);
 
                         let teachersList = res.teachers || [];
-                        teachersList.forEach(function(teacher) {
+                        teachersList.forEach(function (teacher) {
                             var fname = teacher.firstName || teacher.FirstName || '';
                             var lname = teacher.lastName || teacher.LastName || '';
                             teacher.FirstName = (fname + ' ' + lname).trim();
@@ -726,37 +764,37 @@ function getDownloadUrl(filePath) {
                         let logRows = '';
                         (res.logs || []).forEach(l => {
                             logRows += `
-        <tr>
-            <td>
-                <span class="badge bg-info-subtle text-info">
-                    ${l.uploadType}
-                </span>
-            </td>
+                <tr>
+                    <td>
+                        <span class="badge bg-info-subtle text-info">
+                            ${l.uploadType}
+                        </span>
+                    </td>
 
-            <td>${l.fileName}</td>
+                    <td>${l.fileName}</td>
 
-            <td>
-                <span class="badge bg-success-subtle text-success">
-                    ${l.status}
-                </span>
-            </td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success">
+                            ${l.status}
+                        </span>
+                    </td>
 
-            <td>
-                ${new Date(l.uploadedDate).toLocaleDateString()}
-            </td>
+                    <td>
+                        ${new Date(l.uploadedDate).toLocaleDateString()}
+                    </td>
 
-            <td>
-                <a href="${getDownloadUrl(l.filePath)}"
-                           class="btn btn-sm btn-light border" target="_blank"
-                   title="Download Excel">
-                    <i class="bi bi-download"></i>
-                </a>
-            </td>
-        </tr>`;
+                    <td>
+                        <a href="${getDownloadUrl(l.filePath)}"
+                                   class="btn btn-sm btn-light border" target="_blank"
+                           title="Download Excel">
+                            <i class="bi bi-download"></i>
+                        </a>
+                    </td>
+                </tr>`;
                         });
                         $('#logsTable tbody').html(logRows || '<tr><td colspan="5" class="text-center text-muted">No bulk uploads recorded.</td></tr>');
                     }
-                }).fail(function() {
+                }).fail(function () {
                     initStudentTable([]);
                     initTeacherTable([]);
                     initVolunteerTable([]);
@@ -764,7 +802,7 @@ function getDownloadUrl(filePath) {
             }
 
 
-            $('#frmAddStudent, #frmAddTeacher, #frmAddVolunteer').on('submit', function(e) {
+            $('#frmAddStudent, #frmAddTeacher, #frmAddVolunteer').on('submit', function (e) {
                 e.preventDefault();
                 let $form = $(this);
                 let $submitBtn = $form.find('button[type="submit"]');
@@ -786,7 +824,7 @@ function getDownloadUrl(filePath) {
                     data: formData,
                     processData: false,
                     contentType: false,
-                    success: function(res) {
+                    success: function (res) {
                         if (res.success) {
                             alert(res.message);
                             $form[0].reset();
@@ -801,7 +839,7 @@ function getDownloadUrl(filePath) {
                             $submitBtn.html(originalBtnText);
                         }
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         $submitBtn.prop('disabled', false);
                         $submitBtn.html(originalBtnText);
                         alert(xhr.responseJSON?.message || "Registration failed.");
@@ -809,12 +847,12 @@ function getDownloadUrl(filePath) {
                 });
             });
 
-            $('#downloadTemplateBtn').on('click', function() {
+            $('#downloadTemplateBtn').on('click', function () {
                 let type = $('#bulkUploadType').val();
                 window.location.href = `/api/universal/download-sample/${type}`;
             });
 
-           $('#bulkUploadForm').on('submit', function(e) {
+            $('#bulkUploadForm').on('submit', function (e) {
                 e.preventDefault();
                 let $form = $(this);
                 let $submitBtn = $form.find('button[type="submit"]');
@@ -843,7 +881,7 @@ function getDownloadUrl(filePath) {
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function(res) {
+                    success: function (res) {
                         // Re-enable button and restore text
                         $submitBtn.prop('disabled', false);
                         $submitBtn.html(originalBtnText);
@@ -854,7 +892,7 @@ function getDownloadUrl(filePath) {
                             loadSchoolHubData();
                         }
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         // Re-enable button and restore text on error
                         $submitBtn.prop('disabled', false);
                         $submitBtn.html(originalBtnText);
@@ -863,146 +901,146 @@ function getDownloadUrl(filePath) {
                     }
                 });
             });
-        const directoryTableDefaults = {
-            layout: "fitData",
-            responsiveLayout: false,
+            const directoryTableDefaults = {
+                layout: "fitData",
+                responsiveLayout: false,
 
-            pagination: true,
-            paginationMode: "local",
-            paginationSize: 10,
-            paginationSizeSelector: [10, 25, 50, 100],
+                pagination: true,
+                paginationMode: "local",
+                paginationSize: 10,
+                paginationSizeSelector: [10, 25, 50, 100],
 
-            // IMPORTANT:
-            // Prevent users from dragging/reordering columns
-            movableColumns: false,
+                // IMPORTANT:
+                // Prevent users from dragging/reordering columns
+                movableColumns: false,
 
-            // Allow sorting by clicking headers
-            headerSort: true,
-
-            // Do not automatically resize columns to mobile width
-            columnDefaults: {
+                // Allow sorting by clicking headers
                 headerSort: true,
-                headerFilter: "input",
-                headerFilterFunc: "like",
-                resizable: false,
-                tooltip: true
-            }
-        };
-        function initStudentTable(data) {
 
-            if (studentTable) {
-                studentTable.destroy();
-            }
+                // Do not automatically resize columns to mobile width
+                columnDefaults: {
+                    headerSort: true,
+                    headerFilter: "input",
+                    headerFilterFunc: "like",
+                    resizable: false,
+                    tooltip: true
+                }
+            };
+            function initStudentTable(data) {
 
-            // Normalize data so searching/sorting works correctly
-            data = (data || []).map(function(d) {
+                if (studentTable) {
+                    studentTable.destroy();
+                }
 
-                return {
-                    ...d,
+                // Normalize data so searching/sorting works correctly
+                data = (data || []).map(function (d) {
 
-                    _studentId:
-                        d.studentId ||
-                        d.StudentID ||
-                        '',
+                    return {
+                        ...d,
 
-                    _studentName:
-                        `${d.firstName || d.FirstName || ''} ${d.lastName || d.LastName || ''}`.trim(),
+                        _studentId:
+                            d.studentId ||
+                            d.StudentID ||
+                            '',
 
-                    _city:
-                        d.cityName ||
-                        d.CityName ||
-                        '',
+                        _studentName:
+                            `${d.firstName || d.FirstName || ''} ${d.lastName || d.LastName || ''}`.trim(),
 
-                    _mobile:
-                        d.mobileNo ||
-                        d.MobileNo ||
-                        '',
+                        _city:
+                            d.cityName ||
+                            d.CityName ||
+                            '',
 
-                    _gender:
-                        d.gender ||
-                        d.Gender ||
-                        '',
+                        _mobile:
+                            d.mobileNo ||
+                            d.MobileNo ||
+                            '',
 
-                    _standard:
-                        d.standard ||
-                        d.Standard ||
-                        '',
+                        _gender:
+                            d.gender ||
+                            d.Gender ||
+                            '',
 
-                    _division:
-                        d.division ||
-                        d.Division ||
-                        '',
+                        _standard:
+                            d.standard ||
+                            d.Standard ||
+                            '',
 
-                    _username:
-                        d.username ||
-                        d.Username ||
-                        '',
+                        _division:
+                            d.division ||
+                            d.Division ||
+                            '',
 
-                    _password:
-                        d.password_ ||
-                        d.Password_ ||
-                        d.password ||
-                        d.Password ||
-                        ''
-                };
-            });
+                        _username:
+                            d.username ||
+                            d.Username ||
+                            '',
 
-            studentTable = new Tabulator("#studentTableContainer", {
+                        _password:
+                            d.password_ ||
+                            d.Password_ ||
+                            d.password ||
+                            d.Password ||
+                            ''
+                    };
+                });
 
-                ...directoryTableDefaults,
+                studentTable = new Tabulator("#studentTableContainer", {
 
-                data: data,
+                    ...directoryTableDefaults,
 
-                columns: [
+                    data: data,
 
-                    {
-                        formatter: "rownum",
-                        title: "Sr No",
-                        hozAlign: "center",
-                        width: 70,
-                        headerSort: false,
-                        headerFilter: false
-                    },
+                    columns: [
 
-                    {
-                        title: "Student ID",
-                        field: "_studentId",
-                        width: 130,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                        {
+                            formatter: "rownum",
+                            title: "Sr No",
+                            hozAlign: "center",
+                            width: 70,
+                            headerSort: false,
+                            headerFilter: false
+                        },
 
-                    {
-                        title: "Student Name",
-                        field: "_studentName",
-                        width: 190,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                        {
+                            title: "Student ID",
+                            field: "_studentId",
+                            width: 130,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
 
-                    {
-                        title: "City",
-                        field: "_city",
-                        width: 140,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                        {
+                            title: "Student Name",
+                            field: "_studentName",
+                            width: 190,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
 
-                    {
-                        title: "Mobile Number",
-                        field: "_mobile",
-                        width: 150,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                        {
+                            title: "City",
+                            field: "_city",
+                            width: 140,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
 
-                    {
-                        title: "Gender",
-                        field: "_gender",
-                        width: 110,
-                        sorter: "string",
-                        headerFilter: "input"
-                    }, 
+                        {
+                            title: "Mobile Number",
+                            field: "_mobile",
+                            width: 150,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "Gender",
+                            field: "_gender",
+                            width: 110,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
 
                      
                         {
@@ -1014,7 +1052,7 @@ function getDownloadUrl(filePath) {
                             headerFilter: "input",
                             download: true,
 
-                            formatter: function(cell) {
+                            formatter: function (cell) {
                                 const d = cell.getData();
 
                                 const studentId = Number(d._studentId) || 0;
@@ -1023,522 +1061,522 @@ function getDownloadUrl(filePath) {
                                 const division = d._division || "";
 
                                 return `
-                    <button type="button"
-                            class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                            onclick="ChangeStandard(
-                                ${studentId},
-                                this.dataset.name,
-                                this.dataset.standard,
-                                this.dataset.division
-                            )"
-                            data-name="${escapeHtml(studentName)}"
-                            data-standard="${escapeHtml(standard)}"
-                            data-division="${escapeHtml(division)}"
-                            title="Change Student Standard">
-                        <i class="fas fa-edit me-1"></i>
-                        ${escapeHtml(standard || "Assign Standard")}
-                    </button>
-                `;
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                    onclick="ChangeStandard(
+                                        ${studentId},
+                                        this.dataset.name,
+                                        this.dataset.standard,
+                                        this.dataset.division
+                                    )"
+                                    data-name="${escapeHtml(studentName)}"
+                                    data-standard="${escapeHtml(standard)}"
+                                    data-division="${escapeHtml(division)}"
+                                    title="Change Student Standard">
+                                <i class="fas fa-edit me-1"></i>
+                                ${escapeHtml(standard || "Assign Standard")}
+                            </button>
+                        `;
                             }
                         },
 
 
-                    {
-                        title: "Division",
-                        field: "_division",
-                        width: 110,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                        {
+                            title: "Division",
+                            field: "_division",
+                            width: 110,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
 
-                    {
-                        title: "Username",
-                        field: "_username",
-                        width: 170,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                        {
+                            title: "Username",
+                            field: "_username",
+                            width: 170,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
 
-                    {
-                        title: "Password",
-                        field: "_password",
-                        width: 160,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                        {
+                            title: "Password",
+                            field: "_password",
+                            width: 160,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
 
-                    {
-                        title: "Report",
-                        hozAlign: "center",
-                        width: 90,
-                        headerSort: false,
-                        headerFilter: false,
-                        download: false,
+                        {
+                            title: "Report",
+                            hozAlign: "center",
+                            width: 90,
+                            headerSort: false,
+                            headerFilter: false,
+                            download: false,
 
-                        formatter: function(cell) {
+                            formatter: function (cell) {
 
-                            let d = cell.getData();
+                                let d = cell.getData();
 
-                            let sId =
-                                d.studentId ||
-                                d.StudentID ||
-                                0;
+                                let sId =
+                                    d.studentId ||
+                                    d.StudentID ||
+                                    0;
 
-                            return `
-                                <a target="_blank"
-                                   href="/Learn/PrintStudentScorecard?id=${sId}"
-                                   class="text-info"
-                                   title="Print Scorecard">
-                                    <i class="fas fa-print"></i>
-                                </a>
-                            `;
+                                return `
+                                        <a target="_blank"
+                                           href="/Learn/PrintStudentScorecard?id=${sId}"
+                                           class="text-info"
+                                           title="Print Scorecard">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                    `;
+                            }
+                        },
+
+                        {
+                            title: "Actions",
+                            hozAlign: "center",
+                            width: 90,
+                            headerSort: false,
+                            headerFilter: false,
+                            download: false,
+
+                            formatter: function (cell) {
+
+                                let d = cell.getData();
+
+                                let sId =
+                                    d.studentId ||
+                                    d.StudentID ||
+                                    0;
+
+                                return `
+                                        <a class="text-danger cur-pointer"
+                                           onclick="DeleteStudentRosterRow(${sId})"
+                                           title="Remove Student Link">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    `;
+                            }
+                        },
+
+                        {
+                            title: "SMS",
+                            hozAlign: "center",
+                            width: 110,
+                            headerSort: false,
+                            headerFilter: false,
+                            download: false,
+
+                            formatter: function (cell) {
+
+                                let d = cell.getData();
+
+                                let sId =
+                                    d.studentId ||
+                                    d.StudentID ||
+                                    0;
+
+                                return `
+                                        <button type="button"
+                                                data-id="${sId}"
+                                                class="btn btn-outline-primary btn-xs fw-bold px-2 rounded-pill SendSMSINS">
+                                            Send SMS
+                                        </button>
+                                    `;
+                            }
                         }
-                    },
+                    ]
+                });
+            }
+            function initTeacherTable(data) {
 
-                    {
-                        title: "Actions",
-                        hozAlign: "center",
-                        width: 90,
-                        headerSort: false,
-                        headerFilter: false,
-                        download: false,
+                if (teacherTable) {
+                    teacherTable.destroy();
+                }
 
-                        formatter: function(cell) {
+                data = (data || []).map(function (d) {
 
-                            let d = cell.getData();
+                    return {
+                        ...d,
 
-                            let sId =
-                                d.studentId ||
-                                d.StudentID ||
-                                0;
+                        _teacherId:
+                            d.teacherId ||
+                            d.TeacherID ||
+                            d.teacherID ||
+                            '',
 
-                            return `
-                                <a class="text-danger cur-pointer"
-                                   onclick="DeleteStudentRosterRow(${sId})"
-                                   title="Remove Student Link">
+                        _teacherName:
+                            d.FirstName ||
+                            d.firstName ||
+                            '',
+
+                        _institute:
+                            d.instituteName ||
+                            d.InstituteName ||
+                            '',
+
+                        _city:
+                            d.cityName ||
+                            d.CityName ||
+                            d.city ||
+                            '',
+
+                        _mobile:
+                            d.mobileNo ||
+                            d.MobileNo ||
+                            '',
+
+                        _gender:
+                            d.gender ||
+                            d.Gender ||
+                            '',
+
+                        _username:
+                            d.userName ||
+                            d.UserName ||
+                            '',
+
+                        _password:
+                            d.password_ ||
+                            d.Password_ ||
+                            '',
+
+                        _standard:
+                            d.standard ||
+                            d.Standard ||
+                            '',
+
+                        _createdDate:
+                            d.CreatedDate ||
+                            d.createdDate ||
+                            ''
+                    };
+                });
+
+                teacherTable = new Tabulator("#teacherTableContainer", {
+
+                    ...directoryTableDefaults,
+
+                    data: data,
+
+                    columns: [
+
+                        {
+                            formatter: "rownum",
+                            title: "Sr No",
+                            hozAlign: "center",
+                            width: 70,
+                            headerSort: false,
+                            headerFilter: false
+                        },
+
+                        {
+                            title: "Teacher ID",
+                            field: "_teacherId",
+                            width: 130,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "Teacher Name",
+                            field: "_teacherName",
+                            width: 190,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "Institute Name",
+                            field: "_institute",
+                            width: 220,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "City",
+                            field: "_city",
+                            width: 140,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "Mobile",
+                            field: "_mobile",
+                            width: 150,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "Gender",
+                            field: "_gender",
+                            width: 110,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "Username",
+                            field: "_username",
+                            width: 170,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "Password",
+                            field: "_password",
+                            width: 160,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "Standards",
+                            field: "_standard",
+                            width: 180,
+                            sorter: "string",
+                            headerFilter: "input",
+
+                            formatter: function (cell) {
+
+                                let value = cell.getValue();
+
+                                return value
+                                    ? value
+                                    : '<span class="badge bg-warning text-dark">Unassigned</span>';
+                            }
+                        },
+
+                        {
+                            title: "Registered Date",
+                            field: "_createdDate",
+                            width: 180,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "Action",
+                            hozAlign: "center",
+                            width: 110,
+                            headerSort: false,
+                            headerFilter: false,
+                            download: false,
+
+                            formatter: function (cell) {
+
+                                let r = cell.getData();
+
+                                let tId =
+                                    r.teacherId ||
+                                    r.TeacherID ||
+                                    r.teacherID ||
+                                    0;
+
+                                return `
+                                <a class="action-icon-btn text-danger cur-pointer"
+                                   onclick="DeleteTeacher(${tId})"
+                                   title="Delete">
                                     <i class="fas fa-trash-alt"></i>
                                 </a>
+
+                       
                             `;
-                        }
-                    },
+                            }
+                        },
 
-                    {
-                        title: "SMS",
-                        hozAlign: "center",
-                        width: 110,
-                        headerSort: false,
-                        headerFilter: false,
-                        download: false,
+                        {
+                            title: "SMS",
+                            hozAlign: "center",
+                            width: 110,
+                            headerSort: false,
+                            headerFilter: false,
+                            download: false,
 
-                        formatter: function(cell) {
+                            formatter: function (cell) {
 
-                            let d = cell.getData();
+                                let r = cell.getData();
 
-                            let sId =
-                                d.studentId ||
-                                d.StudentID ||
-                                0;
+                                let tId =
+                                    r.teacherId ||
+                                    r.TeacherID ||
+                                    r.teacherID ||
+                                    0;
 
-                            return `
+                                return `
                                 <button type="button"
-                                        data-id="${sId}"
-                                        class="btn btn-outline-primary btn-xs fw-bold px-2 rounded-pill SendSMSINS">
+                                        data-id="${tId}"
+                                        class="btn btn-outline-primary btn-xs px-2 SendSMSINSTeacher font-weight-bold rounded-pill">
                                     Send SMS
                                 </button>
                             `;
+                            }
+                        },
+
+                        {
+                            title: "Assign",
+                            hozAlign: "center",
+                            width: 150,
+                            headerSort: false,
+                            headerFilter: false,
+                            download: false,
+
+                            formatter: function (cell) {
+
+                                let r = cell.getData();
+
+                                let tId =
+                                    r.teacherId ||
+                                    r.TeacherID ||
+                                    r.teacherID ||
+                                    0;
+
+                                let fName =
+                                    (r.FirstName || r.firstName || '')
+                                        .replace(/'/g, "\\'");
+
+                                let std =
+                                    r.standard ||
+                                    r.Standard ||
+                                    '';
+
+                                return `
+                                <a href="#"
+                                   onclick="fnAssignTeacher(${tId}, '${fName}', '${std}')"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#assignStandardList"
+                                   class="btn btn-outline-purple btn-xs px-2 font-weight-bold rounded-pill"
+                                   style="color:#6f42c1;border-color:#6f42c1;">
+                                    Assign Standard
+                                </a>
+                            `;
+                            }
                         }
-                    }
-                ]
-            });
-        }
-        function initTeacherTable(data) {
-
-    if (teacherTable) {
-        teacherTable.destroy();
-    }
-
-    data = (data || []).map(function (d) {
-
-        return {
-            ...d,
-
-            _teacherId:
-                d.teacherId ||
-                d.TeacherID ||
-                d.teacherID ||
-                '',
-
-            _teacherName:
-                d.FirstName ||
-                d.firstName ||
-                '',
-
-            _institute:
-                d.instituteName ||
-                d.InstituteName ||
-                '',
-
-            _city:
-                d.cityName ||
-                d.CityName ||
-                d.city ||
-                '',
-
-            _mobile:
-                d.mobileNo ||
-                d.MobileNo ||
-                '',
-
-            _gender:
-                d.gender ||
-                d.Gender ||
-                '',
-
-            _username:
-                d.userName ||
-                d.UserName ||
-                '',
-
-            _password:
-                d.password_ ||
-                d.Password_ ||
-                '',
-
-            _standard:
-                d.standard ||
-                d.Standard ||
-                '',
-
-            _createdDate:
-                d.CreatedDate ||
-                d.createdDate ||
-                ''
-        };
-    });
-
-    teacherTable = new Tabulator("#teacherTableContainer", {
-
-        ...directoryTableDefaults,
-
-        data: data,
-
-        columns: [
-
-            {
-                formatter: "rownum",
-                title: "Sr No",
-                hozAlign: "center",
-                width: 70,
-                headerSort: false,
-                headerFilter: false
-            },
-
-            {
-                title: "Teacher ID",
-                field: "_teacherId",
-                width: 130,
-                sorter: "string",
-                headerFilter: "input"
-            },
-
-            {
-                title: "Teacher Name",
-                field: "_teacherName",
-                width: 190,
-                sorter: "string",
-                headerFilter: "input"
-            },
-
-            {
-                title: "Institute Name",
-                field: "_institute",
-                width: 220,
-                sorter: "string",
-                headerFilter: "input"
-            },
-
-            {
-                title: "City",
-                field: "_city",
-                width: 140,
-                sorter: "string",
-                headerFilter: "input"
-            },
-
-            {
-                title: "Mobile",
-                field: "_mobile",
-                width: 150,
-                sorter: "string",
-                headerFilter: "input"
-            },
-
-            {
-                title: "Gender",
-                field: "_gender",
-                width: 110,
-                sorter: "string",
-                headerFilter: "input"
-            },
-
-            {
-                title: "Username",
-                field: "_username",
-                width: 170,
-                sorter: "string",
-                headerFilter: "input"
-            },
-
-            {
-                title: "Password",
-                field: "_password",
-                width: 160,
-                sorter: "string",
-                headerFilter: "input"
-            },
-
-            {
-                title: "Standards",
-                field: "_standard",
-                width: 180,
-                sorter: "string",
-                headerFilter: "input",
-
-                formatter: function (cell) {
-
-                    let value = cell.getValue();
-
-                    return value
-                        ? value
-                        : '<span class="badge bg-warning text-dark">Unassigned</span>';
-                }
-            },
-
-            {
-                title: "Registered Date",
-                field: "_createdDate",
-                width: 180,
-                sorter: "string",
-                headerFilter: "input"
-            },
-
-            {
-                title: "Action",
-                hozAlign: "center",
-                width: 110,
-                headerSort: false,
-                headerFilter: false,
-                download: false,
-
-                formatter: function (cell) {
-
-                    let r = cell.getData();
-
-                    let tId =
-                        r.teacherId ||
-                        r.TeacherID ||
-                        r.teacherID ||
-                        0;
-
-                    return `
-                        <a class="action-icon-btn text-danger cur-pointer"
-                           onclick="DeleteTeacher(${tId})"
-                           title="Delete">
-                            <i class="fas fa-trash-alt"></i>
-                        </a>
-
-                       
-                    `;
-                }
-            },
-
-            {
-                title: "SMS",
-                hozAlign: "center",
-                width: 110,
-                headerSort: false,
-                headerFilter: false,
-                download: false,
-
-                formatter: function (cell) {
-
-                    let r = cell.getData();
-
-                    let tId =
-                        r.teacherId ||
-                        r.TeacherID ||
-                        r.teacherID ||
-                        0;
-
-                    return `
-                        <button type="button"
-                                data-id="${tId}"
-                                class="btn btn-outline-primary btn-xs px-2 SendSMSINSTeacher font-weight-bold rounded-pill">
-                            Send SMS
-                        </button>
-                    `;
-                }
-            },
-
-            {
-                title: "Assign",
-                hozAlign: "center",
-                width: 150,
-                headerSort: false,
-                headerFilter: false,
-                download: false,
-
-                formatter: function (cell) {
-
-                    let r = cell.getData();
-
-                    let tId =
-                        r.teacherId ||
-                        r.TeacherID ||
-                        r.teacherID ||
-                        0;
-
-                    let fName =
-                        (r.FirstName || r.firstName || '')
-                        .replace(/'/g, "\\'");
-
-                    let std =
-                        r.standard ||
-                        r.Standard ||
-                        '';
-
-                    return `
-                        <a href="#"
-                           onclick="fnAssignTeacher(${tId}, '${fName}', '${std}')"
-                           data-bs-toggle="modal"
-                           data-bs-target="#assignStandardList"
-                           class="btn btn-outline-purple btn-xs px-2 font-weight-bold rounded-pill"
-                           style="color:#6f42c1;border-color:#6f42c1;">
-                            Assign Standard
-                        </a>
-                    `;
-                }
-            }
-        ]
-    });
-}
-
-        function initVolunteerTable(data) {
-
-            if (volunteerTable) {
-                volunteerTable.destroy();
+                    ]
+                });
             }
 
-            data = (data || []).map(function(d) {
+            function initVolunteerTable(data) {
 
-                return {
-                    ...d,
+                if (volunteerTable) {
+                    volunteerTable.destroy();
+                }
 
-                    _id:
-                        d.iD ||
-                        d.ID ||
-                        d.id ||
-                        '',
+                data = (data || []).map(function (d) {
 
-                    _mobile:
-                        d.mobileNo ||
-                        d.MobileNo ||
-                        '',
+                    return {
+                        ...d,
 
-                    _name:
-                        `${d.firstName || d.FirstName || ''} ${d.lastName || d.LastName || ''}`.trim(),
+                        _id:
+                            d.iD ||
+                            d.ID ||
+                            d.id ||
+                            '',
 
-                    _email:
-                        d.email ||
-                        d.Email ||
-                        '',
+                        _mobile:
+                            d.mobileNo ||
+                            d.MobileNo ||
+                            '',
 
-                    _username:
-                        d.username ||
-                        d.Username ||
-                        '',
+                        _name:
+                            `${d.firstName || d.FirstName || ''} ${d.lastName || d.LastName || ''}`.trim(),
 
-                    _password:
-                        d.password_ ||
-                        d.Password_ ||
-                        ''
-                };
-            });
+                        _email:
+                            d.email ||
+                            d.Email ||
+                            '',
 
-            volunteerTable = new Tabulator("#volunteerTableContainer", {
+                        _username:
+                            d.username ||
+                            d.Username ||
+                            '',
 
-                ...directoryTableDefaults,
+                        _password:
+                            d.password_ ||
+                            d.Password_ ||
+                            ''
+                    };
+                });
 
-                data: data,
+                volunteerTable = new Tabulator("#volunteerTableContainer", {
 
-                columns: [
+                    ...directoryTableDefaults,
 
-                    {
-                        formatter: "rownum",
-                        title: "Sr No",
-                        hozAlign: "center",
-                        width: 70,
-                        headerSort: false,
-                        headerFilter: false
-                    },
+                    data: data,
 
-                    {
-                        title: "Volunteer ID",
-                        field: "_id",
-                        width: 130,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                    columns: [
 
-                    {
-                        title: "Name",
-                        field: "_name",
-                        width: 190,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                        {
+                            formatter: "rownum",
+                            title: "Sr No",
+                            hozAlign: "center",
+                            width: 70,
+                            headerSort: false,
+                            headerFilter: false
+                        },
 
-                    {
-                        title: "Mobile",
-                        field: "_mobile",
-                        width: 150,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                        {
+                            title: "Volunteer ID",
+                            field: "_id",
+                            width: 130,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
 
-                    {
-                        title: "Email",
-                        field: "_email",
-                        width: 230,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
-                     {
-                        title: "City",
-                        field: "cityName",
-                        width: 230,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
-                    {
-                        title: "Username",
-                        field: "_username",
-                        width: 180,
-                        sorter: "string",
-                        headerFilter: "input"
-                    },
+                        {
+                            title: "Name",
+                            field: "_name",
+                            width: 190,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
 
-                    {
-                        title: "Password",
-                        field: "_password",
-                        width: 160,
-                        sorter: "string",
-                        headerFilter: "input"
-                    }
-                ]
-            });
-        }
-          });
+                        {
+                            title: "Mobile",
+                            field: "_mobile",
+                            width: 150,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "Email",
+                            field: "_email",
+                            width: 230,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+                        {
+                            title: "City",
+                            field: "cityName",
+                            width: 230,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+                        {
+                            title: "Username",
+                            field: "_username",
+                            width: 180,
+                            sorter: "string",
+                            headerFilter: "input"
+                        },
+
+                        {
+                            title: "Password",
+                            field: "_password",
+                            width: 160,
+                            sorter: "string",
+                            headerFilter: "input"
+                        }
+                    ]
+                });
+            }
+        });
         function filterTabulator(type, query) {
 
             let table =
@@ -1557,9 +1595,9 @@ function getDownloadUrl(filePath) {
                 return;
             }
 
-            table.setFilter(function(data) {
+            table.setFilter(function (data) {
 
-                return Object.keys(data).some(function(key) {
+                return Object.keys(data).some(function (key) {
 
                     let value = data[key];
 
@@ -1607,7 +1645,7 @@ function getDownloadUrl(filePath) {
                     url: '/api/school/ChangeStandard',
                     dataType: 'json',
                     data: { StudentId: StudentId, Standard: Standard, Division: Division },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             var modalEl = document.getElementById('Dv_StandardModal');
                             var modal = bootstrap.Modal.getInstance(modalEl);
@@ -1639,7 +1677,7 @@ function getDownloadUrl(filePath) {
                         url: '/api/school/UnmapStudent',
                         dataType: 'json',
                         data: { StudentId: StudentId },
-                        success: function(response) {
+                        success: function (response) {
                             if (response.success) {
                                 Swal.fire("Removed!", response.message, "success").then(() => { location.reload(); });
                             } else {
@@ -1651,7 +1689,7 @@ function getDownloadUrl(filePath) {
             });
         }
 
-        $(document).on('click', '.SendSMSINS', function() {
+        $(document).on('click', '.SendSMSINS', function () {
             var targetBtn = $(this);
             Swal.fire({
                 title: 'Send Details?',
@@ -1664,7 +1702,7 @@ function getDownloadUrl(filePath) {
             }).then((result) => {
                 if (result.isConfirmed) {
                     var ID = targetBtn.attr("data-id");
-                    $.post("/api/school/SendPasswordUser", { ID: ID }, function(data) {
+                    $.post("/api/school/SendPasswordUser", { ID: ID }, function (data) {
                         if (data == '1') {
                             Swal.fire('Success', 'Message Sent Successfully!!', 'success');
                         } else {
@@ -1674,7 +1712,7 @@ function getDownloadUrl(filePath) {
                 }
             });
         });
-        $(document).on('click', '.SendSMSINSTeacher', function() {
+        $(document).on('click', '.SendSMSINSTeacher', function () {
             var targetBtn = $(this);
             Swal.fire({
                 title: 'Send Details?',
@@ -1687,7 +1725,7 @@ function getDownloadUrl(filePath) {
             }).then((result) => {
                 if (result.isConfirmed) {
                     var ID = targetBtn.attr("data-id");
-                    $.post("/api/school/SendPasswordTeacher", { ID: ID }, function(data) {
+                    $.post("/api/school/SendPasswordTeacher", { ID: ID }, function (data) {
                         if (data == '1') {
                             Swal.fire('Success', 'Message Sent Successfully!!', 'success');
                         } else {
@@ -1714,14 +1752,14 @@ function getDownloadUrl(filePath) {
                         url: '/api/school/UnmapTeacher',
                         data: { teacherid: TeacherID },
                         dataType: 'json',
-                        success: function(result) {
+                        success: function (result) {
                             if (result.success) {
                                 Swal.fire('Success!', result.message, 'success').then(() => { location.reload(); });
                             } else {
                                 Swal.fire('Info', result.message, 'error');
                             }
                         },
-                        error: function() {
+                        error: function () {
                             Swal.fire('Exception Caught', 'Relational integrity constraints blocked immediate elimination.', 'error');
                         }
                     });
@@ -1741,7 +1779,7 @@ function getDownloadUrl(filePath) {
         }
 
         function escapeHtml(value) {
-            return String(value ?? "").replace(/[&<>"']/g, function(char) {
+            return String(value ?? "").replace(/[&<>"']/g, function (char) {
                 return {
                     "&": "&amp;",
                     "<": "&lt;",
@@ -1752,57 +1790,57 @@ function getDownloadUrl(filePath) {
             });
         }
 
-            function fnSubmitStandardToTeacher() {
-                var teacherId = $('#teacherId').val();
-                var standarddata = [];
+        function fnSubmitStandardToTeacher() {
+            var teacherId = $('#teacherId').val();
+            var standarddata = [];
 
-                var selectedStandard = $("#dll_Standard")[0];
-                if (selectedStandard && selectedStandard.selectedOptions) {
-                    for (var i = 0; i < selectedStandard.selectedOptions.length; i++) {
-                        standarddata.push(selectedStandard.selectedOptions[i].text);
-                    }
+            var selectedStandard = $("#dll_Standard")[0];
+            if (selectedStandard && selectedStandard.selectedOptions) {
+                for (var i = 0; i < selectedStandard.selectedOptions.length; i++) {
+                    standarddata.push(selectedStandard.selectedOptions[i].text);
                 }
-
-                if (standarddata.length == 0) {
-                    Swal.fire('Selection Empty', 'Please match at least 1 grade standard subset row to proceed.', 'warning');
-                    return false;
-                }
-
-                var standard = standarddata.join();
-
-                $.ajax({
-                    type: "GET",
-                    url: '/api/school/assign-standards',
-                    data: { teacherId: teacherId, standard: standard },
-                    dataType: 'json',
-                    success: function(result) {
-                        let isSuccess = result.success !== undefined ? result.success : result.Success;
-                        let messageText = result.message || result.Message || "Standards assigned successfully.";
-
-                        if (isSuccess) {
-                            var modalEl = document.getElementById('assignStandardList');
-                            var modal = bootstrap.Modal.getInstance(modalEl);
-                            if (modal) {
-                                modal.hide();
-                            } else {
-                                $('#assignStandardList').modal('hide');
-                                $('.modal-backdrop').remove();
-                                $('body').removeClass('modal-open');
-                            }
-
-                            Swal.fire('Assigned!', messageText, 'success').then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire('Info', messageText, 'error');
-                        }
-                    },
-                    error: function(xhr) {
-                        Swal.fire('Error', xhr.responseJSON?.message || 'An execution anomaly halted standard directory updates.', 'error');
-                    }
-                });
             }
-       // Reset forms and selections whenever any modal is hidden/closed
+
+            if (standarddata.length == 0) {
+                Swal.fire('Selection Empty', 'Please match at least 1 grade standard subset row to proceed.', 'warning');
+                return false;
+            }
+
+            var standard = standarddata.join();
+
+            $.ajax({
+                type: "GET",
+                url: '/api/school/assign-standards',
+                data: { teacherId: teacherId, standard: standard },
+                dataType: 'json',
+                success: function (result) {
+                    let isSuccess = result.success !== undefined ? result.success : result.Success;
+                    let messageText = result.message || result.Message || "Standards assigned successfully.";
+
+                    if (isSuccess) {
+                        var modalEl = document.getElementById('assignStandardList');
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) {
+                            modal.hide();
+                        } else {
+                            $('#assignStandardList').modal('hide');
+                            $('.modal-backdrop').remove();
+                            $('body').removeClass('modal-open');
+                        }
+
+                        Swal.fire('Assigned!', messageText, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Info', messageText, 'error');
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire('Error', xhr.responseJSON?.message || 'An execution anomaly halted standard directory updates.', 'error');
+                }
+            });
+        }
+        // Reset forms and selections whenever any modal is hidden/closed
         $('.modal').on('hidden.bs.modal', function () {
             // Find any form inside the closed modal and reset it
             $(this).find('form').each(function () {

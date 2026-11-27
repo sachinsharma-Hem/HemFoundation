@@ -585,7 +585,7 @@
                 <input type="text"
                        id="txtSearch"
                        class="form-control"
-                       placeholder="Search student, standard, division, institute or mobile number..." />
+                       placeholder="Search student ID,student, standard, division, institute or mobile number..." />
 
             </div>
 
@@ -1356,7 +1356,19 @@
             String(lastName)
         ).trim();
     }
+    function getStudentId(row) {
+        var names = ["userId", "userid", "UserID", "studentId", "studentid"];
 
+        for (var i = 0; i < names.length; i++) {
+            var value = getValue(row, names[i]);
+
+            if (value !== null && value !== undefined && value !== "") {
+                return value;
+            }
+        }
+
+        return "";
+    }
 
     function renderTable(searchText) {
 
@@ -1394,6 +1406,7 @@
                     }
 
                     var searchableText = [
+                        getStudentId(row),
                         getStudentName(row),
                         getValue(row, "standard"),
                         getValue(row, "Standard"),
@@ -1419,6 +1432,7 @@
         var headerHtml =
             "<tr>" +
             '<th rowspan="2">Sr</th>' +
+            '<th rowspan="2">Student ID</th>' +
             '<th rowspan="2">Student</th>' +
             '<th rowspan="2">Standard</th>' +
             '<th rowspan="2">Division</th>' +
@@ -1564,6 +1578,11 @@
                     "<td>" +
                     (index + 1) +
                     "</td>" +
+
+                    "<td>" +                                     // new
+                    escapeHtml(getStudentId(row)) +
+                    "</td>" +
+
 
                     '<td class="student-name">' +
                     escapeHtml(studentName) +
@@ -1729,6 +1748,7 @@
 
         var headers = [
             "#",
+            "Student ID",
             "Student",
             "Standard",
             "Division",
@@ -1772,7 +1792,7 @@
                 var csvRow = [];
 
                 csvRow.push(index + 1);
-
+                csvRow.push(getStudentId(row));
                 csvRow.push(
                     getStudentName(row)
                 );

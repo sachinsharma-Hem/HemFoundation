@@ -47,6 +47,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 builder.Services.AddScoped<ExamBAL>();
+
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 
 
@@ -128,7 +129,7 @@ builder.Services.AddScoped<HemFoundation.Services.Parent.ParentService>();
 builder.Services.AddScoped<HemFoundation.Services.HemStore.HemStoreBridge>();
 // Affiliate incentive: month-wise summaries (batched database access)
 builder.Services.AddScoped<HemFoundation.Services.AffiliateIncentive.AffiliateIncentiveService>();
-
+builder.Services.AddAntiforgery(o => o.HeaderName = "RequestVerificationToken");
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(
     options =>
     {

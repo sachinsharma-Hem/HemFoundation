@@ -717,8 +717,15 @@
                 }
             });
 
-            $(this.$popupContainer).off('touchstart click', '.multiselect-option, .multiselect-all, .multiselect-group');
-            $(this.$popupContainer).on('touchstart click', '.multiselect-option, .multiselect-all, .multiselect-group', $.proxy(function (event) {
+            $(this.$popupContainer).off(
+                'touchstart click',
+                '.multiselect-option, .multiselect-all, .multiselect-group'
+            );
+
+            $(this.$popupContainer).on(
+                'click',
+                '.multiselect-option, .multiselect-all, .multiselect-group',
+                $.proxy(function (event) {
                 event.stopPropagation();
 
                 var $target = $(event.target);

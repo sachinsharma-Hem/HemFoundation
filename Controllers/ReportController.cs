@@ -470,6 +470,7 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                 using (XLWorkbook wb = new XLWorkbook())
                 {
                     // 1. Build and Add Student Summary Table FIRST so it is the first tab
+                    // 1. Build and Add Student Summary Table FIRST so it is the first tab
                     DataTable summaryTable = new DataTable();
                     summaryTable.Columns.Add("StudentID");
                     summaryTable.Columns.Add("StudentName");
@@ -479,14 +480,34 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                     summaryTable.Columns.Add("Gain Marks", typeof(int));
 
                     var allData = Enumerable.Empty<DataRow>();
-                    if (essr.Tables.Count > 1) allData = allData.Union(essr.Tables[1].AsEnumerable());
-                    if (essr.Tables.Count > 2) allData = allData.Union(essr.Tables[2].AsEnumerable());
-                    allData = allData.Union(pblReportDataTable.AsEnumerable());
+                    if (essr.Tables.Count > 1) allData = allData.Concat(essr.Tables[1].AsEnumerable());
+                    if (essr.Tables.Count > 2) allData = allData.Concat(essr.Tables[2].AsEnumerable());
+                    allData = allData.Concat(pblReportDataTable.AsEnumerable());
 
-                    var summaryData = allData
+                    var allRowsList = allData
+                        .Where(row => row["StudentID"] != DBNull.Value && !string.IsNullOrWhiteSpace(row["StudentID"].ToString()))
+                        .ToList();
+
+                    // Active students = students who completed at least one activity OTHER than "Group PBL"
+                    var activeStudentIds = new HashSet<string>(
+                        allRowsList
+                            .Where(row =>
+                            {
+                                string title = row.Table.Columns.Contains("Title") && row["Title"] != DBNull.Value
+                                    ? row["Title"].ToString().Trim()
+                                    : string.Empty;
+
+                                return !string.Equals(title, "Group PBL", StringComparison.OrdinalIgnoreCase)
+                                    && !string.Equals(title, "Group Project", StringComparison.OrdinalIgnoreCase);
+                            })
+                            .Select(row => row["StudentID"].ToString().Trim())
+                    );
+
+                    var summaryData = allRowsList
+                        .Where(row => activeStudentIds.Contains(row["StudentID"].ToString().Trim()))
                         .GroupBy(row => new
                         {
-                            StudentID = row["StudentID"],
+                            StudentID = row["StudentID"].ToString().Trim(),
                             StudentName = row["Student_Name"].ToString(),
                             Standard = row["Standard"].ToString(),
                             MainCourseName = row["MainCourseName"].ToString()
@@ -498,12 +519,12 @@ namespace HemFoundation.Controllers // Changed namespace to Controllers conventi
                             Standard = g.Key.Standard,
                             MainCourseName = g.Key.MainCourseName,
                             TotalMarks = 100,
-                            GainMarks = g.Sum(row => row.Table.Columns.Contains("MarksObtain")
-                                        ? (row["MarksObtain"] != DBNull.Value
-                                            ? Convert.ToInt32(row["MarksObtain"])
-                                            : 0)
-                                        : 0)
-                        }).OrderBy(x => x.Student_Name).ToList();
+                            GainMarks = g.Sum(row => row.Table.Columns.Contains("MarksObtain") && row["MarksObtain"] != DBNull.Value
+                                ? Convert.ToInt32(row["MarksObtain"])
+                                : 0)
+                        })
+                        .OrderBy(x => x.Student_Name)
+                        .ToList();
 
                     foreach (var item in summaryData)
                     {

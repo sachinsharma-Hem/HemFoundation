@@ -1,0 +1,499 @@
+﻿@{
+    ViewData["Title"] = "Word Game Master";
+
+    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+}
+
+<style>
+    .wg-page { padding: 24px; background: #f5f7fb; min-height: calc(100vh - 80px); }
+    .wg-header {
+        background: linear-gradient(135deg, #1e3c72, #2a5298); color: #fff;
+        border-radius: 16px; padding: 22px 26px; margin-bottom: 20px;
+        display: flex; align-items: center; gap: 16px;
+        box-shadow: 0 8px 25px rgba(30, 60, 114, .18);
+    }
+    .wg-header .icon {
+        width: 54px; height: 54px; border-radius: 14px; background: rgba(255,255,255,.15);
+        display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0;
+    }
+    .wg-header h2 { margin: 0; font-size: 23px; font-weight: 700; }
+    .wg-header p { margin: 4px 0 0; opacity: .85; font-size: 14px; }
+
+    .wg-tabs .nav-link { border-radius: 10px; font-weight: 600; color: #475569; }
+    .wg-tabs .nav-link.active { background: #2a5298; color: #fff; }
+
+    .wg-card {
+        background: #fff; border: 1px solid #e9edf3; border-radius: 16px;
+        box-shadow: 0 5px 20px rgba(0,0,0,.05); padding: 18px;
+    }
+    .wg-toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+    .wg-toolbar .grow { flex: 1 1 220px; }
+    .wg-toolbar .form-control, .wg-toolbar .form-select { min-height: 42px; border-radius: 8px; }
+    .btn-brand {
+        background: linear-gradient(135deg, #1e3c72, #2a5298); color: #fff; border: 0;
+        border-radius: 8px; min-height: 42px; padding: 0 20px; font-weight: 600;
+    }
+    .btn-brand:hover { color: #fff; box-shadow: 0 5px 15px rgba(42,82,152,.25); transform: translateY(-1px); }
+
+    .wg-table { margin: 0; font-size: 14px; }
+    .wg-table thead th { background: #f1f5f9; color: #334155; font-weight: 700; white-space: nowrap; }
+    .wg-table td { vertical-align: middle; }
+    .wg-table .q-text { max-width: 360px; }
+    .btn.locked { opacity: .45; cursor: not-allowed; }
+
+    .wg-empty { padding: 45px 10px; text-align: center; color: #6b7280; }
+    .wg-empty i { font-size: 42px; color: #b7c0cc; }
+
+    @@media (max-width: 768px) {
+        .wg-page { padding: 12px; }
+        .wg-header { padding: 16px; }
+        .wg-header h2 { font-size: 19px; }
+        .wg-table thead { display: none; }
+        .wg-table, .wg-table tbody, .wg-table tr, .wg-table td { display: block; width: 100%; }
+        .wg-table tr {
+            border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 12px;
+            padding: 8px 14px; background: #fff;
+        }
+        .wg-table td {
+            display: flex; justify-content: space-between; align-items: center; gap: 14px;
+            border: 0; padding: 6px 0; text-align: right;
+        }
+        .wg-table td::before { content: attr(data-label); font-weight: 600; color: #6b7280; text-align: left; flex-shrink: 0; }
+        .wg-table .q-text { max-width: none; }
+        .wg-toolbar > * { flex: 1 1 100%; }
+    }
+</style>
+
+@Html.AntiForgeryToken()
+
+<div class="wg-page">
+    <div class="wg-header">
+        <div class="icon"><i class="bi bi-puzzle"></i></div>
+        <div>
+            <h2>Word Game Master</h2>
+            <p>Manage word game topics and questions</p>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills wg-tabs mb-3" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#paneTopics" type="button">
+                <i class="bi bi-tags me-1"></i>Topics <span id="topicBadge" class="badge text-bg-light ms-1">0</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#paneQuestions" type="button">
+                <i class="bi bi-question-circle me-1"></i>Questions <span id="questionBadge" class="badge text-bg-light ms-1">0</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- TOPICS -->
+        <div class="tab-pane fade show active" id="paneTopics">
+            <div class="wg-card">
+                <div class="wg-toolbar">
+                    <input id="topicSearch" class="form-control grow" placeholder="Search topics..." />
+                    <select id="topicStatus" class="form-select" style="max-width:170px">
+                        <option value="">All status</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                    <button id="btnAddTopic" class="btn btn-brand"><i class="bi bi-plus-lg me-1"></i>Add Topic</button>
+                </div>
+
+                <table class="table wg-table align-middle">
+                    <thead>
+                        <tr><th>#</th><th>Topic</th><th>Description</th><th>Questions</th><th>Played</th><th>Status</th><th class="text-end">Actions</th></tr>
+                    </thead>
+                    <tbody id="topicBody"></tbody>
+                </table>
+                <div id="topicEmpty" class="wg-empty d-none"><i class="bi bi-inbox"></i><div class="mt-2">No topics found</div></div>
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                    <small id="topicInfo" class="text-muted"></small>
+                    <ul id="topicPager" class="pagination pagination-sm mb-0"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUESTIONS -->
+        <div class="tab-pane fade" id="paneQuestions">
+            <div class="wg-card">
+                <div class="wg-toolbar">
+                    <input id="qSearch" class="form-control grow" placeholder="Search question or answer..." />
+                    <select id="qFilterTopic" class="form-select" style="max-width:200px"></select>
+                    <select id="qFilterCourse" class="form-select" style="max-width:200px"></select>
+                    <select id="qFilterStatus" class="form-select" style="max-width:150px">
+                        <option value="">All status</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                    <button id="btnAddQuestion" class="btn btn-brand"><i class="bi bi-plus-lg me-1"></i>Add Question</button>
+                </div>
+
+                <table class="table wg-table align-middle">
+                    <thead>
+                        <tr><th>#</th><th>Topic</th><th>Course</th><th>Question</th><th>Answer</th><th>Played</th><th>Status</th><th class="text-end">Actions</th></tr>
+                    </thead>
+                    <tbody id="questionBody"></tbody>
+                </table>
+                <div id="questionEmpty" class="wg-empty d-none"><i class="bi bi-inbox"></i><div class="mt-2">No questions found</div></div>
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                    <small id="questionInfo" class="text-muted"></small>
+                    <ul id="questionPager" class="pagination pagination-sm mb-0"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Topic modal -->
+<div class="modal fade" id="topicModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="topicTitle"></h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div id="topicError" class="alert alert-danger py-2 d-none"></div>
+                <input type="hidden" id="tId" />
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Topic name <span class="text-danger">*</span></label>
+                    <input id="tName" class="form-control" maxlength="100" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Description</label>
+                    <textarea id="tDesc" class="form-control" rows="3" maxlength="500"></textarea>
+                </div>
+                <div class="form-check form-switch">
+                    <input id="tActive" class="form-check-input" type="checkbox" checked />
+                    <label class="form-check-label" for="tActive">Active</label>
+                </div>
+                <div id="topicUsage" class="small text-muted mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                <button id="btnSaveTopic" class="btn btn-brand js-save">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Question modal -->
+<div class="modal fade" id="questionModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="questionTitle"></h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div id="questionError" class="alert alert-danger py-2 d-none"></div>
+                <input type="hidden" id="qId" />
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Topic <span class="text-danger">*</span></label>
+                        <select id="qTopic" class="form-select"></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Course <span class="text-danger">*</span></label>
+                        <select id="qCourse" class="form-select"></select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Question <span class="text-danger">*</span></label>
+                        <textarea id="qQuestion" class="form-control" rows="3" maxlength="500"></textarea>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold">Answer <span class="text-danger">*</span></label>
+                        <input id="qAnswer" class="form-control" maxlength="50" />
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check form-switch mb-2">
+                            <input id="qActive" class="form-check-input" type="checkbox" checked />
+                            <label class="form-check-label" for="qActive">Active</label>
+                        </div>
+                    </div>
+                </div>
+                <div id="questionUsage" class="small text-muted mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                <button id="btnSaveQuestion" class="btn btn-brand js-save">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <i class="bi bi-exclamation-triangle text-danger" style="font-size:46px"></i>
+                <h5 class="mt-2">Delete this record?</h5>
+                <p id="confirmText" class="text-muted mb-0"></p>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pt-0">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button id="confirmYes" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toastBox" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:11000"></div>
+
+<script>
+(function () {
+    const urls = {
+        courses:        '@Url.Action("Courses", "WordGameMaster")',
+        topics:         '@Url.Action("Topics", "WordGameMaster")',
+        saveTopic:      '@Url.Action("SaveTopic", "WordGameMaster")',
+        deleteTopic:    '@Url.Action("DeleteTopic", "WordGameMaster")',
+        questions:      '@Url.Action("Questions", "WordGameMaster")',
+        saveQuestion:   '@Url.Action("SaveQuestion", "WordGameMaster")',
+        deleteQuestion: '@Url.Action("DeleteQuestion", "WordGameMaster")'
+    };
+    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+    const PAGE = 10;
+    const state = { topics: [], questions: [], courses: [], tPage: 1, qPage: 1 };
+
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const modals = {};
+    const modal = id => (modals[id] ??= new bootstrap.Modal($(id)));
+
+    async function api(url, body) {
+        const opt = body === undefined
+            ? { headers: { Accept: 'application/json' } }
+            : { method: 'POST', body: JSON.stringify(body),
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', RequestVerificationToken: token } };
+        const r = await fetch(url, opt);
+        if (!r.ok) throw new Error('Request failed (' + r.status + ')');
+        return r.json();
+    }
+
+    function toast(msg, type) {
+        const el = document.createElement('div');
+        el.className = 'toast align-items-center text-bg-' + (type || 'primary') + ' border-0';
+        el.innerHTML = '<div class="d-flex"><div class="toast-body">' + esc(msg) +
+            '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
+        $('toastBox').appendChild(el);
+        el.addEventListener('hidden.bs.toast', () => el.remove());
+        new bootstrap.Toast(el, { delay: 4000 }).show();
+    }
+
+    const badge = on => on ? '<span class="badge text-bg-success">Active</span>' : '<span class="badge text-bg-secondary">Inactive</span>';
+
+    function actions(id, locked) {
+        return '<div class="btn-group btn-group-sm">' +
+            '<button class="btn btn-outline-secondary" data-act="view" data-id="' + id + '" title="View"><i class="bi bi-eye"></i></button>' +
+            '<button class="btn btn-outline-primary" data-act="edit" data-id="' + id + '" title="Edit"><i class="bi bi-pencil"></i></button>' +
+            '<button class="btn btn-outline-danger' + (locked ? ' locked' : '') + '" data-act="delete" data-id="' + id +
+            '" title="' + (locked ? 'In use - cannot be deleted' : 'Delete') + '"><i class="bi ' + (locked ? 'bi-lock' : 'bi-trash') + '"></i></button></div>';
+    }
+
+    function paginate(list, page) {
+        const pages = Math.max(1, Math.ceil(list.length / PAGE));
+        page = Math.min(Math.max(page, 1), pages);
+        return { items: list.slice((page - 1) * PAGE, page * PAGE), page, pages };
+    }
+
+    function drawPager(ul, info, p, total, go) {
+        info.textContent = total ? 'Showing ' + ((p.page - 1) * PAGE + 1) + '–' + Math.min(p.page * PAGE, total) + ' of ' + total : '';
+        ul.innerHTML = '';
+        if (p.pages <= 1) return;
+        const mk = (label, page, disabled) => {
+            const li = document.createElement('li');
+            li.className = 'page-item' + (disabled ? ' disabled' : '');
+            const a = document.createElement('a');
+            a.className = 'page-link'; a.href = '#'; a.textContent = label;
+            a.onclick = e => { e.preventDefault(); if (!disabled) go(page); };
+            li.appendChild(a); return li;
+        };
+        ul.appendChild(mk('‹', p.page - 1, p.page === 1));
+        ul.appendChild(mk(p.page + ' / ' + p.pages, p.page, true));
+        ul.appendChild(mk('›', p.page + 1, p.page === p.pages));
+    }
+
+    // ---------- Topics ----------
+    function renderTopics() {
+        const q = $('topicSearch').value.trim().toLowerCase();
+        const st = $('topicStatus').value;
+        const list = state.topics.filter(t =>
+            (!q || ((t.topicName || '') + ' ' + (t.description || '')).toLowerCase().includes(q)) &&
+            (st === '' || String(t.isActive) === st));
+        const p = paginate(list, state.tPage); state.tPage = p.page;
+
+        $('topicBody').innerHTML = p.items.map((t, i) =>
+            '<tr>' +
+            '<td data-label="#">' + ((p.page - 1) * PAGE + i + 1) + '</td>' +
+            '<td data-label="Topic" class="fw-semibold">' + esc(t.topicName) + '</td>' +
+            '<td data-label="Description" class="text-muted">' + (esc(t.description) || '—') + '</td>' +
+            '<td data-label="Questions"><span class="badge text-bg-light border">' + t.questionCount + '</span></td>' +
+            '<td data-label="Played">' + t.playCount + '</td>' +
+            '<td data-label="Status">' + badge(t.isActive) + '</td>' +
+            '<td data-label="Actions" class="text-end">' + actions(t.topicId, t.questionCount > 0) + '</td></tr>').join('');
+
+        $('topicEmpty').classList.toggle('d-none', list.length > 0);
+        $('topicBadge').textContent = state.topics.length;
+        drawPager($('topicPager'), $('topicInfo'), p, list.length, pg => { state.tPage = pg; renderTopics(); });
+    }
+
+    function lockForm(id, readOnly) {
+        $(id).querySelectorAll('input:not([type=hidden]),select,textarea').forEach(e => e.disabled = readOnly);
+        $(id).querySelector('.js-save').classList.toggle('d-none', readOnly);
+    }
+    function showErr(id, msg) { const el = $(id); el.textContent = msg; el.classList.remove('d-none'); }
+
+    function openTopic(mode, t) {
+        $('topicTitle').textContent = mode === 'add' ? 'Add Topic' : mode === 'edit' ? 'Edit Topic' : 'Topic Details';
+        $('tId').value = t ? t.topicId : 0;
+        $('tName').value = t ? t.topicName || '' : '';
+        $('tDesc').value = t ? t.description || '' : '';
+        $('tActive').checked = t ? t.isActive : true;
+        $('topicUsage').textContent = t ? t.questionCount + ' question(s), played ' + t.playCount + ' time(s).' : '';
+        $('topicError').classList.add('d-none');
+        lockForm('topicModal', mode === 'view');
+        modal('topicModal').show();
+    }
+
+    async function saveTopic() {
+        const body = { topicId: +$('tId').value, topicName: $('tName').value.trim(),
+                       description: $('tDesc').value.trim(), isActive: $('tActive').checked };
+        if (!body.topicName) return showErr('topicError', 'Topic name is required.');
+        const btn = $('btnSaveTopic'); btn.disabled = true;
+        try {
+            const r = await api(urls.saveTopic, body);
+            if (!r.success) return showErr('topicError', r.message);
+            modal('topicModal').hide(); toast(r.message, 'success'); await loadAll();
+        } catch (e) { showErr('topicError', e.message); }
+        finally { btn.disabled = false; }
+    }
+
+    // ---------- Questions ----------
+    function renderQuestions() {
+        const q = $('qSearch').value.trim().toLowerCase();
+        const ft = $('qFilterTopic').value, fc = $('qFilterCourse').value, st = $('qFilterStatus').value;
+        const list = state.questions.filter(x =>
+            (!q || ((x.question || '') + ' ' + (x.answer || '')).toLowerCase().includes(q)) &&
+            (!ft || String(x.topicId) === ft) && (!fc || String(x.courseId) === fc) &&
+            (st === '' || String(x.isActive) === st));
+        const p = paginate(list, state.qPage); state.qPage = p.page;
+
+        $('questionBody').innerHTML = p.items.map((x, i) =>
+            '<tr>' +
+            '<td data-label="#">' + ((p.page - 1) * PAGE + i + 1) + '</td>' +
+            '<td data-label="Topic">' + esc(x.topicName) + '</td>' +
+            '<td data-label="Course">' + esc(x.courseName) + '</td>' +
+            '<td data-label="Question" class="q-text">' + esc(x.question) + '</td>' +
+            '<td data-label="Answer" class="fw-semibold">' + esc(x.answer) + '</td>' +
+            '<td data-label="Played">' + x.playCount + '</td>' +
+            '<td data-label="Status">' + badge(x.isActive) + '</td>' +
+            '<td data-label="Actions" class="text-end">' + actions(x.questionId, x.playCount > 0) + '</td></tr>').join('');
+
+        $('questionEmpty').classList.toggle('d-none', list.length > 0);
+        $('questionBadge').textContent = state.questions.length;
+        drawPager($('questionPager'), $('questionInfo'), p, list.length, pg => { state.qPage = pg; renderQuestions(); });
+    }
+
+    function options(list, valKey, textKey, first, selected) {
+        return '<option value="">' + first + '</option>' + list.map(x =>
+            '<option value="' + x[valKey] + '"' + (String(x[valKey]) === String(selected) ? ' selected' : '') + '>' +
+            esc(x[textKey]) + (x.isActive === false ? ' (inactive)' : '') + '</option>').join('');
+    }
+
+    function fillFilters() {
+        const ft = $('qFilterTopic').value, fc = $('qFilterCourse').value;
+        $('qFilterTopic').innerHTML = options(state.topics, 'topicId', 'topicName', 'All topics', ft);
+        $('qFilterCourse').innerHTML = options(state.courses, 'courseId', 'courseName', 'All courses', fc);
+    }
+
+    function openQuestion(mode, x) {
+        $('questionTitle').textContent = mode === 'add' ? 'Add Question' : mode === 'edit' ? 'Edit Question' : 'Question Details';
+        $('qId').value = x ? x.questionId : 0;
+        $('qTopic').innerHTML = options(state.topics, 'topicId', 'topicName', '-- Select topic --', x ? x.topicId : '');
+        $('qCourse').innerHTML = options(state.courses, 'courseId', 'courseName', '-- Select course --', x ? x.courseId : '');
+        $('qQuestion').value = x ? x.question || '' : '';
+        $('qAnswer').value = x ? x.answer || '' : '';
+        $('qActive').checked = x ? x.isActive : true;
+        $('questionUsage').textContent = x && x.playCount > 0
+            ? 'Played ' + x.playCount + ' time(s) by students, so it cannot be deleted. Changing the answer affects how past attempts relate to it.'
+            : '';
+        $('questionError').classList.add('d-none');
+        lockForm('questionModal', mode === 'view');
+        modal('questionModal').show();
+    }
+
+    async function saveQuestion() {
+        const body = { questionId: +$('qId').value, topicId: +$('qTopic').value || 0, courseId: +$('qCourse').value || 0,
+                       question: $('qQuestion').value.trim(), answer: $('qAnswer').value.trim(), isActive: $('qActive').checked };
+        if (!body.topicId) return showErr('questionError', 'Please select a topic.');
+        if (!body.courseId) return showErr('questionError', 'Please select a course.');
+        if (!body.question) return showErr('questionError', 'Question is required.');
+        if (!body.answer) return showErr('questionError', 'Answer is required.');
+        const btn = $('btnSaveQuestion'); btn.disabled = true;
+        try {
+            const r = await api(urls.saveQuestion, body);
+            if (!r.success) return showErr('questionError', r.message);
+            modal('questionModal').hide(); toast(r.message, 'success'); await loadAll();
+        } catch (e) { showErr('questionError', e.message); }
+        finally { btn.disabled = false; }
+    }
+
+    // ---------- Delete ----------
+    function confirmDelete(text, url, id) {
+        $('confirmText').textContent = text;
+        const btn = $('confirmYes');
+        btn.onclick = async () => {
+            btn.disabled = true;
+            try {
+                const r = await api(url, { id });
+                toast(r.message, r.success ? 'success' : 'danger');
+                if (r.success) await loadAll();
+            } catch (e) { toast(e.message, 'danger'); }
+            finally { btn.disabled = false; modal('confirmModal').hide(); }
+        };
+        modal('confirmModal').show();
+    }
+
+    // ---------- Events ----------
+    $('topicBody').addEventListener('click', e => {
+        const b = e.target.closest('button[data-act]'); if (!b) return;
+        const t = state.topics.find(x => x.topicId == b.dataset.id); if (!t) return;
+        if (b.dataset.act === 'view') openTopic('view', t);
+        else if (b.dataset.act === 'edit') openTopic('edit', t);
+        else if (t.questionCount > 0)
+            toast('This topic is used by ' + t.questionCount + ' question(s) and cannot be deleted. Deactivate it instead.', 'warning');
+        else confirmDelete('Topic "' + t.topicName + '" will be permanently deleted.', urls.deleteTopic, t.topicId);
+    });
+
+    $('questionBody').addEventListener('click', e => {
+        const b = e.target.closest('button[data-act]'); if (!b) return;
+        const x = state.questions.find(q => q.questionId == b.dataset.id); if (!x) return;
+        if (b.dataset.act === 'view') openQuestion('view', x);
+        else if (b.dataset.act === 'edit') openQuestion('edit', x);
+        else if (x.playCount > 0)
+            toast('Students have played this question ' + x.playCount + ' time(s), so it cannot be deleted. Deactivate it instead.', 'warning');
+        else confirmDelete('This question will be permanently deleted.', urls.deleteQuestion, x.questionId);
+    });
+
+    $('btnAddTopic').onclick = () => openTopic('add');
+    $('btnAddQuestion').onclick = () => openQuestion('add');
+    $('btnSaveTopic').onclick = saveTopic;
+    $('btnSaveQuestion').onclick = saveQuestion;
+
+    ['topicSearch', 'topicStatus'].forEach(id => $(id).addEventListener('input', () => { state.tPage = 1; renderTopics(); }));
+    ['qSearch', 'qFilterTopic', 'qFilterCourse', 'qFilterStatus'].forEach(id =>
+        $(id).addEventListener('input', () => { state.qPage = 1; renderQuestions(); }));
+
+    // ---------- Load ----------
+    async function loadAll() {
+        try {
+            const [c, t, q] = await Promise.all([api(urls.courses), api(urls.topics), api(urls.questions)]);
+            if (!c.success || !t.success || !q.success) throw new Error(c.message || t.message || q.message);
+            state.courses = c.data; state.topics = t.data; state.questions = q.data;
+            fillFilters(); renderTopics(); renderQuestions();
+        } catch (e) { toast(e.message || 'Failed to load data.', 'danger'); }
+    }
+
+    loadAll();
+})();
+</script>
